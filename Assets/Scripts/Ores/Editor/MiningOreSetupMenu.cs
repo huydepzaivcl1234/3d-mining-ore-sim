@@ -3,6 +3,7 @@ using System;
 using System.IO;
 using Microlight.MicroBar;
 using MiningSimulator.Ores;
+using TMPro;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -20,6 +21,7 @@ namespace MiningSimulator.Editor
     public static class MiningOreSetupMenu
     {
         private const string ModelFolder = "Assets/Ores/Models";
+        private const string GameDataPath = "Assets/GameData/MiningGameData.asset";
         private const string DataFolder = "Assets/GameData/Ores";
         private const string PrefabFolder = "Assets/Prefabs/Ores";
         private const string NpcPrefabFolder = "Assets/Prefabs/NPC";
@@ -93,8 +95,9 @@ namespace MiningSimulator.Editor
                 }
             }
 
-            MiningNpc npcPrefab = CreateOrUpdateNpcPrefab();
-            CreateOrUpdateRuntimePrefab(dataAssets, npcPrefab);
+            MiningGameData gameData = CreateOrUpdateGameData(dataAssets);
+            MiningNpc npcPrefab = CreateOrUpdateNpcPrefab(gameData);
+            CreateOrUpdateRuntimePrefab(npcPrefab, gameData);
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -223,7 +226,35 @@ namespace MiningSimulator.Editor
             }
         }
 
-        private static MiningNpc CreateOrUpdateNpcPrefab()
+        private static MiningGameData CreateOrUpdateGameData(OreData[] dataAssets)
+        {
+            MiningGameData gameData = AssetDatabase.LoadAssetAtPath<MiningGameData>(GameDataPath);
+            if (gameData == null)
+            {
+                gameData = ScriptableObject.CreateInstance<MiningGameData>();
+                AssetDatabase.CreateAsset(gameData, GameDataPath);
+            }
+
+            var serialized = new SerializedObject(gameData);
+            SerializedProperty pool = serialized.FindProperty("orePool");
+            if (pool != null && pool.arraySize == 0)
+            {
+                pool.arraySize = dataAssets.Length;
+                float[] defaultWeights = { 60f, 30f, 10f };
+                for (int index = 0; index < dataAssets.Length; index++)
+                {
+                    SerializedProperty entry = pool.GetArrayElementAtIndex(index);
+                    entry.FindPropertyRelative("data").objectReferenceValue = dataAssets[index];
+                    entry.FindPropertyRelative("weight").floatValue = defaultWeights[index];
+                }
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+                EditorUtility.SetDirty(gameData);
+            }
+
+            return gameData;
+        }
+
+        private static MiningNpc CreateOrUpdateNpcPrefab(MiningGameData gameData)
         {
             GameObject existing = AssetDatabase.LoadAssetAtPath<GameObject>(NpcPrefabPath);
             if (existing != null)
@@ -231,10 +262,8 @@ namespace MiningSimulator.Editor
                 GameObject contents = PrefabUtility.LoadPrefabContents(NpcPrefabPath);
                 try
                 {
-                    if (contents.GetComponent<MiningNpc>() == null)
-                    {
-                        contents.AddComponent<MiningNpc>();
-                    }
+                    MiningNpc miningNpc = contents.GetComponent<MiningNpc>() ?? contents.AddComponent<MiningNpc>();
+                    ConfigureNpcPrefab(contents, miningNpc, gameData);
                     PrefabUtility.SaveAsPrefabAsset(contents, NpcPrefabPath);
                 }
                 finally
@@ -251,6 +280,7 @@ namespace MiningSimulator.Editor
                 npcObject.name = "Mining NPC";
                 npcObject.transform.localScale = new Vector3(0.8f, 0.9f, 0.8f);
                 MiningNpc miningNpc = npcObject.AddComponent<MiningNpc>();
+                ConfigureNpcPrefab(npcObject, miningNpc, gameData);
 
                 GameObject helmet = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 helmet.name = "Miner Helmet";
@@ -284,7 +314,26 @@ namespace MiningSimulator.Editor
             }
         }
 
-        private static void CreateOrUpdateRuntimePrefab(OreData[] dataAssets, MiningNpc npcPrefab)
+        private static void ConfigureNpcPrefab(GameObject npcObject, MiningNpc miningNpc,
+            MiningGameData gameData)
+        {
+            var npcSerialized = new SerializedObject(miningNpc);
+            SetReferenceIfMissing(npcSerialized.FindProperty("gameData"), gameData);
+            npcSerialized.ApplyModifiedPropertiesWithoutUndo();
+
+            CapsuleCollider capsule = npcObject.GetComponent<CapsuleCollider>() ??
+                                      npcObject.AddComponent<CapsuleCollider>();
+            capsule.radius = gameData.NpcColliderRadius;
+            capsule.height = gameData.NpcColliderHeight;
+
+            Rigidbody body = npcObject.GetComponent<Rigidbody>() ?? npcObject.AddComponent<Rigidbody>();
+            body.mass = gameData.NpcMass;
+            body.interpolation = RigidbodyInterpolation.Interpolate;
+            body.collisionDetectionMode = CollisionDetectionMode.Continuous;
+            body.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+        }
+
+        private static void CreateOrUpdateRuntimePrefab(MiningNpc npcPrefab, MiningGameData gameData)
         {
             GameObject existing = AssetDatabase.LoadAssetAtPath<GameObject>(RuntimePrefabPath);
             bool isNew = existing == null;
@@ -296,53 +345,42 @@ namespace MiningSimulator.Editor
             {
                 PlayerWallet wallet = runtime.GetComponent<PlayerWallet>() ?? runtime.AddComponent<PlayerWallet>();
                 OreSpawner spawner = runtime.GetComponent<OreSpawner>() ?? runtime.AddComponent<OreSpawner>();
-                if (runtime.GetComponent<OreClickInput>() == null)
-                {
-                    runtime.AddComponent<OreClickInput>();
-                }
+                OreClickInput clickInput = runtime.GetComponent<OreClickInput>() ?? runtime.AddComponent<OreClickInput>();
                 NpcShop shop = runtime.GetComponent<NpcShop>() ?? runtime.AddComponent<NpcShop>();
                 MiningHud hud = runtime.GetComponent<MiningHud>() ?? runtime.AddComponent<MiningHud>();
-                if (runtime.GetComponent<MiningOrbitCamera>() == null)
-                {
-                    runtime.AddComponent<MiningOrbitCamera>();
-                }
+                MiningOrbitCamera orbitCamera = runtime.GetComponent<MiningOrbitCamera>() ??
+                                                runtime.AddComponent<MiningOrbitCamera>();
 
                 var walletSerialized = new SerializedObject(wallet);
-                SerializedProperty startingMoney = walletSerialized.FindProperty("startingMoney");
-                if (startingMoney.intValue <= 0)
-                {
-                    startingMoney.intValue = 100;
-                    walletSerialized.ApplyModifiedPropertiesWithoutUndo();
-                }
+                SetReferenceIfMissing(walletSerialized.FindProperty("gameData"), gameData);
+                walletSerialized.ApplyModifiedPropertiesWithoutUndo();
 
                 var serialized = new SerializedObject(spawner);
                 SetReferenceIfMissing(serialized.FindProperty("wallet"), wallet);
-
-                SerializedProperty pool = serialized.FindProperty("orePool");
-                if (isNew || pool.arraySize == 0)
-                {
-                    pool.arraySize = dataAssets.Length;
-                    float[] defaultWeights = { 60f, 30f, 10f };
-                    for (int i = 0; i < dataAssets.Length; i++)
-                    {
-                        SerializedProperty entry = pool.GetArrayElementAtIndex(i);
-                        entry.FindPropertyRelative("data").objectReferenceValue = dataAssets[i];
-                        entry.FindPropertyRelative("weight").floatValue = defaultWeights[i];
-                    }
-                }
+                SetReferenceIfMissing(serialized.FindProperty("gameData"), gameData);
                 serialized.ApplyModifiedPropertiesWithoutUndo();
+
+                var clickSerialized = new SerializedObject(clickInput);
+                SetReferenceIfMissing(clickSerialized.FindProperty("gameData"), gameData);
+                clickSerialized.ApplyModifiedPropertiesWithoutUndo();
 
                 var shopSerialized = new SerializedObject(shop);
                 SetReferenceIfMissing(shopSerialized.FindProperty("wallet"), wallet);
                 SetReferenceIfMissing(shopSerialized.FindProperty("oreSpawner"), spawner);
                 SetReferenceIfMissing(shopSerialized.FindProperty("npcPrefab"), npcPrefab);
+                SetReferenceIfMissing(shopSerialized.FindProperty("gameData"), gameData);
                 shopSerialized.ApplyModifiedPropertiesWithoutUndo();
 
                 var hudSerialized = new SerializedObject(hud);
                 SetReferenceIfMissing(hudSerialized.FindProperty("wallet"), wallet);
                 SetReferenceIfMissing(hudSerialized.FindProperty("npcShop"), shop);
+                SetReferenceIfMissing(hudSerialized.FindProperty("gameData"), gameData);
                 CreateEditableHudIfMissing(runtime, hudSerialized);
                 hudSerialized.ApplyModifiedPropertiesWithoutUndo();
+
+                var cameraSerialized = new SerializedObject(orbitCamera);
+                SetReferenceIfMissing(cameraSerialized.FindProperty("gameData"), gameData);
+                cameraSerialized.ApplyModifiedPropertiesWithoutUndo();
 
                 PrefabUtility.SaveAsPrefabAsset(runtime, RuntimePrefabPath);
             }
@@ -368,7 +406,6 @@ namespace MiningSimulator.Editor
                 return;
             }
 
-            Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             GameObject canvasObject = new(HudCanvasName, typeof(RectTransform), typeof(Canvas),
                 typeof(CanvasScaler), typeof(GraphicRaycaster));
             canvasObject.layer = LayerMask.NameToLayer("UI");
@@ -392,10 +429,10 @@ namespace MiningSimulator.Editor
             panelRect.sizeDelta = new Vector2(330f, 190f);
             panel.GetComponent<Image>().color = new Color(0.035f, 0.045f, 0.06f, 0.94f);
 
-            Text moneyText = CreateText(panel.transform, "Money", new Vector2(18f, -16f), 26, font);
-            Text npcCountText = CreateText(panel.transform, "NPC Count", new Vector2(18f, -52f), 21, font);
-            Button buyButton = CreateButton(panel.transform, new Vector2(18f, -88f), font, out Text buyLabel);
-            Text statusText = CreateText(panel.transform, "Status", new Vector2(18f, -151f), 17, font);
+            TextMeshProUGUI moneyText = CreateText(panel.transform, "Money", new Vector2(18f, -16f), 26);
+            TextMeshProUGUI npcCountText = CreateText(panel.transform, "NPC Count", new Vector2(18f, -52f), 21);
+            Button buyButton = CreateButton(panel.transform, new Vector2(18f, -88f), out TextMeshProUGUI buyLabel);
+            TextMeshProUGUI statusText = CreateText(panel.transform, "Status", new Vector2(18f, -151f), 17);
             statusText.color = new Color(1f, 0.82f, 0.28f);
             statusText.text = "Chuột phải: xoay • WASD: di chuyển";
 
@@ -414,18 +451,21 @@ namespace MiningSimulator.Editor
                 return;
             }
 
-            SetReferenceIfMissing(hudSerialized.FindProperty("moneyText"), panel.Find("Money")?.GetComponent<Text>());
-            SetReferenceIfMissing(hudSerialized.FindProperty("npcCountText"), panel.Find("NPC Count")?.GetComponent<Text>());
-            SetReferenceIfMissing(hudSerialized.FindProperty("statusText"), panel.Find("Status")?.GetComponent<Text>());
+            hudSerialized.FindProperty("moneyText").objectReferenceValue =
+                ConvertToTextMeshPro(panel.Find("Money"), TextAlignmentOptions.Left);
+            hudSerialized.FindProperty("npcCountText").objectReferenceValue =
+                ConvertToTextMeshPro(panel.Find("NPC Count"), TextAlignmentOptions.Left);
+            hudSerialized.FindProperty("statusText").objectReferenceValue =
+                ConvertToTextMeshPro(panel.Find("Status"), TextAlignmentOptions.Left);
             Transform buttonTransform = panel.Find("Buy Mining NPC");
             SetReferenceIfMissing(hudSerialized.FindProperty("buyButton"), buttonTransform?.GetComponent<Button>());
-            SetReferenceIfMissing(hudSerialized.FindProperty("buyButtonLabel"),
-                buttonTransform?.Find("Label")?.GetComponent<Text>());
+            hudSerialized.FindProperty("buyButtonLabel").objectReferenceValue =
+                ConvertToTextMeshPro(buttonTransform?.Find("Label"), TextAlignmentOptions.Center);
         }
 
-        private static Text CreateText(Transform parent, string name, Vector2 position, int size, Font font)
+        private static TextMeshProUGUI CreateText(Transform parent, string name, Vector2 position, int size)
         {
-            GameObject textObject = CreateUiObject(name, parent, typeof(Text));
+            GameObject textObject = CreateUiObject(name, parent, typeof(TextMeshProUGUI));
             RectTransform rect = textObject.GetComponent<RectTransform>();
             rect.anchorMin = new Vector2(0f, 1f);
             rect.anchorMax = new Vector2(0f, 1f);
@@ -433,15 +473,14 @@ namespace MiningSimulator.Editor
             rect.anchoredPosition = position;
             rect.sizeDelta = new Vector2(294f, 32f);
 
-            Text text = textObject.GetComponent<Text>();
-            text.font = font;
+            TextMeshProUGUI text = textObject.GetComponent<TextMeshProUGUI>();
             text.fontSize = size;
             text.color = Color.white;
-            text.alignment = TextAnchor.MiddleLeft;
+            text.alignment = TextAlignmentOptions.Left;
             return text;
         }
 
-        private static Button CreateButton(Transform parent, Vector2 position, Font font, out Text label)
+        private static Button CreateButton(Transform parent, Vector2 position, out TextMeshProUGUI label)
         {
             GameObject buttonObject = CreateUiObject("Buy Mining NPC", parent, typeof(Image), typeof(Button));
             RectTransform rect = buttonObject.GetComponent<RectTransform>();
@@ -453,16 +492,47 @@ namespace MiningSimulator.Editor
 
             buttonObject.GetComponent<Image>().color = new Color(0.95f, 0.57f, 0.1f);
             Button button = buttonObject.GetComponent<Button>();
-            label = CreateText(buttonObject.transform, "Label", Vector2.zero, 22, font);
+            label = CreateText(buttonObject.transform, "Label", Vector2.zero, 22);
             RectTransform labelRect = label.rectTransform;
             labelRect.anchorMin = Vector2.zero;
             labelRect.anchorMax = Vector2.one;
             labelRect.pivot = new Vector2(0.5f, 0.5f);
             labelRect.anchoredPosition = Vector2.zero;
             labelRect.sizeDelta = Vector2.zero;
-            label.alignment = TextAnchor.MiddleCenter;
+            label.alignment = TextAlignmentOptions.Center;
             label.color = new Color(0.08f, 0.06f, 0.03f);
             return button;
+        }
+
+        private static TextMeshProUGUI ConvertToTextMeshPro(Transform target,
+            TextAlignmentOptions alignment)
+        {
+            if (target == null)
+            {
+                return null;
+            }
+
+            TextMeshProUGUI existing = target.GetComponent<TextMeshProUGUI>();
+            if (existing != null)
+            {
+                return existing;
+            }
+
+            UnityEngine.UI.Text legacy = target.GetComponent<UnityEngine.UI.Text>();
+            string value = legacy != null ? legacy.text : string.Empty;
+            Color color = legacy != null ? legacy.color : Color.white;
+            float fontSize = legacy != null ? legacy.fontSize : 18f;
+            if (legacy != null)
+            {
+                UnityEngine.Object.DestroyImmediate(legacy, true);
+            }
+
+            TextMeshProUGUI converted = target.gameObject.AddComponent<TextMeshProUGUI>();
+            converted.text = value;
+            converted.color = color;
+            converted.fontSize = fontSize;
+            converted.alignment = alignment;
+            return converted;
         }
 
         private static GameObject CreateUiObject(string name, Transform parent, params Type[] components)

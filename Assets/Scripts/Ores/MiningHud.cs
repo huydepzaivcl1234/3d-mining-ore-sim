@@ -1,21 +1,23 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace MiningSimulator.Ores
 {
-    /// <summary>Connects the editable HUD objects to the mining gameplay state.</summary>
+    /// <summary>Connects the editable TextMeshPro HUD to the mining gameplay state.</summary>
     [DisallowMultipleComponent]
     public sealed class MiningHud : MonoBehaviour
     {
         [SerializeField] private PlayerWallet wallet;
         [SerializeField] private NpcShop npcShop;
+        [SerializeField] private MiningGameData gameData;
 
         [Header("Editable HUD References")]
-        [SerializeField] private Text moneyText;
-        [SerializeField] private Text npcCountText;
-        [SerializeField] private Text statusText;
+        [SerializeField] private TextMeshProUGUI moneyText;
+        [SerializeField] private TextMeshProUGUI npcCountText;
+        [SerializeField] private TextMeshProUGUI statusText;
         [SerializeField] private Button buyButton;
-        [SerializeField] private Text buyButtonLabel;
+        [SerializeField] private TextMeshProUGUI buyButtonLabel;
 
         [Header("Editable Text")]
         [SerializeField] private string moneyFormat = "Tiền: {0}";
@@ -24,12 +26,19 @@ namespace MiningSimulator.Ores
         [SerializeField] private string purchasedMessage = "Đã mua NPC đào quặng!";
         [SerializeField] private string purchaseFailedMessage = "Không đủ tiền hoặc thiếu cấu hình NPC.";
 
+        private int displayedMoney;
+        private int targetMoney;
+        private float countAccumulator;
+        private float currentCountSpeed;
+
         private void OnEnable()
         {
             if (wallet != null)
             {
                 wallet.MoneyChanged -= HandleMoneyChanged;
                 wallet.MoneyChanged += HandleMoneyChanged;
+                displayedMoney = wallet.CurrentMoney;
+                targetMoney = displayedMoney;
             }
 
             if (npcShop != null)
@@ -44,7 +53,8 @@ namespace MiningSimulator.Ores
                 buyButton.onClick.AddListener(BuyNpc);
             }
 
-            Refresh();
+            RefreshMoneyText();
+            RefreshOtherText();
         }
 
         private void OnDisable()
@@ -65,6 +75,26 @@ namespace MiningSimulator.Ores
             }
         }
 
+        private void Update()
+        {
+            if (displayedMoney == targetMoney || gameData == null)
+            {
+                return;
+            }
+
+            countAccumulator += Time.unscaledDeltaTime * currentCountSpeed;
+            int wholeUnits = Mathf.FloorToInt(countAccumulator);
+            if (wholeUnits <= 0)
+            {
+                return;
+            }
+
+            countAccumulator -= wholeUnits;
+            int difference = targetMoney - displayedMoney;
+            displayedMoney += Mathf.Clamp(difference, -wholeUnits, wholeUnits);
+            RefreshMoneyText();
+        }
+
         private void BuyNpc()
         {
             bool purchased = npcShop != null && npcShop.TryBuyNpc();
@@ -72,33 +102,60 @@ namespace MiningSimulator.Ores
             {
                 statusText.text = purchased ? purchasedMessage : purchaseFailedMessage;
             }
-            Refresh();
+            RefreshOtherText();
         }
 
         private void HandleMoneyChanged(int money)
         {
-            Refresh();
+            targetMoney = money;
+            countAccumulator = 0f;
+
+            if (gameData == null)
+            {
+                displayedMoney = targetMoney;
+            }
+            else
+            {
+                int difference = Mathf.Abs(targetMoney - displayedMoney);
+                float durationLimitedSpeed = difference / gameData.MoneyCountMaximumDuration;
+                currentCountSpeed = Mathf.Max(gameData.MoneyCountUnitsPerSecond, durationLimitedSpeed);
+            }
+
+            RefreshMoneyText();
+            RefreshOtherText();
         }
 
         private void HandleNpcCountChanged(int count)
         {
-            Refresh();
+            RefreshOtherText();
         }
 
-        private void Refresh()
+        private void RefreshMoneyText()
         {
-            if (moneyText == null || npcCountText == null || buyButton == null || buyButtonLabel == null)
+            if (moneyText != null)
             {
-                return;
+                moneyText.text = string.Format(moneyFormat, displayedMoney);
+            }
+        }
+
+        private void RefreshOtherText()
+        {
+            if (npcCountText != null)
+            {
+                int count = npcShop != null ? npcShop.PurchasedCount : 0;
+                npcCountText.text = string.Format(npcCountFormat, count);
             }
 
-            int money = wallet != null ? wallet.CurrentMoney : 0;
-            int count = npcShop != null ? npcShop.PurchasedCount : 0;
-            int cost = npcShop != null ? npcShop.NpcCost : 0;
-            moneyText.text = string.Format(moneyFormat, money);
-            npcCountText.text = string.Format(npcCountFormat, count);
-            buyButtonLabel.text = string.Format(buyButtonFormat, cost);
-            buyButton.interactable = npcShop != null && npcShop.CanBuy;
+            if (buyButtonLabel != null)
+            {
+                int cost = npcShop != null ? npcShop.NpcCost : 0;
+                buyButtonLabel.text = string.Format(buyButtonFormat, cost);
+            }
+
+            if (buyButton != null)
+            {
+                buyButton.interactable = npcShop != null && npcShop.CanBuy;
+            }
         }
     }
 }

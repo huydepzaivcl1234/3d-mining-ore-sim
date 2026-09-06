@@ -1,0 +1,79 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d8f1402b73084f33b8415df7ae65c944, type: 3}
+  m_Name: MiningGameData
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningGameData
+  startingMoney: 100
+  npcCost: 25
+  npcSpawnSpread: 1.25
+  npcSpawnHeightOffset: 0.9
+  npcSpawnAttempts: 12
+  npcMoveSpeed: 3.5
+  npcTurnSpeed: 720
+  npcMiningRange: 1.8
+  npcMiningPower: 6
+  npcDamagePerHit: 2
+  npcSecondsPerHit: 0.65
+  npcTargetRefreshInterval: 0.35
+  maximumNpcsPerOre: 3
+  npcOreStandDistance: 1.4
+  npcColliderRadius: 0.4
+  npcColliderHeight: 1.8
+  npcMass: 1
+  npcCollisionLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  toolSwingSpeed: 12
+  toolSwingAngle: 42
+  toolReturnSpeed: 14
+  spawnOnEnable: 1
+  initialSpawnCount: 8
+  maximumAliveOres: 12
+  oreSpawnInterval: 2
+  orePool:
+  - data: {fileID: 11400000, guid: 3982179b3238eaf4ebcf9c0a2f198d7e, type: 2}
+    weight: 60
+  - data: {fileID: 11400000, guid: 3122b10f68c76d440b1523756c7ee4c4, type: 2}
+    weight: 30
+  - data: {fileID: 11400000, guid: 40db213d6c25d9a46b3ce1a4e0ff06b4, type: 2}
+    weight: 10
+  oreAreaCenter: {x: 0, y: 0, z: 0}
+  oreAreaSize: {x: 16, y: 0, z: 16}
+  oreHeightOffset: 0
+  randomOreYRotation: 1
+  oreUniformScaleRange: {x: 1, y: 1}
+  alignOresToGround: 0
+  oreGroundLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  oreGroundRayStartHeight: 20
+  oreGroundRayDistance: 50
+  clickableLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  clickMaximumDistance: 500
+  moneyCountUnitsPerSecond: 25
+  moneyCountMaximumDuration: 1.25
+  cameraFocusPoint: {x: 0, y: 0, z: 0}
+  cameraDistance: 18
+  cameraYaw: 45
+  cameraPitch: 38
+  cameraMinimumPitch: -85
+  cameraMaximumPitch: 85
+  cameraMoveSpeed: 10
+  cameraFastMoveMultiplier: 2
+  cameraRotationDegreesPerPixel: 0.2
+  cameraKeyboardRotationSpeed: 90
+  cameraMousePanSpeed: 0.0025
+  cameraZoomSpeed: 0.012
+  cameraMinimumDistance: 4
+  cameraMaximumDistance: 45

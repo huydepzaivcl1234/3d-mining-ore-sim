@@ -7,7 +7,7 @@ namespace MiningSimulator.Ores
     [DisallowMultipleComponent]
     public sealed class PlayerWallet : MonoBehaviour
     {
-        [Min(0), SerializeField] private int startingMoney = 100;
+        [SerializeField] private MiningGameData gameData;
         [SerializeField] private int currentMoney;
 
         public int CurrentMoney => currentMoney;
@@ -15,7 +15,7 @@ namespace MiningSimulator.Ores
 
         private void Awake()
         {
-            currentMoney = Mathf.Max(0, startingMoney);
+            currentMoney = gameData != null ? gameData.StartingMoney : 0;
             MoneyChanged?.Invoke(currentMoney);
         }
 

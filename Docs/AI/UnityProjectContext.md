@@ -52,7 +52,10 @@
 
 - Data-driven ScriptableObject configuration, modeled after the user's Tower Defense project.
 - Each ore owns an independent OreData asset and prefab; runtime state lives on the Ore component.
-- No global managers, save system, economy service, or mining controller exists yet.
+- Shared economy, NPC, spawn, HUD animation, click, and camera tuning lives in `Assets/GameData/MiningGameData.asset`.
+- NPC miners reserve limited slots around compatible ores and use Rigidbody/CapsuleCollider collision.
+- The editable runtime HUD uses TextMeshPro components and is created as serialized prefab content by the setup menu.
+- No global managers or save system exists yet.
 
 ## Coding Conventions
 

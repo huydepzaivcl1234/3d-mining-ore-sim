@@ -9,27 +9,32 @@ namespace MiningSimulator.Ores
     public sealed class MiningOrbitCamera : MonoBehaviour
     {
         [SerializeField] private Camera controlledCamera;
-        [SerializeField] private Vector3 focusPoint;
-        [Min(0.1f), SerializeField] private float distance = 18f;
-        [SerializeField] private float yaw = 45f;
-        [Range(-89f, 89f), SerializeField] private float pitch = 38f;
+        [SerializeField] private MiningGameData gameData;
 
-        [Header("Controls")]
-        [Min(0f), SerializeField] private float keyboardMoveSpeed = 10f;
-        [Min(0f), SerializeField] private float rotationDegreesPerPixel = 0.2f;
-        [Min(0f), SerializeField] private float keyboardRotationSpeed = 90f;
-        [Min(0f), SerializeField] private float mousePanSpeed = 0.0025f;
-        [Min(0f), SerializeField] private float zoomSpeed = 0.012f;
-        [Min(0.1f), SerializeField] private float minimumDistance = 4f;
-        [Min(0.1f), SerializeField] private float maximumDistance = 45f;
+        private Vector3 focusPoint;
+        private float distance;
+        private float yaw;
+        private float pitch;
 
         private void Awake()
         {
             controlledCamera ??= Camera.main;
+            if (gameData != null)
+            {
+                focusPoint = gameData.CameraFocusPoint;
+                distance = gameData.CameraDistance;
+                yaw = gameData.CameraYaw;
+                pitch = gameData.CameraPitch;
+            }
         }
 
         private void Update()
         {
+            if (gameData == null)
+            {
+                return;
+            }
+
             ReadKeyboard();
             ReadMouse();
         }
@@ -41,7 +46,7 @@ namespace MiningSimulator.Ores
                 controlledCamera = Camera.main;
             }
 
-            if (controlledCamera == null)
+            if (controlledCamera == null || gameData == null)
             {
                 return;
             }
@@ -61,7 +66,9 @@ namespace MiningSimulator.Ores
 
             float horizontal = ReadAxis(keyboard.aKey, keyboard.dKey);
             float vertical = ReadAxis(keyboard.sKey, keyboard.wKey);
-            float speedMultiplier = keyboard.leftShiftKey.isPressed || keyboard.rightShiftKey.isPressed ? 2f : 1f;
+            float speedMultiplier = keyboard.leftShiftKey.isPressed || keyboard.rightShiftKey.isPressed
+                ? gameData.CameraFastMoveMultiplier
+                : 1f;
 
             Quaternion yawRotation = Quaternion.Euler(0f, yaw, 0f);
             Vector3 direction = yawRotation * new Vector3(horizontal, 0f, vertical);
@@ -69,10 +76,10 @@ namespace MiningSimulator.Ores
             {
                 direction.Normalize();
             }
-            focusPoint += direction * (keyboardMoveSpeed * speedMultiplier * Time.deltaTime);
+            focusPoint += direction * (gameData.CameraMoveSpeed * speedMultiplier * Time.deltaTime);
 
             float rotationInput = ReadAxis(keyboard.qKey, keyboard.eKey);
-            yaw += rotationInput * keyboardRotationSpeed * Time.deltaTime;
+            yaw += rotationInput * gameData.CameraKeyboardRotationSpeed * Time.deltaTime;
         }
 
         private void ReadMouse()
@@ -86,38 +93,27 @@ namespace MiningSimulator.Ores
             Vector2 delta = mouse.delta.ReadValue();
             if (mouse.rightButton.isPressed)
             {
-                yaw += delta.x * rotationDegreesPerPixel;
-                pitch = Mathf.Clamp(pitch - delta.y * rotationDegreesPerPixel, -85f, 85f);
+                yaw += delta.x * gameData.CameraRotationDegreesPerPixel;
+                pitch = Mathf.Clamp(pitch - delta.y * gameData.CameraRotationDegreesPerPixel,
+                    gameData.CameraMinimumPitch, gameData.CameraMaximumPitch);
             }
 
             if (mouse.middleButton.isPressed && controlledCamera != null)
             {
-                float scale = distance * mousePanSpeed;
+                float scale = distance * gameData.CameraMousePanSpeed;
                 focusPoint -= controlledCamera.transform.right * (delta.x * scale);
                 Vector3 flatForward = Vector3.ProjectOnPlane(controlledCamera.transform.forward, Vector3.up).normalized;
                 focusPoint -= flatForward * (delta.y * scale);
             }
 
             float scroll = mouse.scroll.ReadValue().y;
-            distance = Mathf.Clamp(distance - scroll * zoomSpeed, minimumDistance, maximumDistance);
+            distance = Mathf.Clamp(distance - scroll * gameData.CameraZoomSpeed,
+                gameData.CameraMinimumDistance, gameData.CameraMaximumDistance);
         }
 
         private static float ReadAxis(KeyControl negative, KeyControl positive)
         {
             return (positive.isPressed ? 1f : 0f) - (negative.isPressed ? 1f : 0f);
-        }
-
-        private void OnValidate()
-        {
-            minimumDistance = Mathf.Max(0.1f, minimumDistance);
-            maximumDistance = Mathf.Max(minimumDistance, maximumDistance);
-            distance = Mathf.Clamp(distance, minimumDistance, maximumDistance);
-            pitch = Mathf.Clamp(pitch, -85f, 85f);
-            keyboardMoveSpeed = Mathf.Max(0f, keyboardMoveSpeed);
-            rotationDegreesPerPixel = Mathf.Max(0f, rotationDegreesPerPixel);
-            keyboardRotationSpeed = Mathf.Max(0f, keyboardRotationSpeed);
-            mousePanSpeed = Mathf.Max(0f, mousePanSpeed);
-            zoomSpeed = Mathf.Max(0f, zoomSpeed);
         }
     }
 }

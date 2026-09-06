@@ -9,8 +9,7 @@ namespace MiningSimulator.Ores
     public sealed class OreClickInput : MonoBehaviour
     {
         [SerializeField] private Camera targetCamera;
-        [SerializeField] private LayerMask clickableLayers = ~0;
-        [Min(0.1f), SerializeField] private float maximumDistance = 500f;
+        [SerializeField] private MiningGameData gameData;
 
         private void Awake()
         {
@@ -23,7 +22,7 @@ namespace MiningSimulator.Ores
         private void Update()
         {
             Pointer pointer = Pointer.current;
-            if (pointer == null || !pointer.press.wasPressedThisFrame || targetCamera == null)
+            if (pointer == null || !pointer.press.wasPressedThisFrame || targetCamera == null || gameData == null)
             {
                 return;
             }
@@ -34,19 +33,14 @@ namespace MiningSimulator.Ores
             }
 
             Ray ray = targetCamera.ScreenPointToRay(pointer.position.ReadValue());
-            if (!Physics.Raycast(ray, out RaycastHit hit, maximumDistance,
-                clickableLayers, QueryTriggerInteraction.Ignore))
+            if (!Physics.Raycast(ray, out RaycastHit hit, gameData.ClickMaximumDistance,
+                gameData.ClickableLayers, QueryTriggerInteraction.Ignore))
             {
                 return;
             }
 
             Ore ore = hit.collider.GetComponentInParent<Ore>();
             ore?.MineOnce();
-        }
-
-        private void OnValidate()
-        {
-            maximumDistance = Mathf.Max(0.1f, maximumDistance);
         }
     }
 }
