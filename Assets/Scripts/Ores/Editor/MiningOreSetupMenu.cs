@@ -6,7 +6,10 @@ using MiningSimulator.Ores;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem.UI;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 namespace MiningSimulator.Editor
 {
@@ -23,6 +26,7 @@ namespace MiningSimulator.Editor
         private const string SystemPrefabFolder = "Assets/Prefabs/Systems";
         private const string NpcPrefabPath = NpcPrefabFolder + "/MiningNpc.prefab";
         private const string RuntimePrefabPath = SystemPrefabFolder + "/MiningRuntime.prefab";
+        private const string HudCanvasName = "Mining HUD Canvas";
         private const string HealthBarPrefabPath =
             "Assets/Microlight/MicroBar/Prefabs/SimpleBars/Sprite_SimpleMicroBarSRP.prefab";
         private const string SampleScenePath = "Assets/Scenes/SampleScene.unity";
@@ -108,15 +112,21 @@ namespace MiningSimulator.Editor
         {
             CreateOrUpdateStarterOres();
             Scene scene = SceneManager.GetActiveScene();
-            AddRuntimeToSceneIfMissing(scene, registerUndo: true);
-            EditorSceneManager.MarkSceneDirty(scene);
+            bool changed = AddRuntimeToSceneIfMissing(scene, registerUndo: true);
+            changed |= EnsureEventSystemInScene(scene, registerUndo: true);
+            if (changed)
+            {
+                EditorSceneManager.MarkSceneDirty(scene);
+            }
         }
 
         public static void SetupSampleSceneBatch()
         {
             CreateOrUpdateStarterOres();
             Scene scene = EditorSceneManager.OpenScene(SampleScenePath, OpenSceneMode.Single);
-            if (AddRuntimeToSceneIfMissing(scene, registerUndo: false))
+            bool changed = AddRuntimeToSceneIfMissing(scene, registerUndo: false);
+            changed |= EnsureEventSystemInScene(scene, registerUndo: false);
+            if (changed)
             {
                 EditorSceneManager.SaveScene(scene);
             }
@@ -331,6 +341,7 @@ namespace MiningSimulator.Editor
                 var hudSerialized = new SerializedObject(hud);
                 SetReferenceIfMissing(hudSerialized.FindProperty("wallet"), wallet);
                 SetReferenceIfMissing(hudSerialized.FindProperty("npcShop"), shop);
+                CreateEditableHudIfMissing(runtime, hudSerialized);
                 hudSerialized.ApplyModifiedPropertiesWithoutUndo();
 
                 PrefabUtility.SaveAsPrefabAsset(runtime, RuntimePrefabPath);
@@ -346,6 +357,143 @@ namespace MiningSimulator.Editor
                     PrefabUtility.UnloadPrefabContents(runtime);
                 }
             }
+        }
+
+        private static void CreateEditableHudIfMissing(GameObject runtime, SerializedObject hudSerialized)
+        {
+            Transform existingCanvas = runtime.transform.Find(HudCanvasName);
+            if (existingCanvas != null)
+            {
+                WireExistingHud(existingCanvas, hudSerialized);
+                return;
+            }
+
+            Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            GameObject canvasObject = new(HudCanvasName, typeof(RectTransform), typeof(Canvas),
+                typeof(CanvasScaler), typeof(GraphicRaycaster));
+            canvasObject.layer = LayerMask.NameToLayer("UI");
+            canvasObject.transform.SetParent(runtime.transform, false);
+
+            Canvas canvas = canvasObject.GetComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = 100;
+
+            CanvasScaler scaler = canvasObject.GetComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920f, 1080f);
+            scaler.matchWidthOrHeight = 0.5f;
+
+            GameObject panel = CreateUiObject("NPC Shop", canvasObject.transform, typeof(Image));
+            RectTransform panelRect = panel.GetComponent<RectTransform>();
+            panelRect.anchorMin = new Vector2(0f, 1f);
+            panelRect.anchorMax = new Vector2(0f, 1f);
+            panelRect.pivot = new Vector2(0f, 1f);
+            panelRect.anchoredPosition = new Vector2(24f, -24f);
+            panelRect.sizeDelta = new Vector2(330f, 190f);
+            panel.GetComponent<Image>().color = new Color(0.035f, 0.045f, 0.06f, 0.94f);
+
+            Text moneyText = CreateText(panel.transform, "Money", new Vector2(18f, -16f), 26, font);
+            Text npcCountText = CreateText(panel.transform, "NPC Count", new Vector2(18f, -52f), 21, font);
+            Button buyButton = CreateButton(panel.transform, new Vector2(18f, -88f), font, out Text buyLabel);
+            Text statusText = CreateText(panel.transform, "Status", new Vector2(18f, -151f), 17, font);
+            statusText.color = new Color(1f, 0.82f, 0.28f);
+            statusText.text = "Chuột phải: xoay • WASD: di chuyển";
+
+            hudSerialized.FindProperty("moneyText").objectReferenceValue = moneyText;
+            hudSerialized.FindProperty("npcCountText").objectReferenceValue = npcCountText;
+            hudSerialized.FindProperty("statusText").objectReferenceValue = statusText;
+            hudSerialized.FindProperty("buyButton").objectReferenceValue = buyButton;
+            hudSerialized.FindProperty("buyButtonLabel").objectReferenceValue = buyLabel;
+        }
+
+        private static void WireExistingHud(Transform canvas, SerializedObject hudSerialized)
+        {
+            Transform panel = canvas.Find("NPC Shop");
+            if (panel == null)
+            {
+                return;
+            }
+
+            SetReferenceIfMissing(hudSerialized.FindProperty("moneyText"), panel.Find("Money")?.GetComponent<Text>());
+            SetReferenceIfMissing(hudSerialized.FindProperty("npcCountText"), panel.Find("NPC Count")?.GetComponent<Text>());
+            SetReferenceIfMissing(hudSerialized.FindProperty("statusText"), panel.Find("Status")?.GetComponent<Text>());
+            Transform buttonTransform = panel.Find("Buy Mining NPC");
+            SetReferenceIfMissing(hudSerialized.FindProperty("buyButton"), buttonTransform?.GetComponent<Button>());
+            SetReferenceIfMissing(hudSerialized.FindProperty("buyButtonLabel"),
+                buttonTransform?.Find("Label")?.GetComponent<Text>());
+        }
+
+        private static Text CreateText(Transform parent, string name, Vector2 position, int size, Font font)
+        {
+            GameObject textObject = CreateUiObject(name, parent, typeof(Text));
+            RectTransform rect = textObject.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0f, 1f);
+            rect.anchorMax = new Vector2(0f, 1f);
+            rect.pivot = new Vector2(0f, 1f);
+            rect.anchoredPosition = position;
+            rect.sizeDelta = new Vector2(294f, 32f);
+
+            Text text = textObject.GetComponent<Text>();
+            text.font = font;
+            text.fontSize = size;
+            text.color = Color.white;
+            text.alignment = TextAnchor.MiddleLeft;
+            return text;
+        }
+
+        private static Button CreateButton(Transform parent, Vector2 position, Font font, out Text label)
+        {
+            GameObject buttonObject = CreateUiObject("Buy Mining NPC", parent, typeof(Image), typeof(Button));
+            RectTransform rect = buttonObject.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0f, 1f);
+            rect.anchorMax = new Vector2(0f, 1f);
+            rect.pivot = new Vector2(0f, 1f);
+            rect.anchoredPosition = position;
+            rect.sizeDelta = new Vector2(294f, 54f);
+
+            buttonObject.GetComponent<Image>().color = new Color(0.95f, 0.57f, 0.1f);
+            Button button = buttonObject.GetComponent<Button>();
+            label = CreateText(buttonObject.transform, "Label", Vector2.zero, 22, font);
+            RectTransform labelRect = label.rectTransform;
+            labelRect.anchorMin = Vector2.zero;
+            labelRect.anchorMax = Vector2.one;
+            labelRect.pivot = new Vector2(0.5f, 0.5f);
+            labelRect.anchoredPosition = Vector2.zero;
+            labelRect.sizeDelta = Vector2.zero;
+            label.alignment = TextAnchor.MiddleCenter;
+            label.color = new Color(0.08f, 0.06f, 0.03f);
+            return button;
+        }
+
+        private static GameObject CreateUiObject(string name, Transform parent, params Type[] components)
+        {
+            GameObject result = new(name, typeof(RectTransform));
+            result.layer = LayerMask.NameToLayer("UI");
+            result.transform.SetParent(parent, false);
+            foreach (Type component in components)
+            {
+                result.AddComponent(component);
+            }
+            return result;
+        }
+
+        private static bool EnsureEventSystemInScene(Scene scene, bool registerUndo)
+        {
+            foreach (GameObject root in scene.GetRootGameObjects())
+            {
+                if (root.GetComponentInChildren<EventSystem>(true) != null)
+                {
+                    return false;
+                }
+            }
+
+            GameObject eventSystem = new("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
+            SceneManager.MoveGameObjectToScene(eventSystem, scene);
+            if (registerUndo)
+            {
+                Undo.RegisterCreatedObjectUndo(eventSystem, "Add Event System");
+            }
+            return true;
         }
 
         private static void AddHealthBarIfMissing(GameObject root, Ore ore)
