@@ -148,7 +148,7 @@ def create_ore_collection(ore_id, display_name, tier, x, base_mat, accent_mat, s
     return collection, root
 
 
-def export_collection(collection, root, output_path):
+def export_collection(collection, root, glb_output_path, fbx_output_path):
     previous_location = root.location.copy()
     root.location = (0, 0, 0)
     bpy.context.view_layer.update()
@@ -157,13 +157,25 @@ def export_collection(collection, root, output_path):
         obj.select_set(True)
     bpy.context.view_layer.objects.active = root
     bpy.ops.export_scene.gltf(
-        filepath=output_path,
+        filepath=glb_output_path,
         export_format="GLB",
         use_selection=True,
         export_apply=True,
         export_yup=True,
         export_materials="EXPORT",
         export_extras=True,
+    )
+    bpy.ops.export_scene.fbx(
+        filepath=fbx_output_path,
+        use_selection=True,
+        apply_unit_scale=True,
+        apply_scale_options="FBX_SCALE_UNITS",
+        axis_forward="-Z",
+        axis_up="Y",
+        add_leaf_bones=False,
+        use_mesh_modifiers=True,
+        bake_anim=False,
+        path_mode="AUTO",
     )
     root.location = previous_location
     bpy.context.view_layer.update()
@@ -234,8 +246,13 @@ def main():
         create_ore_collection("copper", "Copper", 3, 3.0, copper_base, copper_detail, "copper"),
     ]
 
-    for (collection, root), filename in zip(ores, ("stone_tier1.glb", "coal_tier2.glb", "copper_tier3.glb")):
-        export_collection(collection, root, os.path.join(ASSET_DIR, filename))
+    for (collection, root), stem in zip(ores, ("stone_tier1", "coal_tier2", "copper_tier3")):
+        export_collection(
+            collection,
+            root,
+            os.path.join(ASSET_DIR, stem + ".glb"),
+            os.path.join(ASSET_DIR, stem + ".fbx"),
+        )
 
     setup_presentation(text_mat)
     scene = bpy.context.scene
