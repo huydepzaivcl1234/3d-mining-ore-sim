@@ -12,6 +12,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private PlayerWallet wallet;
         [SerializeField] private Transform spawnedOreParent;
         [SerializeField] private OreSpawnData spawnData;
+        [SerializeField] private MiningUpgradeSystem upgradeSystem;
 
         private readonly HashSet<Ore> activeOres = new();
         private Coroutine spawnRoutine;
@@ -114,15 +115,20 @@ namespace MiningSimulator.Ores
             }
 
             Vector3 position = ChoosePosition();
-            Quaternion rotation = spawnData.RandomYRotation
-                ? Quaternion.Euler(0f, UnityEngine.Random.Range(0f, 360f), 0f)
-                : Quaternion.identity;
+            Vector2 yRange = spawnData.RandomYRotationRange;
+            float randomY = spawnData.RandomYRotation
+                ? UnityEngine.Random.Range(Mathf.Min(yRange.x, yRange.y), Mathf.Max(yRange.x, yRange.y))
+                : 0f;
+            Quaternion rotation = Quaternion.Euler(0f, randomY, 0f) *
+                                  Quaternion.Euler(data.SpawnRotationOffset);
             Transform parent = spawnedOreParent != null ? spawnedOreParent : transform;
             GameObject instance = Instantiate(data.Prefab, position, rotation, parent);
             float scale = UnityEngine.Random.Range(
                 Mathf.Max(0.01f, Mathf.Min(spawnData.UniformScaleRange.x, spawnData.UniformScaleRange.y)),
                 Mathf.Max(0.01f, Mathf.Max(spawnData.UniformScaleRange.x, spawnData.UniformScaleRange.y)));
             instance.transform.localScale *= scale;
+
+            KeepAboveSurface(instance, position.y + data.SpawnHeightOffset);
 
             Ore ore = instance.GetComponent<Ore>();
             if (ore == null)
@@ -132,7 +138,7 @@ namespace MiningSimulator.Ores
                 return false;
             }
 
-            ore.Initialize(data, wallet);
+            ore.Initialize(data, wallet, upgradeSystem);
             ore.Depleted += HandleOreDepleted;
             activeOres.Add(ore);
             return true;
@@ -154,7 +160,7 @@ namespace MiningSimulator.Ores
             {
                 if (entry?.Ore != null && entry.SpawnWeight > 0f && entry.Ore.Prefab != null)
                 {
-                    totalWeight += entry.SpawnWeight;
+                    totalWeight += GetEffectiveWeight(entry);
                 }
             }
 
@@ -171,7 +177,7 @@ namespace MiningSimulator.Ores
                     continue;
                 }
 
-                choice -= entry.SpawnWeight;
+                choice -= GetEffectiveWeight(entry);
                 if (choice <= 0f)
                 {
                     return entry.Ore;
@@ -179,6 +185,60 @@ namespace MiningSimulator.Ores
             }
 
             return null;
+        }
+
+        private float GetEffectiveWeight(OreSpawnEntry entry)
+        {
+            float multiplier = entry.Ore.RareOre && upgradeSystem != null
+                ? upgradeSystem.GetMultiplier(MiningUpgradeType.RareOreSpawn)
+                : 1f;
+            return entry.SpawnWeight * multiplier;
+        }
+
+        private void KeepAboveSurface(GameObject instance, float surfaceY)
+        {
+            if (!spawnData.KeepOreAboveSurface)
+            {
+                return;
+            }
+
+            Collider[] colliders = instance.GetComponentsInChildren<Collider>();
+            bool hasBounds = false;
+            Bounds combinedBounds = default;
+            foreach (Collider targetCollider in colliders)
+            {
+                if (!targetCollider.enabled || targetCollider.isTrigger)
+                {
+                    continue;
+                }
+
+                if (!hasBounds)
+                {
+                    combinedBounds = targetCollider.bounds;
+                    hasBounds = true;
+                }
+                else
+                {
+                    combinedBounds.Encapsulate(targetCollider.bounds);
+                }
+            }
+
+            if (hasBounds)
+            {
+                float requiredLift = surfaceY + spawnData.SurfaceClearance - combinedBounds.min.y;
+                if (requiredLift > 0f)
+                {
+                    instance.transform.position += Vector3.up * requiredLift;
+                }
+            }
+            else
+            {
+                float fallbackLift = surfaceY - instance.transform.position.y;
+                if (fallbackLift > 0f)
+                {
+                    instance.transform.position += Vector3.up * fallbackLift;
+                }
+            }
         }
 
         private Vector3 ChoosePosition()
@@ -217,6 +277,7 @@ namespace MiningSimulator.Ores
             Ore[] existing = parent.GetComponentsInChildren<Ore>(true);
             foreach (Ore ore in existing)
             {
+                ore.ConfigureRuntime(wallet, upgradeSystem);
                 ore.Depleted -= HandleOreDepleted;
                 ore.Depleted += HandleOreDepleted;
                 activeOres.Add(ore);

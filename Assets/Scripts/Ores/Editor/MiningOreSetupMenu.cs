@@ -26,6 +26,8 @@ namespace MiningSimulator.Editor
         private const string NpcDataPath = NpcDataFolder + "/NpcData.asset";
         private const string SpawnDataFolder = "Assets/GameData/Spawning";
         private const string SpawnDataPath = SpawnDataFolder + "/OreSpawnData.asset";
+        private const string UpgradeDataFolder = "Assets/GameData/Upgrades";
+        private const string UpgradeDataPath = UpgradeDataFolder + "/MiningUpgradeData.asset";
         private const string DataFolder = "Assets/GameData/Ores";
         private const string PrefabFolder = "Assets/Prefabs/Ores";
         private const string NpcPrefabFolder = "Assets/Prefabs/NPC";
@@ -41,7 +43,7 @@ namespace MiningSimulator.Editor
         {
             public OreSpec(OreKind kind, string name, string description, int tier,
                 int miningPower, int durability, int clickDamage, int sellValue,
-                Color mapColor, string modelFile)
+                bool rareOre, Color mapColor, string modelFile)
             {
                 Kind = kind;
                 Name = name;
@@ -51,6 +53,7 @@ namespace MiningSimulator.Editor
                 Durability = durability;
                 ClickDamage = clickDamage;
                 SellValue = sellValue;
+                RareOre = rareOre;
                 MapColor = mapColor;
                 ModelFile = modelFile;
             }
@@ -63,6 +66,7 @@ namespace MiningSimulator.Editor
             public int Durability { get; }
             public int ClickDamage { get; }
             public int SellValue { get; }
+            public bool RareOre { get; }
             public Color MapColor { get; }
             public string ModelFile { get; }
         }
@@ -70,11 +74,11 @@ namespace MiningSimulator.Editor
         private static readonly OreSpec[] StarterOres =
         {
             new(OreKind.Stone, "Stone", "Common stone. The first material a miner can break.",
-                1, 1, 10, 1, 1, new Color(0.48f, 0.52f, 0.56f), "stone_tier1.fbx"),
+                1, 1, 10, 1, 1, false, new Color(0.48f, 0.52f, 0.56f), "stone_tier1.fbx"),
             new(OreKind.Coal, "Coal", "Dark fuel ore unlocked after basic stone mining.",
-                2, 3, 20, 2, 4, new Color(0.10f, 0.12f, 0.14f), "coal_tier2.fbx"),
+                2, 3, 20, 2, 4, true, new Color(0.10f, 0.12f, 0.14f), "coal_tier2.fbx"),
             new(OreKind.Copper, "Copper", "Valuable metallic ore used for stronger upgrades.",
-                3, 6, 35, 3, 9, new Color(0.82f, 0.32f, 0.08f), "copper_tier3.fbx")
+                3, 6, 35, 3, 9, true, new Color(0.82f, 0.32f, 0.08f), "copper_tier3.fbx")
         };
 
         [MenuItem("Mining Simulator/Setup/Create or Update Starter Ores")]
@@ -83,6 +87,7 @@ namespace MiningSimulator.Editor
             EnsureFolder(DataFolder);
             EnsureFolder(NpcDataFolder);
             EnsureFolder(SpawnDataFolder);
+            EnsureFolder(UpgradeDataFolder);
             EnsureFolder(PrefabFolder);
             EnsureFolder(NpcPrefabFolder);
             EnsureFolder(SystemPrefabFolder);
@@ -104,8 +109,9 @@ namespace MiningSimulator.Editor
             MiningGameData gameData = CreateOrUpdateGameData();
             NpcData npcData = CreateOrUpdateNpcData();
             OreSpawnData spawnData = CreateOrUpdateSpawnData(dataAssets);
+            MiningUpgradeData upgradeData = CreateOrUpdateUpgradeData();
             MiningNpc npcPrefab = CreateOrUpdateNpcPrefab(npcData);
-            CreateOrUpdateRuntimePrefab(npcPrefab, gameData, npcData, spawnData);
+            CreateOrUpdateRuntimePrefab(npcPrefab, gameData, npcData, spawnData, upgradeData);
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -184,6 +190,7 @@ namespace MiningSimulator.Editor
             serialized.FindProperty("baseSellValue").intValue = spec.SellValue;
             serialized.FindProperty("maximumMiningNpcs").intValue = 3;
             serialized.FindProperty("npcStandDistance").floatValue = 1.4f;
+            serialized.FindProperty("rareOre").boolValue = spec.RareOre;
             serialized.FindProperty("mapColor").colorValue = spec.MapColor;
             serialized.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(data);
@@ -297,6 +304,18 @@ namespace MiningSimulator.Editor
             return spawnData;
         }
 
+        private static MiningUpgradeData CreateOrUpdateUpgradeData()
+        {
+            MiningUpgradeData upgradeData =
+                AssetDatabase.LoadAssetAtPath<MiningUpgradeData>(UpgradeDataPath);
+            if (upgradeData == null)
+            {
+                upgradeData = ScriptableObject.CreateInstance<MiningUpgradeData>();
+                AssetDatabase.CreateAsset(upgradeData, UpgradeDataPath);
+            }
+            return upgradeData;
+        }
+
         private static MiningNpc CreateOrUpdateNpcPrefab(NpcData npcData)
         {
             GameObject existing = AssetDatabase.LoadAssetAtPath<GameObject>(NpcPrefabPath);
@@ -377,7 +396,7 @@ namespace MiningSimulator.Editor
         }
 
         private static void CreateOrUpdateRuntimePrefab(MiningNpc npcPrefab, MiningGameData gameData,
-            NpcData npcData, OreSpawnData spawnData)
+            NpcData npcData, OreSpawnData spawnData, MiningUpgradeData upgradeData)
         {
             GameObject existing = AssetDatabase.LoadAssetAtPath<GameObject>(RuntimePrefabPath);
             bool isNew = existing == null;
@@ -392,6 +411,10 @@ namespace MiningSimulator.Editor
                 OreClickInput clickInput = runtime.GetComponent<OreClickInput>() ?? runtime.AddComponent<OreClickInput>();
                 NpcShop shop = runtime.GetComponent<NpcShop>() ?? runtime.AddComponent<NpcShop>();
                 MiningHud hud = runtime.GetComponent<MiningHud>() ?? runtime.AddComponent<MiningHud>();
+                MiningUpgradeSystem upgradeSystem = runtime.GetComponent<MiningUpgradeSystem>() ??
+                                                    runtime.AddComponent<MiningUpgradeSystem>();
+                MiningUpgradePanel upgradePanel = runtime.GetComponent<MiningUpgradePanel>() ??
+                                                   runtime.AddComponent<MiningUpgradePanel>();
                 MiningOrbitCamera orbitCamera = runtime.GetComponent<MiningOrbitCamera>() ??
                                                 runtime.AddComponent<MiningOrbitCamera>();
 
@@ -402,7 +425,13 @@ namespace MiningSimulator.Editor
                 var serialized = new SerializedObject(spawner);
                 SetReferenceIfMissing(serialized.FindProperty("wallet"), wallet);
                 SetReferenceIfMissing(serialized.FindProperty("spawnData"), spawnData);
+                SetReferenceIfMissing(serialized.FindProperty("upgradeSystem"), upgradeSystem);
                 serialized.ApplyModifiedPropertiesWithoutUndo();
+
+                var upgradeSystemSerialized = new SerializedObject(upgradeSystem);
+                SetReferenceIfMissing(upgradeSystemSerialized.FindProperty("wallet"), wallet);
+                SetReferenceIfMissing(upgradeSystemSerialized.FindProperty("upgradeData"), upgradeData);
+                upgradeSystemSerialized.ApplyModifiedPropertiesWithoutUndo();
 
                 var clickSerialized = new SerializedObject(clickInput);
                 SetReferenceIfMissing(clickSerialized.FindProperty("gameData"), gameData);
@@ -421,6 +450,8 @@ namespace MiningSimulator.Editor
                 SetReferenceIfMissing(hudSerialized.FindProperty("gameData"), gameData);
                 CreateEditableHudIfMissing(runtime, hudSerialized);
                 hudSerialized.ApplyModifiedPropertiesWithoutUndo();
+
+                ConfigureUpgradePanel(runtime, upgradePanel, upgradeSystem, wallet, upgradeData);
 
                 var cameraSerialized = new SerializedObject(orbitCamera);
                 SetReferenceIfMissing(cameraSerialized.FindProperty("gameData"), gameData);
@@ -487,6 +518,100 @@ namespace MiningSimulator.Editor
             hudSerialized.FindProperty("buyButtonLabel").objectReferenceValue = buyLabel;
         }
 
+        private static void ConfigureUpgradePanel(GameObject runtime, MiningUpgradePanel panelController,
+            MiningUpgradeSystem upgradeSystem, PlayerWallet wallet, MiningUpgradeData upgradeData)
+        {
+            Transform canvas = runtime.transform.Find(HudCanvasName);
+            Transform shopPanel = canvas?.Find("NPC Shop");
+            if (canvas == null || shopPanel == null)
+            {
+                return;
+            }
+
+            RectTransform shopRect = shopPanel.GetComponent<RectTransform>();
+            if (shopRect != null && shopRect.sizeDelta.y < 260f)
+            {
+                shopRect.sizeDelta = new Vector2(shopRect.sizeDelta.x, 260f);
+            }
+
+            Transform openButtonTransform = shopPanel.Find("Open Upgrades");
+            if (openButtonTransform == null)
+            {
+                Button openButton = CreateButton(shopPanel, "Open Upgrades", new Vector2(18f, -194f),
+                    new Vector2(294f, 46f), 20, out TextMeshProUGUI openLabel);
+                openLabel.text = "NÂNG CẤP";
+                openButtonTransform = openButton.transform;
+            }
+
+            Transform upgradePanelTransform = canvas.Find("Upgrade Panel");
+            if (upgradePanelTransform == null)
+            {
+                GameObject upgradePanel = CreateUiObject("Upgrade Panel", canvas, typeof(Image));
+                RectTransform panelRect = upgradePanel.GetComponent<RectTransform>();
+                panelRect.anchorMin = new Vector2(0.5f, 0.5f);
+                panelRect.anchorMax = new Vector2(0.5f, 0.5f);
+                panelRect.pivot = new Vector2(0.5f, 0.5f);
+                panelRect.anchoredPosition = Vector2.zero;
+                panelRect.sizeDelta = new Vector2(620f, 500f);
+                upgradePanel.GetComponent<Image>().color = new Color(0.035f, 0.045f, 0.06f, 0.97f);
+
+                TextMeshProUGUI title = CreateText(upgradePanel.transform, "Title",
+                    new Vector2(34f, -24f), 30);
+                title.rectTransform.sizeDelta = new Vector2(552f, 48f);
+                title.text = "NÂNG CẤP";
+                title.alignment = TextAlignmentOptions.Center;
+
+                CreateButton(upgradePanel.transform, "Money Reward Upgrade", new Vector2(50f, -92f),
+                    new Vector2(520f, 88f), 20, out TextMeshProUGUI moneyLabel);
+                CreateButton(upgradePanel.transform, "Rare Ore Upgrade", new Vector2(50f, -196f),
+                    new Vector2(520f, 88f), 20, out TextMeshProUGUI rareLabel);
+                CreateButton(upgradePanel.transform, "Ore Damage Upgrade", new Vector2(50f, -300f),
+                    new Vector2(520f, 88f), 20, out TextMeshProUGUI damageLabel);
+                moneyLabel.text = GetUpgradePreview(upgradeData.MoneyReward);
+                rareLabel.text = GetUpgradePreview(upgradeData.RareOreSpawn);
+                damageLabel.text = GetUpgradePreview(upgradeData.OreDamage);
+
+                CreateButton(upgradePanel.transform, "Back", new Vector2(235f, -414f),
+                    new Vector2(150f, 52f), 20, out TextMeshProUGUI backLabel);
+                backLabel.text = "QUAY LẠI";
+                upgradePanelTransform = upgradePanel.transform;
+                upgradePanel.SetActive(false);
+            }
+
+            var serialized = new SerializedObject(panelController);
+            SetReferenceIfMissing(serialized.FindProperty("upgradeSystem"), upgradeSystem);
+            SetReferenceIfMissing(serialized.FindProperty("wallet"), wallet);
+            SetReferenceIfMissing(serialized.FindProperty("shopPanel"), shopPanel.gameObject);
+            SetReferenceIfMissing(serialized.FindProperty("upgradePanel"), upgradePanelTransform.gameObject);
+            WireUpgradeButton(serialized, "openButton", null, openButtonTransform);
+            WireUpgradeButton(serialized, "backButton", null, upgradePanelTransform.Find("Back"));
+            WireUpgradeButton(serialized, "moneyRewardButton", "moneyRewardLabel",
+                upgradePanelTransform.Find("Money Reward Upgrade"));
+            WireUpgradeButton(serialized, "rareOreSpawnButton", "rareOreSpawnLabel",
+                upgradePanelTransform.Find("Rare Ore Upgrade"));
+            WireUpgradeButton(serialized, "oreDamageButton", "oreDamageLabel",
+                upgradePanelTransform.Find("Ore Damage Upgrade"));
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static string GetUpgradePreview(MiningUpgradeDefinition definition)
+        {
+            return $"{definition.DisplayName}\n+{definition.PercentPerStack:0.##}%  " +
+                   $"[0/{definition.MaximumStacks}]  -  {definition.StartingCost} tiền";
+        }
+
+        private static void WireUpgradeButton(SerializedObject serialized, string buttonProperty,
+            string labelProperty, Transform buttonTransform)
+        {
+            SetReferenceIfMissing(serialized.FindProperty(buttonProperty),
+                buttonTransform?.GetComponent<Button>());
+            if (!string.IsNullOrEmpty(labelProperty))
+            {
+                SetReferenceIfMissing(serialized.FindProperty(labelProperty),
+                    buttonTransform?.Find("Label")?.GetComponent<TextMeshProUGUI>());
+            }
+        }
+
         private static void WireExistingHud(Transform canvas, SerializedObject hudSerialized)
         {
             Transform panel = canvas.Find("NPC Shop");
@@ -526,17 +651,23 @@ namespace MiningSimulator.Editor
 
         private static Button CreateButton(Transform parent, Vector2 position, out TextMeshProUGUI label)
         {
-            GameObject buttonObject = CreateUiObject("Buy Mining NPC", parent, typeof(Image), typeof(Button));
+            return CreateButton(parent, "Buy Mining NPC", position, new Vector2(294f, 54f), 22, out label);
+        }
+
+        private static Button CreateButton(Transform parent, string name, Vector2 position,
+            Vector2 size, int fontSize, out TextMeshProUGUI label)
+        {
+            GameObject buttonObject = CreateUiObject(name, parent, typeof(Image), typeof(Button));
             RectTransform rect = buttonObject.GetComponent<RectTransform>();
             rect.anchorMin = new Vector2(0f, 1f);
             rect.anchorMax = new Vector2(0f, 1f);
             rect.pivot = new Vector2(0f, 1f);
             rect.anchoredPosition = position;
-            rect.sizeDelta = new Vector2(294f, 54f);
+            rect.sizeDelta = size;
 
             buttonObject.GetComponent<Image>().color = new Color(0.95f, 0.57f, 0.1f);
             Button button = buttonObject.GetComponent<Button>();
-            label = CreateText(buttonObject.transform, "Label", Vector2.zero, 22);
+            label = CreateText(buttonObject.transform, "Label", Vector2.zero, fontSize);
             RectTransform labelRect = label.rectTransform;
             labelRect.anchorMin = Vector2.zero;
             labelRect.anchorMax = Vector2.one;

@@ -13,9 +13,11 @@ namespace MiningSimulator.Ores
     {
         [SerializeField] private OreData data;
         [SerializeField] private PlayerWallet wallet;
+        [SerializeField] private MiningUpgradeSystem upgradeSystem;
         [SerializeField, Min(0)] private int currentDurability;
 
         private bool rewardGranted;
+        private float damageRemainder;
         private readonly Dictionary<MiningNpc, int> reservedMiners = new();
 
         public OreData Data => data;
@@ -93,11 +95,19 @@ namespace MiningSimulator.Ores
             ResetDurability();
         }
 
-        public void Initialize(OreData oreData, PlayerWallet playerWallet)
+        public void Initialize(OreData oreData, PlayerWallet playerWallet,
+            MiningUpgradeSystem targetUpgradeSystem)
         {
             data = oreData;
             wallet = playerWallet;
+            upgradeSystem = targetUpgradeSystem;
             ResetDurability();
+        }
+
+        public void ConfigureRuntime(PlayerWallet playerWallet, MiningUpgradeSystem targetUpgradeSystem)
+        {
+            wallet = playerWallet;
+            upgradeSystem = targetUpgradeSystem;
         }
 
         public bool MineOnce()
@@ -112,7 +122,13 @@ namespace MiningSimulator.Ores
                 return false;
             }
 
-            currentDurability = Mathf.Max(0, currentDurability - damage);
+            float multiplier = upgradeSystem != null
+                ? upgradeSystem.GetMultiplier(MiningUpgradeType.OreDamage)
+                : 1f;
+            float upgradedDamage = damage * multiplier + damageRemainder;
+            int appliedDamage = Mathf.Max(1, Mathf.FloorToInt(upgradedDamage));
+            damageRemainder = upgradedDamage - appliedDamage;
+            currentDurability = Mathf.Max(0, currentDurability - appliedDamage);
             DurabilityChanged?.Invoke(currentDurability, MaxDurability);
             if (currentDurability == 0)
             {
@@ -143,6 +159,7 @@ namespace MiningSimulator.Ores
         {
             reservedMiners.Clear();
             currentDurability = data != null ? data.Durability : 0;
+            damageRemainder = 0f;
             rewardGranted = false;
             DurabilityChanged?.Invoke(currentDurability, MaxDurability);
         }
@@ -156,7 +173,10 @@ namespace MiningSimulator.Ores
 
             rewardGranted = true;
             reservedMiners.Clear();
-            wallet?.AddMoney(data.BaseSellValue);
+            int reward = upgradeSystem != null
+                ? upgradeSystem.CalculateMiningReward(data.BaseSellValue)
+                : data.BaseSellValue;
+            wallet?.AddMoney(reward);
             Depleted?.Invoke(this);
             Destroy(gameObject, data.DestroyDelay);
         }

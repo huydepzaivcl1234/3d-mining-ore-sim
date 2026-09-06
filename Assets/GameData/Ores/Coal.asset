@@ -23,5 +23,8 @@ MonoBehaviour:
   destroyDelay: 0
   maximumMiningNpcs: 3
   npcStandDistance: 1.4
+  rareOre: 1
+  spawnRotationOffset: {x: 0, y: 0, z: 0}
+  spawnHeightOffset: 0
   prefab: {fileID: 8857154005313688155, guid: 8ec9e9f366187c146b7d3529028d8fc4, type: 3}
   mapColor: {r: 0.1, g: 0.12, b: 0.14, a: 1}

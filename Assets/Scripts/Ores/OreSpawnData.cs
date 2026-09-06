@@ -33,7 +33,12 @@ namespace MiningSimulator.Ores
         [SerializeField] private Vector3 areaSize = new(16f, 0f, 16f);
         [SerializeField] private float heightOffset;
         [SerializeField] private bool randomYRotation = true;
+        [SerializeField] private Vector2 randomYRotationRange = new(0f, 360f);
         [SerializeField] private Vector2 uniformScaleRange = Vector2.one;
+
+        [Header("Surface Placement")]
+        [SerializeField] private bool keepOreAboveSurface = true;
+        [Min(0f), SerializeField] private float surfaceClearance = 0.05f;
 
         [Header("Optional Ground Placement")]
         [SerializeField] private bool alignToGround;
@@ -50,7 +55,10 @@ namespace MiningSimulator.Ores
         public Vector3 AreaSize => areaSize;
         public float HeightOffset => heightOffset;
         public bool RandomYRotation => randomYRotation;
+        public Vector2 RandomYRotationRange => randomYRotationRange;
         public Vector2 UniformScaleRange => uniformScaleRange;
+        public bool KeepOreAboveSurface => keepOreAboveSurface;
+        public float SurfaceClearance => surfaceClearance;
         public bool AlignToGround => alignToGround;
         public LayerMask GroundLayers => groundLayers;
         public float GroundRayStartHeight => groundRayStartHeight;
@@ -62,6 +70,7 @@ namespace MiningSimulator.Ores
             maximumAliveOres = Mathf.Max(0, maximumAliveOres);
             secondsPerSpawn = Mathf.Max(0.05f, secondsPerSpawn);
             areaSize = new Vector3(Mathf.Abs(areaSize.x), Mathf.Abs(areaSize.y), Mathf.Abs(areaSize.z));
+            surfaceClearance = Mathf.Max(0f, surfaceClearance);
             groundRayStartHeight = Mathf.Max(0.1f, groundRayStartHeight);
             groundRayDistance = Mathf.Max(0.1f, groundRayDistance);
         }

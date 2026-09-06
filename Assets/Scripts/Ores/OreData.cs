@@ -38,6 +38,9 @@ namespace MiningSimulator.Ores
         [Min(0.1f), SerializeField] private float npcStandDistance = 1.4f;
 
         [Header("Presentation")]
+        [SerializeField] private bool rareOre;
+        [SerializeField] private Vector3 spawnRotationOffset;
+        [Min(0f), SerializeField] private float spawnHeightOffset;
         [SerializeField] private GameObject prefab;
         [SerializeField] private Color mapColor = Color.gray;
 
@@ -53,6 +56,9 @@ namespace MiningSimulator.Ores
         public float DestroyDelay => destroyDelay;
         public int MaximumMiningNpcs => maximumMiningNpcs;
         public float NpcStandDistance => npcStandDistance;
+        public bool RareOre => rareOre;
+        public Vector3 SpawnRotationOffset => spawnRotationOffset;
+        public float SpawnHeightOffset => spawnHeightOffset;
         public GameObject Prefab => prefab;
         public Color MapColor => mapColor;
 
@@ -66,6 +72,7 @@ namespace MiningSimulator.Ores
             destroyDelay = Mathf.Max(0f, destroyDelay);
             maximumMiningNpcs = Mathf.Max(1, maximumMiningNpcs);
             npcStandDistance = Mathf.Max(0.1f, npcStandDistance);
+            spawnHeightOffset = Mathf.Max(0f, spawnHeightOffset);
         }
     }
 }
