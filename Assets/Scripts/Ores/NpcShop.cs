@@ -11,20 +11,20 @@ namespace MiningSimulator.Ores
         [SerializeField] private OreSpawner oreSpawner;
         [SerializeField] private MiningNpc npcPrefab;
         [SerializeField] private Transform spawnPoint;
-        [SerializeField] private MiningGameData gameData;
+        [SerializeField] private NpcData npcData;
 
         private int purchasedCount;
 
-        public int NpcCost => gameData != null ? gameData.NpcCost : 0;
+        public int NpcCost => npcData != null ? npcData.PurchaseCost : 0;
         public int PurchasedCount => purchasedCount;
-        public bool CanBuy => gameData != null && wallet != null && wallet.CurrentMoney >= NpcCost &&
+        public bool CanBuy => npcData != null && wallet != null && wallet.CurrentMoney >= NpcCost &&
                               oreSpawner != null && npcPrefab != null;
         public event Action<int> NpcCountChanged;
 
         public bool TryBuyNpc()
         {
             if (wallet == null || oreSpawner == null || npcPrefab == null ||
-                gameData == null || !wallet.TrySpend(NpcCost))
+                npcData == null || !wallet.TrySpend(NpcCost))
             {
                 return false;
             }
@@ -44,7 +44,7 @@ namespace MiningSimulator.Ores
             }
 
             npc.name = $"Mining NPC {purchasedCount + 1}";
-            npc.Initialize(oreSpawner, gameData);
+            npc.Initialize(oreSpawner, npcData);
             purchasedCount++;
             NpcCountChanged?.Invoke(purchasedCount);
             return true;
@@ -52,13 +52,13 @@ namespace MiningSimulator.Ores
 
         private bool TryFindAvailableSpawnPosition(Vector3 origin, out Vector3 position)
         {
-            Vector3 fallback = origin + Vector3.up * gameData.NpcSpawnHeightOffset;
-            for (int attempt = 0; attempt < gameData.NpcSpawnAttempts; attempt++)
+            Vector3 fallback = origin + Vector3.up * npcData.SpawnHeightOffset;
+            for (int attempt = 0; attempt < npcData.SpawnAttempts; attempt++)
             {
-                Vector2 spread = UnityEngine.Random.insideUnitCircle * gameData.NpcSpawnSpread;
+                Vector2 spread = UnityEngine.Random.insideUnitCircle * npcData.SpawnSpread;
                 Vector3 candidate = fallback + new Vector3(spread.x, 0f, spread.y);
-                Collider[] overlaps = Physics.OverlapSphere(candidate, gameData.NpcColliderRadius,
-                    gameData.NpcCollisionLayers, QueryTriggerInteraction.Ignore);
+                Collider[] overlaps = Physics.OverlapSphere(candidate, npcData.ColliderRadius,
+                    npcData.CollisionLayers, QueryTriggerInteraction.Ignore);
                 bool occupiedByNpc = false;
                 foreach (Collider overlap in overlaps)
                 {

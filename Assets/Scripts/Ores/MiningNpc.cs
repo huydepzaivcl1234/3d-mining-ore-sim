@@ -9,7 +9,7 @@ namespace MiningSimulator.Ores
     {
         [Header("References")]
         [SerializeField] private OreSpawner oreSpawner;
-        [SerializeField] private MiningGameData gameData;
+        [SerializeField] private NpcData npcData;
         [SerializeField] private Transform toolPivot;
 
         private Ore targetOre;
@@ -26,11 +26,11 @@ namespace MiningSimulator.Ores
             toolPivot = targetToolPivot;
         }
 
-        public void Initialize(OreSpawner targetSpawner, MiningGameData targetGameData)
+        public void Initialize(OreSpawner targetSpawner, NpcData targetNpcData)
         {
             ReleaseTarget();
             oreSpawner = targetSpawner;
-            gameData = targetGameData;
+            npcData = targetNpcData;
             nextTargetRefreshTime = 0f;
             ConfigurePhysics();
         }
@@ -55,7 +55,7 @@ namespace MiningSimulator.Ores
         {
             desiredMoveDirection = Vector3.zero;
             isMining = false;
-            if (oreSpawner == null || gameData == null)
+            if (oreSpawner == null || npcData == null)
             {
                 ReleaseTarget();
                 return;
@@ -69,7 +69,7 @@ namespace MiningSimulator.Ores
             if (targetOre == null && Time.time >= nextTargetRefreshTime)
             {
                 TryAcquireTarget();
-                nextTargetRefreshTime = Time.time + gameData.NpcTargetRefreshInterval;
+                nextTargetRefreshTime = Time.time + npcData.TargetRefreshInterval;
             }
 
             if (!IsTargetValid())
@@ -84,7 +84,7 @@ namespace MiningSimulator.Ores
             oreOffset.y = 0f;
 
             FaceDirection(oreOffset);
-            if (oreOffset.sqrMagnitude > gameData.NpcMiningRange * gameData.NpcMiningRange)
+            if (oreOffset.sqrMagnitude > npcData.MiningRange * npcData.MiningRange)
             {
                 desiredMoveDirection = standOffset.sqrMagnitude > 0.0001f
                     ? standOffset.normalized
@@ -98,8 +98,8 @@ namespace MiningSimulator.Ores
                 return;
             }
 
-            nextHitTime = Time.time + gameData.NpcSecondsPerHit;
-            targetOre.ApplyDamage(gameData.NpcDamagePerHit);
+            nextHitTime = Time.time + npcData.SecondsPerHit;
+            targetOre.ApplyDamage(npcData.DamagePerHit);
             if (!IsTargetValid())
             {
                 ReleaseTarget();
@@ -109,18 +109,18 @@ namespace MiningSimulator.Ores
 
         private void FixedUpdate()
         {
-            if (desiredMoveDirection.sqrMagnitude < 0.0001f || gameData == null)
+            if (desiredMoveDirection.sqrMagnitude < 0.0001f || npcData == null)
             {
                 return;
             }
 
-            Vector3 movement = desiredMoveDirection * (gameData.NpcMoveSpeed * Time.fixedDeltaTime);
+            Vector3 movement = desiredMoveDirection * (npcData.MoveSpeed * Time.fixedDeltaTime);
             if (body != null)
             {
                 body.MovePosition(body.position + movement);
                 Quaternion targetRotation = Quaternion.LookRotation(desiredMoveDirection, Vector3.up);
                 body.MoveRotation(Quaternion.RotateTowards(
-                    body.rotation, targetRotation, gameData.NpcTurnSpeed * Time.fixedDeltaTime));
+                    body.rotation, targetRotation, npcData.TurnSpeed * Time.fixedDeltaTime));
             }
             else
             {
@@ -131,7 +131,7 @@ namespace MiningSimulator.Ores
 
         private void LateUpdate()
         {
-            if (toolPivot == null || gameData == null)
+            if (toolPivot == null || npcData == null)
             {
                 return;
             }
@@ -139,17 +139,17 @@ namespace MiningSimulator.Ores
             Quaternion targetRotation = toolRestRotation;
             if (isMining)
             {
-                float swing = Mathf.Sin(Time.time * gameData.ToolSwingSpeed) * gameData.ToolSwingAngle;
+                float swing = Mathf.Sin(Time.time * npcData.ToolSwingSpeed) * npcData.ToolSwingAngle;
                 targetRotation *= Quaternion.Euler(0f, 0f, swing);
             }
 
             toolPivot.localRotation = Quaternion.Slerp(
-                toolPivot.localRotation, targetRotation, gameData.ToolReturnSpeed * Time.deltaTime);
+                toolPivot.localRotation, targetRotation, npcData.ToolReturnSpeed * Time.deltaTime);
         }
 
         private void TryAcquireTarget()
         {
-            if (oreSpawner.TryReserveClosestOre(this, transform.position, gameData.NpcMiningPower,
+            if (oreSpawner.TryReserveClosestOre(this, transform.position, npcData.MiningPower,
                 out Ore ore, out int slotIndex))
             {
                 targetOre = ore;
@@ -159,17 +159,17 @@ namespace MiningSimulator.Ores
 
         private Vector3 GetReservedStandPosition()
         {
-            float angle = 360f * reservedSlot / gameData.MaximumNpcsPerOre;
+            float angle = 360f * reservedSlot / targetOre.Data.MaximumMiningNpcs;
             Vector3 direction = Quaternion.Euler(0f, angle, 0f) * Vector3.forward;
-            return targetOre.transform.position + direction * gameData.NpcOreStandDistance;
+            return targetOre.transform.position + direction * targetOre.Data.NpcStandDistance;
         }
 
         private bool IsTargetValid()
         {
-            return gameData != null && targetOre != null && targetOre.isActiveAndEnabled &&
+            return npcData != null && targetOre != null && targetOre.isActiveAndEnabled &&
                    !targetOre.IsDepleted &&
                    targetOre.Data != null &&
-                   targetOre.Data.MiningPowerRequired <= gameData.NpcMiningPower;
+                   targetOre.Data.MiningPowerRequired <= npcData.MiningPower;
         }
 
         private void ReleaseTarget()
@@ -185,7 +185,7 @@ namespace MiningSimulator.Ores
 
         private void ConfigurePhysics()
         {
-            if (gameData == null)
+            if (npcData == null)
             {
                 return;
             }
@@ -193,14 +193,14 @@ namespace MiningSimulator.Ores
             CapsuleCollider capsule = GetComponent<CapsuleCollider>();
             if (capsule != null)
             {
-                capsule.radius = gameData.NpcColliderRadius;
-                capsule.height = gameData.NpcColliderHeight;
+                capsule.radius = npcData.ColliderRadius;
+                capsule.height = npcData.ColliderHeight;
             }
 
             body ??= GetComponent<Rigidbody>();
             if (body != null)
             {
-                body.mass = gameData.NpcMass;
+                body.mass = npcData.Mass;
                 body.interpolation = RigidbodyInterpolation.Interpolate;
                 body.collisionDetectionMode = CollisionDetectionMode.Continuous;
                 body.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
@@ -209,14 +209,14 @@ namespace MiningSimulator.Ores
 
         private void FaceDirection(Vector3 direction)
         {
-            if (direction.sqrMagnitude < 0.0001f || gameData == null)
+            if (direction.sqrMagnitude < 0.0001f || npcData == null)
             {
                 return;
             }
 
             Quaternion targetRotation = Quaternion.LookRotation(direction.normalized, Vector3.up);
             transform.rotation = Quaternion.RotateTowards(
-                transform.rotation, targetRotation, gameData.NpcTurnSpeed * Time.deltaTime);
+                transform.rotation, targetRotation, npcData.TurnSpeed * Time.deltaTime);
         }
     }
 }

@@ -18,6 +18,10 @@ MonoBehaviour:
   tier: 1
   miningPowerRequired: 1
   durability: 10
+  clickDamage: 1
   baseSellValue: 1
+  destroyDelay: 0
+  maximumMiningNpcs: 3
+  npcStandDistance: 1.4
   prefab: {fileID: 8004528017128687883, guid: 2356a862805f76d49bb2631761b98599, type: 3}
   mapColor: {r: 0.48, g: 0.52, b: 0.56, a: 1}

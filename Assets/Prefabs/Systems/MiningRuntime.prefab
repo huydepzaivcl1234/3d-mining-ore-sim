@@ -46,7 +46,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b684b75a86fb4654fbe50f4aad7c0ce1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.PlayerWallet
-  startingMoney: 0
+  gameData: {fileID: 11400000, guid: fa0fc8680dcb4e63a9939950274281de, type: 2}
   currentMoney: 0
 --- !u!114 &7999392227225844688
 MonoBehaviour:
@@ -62,28 +62,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.OreSpawner
   wallet: {fileID: 5319940144110336854}
   spawnedOreParent: {fileID: 0}
-  orePool:
-  - data: {fileID: 11400000, guid: 3982179b3238eaf4ebcf9c0a2f198d7e, type: 2}
-    weight: 60
-  - data: {fileID: 11400000, guid: 3122b10f68c76d440b1523756c7ee4c4, type: 2}
-    weight: 30
-  - data: {fileID: 11400000, guid: 40db213d6c25d9a46b3ce1a4e0ff06b4, type: 2}
-    weight: 10
-  spawnOnEnable: 1
-  initialSpawnCount: 8
-  maximumAlive: 12
-  spawnInterval: 2
-  areaCenter: {x: 0, y: 0, z: 0}
-  areaSize: {x: 16, y: 0, z: 16}
-  heightOffset: 0
-  randomYRotation: 1
-  uniformScaleRange: {x: 1, y: 1}
-  alignToGround: 0
-  groundLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  groundRayStartHeight: 20
-  groundRayDistance: 50
+  spawnData: {fileID: 11400000, guid: b6c0c4c0580f44a69bf14fb54e455f1b, type: 2}
 --- !u!114 &8225797318797681101
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -97,7 +76,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.OreClickInput
   targetCamera: {fileID: 0}
-  clickableLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  maximumDistance: 500
+  gameData: {fileID: 11400000, guid: fa0fc8680dcb4e63a9939950274281de, type: 2}

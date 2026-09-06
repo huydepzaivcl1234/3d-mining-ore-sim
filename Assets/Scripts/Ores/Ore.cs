@@ -25,23 +25,22 @@ namespace MiningSimulator.Ores
         public event Action<Ore> Depleted;
         public event Action<int, int> DurabilityChanged;
 
-        public bool CanAcceptMiner(MiningNpc miner, int miningPower, int maximumMiners)
+        public bool CanAcceptMiner(MiningNpc miner, int miningPower)
         {
             RemoveMissingReservations();
             if (miner == null || data == null || IsDepleted ||
-                miningPower < data.MiningPowerRequired || maximumMiners <= 0)
+                miningPower < data.MiningPowerRequired)
             {
                 return false;
             }
 
-            return reservedMiners.ContainsKey(miner) || reservedMiners.Count < maximumMiners;
+            return reservedMiners.ContainsKey(miner) || reservedMiners.Count < data.MaximumMiningNpcs;
         }
 
-        public bool TryReserveMiner(MiningNpc miner, int miningPower, int maximumMiners,
-            out int slotIndex)
+        public bool TryReserveMiner(MiningNpc miner, int miningPower, out int slotIndex)
         {
             slotIndex = -1;
-            if (!CanAcceptMiner(miner, miningPower, maximumMiners))
+            if (!CanAcceptMiner(miner, miningPower))
             {
                 return false;
             }
@@ -51,7 +50,7 @@ namespace MiningSimulator.Ores
                 return true;
             }
 
-            bool[] usedSlots = new bool[maximumMiners];
+            bool[] usedSlots = new bool[data.MaximumMiningNpcs];
             foreach (int usedSlot in reservedMiners.Values)
             {
                 if (usedSlot >= 0 && usedSlot < usedSlots.Length)

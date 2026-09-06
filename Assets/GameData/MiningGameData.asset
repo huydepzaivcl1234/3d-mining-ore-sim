@@ -13,50 +13,6 @@ MonoBehaviour:
   m_Name: MiningGameData
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningGameData
   startingMoney: 100
-  npcCost: 25
-  npcSpawnSpread: 1.25
-  npcSpawnHeightOffset: 0.9
-  npcSpawnAttempts: 12
-  npcMoveSpeed: 3.5
-  npcTurnSpeed: 720
-  npcMiningRange: 1.8
-  npcMiningPower: 6
-  npcDamagePerHit: 2
-  npcSecondsPerHit: 0.65
-  npcTargetRefreshInterval: 0.35
-  maximumNpcsPerOre: 3
-  npcOreStandDistance: 1.4
-  npcColliderRadius: 0.4
-  npcColliderHeight: 1.8
-  npcMass: 1
-  npcCollisionLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  toolSwingSpeed: 12
-  toolSwingAngle: 42
-  toolReturnSpeed: 14
-  spawnOnEnable: 1
-  initialSpawnCount: 8
-  maximumAliveOres: 12
-  oreSpawnInterval: 2
-  orePool:
-  - data: {fileID: 11400000, guid: 3982179b3238eaf4ebcf9c0a2f198d7e, type: 2}
-    weight: 60
-  - data: {fileID: 11400000, guid: 3122b10f68c76d440b1523756c7ee4c4, type: 2}
-    weight: 30
-  - data: {fileID: 11400000, guid: 40db213d6c25d9a46b3ce1a4e0ff06b4, type: 2}
-    weight: 10
-  oreAreaCenter: {x: 0, y: 0, z: 0}
-  oreAreaSize: {x: 16, y: 0, z: 16}
-  oreHeightOffset: 0
-  randomOreYRotation: 1
-  oreUniformScaleRange: {x: 1, y: 1}
-  alignOresToGround: 0
-  oreGroundLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  oreGroundRayStartHeight: 20
-  oreGroundRayDistance: 50
   clickableLayers:
     serializedVersion: 2
     m_Bits: 4294967295

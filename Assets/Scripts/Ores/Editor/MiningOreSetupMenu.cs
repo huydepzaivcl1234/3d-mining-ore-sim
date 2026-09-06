@@ -22,6 +22,10 @@ namespace MiningSimulator.Editor
     {
         private const string ModelFolder = "Assets/Ores/Models";
         private const string GameDataPath = "Assets/GameData/MiningGameData.asset";
+        private const string NpcDataFolder = "Assets/GameData/NPC";
+        private const string NpcDataPath = NpcDataFolder + "/NpcData.asset";
+        private const string SpawnDataFolder = "Assets/GameData/Spawning";
+        private const string SpawnDataPath = SpawnDataFolder + "/OreSpawnData.asset";
         private const string DataFolder = "Assets/GameData/Ores";
         private const string PrefabFolder = "Assets/Prefabs/Ores";
         private const string NpcPrefabFolder = "Assets/Prefabs/NPC";
@@ -77,6 +81,8 @@ namespace MiningSimulator.Editor
         public static void CreateOrUpdateStarterOres()
         {
             EnsureFolder(DataFolder);
+            EnsureFolder(NpcDataFolder);
+            EnsureFolder(SpawnDataFolder);
             EnsureFolder(PrefabFolder);
             EnsureFolder(NpcPrefabFolder);
             EnsureFolder(SystemPrefabFolder);
@@ -95,9 +101,11 @@ namespace MiningSimulator.Editor
                 }
             }
 
-            MiningGameData gameData = CreateOrUpdateGameData(dataAssets);
-            MiningNpc npcPrefab = CreateOrUpdateNpcPrefab(gameData);
-            CreateOrUpdateRuntimePrefab(npcPrefab, gameData);
+            MiningGameData gameData = CreateOrUpdateGameData();
+            NpcData npcData = CreateOrUpdateNpcData();
+            OreSpawnData spawnData = CreateOrUpdateSpawnData(dataAssets);
+            MiningNpc npcPrefab = CreateOrUpdateNpcPrefab(npcData);
+            CreateOrUpdateRuntimePrefab(npcPrefab, gameData, npcData, spawnData);
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -147,9 +155,19 @@ namespace MiningSimulator.Editor
                 if (clickDamage != null && clickDamage.intValue <= 0)
                 {
                     clickDamage.intValue = spec.ClickDamage;
-                    existingSerialized.ApplyModifiedPropertiesWithoutUndo();
-                    EditorUtility.SetDirty(existing);
                 }
+                SerializedProperty maximumMiningNpcs = existingSerialized.FindProperty("maximumMiningNpcs");
+                if (maximumMiningNpcs != null && maximumMiningNpcs.intValue <= 0)
+                {
+                    maximumMiningNpcs.intValue = 3;
+                }
+                SerializedProperty npcStandDistance = existingSerialized.FindProperty("npcStandDistance");
+                if (npcStandDistance != null && npcStandDistance.floatValue <= 0f)
+                {
+                    npcStandDistance.floatValue = 1.4f;
+                }
+                existingSerialized.ApplyModifiedPropertiesWithoutUndo();
+                EditorUtility.SetDirty(existing);
                 return existing;
             }
 
@@ -164,6 +182,8 @@ namespace MiningSimulator.Editor
             serialized.FindProperty("durability").intValue = spec.Durability;
             serialized.FindProperty("clickDamage").intValue = spec.ClickDamage;
             serialized.FindProperty("baseSellValue").intValue = spec.SellValue;
+            serialized.FindProperty("maximumMiningNpcs").intValue = 3;
+            serialized.FindProperty("npcStandDistance").floatValue = 1.4f;
             serialized.FindProperty("mapColor").colorValue = spec.MapColor;
             serialized.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(data);
@@ -226,7 +246,7 @@ namespace MiningSimulator.Editor
             }
         }
 
-        private static MiningGameData CreateOrUpdateGameData(OreData[] dataAssets)
+        private static MiningGameData CreateOrUpdateGameData()
         {
             MiningGameData gameData = AssetDatabase.LoadAssetAtPath<MiningGameData>(GameDataPath);
             if (gameData == null)
@@ -235,26 +255,49 @@ namespace MiningSimulator.Editor
                 AssetDatabase.CreateAsset(gameData, GameDataPath);
             }
 
-            var serialized = new SerializedObject(gameData);
-            SerializedProperty pool = serialized.FindProperty("orePool");
-            if (pool != null && pool.arraySize == 0)
-            {
-                pool.arraySize = dataAssets.Length;
-                float[] defaultWeights = { 60f, 30f, 10f };
-                for (int index = 0; index < dataAssets.Length; index++)
-                {
-                    SerializedProperty entry = pool.GetArrayElementAtIndex(index);
-                    entry.FindPropertyRelative("data").objectReferenceValue = dataAssets[index];
-                    entry.FindPropertyRelative("weight").floatValue = defaultWeights[index];
-                }
-                serialized.ApplyModifiedPropertiesWithoutUndo();
-                EditorUtility.SetDirty(gameData);
-            }
-
             return gameData;
         }
 
-        private static MiningNpc CreateOrUpdateNpcPrefab(MiningGameData gameData)
+        private static NpcData CreateOrUpdateNpcData()
+        {
+            NpcData npcData = AssetDatabase.LoadAssetAtPath<NpcData>(NpcDataPath);
+            if (npcData == null)
+            {
+                npcData = ScriptableObject.CreateInstance<NpcData>();
+                AssetDatabase.CreateAsset(npcData, NpcDataPath);
+            }
+            return npcData;
+        }
+
+        private static OreSpawnData CreateOrUpdateSpawnData(OreData[] dataAssets)
+        {
+            OreSpawnData spawnData = AssetDatabase.LoadAssetAtPath<OreSpawnData>(SpawnDataPath);
+            if (spawnData == null)
+            {
+                spawnData = ScriptableObject.CreateInstance<OreSpawnData>();
+                AssetDatabase.CreateAsset(spawnData, SpawnDataPath);
+            }
+
+            var serialized = new SerializedObject(spawnData);
+            SerializedProperty table = serialized.FindProperty("oreSpawnTable");
+            if (table != null && table.arraySize == 0)
+            {
+                table.arraySize = dataAssets.Length;
+                float[] defaultWeights = { 60f, 30f, 10f };
+                for (int index = 0; index < dataAssets.Length; index++)
+                {
+                    SerializedProperty entry = table.GetArrayElementAtIndex(index);
+                    entry.FindPropertyRelative("ore").objectReferenceValue = dataAssets[index];
+                    entry.FindPropertyRelative("spawnWeight").floatValue =
+                        index < defaultWeights.Length ? defaultWeights[index] : 1f;
+                }
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+                EditorUtility.SetDirty(spawnData);
+            }
+            return spawnData;
+        }
+
+        private static MiningNpc CreateOrUpdateNpcPrefab(NpcData npcData)
         {
             GameObject existing = AssetDatabase.LoadAssetAtPath<GameObject>(NpcPrefabPath);
             if (existing != null)
@@ -263,7 +306,7 @@ namespace MiningSimulator.Editor
                 try
                 {
                     MiningNpc miningNpc = contents.GetComponent<MiningNpc>() ?? contents.AddComponent<MiningNpc>();
-                    ConfigureNpcPrefab(contents, miningNpc, gameData);
+                    ConfigureNpcPrefab(contents, miningNpc, npcData);
                     PrefabUtility.SaveAsPrefabAsset(contents, NpcPrefabPath);
                 }
                 finally
@@ -280,7 +323,7 @@ namespace MiningSimulator.Editor
                 npcObject.name = "Mining NPC";
                 npcObject.transform.localScale = new Vector3(0.8f, 0.9f, 0.8f);
                 MiningNpc miningNpc = npcObject.AddComponent<MiningNpc>();
-                ConfigureNpcPrefab(npcObject, miningNpc, gameData);
+                ConfigureNpcPrefab(npcObject, miningNpc, npcData);
 
                 GameObject helmet = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 helmet.name = "Miner Helmet";
@@ -315,25 +358,26 @@ namespace MiningSimulator.Editor
         }
 
         private static void ConfigureNpcPrefab(GameObject npcObject, MiningNpc miningNpc,
-            MiningGameData gameData)
+            NpcData npcData)
         {
             var npcSerialized = new SerializedObject(miningNpc);
-            SetReferenceIfMissing(npcSerialized.FindProperty("gameData"), gameData);
+            SetReferenceIfMissing(npcSerialized.FindProperty("npcData"), npcData);
             npcSerialized.ApplyModifiedPropertiesWithoutUndo();
 
             CapsuleCollider capsule = npcObject.GetComponent<CapsuleCollider>() ??
                                       npcObject.AddComponent<CapsuleCollider>();
-            capsule.radius = gameData.NpcColliderRadius;
-            capsule.height = gameData.NpcColliderHeight;
+            capsule.radius = npcData.ColliderRadius;
+            capsule.height = npcData.ColliderHeight;
 
             Rigidbody body = npcObject.GetComponent<Rigidbody>() ?? npcObject.AddComponent<Rigidbody>();
-            body.mass = gameData.NpcMass;
+            body.mass = npcData.Mass;
             body.interpolation = RigidbodyInterpolation.Interpolate;
             body.collisionDetectionMode = CollisionDetectionMode.Continuous;
             body.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
         }
 
-        private static void CreateOrUpdateRuntimePrefab(MiningNpc npcPrefab, MiningGameData gameData)
+        private static void CreateOrUpdateRuntimePrefab(MiningNpc npcPrefab, MiningGameData gameData,
+            NpcData npcData, OreSpawnData spawnData)
         {
             GameObject existing = AssetDatabase.LoadAssetAtPath<GameObject>(RuntimePrefabPath);
             bool isNew = existing == null;
@@ -357,7 +401,7 @@ namespace MiningSimulator.Editor
 
                 var serialized = new SerializedObject(spawner);
                 SetReferenceIfMissing(serialized.FindProperty("wallet"), wallet);
-                SetReferenceIfMissing(serialized.FindProperty("gameData"), gameData);
+                SetReferenceIfMissing(serialized.FindProperty("spawnData"), spawnData);
                 serialized.ApplyModifiedPropertiesWithoutUndo();
 
                 var clickSerialized = new SerializedObject(clickInput);
@@ -368,7 +412,7 @@ namespace MiningSimulator.Editor
                 SetReferenceIfMissing(shopSerialized.FindProperty("wallet"), wallet);
                 SetReferenceIfMissing(shopSerialized.FindProperty("oreSpawner"), spawner);
                 SetReferenceIfMissing(shopSerialized.FindProperty("npcPrefab"), npcPrefab);
-                SetReferenceIfMissing(shopSerialized.FindProperty("gameData"), gameData);
+                SetReferenceIfMissing(shopSerialized.FindProperty("npcData"), npcData);
                 shopSerialized.ApplyModifiedPropertiesWithoutUndo();
 
                 var hudSerialized = new SerializedObject(hud);

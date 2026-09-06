@@ -33,6 +33,8 @@
 | `Assets/Ores/Models` | Source FBX ore models | Confirmed | Starter ore feature |
 | `Assets/Prefabs/Ores` | One independent prefab per ore | Confirmed | Starter ore feature |
 | `Assets/GameData/Ores` | One OreData ScriptableObject per ore | Confirmed | Starter ore feature |
+| `Assets/GameData/NPC` | NPC-only balance and collision data | Confirmed | NPC feature |
+| `Assets/GameData/Spawning` | Ore spawn ratios, timing, limits, and placement | Confirmed | Spawn manager feature |
 | `Assets/Scripts/Ores` | First-party ore runtime and editor code | Confirmed | Starter ore feature |
 | `Assets/Scenes` | Unity starter scene | Confirmed | Repository inspection |
 | `Assets/Settings` | URP renderer and pipeline assets | Confirmed | Repository inspection |
@@ -52,7 +54,10 @@
 
 - Data-driven ScriptableObject configuration, modeled after the user's Tower Defense project.
 - Each ore owns an independent OreData asset and prefab; runtime state lives on the Ore component.
-- Shared economy, NPC, spawn, HUD animation, click, and camera tuning lives in `Assets/GameData/MiningGameData.asset`.
+- Each `OreData` contains only ore-owned values, including durability, rewards, required power, and NPC mining slots.
+- NPC-only tuning lives in `Assets/GameData/NPC/NpcData.asset`.
+- `OreSpawner` is the spawn manager and reads ratios, spawn speed, limits, and placement from `Assets/GameData/Spawning/OreSpawnData.asset`.
+- Shared economy, HUD animation, click, and camera tuning lives in `Assets/GameData/MiningGameData.asset`.
 - NPC miners reserve limited slots around compatible ores and use Rigidbody/CapsuleCollider collision.
 - The editable runtime HUD uses TextMeshPro components and is created as serialized prefab content by the setup menu.
 - No global managers or save system exists yet.

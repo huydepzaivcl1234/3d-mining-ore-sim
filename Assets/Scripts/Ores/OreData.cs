@@ -33,6 +33,10 @@ namespace MiningSimulator.Ores
         [Header("Depletion")]
         [Min(0f), SerializeField] private float destroyDelay;
 
+        [Header("NPC Mining Slots")]
+        [Min(1), SerializeField] private int maximumMiningNpcs = 3;
+        [Min(0.1f), SerializeField] private float npcStandDistance = 1.4f;
+
         [Header("Presentation")]
         [SerializeField] private GameObject prefab;
         [SerializeField] private Color mapColor = Color.gray;
@@ -47,6 +51,8 @@ namespace MiningSimulator.Ores
         public int ClickDamage => clickDamage;
         public int BaseSellValue => baseSellValue;
         public float DestroyDelay => destroyDelay;
+        public int MaximumMiningNpcs => maximumMiningNpcs;
+        public float NpcStandDistance => npcStandDistance;
         public GameObject Prefab => prefab;
         public Color MapColor => mapColor;
 
@@ -58,6 +64,8 @@ namespace MiningSimulator.Ores
             clickDamage = Mathf.Max(1, clickDamage);
             baseSellValue = Mathf.Max(0, baseSellValue);
             destroyDelay = Mathf.Max(0f, destroyDelay);
+            maximumMiningNpcs = Mathf.Max(1, maximumMiningNpcs);
+            npcStandDistance = Mathf.Max(0.1f, npcStandDistance);
         }
     }
 }
