@@ -50,22 +50,23 @@ namespace MiningSimulator.Editor
 
                     if (GUILayout.Button("Push"))
                     {
-                        RunSequence(new GitCommand("push"));
+                        RunSequence(CreatePushCommand());
                     }
                 }
 
-                GUI.enabled = !isRunning && !string.IsNullOrWhiteSpace(commitMessage);
-                if (GUILayout.Button("Commit All & Push", GUILayout.Height(34)) &&
-                    EditorUtility.DisplayDialog("Commit All & Push",
-                        "Stage every non-ignored project change, create a commit, and push it to GitHub?",
-                        "Commit & Push", "Cancel"))
+                using (new EditorGUI.DisabledScope(string.IsNullOrWhiteSpace(commitMessage)))
                 {
-                    RunSequence(
-                        new GitCommand("add", "-A"),
-                        new GitCommand("commit", "-m", commitMessage.Trim()),
-                        new GitCommand("push"));
+                    if (GUILayout.Button("Commit All & Push", GUILayout.Height(34)) &&
+                        EditorUtility.DisplayDialog("Commit All & Push",
+                            "Stage every non-ignored project change, create a commit, and push it to GitHub?",
+                            "Commit & Push", "Cancel"))
+                    {
+                        RunSequence(
+                            new GitCommand("add", "-A"),
+                            new GitCommand("commit", "-m", commitMessage.Trim()),
+                            CreatePushCommand());
+                    }
                 }
-                GUI.enabled = true;
             }
 
             EditorGUILayout.Space();
@@ -99,12 +100,14 @@ namespace MiningSimulator.Editor
                 {
                     GitResult result = await Task.Run(() => Execute(root, command));
                     output += result.DisplayText;
+                    Repaint();
 
                     bool nothingToCommit = command.Name == "commit" &&
                         result.ExitCode != 0 &&
                         result.CombinedOutput.IndexOf("nothing to commit", StringComparison.OrdinalIgnoreCase) >= 0;
                     if (result.ExitCode != 0 && !nothingToCommit)
                     {
+                        output += BuildFailureHelp(command, result.CombinedOutput);
                         output += $"\nStopped because git {command.Name} failed (exit {result.ExitCode}).\n";
                         break;
                     }
@@ -138,16 +141,19 @@ namespace MiningSimulator.Editor
             };
             startInfo.EnvironmentVariables["GIT_TERMINAL_PROMPT"] = "0";
 
-            using Process process = Process.Start(startInfo);
-            if (process == null)
+            using var process = new Process { StartInfo = startInfo };
+            if (!process.Start())
             {
                 throw new InvalidOperationException("Could not start Git. Confirm Git is installed and available in PATH.");
             }
 
-            string standardOutput = process.StandardOutput.ReadToEnd();
-            string standardError = process.StandardError.ReadToEnd();
+            // Drain both redirected streams concurrently. Reading one stream completely before
+            // the other can deadlock when Git produces enough output to fill the second buffer.
+            Task<string> standardOutputTask = process.StandardOutput.ReadToEndAsync();
+            Task<string> standardErrorTask = process.StandardError.ReadToEndAsync();
             process.WaitForExit();
-            return new GitResult(command, process.ExitCode, standardOutput, standardError);
+            Task.WaitAll(standardOutputTask, standardErrorTask);
+            return new GitResult(command, process.ExitCode, standardOutputTask.Result, standardErrorTask.Result);
         }
 
         private static string BuildArguments(GitCommand command)
@@ -162,7 +168,84 @@ namespace MiningSimulator.Editor
 
         private static string Quote(string value)
         {
-            return "\"" + value.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
+            if (value.Length > 0 && value.IndexOfAny(new[] { ' ', '\t', '\n', '\v', '\"' }) < 0)
+            {
+                return value;
+            }
+
+            // ProcessStartInfo.Arguments is a command-line string, not a shell command. Escape
+            // quotes using the Windows command-line parsing rules so commit messages containing
+            // quotes or trailing backslashes arrive at Git unchanged.
+            var builder = new StringBuilder(value.Length + 2);
+            builder.Append('\"');
+            int backslashCount = 0;
+
+            foreach (char character in value)
+            {
+                if (character == '\\')
+                {
+                    backslashCount++;
+                    continue;
+                }
+
+                if (character == '\"')
+                {
+                    builder.Append('\\', backslashCount * 2 + 1);
+                    builder.Append('\"');
+                    backslashCount = 0;
+                    continue;
+                }
+
+                builder.Append('\\', backslashCount);
+                backslashCount = 0;
+                builder.Append(character);
+            }
+
+            builder.Append('\\', backslashCount * 2);
+            builder.Append('\"');
+            return builder.ToString();
+        }
+
+        private static GitCommand CreatePushCommand()
+        {
+            // This also fixes the common "current branch has no upstream branch" failure for
+            // newly created branches while remaining safe for branches that already track origin.
+            return new GitCommand("push", "--set-upstream", "origin", "HEAD");
+        }
+
+        private static string BuildFailureHelp(GitCommand command, string combinedOutput)
+        {
+            if (command.Name != "push" && command.Name != "pull")
+            {
+                return string.Empty;
+            }
+
+            if (Contains(combinedOutput, "authentication failed") ||
+                Contains(combinedOutput, "could not read Username") ||
+                Contains(combinedOutput, "terminal prompts disabled") ||
+                Contains(combinedOutput, "repository not found"))
+            {
+                return "\nGitHub login failed. Sign in to the correct GitHub account in Git " +
+                       "Credential Manager or GitHub Desktop, then try again.\n";
+            }
+
+            if (Contains(combinedOutput, "non-fast-forward") || Contains(combinedOutput, "fetch first"))
+            {
+                return "\nThe remote branch has newer commits. Use Pull (fast-forward only), " +
+                       "review the incoming changes, then push again.\n";
+            }
+
+            if (Contains(combinedOutput, "not a git repository"))
+            {
+                return "\nOpen the Unity project from inside the cloned Git repository.\n";
+            }
+
+            return string.Empty;
+        }
+
+        private static bool Contains(string text, string value)
+        {
+            return text.IndexOf(value, StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
         private readonly struct GitCommand

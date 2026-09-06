@@ -6,7 +6,9 @@ from mathutils import Vector
 
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-ASSET_DIR = os.path.join(ROOT, "assets", "ores")
+GLB_DIR = os.path.join(ROOT, "ArtSource", "GLB")
+BLEND_DIR = os.path.join(ROOT, "ArtSource", "Blender")
+UNITY_MODEL_DIR = os.path.join(ROOT, "Assets", "Ores", "Models")
 PREVIEW_DIR = os.path.join(ROOT, "previews")
 
 
@@ -228,7 +230,9 @@ def setup_presentation(text_mat):
 
 
 def main():
-    os.makedirs(ASSET_DIR, exist_ok=True)
+    os.makedirs(GLB_DIR, exist_ok=True)
+    os.makedirs(BLEND_DIR, exist_ok=True)
+    os.makedirs(UNITY_MODEL_DIR, exist_ok=True)
     os.makedirs(PREVIEW_DIR, exist_ok=True)
     reset_scene()
 
@@ -250,8 +254,8 @@ def main():
         export_collection(
             collection,
             root,
-            os.path.join(ASSET_DIR, stem + ".glb"),
-            os.path.join(ASSET_DIR, stem + ".fbx"),
+            os.path.join(GLB_DIR, stem + ".glb"),
+            os.path.join(UNITY_MODEL_DIR, stem + ".fbx"),
         )
 
     setup_presentation(text_mat)
@@ -259,7 +263,7 @@ def main():
     scene["asset_set"] = "Mining Ore Starter Set"
     scene["units"] = "meters"
     scene["tier_order"] = "Stone=1, Coal=2, Copper=3"
-    blend_path = os.path.join(ASSET_DIR, "mining_ores.blend")
+    blend_path = os.path.join(BLEND_DIR, "mining_ores.blend")
     bpy.ops.wm.save_as_mainfile(filepath=blend_path)
     bpy.ops.render.render(write_still=True)
     print("CREATED", blend_path)

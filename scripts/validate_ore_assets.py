@@ -4,7 +4,9 @@ import sys
 
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-ASSET_DIR = os.path.join(ROOT, "assets", "ores")
+GLB_DIR = os.path.join(ROOT, "ArtSource", "GLB")
+BLEND_DIR = os.path.join(ROOT, "ArtSource", "Blender")
+UNITY_MODEL_DIR = os.path.join(ROOT, "Assets", "Ores", "Models")
 EXPECTED = {
     "stone_tier1.glb": ("stone", 1),
     "coal_tier2.glb": ("coal", 2),
@@ -18,9 +20,13 @@ def fail(message):
 
 
 for filename, (ore_id, tier) in EXPECTED.items():
-    path = os.path.join(ASSET_DIR, filename)
+    path = os.path.join(GLB_DIR, filename)
     if not os.path.isfile(path) or os.path.getsize(path) < 1000:
         fail(f"Missing or empty asset: {path}")
+
+    fbx_path = os.path.join(UNITY_MODEL_DIR, os.path.splitext(filename)[0] + ".fbx")
+    if not os.path.isfile(fbx_path) or os.path.getsize(fbx_path) < 1000:
+        fail(f"Missing or empty Unity FBX asset: {fbx_path}")
 
     bpy.ops.wm.read_factory_settings(use_empty=True)
     bpy.ops.import_scene.gltf(filepath=path)
@@ -37,7 +43,7 @@ for filename, (ore_id, tier) in EXPECTED.items():
     triangles = sum(sum(max(0, len(poly.vertices) - 2) for poly in mesh.data.polygons) for mesh in meshes)
     print(f"VALID {filename}: meshes={len(meshes)} triangles={triangles} tier={tier}")
 
-blend_path = os.path.join(ASSET_DIR, "mining_ores.blend")
+blend_path = os.path.join(BLEND_DIR, "mining_ores.blend")
 if not os.path.isfile(blend_path) or os.path.getsize(blend_path) < 1000:
     fail(f"Missing editable Blender source: {blend_path}")
 
