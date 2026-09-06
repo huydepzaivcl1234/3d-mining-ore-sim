@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace MiningSimulator.Ores
@@ -10,11 +11,17 @@ namespace MiningSimulator.Ores
     public sealed class Ore : MonoBehaviour
     {
         [SerializeField] private OreData data;
+        [SerializeField] private PlayerWallet wallet;
         [SerializeField, Min(0)] private int currentDurability;
+
+        private bool rewardGranted;
 
         public OreData Data => data;
         public int CurrentDurability => currentDurability;
+        public int MaxDurability => data != null ? data.Durability : 0;
         public bool IsDepleted => currentDurability <= 0;
+        public event Action<Ore> Depleted;
+        public event Action<int, int> DurabilityChanged;
 
         private void Awake()
         {
@@ -25,6 +32,35 @@ namespace MiningSimulator.Ores
         {
             data = oreData;
             ResetDurability();
+        }
+
+        public void Initialize(OreData oreData, PlayerWallet playerWallet)
+        {
+            data = oreData;
+            wallet = playerWallet;
+            ResetDurability();
+        }
+
+        public bool MineOnce()
+        {
+            return data != null && ApplyDamage(data.ClickDamage);
+        }
+
+        public bool ApplyDamage(int damage)
+        {
+            if (data == null || IsDepleted || damage <= 0)
+            {
+                return false;
+            }
+
+            currentDurability = Mathf.Max(0, currentDurability - damage);
+            DurabilityChanged?.Invoke(currentDurability, MaxDurability);
+            if (currentDurability == 0)
+            {
+                Deplete();
+            }
+
+            return true;
         }
 
         public bool TryMine(int miningPower, out int moneyEarned)
@@ -47,6 +83,21 @@ namespace MiningSimulator.Ores
         public void ResetDurability()
         {
             currentDurability = data != null ? data.Durability : 0;
+            rewardGranted = false;
+            DurabilityChanged?.Invoke(currentDurability, MaxDurability);
+        }
+
+        private void Deplete()
+        {
+            if (rewardGranted)
+            {
+                return;
+            }
+
+            rewardGranted = true;
+            wallet?.AddMoney(data.BaseSellValue);
+            Depleted?.Invoke(this);
+            Destroy(gameObject, data.DestroyDelay);
         }
     }
 }

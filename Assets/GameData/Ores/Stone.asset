@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d859909622396a747a6c00395cd02515, type: 3}
+  m_Name: Stone
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.OreData
+  kind: 0
+  displayName: Stone
+  description: Common stone. The first material a miner can break.
+  tier: 1
+  miningPowerRequired: 1
+  durability: 10
+  baseSellValue: 1
+  prefab: {fileID: 8004528017128687883, guid: 2356a862805f76d49bb2631761b98599, type: 3}
+  mapColor: {r: 0.48, g: 0.52, b: 0.56, a: 1}
