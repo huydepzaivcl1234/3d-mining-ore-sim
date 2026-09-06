@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 
 namespace MiningSimulator.Ores
@@ -23,6 +24,11 @@ namespace MiningSimulator.Ores
         {
             Pointer pointer = Pointer.current;
             if (pointer == null || !pointer.press.wasPressedThisFrame || targetCamera == null)
+            {
+                return;
+            }
+
+            if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
             {
                 return;
             }

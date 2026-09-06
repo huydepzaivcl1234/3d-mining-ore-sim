@@ -7,7 +7,7 @@ namespace MiningSimulator.Ores
     [DisallowMultipleComponent]
     public sealed class PlayerWallet : MonoBehaviour
     {
-        [Min(0), SerializeField] private int startingMoney;
+        [Min(0), SerializeField] private int startingMoney = 100;
         [SerializeField] private int currentMoney;
 
         public int CurrentMoney => currentMoney;

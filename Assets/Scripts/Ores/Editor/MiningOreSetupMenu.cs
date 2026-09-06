@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using System;
 using System.IO;
+using Microlight.MicroBar;
 using MiningSimulator.Ores;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -18,8 +19,12 @@ namespace MiningSimulator.Editor
         private const string ModelFolder = "Assets/Ores/Models";
         private const string DataFolder = "Assets/GameData/Ores";
         private const string PrefabFolder = "Assets/Prefabs/Ores";
+        private const string NpcPrefabFolder = "Assets/Prefabs/NPC";
         private const string SystemPrefabFolder = "Assets/Prefabs/Systems";
+        private const string NpcPrefabPath = NpcPrefabFolder + "/MiningNpc.prefab";
         private const string RuntimePrefabPath = SystemPrefabFolder + "/MiningRuntime.prefab";
+        private const string HealthBarPrefabPath =
+            "Assets/Microlight/MicroBar/Prefabs/SimpleBars/Sprite_SimpleMicroBarSRP.prefab";
         private const string SampleScenePath = "Assets/Scenes/SampleScene.unity";
 
         private readonly struct OreSpec
@@ -67,6 +72,7 @@ namespace MiningSimulator.Editor
         {
             EnsureFolder(DataFolder);
             EnsureFolder(PrefabFolder);
+            EnsureFolder(NpcPrefabFolder);
             EnsureFolder(SystemPrefabFolder);
 
             var dataAssets = new OreData[StarterOres.Length];
@@ -83,7 +89,8 @@ namespace MiningSimulator.Editor
                 }
             }
 
-            CreateRuntimePrefabIfMissing(dataAssets);
+            MiningNpc npcPrefab = CreateOrUpdateNpcPrefab();
+            CreateOrUpdateRuntimePrefab(dataAssets, npcPrefab);
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -96,7 +103,7 @@ namespace MiningSimulator.Editor
             CreateOrUpdateStarterOres();
         }
 
-        [MenuItem("Mining Simulator/Setup/Add Mining Runtime to Active Scene")]
+        [MenuItem("Mining Simulator/Setup/Setup Complete Mining Gameplay")]
         public static void AddMiningRuntimeToActiveScene()
         {
             CreateOrUpdateStarterOres();
@@ -156,7 +163,23 @@ namespace MiningSimulator.Editor
             GameObject existingPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
             if (existingPrefab != null)
             {
-                return existingPrefab;
+                GameObject contents = PrefabUtility.LoadPrefabContents(prefabPath);
+                try
+                {
+                    Ore existingOre = contents.GetComponent<Ore>() ?? contents.AddComponent<Ore>();
+                    if (existingOre.Data == null)
+                    {
+                        existingOre.SetData(data);
+                    }
+                    EnsureCollider(contents);
+                    AddHealthBarIfMissing(contents, existingOre);
+                    PrefabUtility.SaveAsPrefabAsset(contents, prefabPath);
+                }
+                finally
+                {
+                    PrefabUtility.UnloadPrefabContents(contents);
+                }
+                return AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
             }
 
             string modelPath = $"{ModelFolder}/{spec.ModelFile}";
@@ -180,6 +203,7 @@ namespace MiningSimulator.Editor
                 Ore ore = instance.GetComponent<Ore>() ?? instance.AddComponent<Ore>();
                 ore.SetData(data);
                 EnsureCollider(instance);
+                AddHealthBarIfMissing(instance, ore);
 
                 return PrefabUtility.SaveAsPrefabAsset(instance, prefabPath);
             }
@@ -189,38 +213,176 @@ namespace MiningSimulator.Editor
             }
         }
 
-        private static void CreateRuntimePrefabIfMissing(OreData[] dataAssets)
+        private static MiningNpc CreateOrUpdateNpcPrefab()
         {
-            if (AssetDatabase.LoadAssetAtPath<GameObject>(RuntimePrefabPath) != null)
+            GameObject existing = AssetDatabase.LoadAssetAtPath<GameObject>(NpcPrefabPath);
+            if (existing != null)
             {
-                return;
+                GameObject contents = PrefabUtility.LoadPrefabContents(NpcPrefabPath);
+                try
+                {
+                    if (contents.GetComponent<MiningNpc>() == null)
+                    {
+                        contents.AddComponent<MiningNpc>();
+                    }
+                    PrefabUtility.SaveAsPrefabAsset(contents, NpcPrefabPath);
+                }
+                finally
+                {
+                    PrefabUtility.UnloadPrefabContents(contents);
+                }
+                GameObject updated = AssetDatabase.LoadAssetAtPath<GameObject>(NpcPrefabPath);
+                return updated != null ? updated.GetComponent<MiningNpc>() : null;
             }
 
-            var runtime = new GameObject("MiningRuntime");
+            GameObject npcObject = GameObject.CreatePrimitive(PrimitiveType.Capsule);
             try
             {
-                PlayerWallet wallet = runtime.AddComponent<PlayerWallet>();
-                OreSpawner spawner = runtime.AddComponent<OreSpawner>();
-                runtime.AddComponent<OreClickInput>();
-                var serialized = new SerializedObject(spawner);
-                serialized.FindProperty("wallet").objectReferenceValue = wallet;
+                npcObject.name = "Mining NPC";
+                npcObject.transform.localScale = new Vector3(0.8f, 0.9f, 0.8f);
+                MiningNpc miningNpc = npcObject.AddComponent<MiningNpc>();
 
-                SerializedProperty pool = serialized.FindProperty("orePool");
-                pool.arraySize = dataAssets.Length;
-                float[] defaultWeights = { 60f, 30f, 10f };
-                for (int i = 0; i < dataAssets.Length; i++)
+                GameObject helmet = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                helmet.name = "Miner Helmet";
+                helmet.transform.SetParent(npcObject.transform, false);
+                helmet.transform.localPosition = new Vector3(0f, 0.86f, 0.08f);
+                helmet.transform.localScale = new Vector3(0.9f, 0.18f, 0.92f);
+                UnityEngine.Object.DestroyImmediate(helmet.GetComponent<Collider>());
+
+                GameObject pickaxeHandle = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                pickaxeHandle.name = "Pickaxe Handle";
+                pickaxeHandle.transform.SetParent(npcObject.transform, false);
+                pickaxeHandle.transform.localPosition = new Vector3(0.65f, 0f, 0f);
+                pickaxeHandle.transform.localRotation = Quaternion.Euler(0f, 0f, -25f);
+                pickaxeHandle.transform.localScale = new Vector3(0.08f, 0.85f, 0.08f);
+                UnityEngine.Object.DestroyImmediate(pickaxeHandle.GetComponent<Collider>());
+
+                GameObject pickaxeHead = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                pickaxeHead.name = "Pickaxe Head";
+                pickaxeHead.transform.SetParent(pickaxeHandle.transform, false);
+                pickaxeHead.transform.localPosition = new Vector3(0f, 0.55f, 0f);
+                pickaxeHead.transform.localScale = new Vector3(3.8f, 0.18f, 0.65f);
+                UnityEngine.Object.DestroyImmediate(pickaxeHead.GetComponent<Collider>());
+                miningNpc.ConfigureTool(pickaxeHandle.transform);
+
+                GameObject saved = PrefabUtility.SaveAsPrefabAsset(npcObject, NpcPrefabPath);
+                return saved != null ? saved.GetComponent<MiningNpc>() : null;
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(npcObject);
+            }
+        }
+
+        private static void CreateOrUpdateRuntimePrefab(OreData[] dataAssets, MiningNpc npcPrefab)
+        {
+            GameObject existing = AssetDatabase.LoadAssetAtPath<GameObject>(RuntimePrefabPath);
+            bool isNew = existing == null;
+            GameObject runtime = isNew
+                ? new GameObject("MiningRuntime")
+                : PrefabUtility.LoadPrefabContents(RuntimePrefabPath);
+
+            try
+            {
+                PlayerWallet wallet = runtime.GetComponent<PlayerWallet>() ?? runtime.AddComponent<PlayerWallet>();
+                OreSpawner spawner = runtime.GetComponent<OreSpawner>() ?? runtime.AddComponent<OreSpawner>();
+                if (runtime.GetComponent<OreClickInput>() == null)
                 {
-                    SerializedProperty entry = pool.GetArrayElementAtIndex(i);
-                    entry.FindPropertyRelative("data").objectReferenceValue = dataAssets[i];
-                    entry.FindPropertyRelative("weight").floatValue = defaultWeights[i];
+                    runtime.AddComponent<OreClickInput>();
+                }
+                NpcShop shop = runtime.GetComponent<NpcShop>() ?? runtime.AddComponent<NpcShop>();
+                MiningHud hud = runtime.GetComponent<MiningHud>() ?? runtime.AddComponent<MiningHud>();
+                if (runtime.GetComponent<MiningOrbitCamera>() == null)
+                {
+                    runtime.AddComponent<MiningOrbitCamera>();
                 }
 
+                var walletSerialized = new SerializedObject(wallet);
+                SerializedProperty startingMoney = walletSerialized.FindProperty("startingMoney");
+                if (startingMoney.intValue <= 0)
+                {
+                    startingMoney.intValue = 100;
+                    walletSerialized.ApplyModifiedPropertiesWithoutUndo();
+                }
+
+                var serialized = new SerializedObject(spawner);
+                SetReferenceIfMissing(serialized.FindProperty("wallet"), wallet);
+
+                SerializedProperty pool = serialized.FindProperty("orePool");
+                if (isNew || pool.arraySize == 0)
+                {
+                    pool.arraySize = dataAssets.Length;
+                    float[] defaultWeights = { 60f, 30f, 10f };
+                    for (int i = 0; i < dataAssets.Length; i++)
+                    {
+                        SerializedProperty entry = pool.GetArrayElementAtIndex(i);
+                        entry.FindPropertyRelative("data").objectReferenceValue = dataAssets[i];
+                        entry.FindPropertyRelative("weight").floatValue = defaultWeights[i];
+                    }
+                }
                 serialized.ApplyModifiedPropertiesWithoutUndo();
+
+                var shopSerialized = new SerializedObject(shop);
+                SetReferenceIfMissing(shopSerialized.FindProperty("wallet"), wallet);
+                SetReferenceIfMissing(shopSerialized.FindProperty("oreSpawner"), spawner);
+                SetReferenceIfMissing(shopSerialized.FindProperty("npcPrefab"), npcPrefab);
+                shopSerialized.ApplyModifiedPropertiesWithoutUndo();
+
+                var hudSerialized = new SerializedObject(hud);
+                SetReferenceIfMissing(hudSerialized.FindProperty("wallet"), wallet);
+                SetReferenceIfMissing(hudSerialized.FindProperty("npcShop"), shop);
+                hudSerialized.ApplyModifiedPropertiesWithoutUndo();
+
                 PrefabUtility.SaveAsPrefabAsset(runtime, RuntimePrefabPath);
             }
             finally
             {
-                UnityEngine.Object.DestroyImmediate(runtime);
+                if (isNew)
+                {
+                    UnityEngine.Object.DestroyImmediate(runtime);
+                }
+                else
+                {
+                    PrefabUtility.UnloadPrefabContents(runtime);
+                }
+            }
+        }
+
+        private static void AddHealthBarIfMissing(GameObject root, Ore ore)
+        {
+            if (root.GetComponentInChildren<OreHealthBar>(true) != null)
+            {
+                return;
+            }
+
+            GameObject barPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(HealthBarPrefabPath);
+            if (barPrefab == null)
+            {
+                Debug.LogError($"MicroBar prefab is missing at {HealthBarPrefabPath}.");
+                return;
+            }
+
+            GameObject barObject = PrefabUtility.InstantiatePrefab(barPrefab, root.transform) as GameObject;
+            if (barObject == null)
+            {
+                Debug.LogError($"Could not add a MicroBar to ore prefab '{root.name}'.");
+                return;
+            }
+
+            barObject.name = "Ore Health Bar";
+            barObject.transform.localPosition = new Vector3(0f, 1.75f, 0f);
+            barObject.transform.localRotation = Quaternion.identity;
+            barObject.transform.localScale = Vector3.one * 0.65f;
+            MicroBar bar = barObject.GetComponent<MicroBar>();
+            OreHealthBar binding = barObject.AddComponent<OreHealthBar>();
+            binding.Configure(ore, bar, barObject.transform);
+        }
+
+        private static void SetReferenceIfMissing(SerializedProperty property, UnityEngine.Object value)
+        {
+            if (property != null && property.objectReferenceValue == null)
+            {
+                property.objectReferenceValue = value;
             }
         }
 

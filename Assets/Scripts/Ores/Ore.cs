@@ -18,8 +18,10 @@ namespace MiningSimulator.Ores
 
         public OreData Data => data;
         public int CurrentDurability => currentDurability;
+        public int MaxDurability => data != null ? data.Durability : 0;
         public bool IsDepleted => currentDurability <= 0;
         public event Action<Ore> Depleted;
+        public event Action<int, int> DurabilityChanged;
 
         private void Awake()
         {
@@ -52,6 +54,7 @@ namespace MiningSimulator.Ores
             }
 
             currentDurability = Mathf.Max(0, currentDurability - damage);
+            DurabilityChanged?.Invoke(currentDurability, MaxDurability);
             if (currentDurability == 0)
             {
                 Deplete();
@@ -81,6 +84,7 @@ namespace MiningSimulator.Ores
         {
             currentDurability = data != null ? data.Durability : 0;
             rewardGranted = false;
+            DurabilityChanged?.Invoke(currentDurability, MaxDurability);
         }
 
         private void Deplete()

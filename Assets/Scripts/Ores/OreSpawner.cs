@@ -49,6 +49,32 @@ namespace MiningSimulator.Ores
 
         public int ActiveCount => activeOres.Count;
 
+        public Ore FindClosestMineableOre(Vector3 origin, int miningPower)
+        {
+            Ore closest = null;
+            float closestSqrDistance = float.PositiveInfinity;
+
+            foreach (Ore ore in activeOres)
+            {
+                if (ore == null || ore.IsDepleted || ore.Data == null ||
+                    ore.Data.MiningPowerRequired > miningPower)
+                {
+                    continue;
+                }
+
+                float sqrDistance = (ore.transform.position - origin).sqrMagnitude;
+                if (sqrDistance >= closestSqrDistance)
+                {
+                    continue;
+                }
+
+                closest = ore;
+                closestSqrDistance = sqrDistance;
+            }
+
+            return closest;
+        }
+
         private void OnEnable()
         {
             RegisterExistingOres();
