@@ -17,10 +17,12 @@ namespace MiningSimulator.Ores
         [SerializeField, Min(0)] private int npcMoveSpeedStacks;
 
         private float rewardRemainder;
+        private float permanentMoneyMultiplier = 1f;
 
         public MiningUpgradeData UpgradeData => upgradeData;
         public event Action UpgradesChanged;
         public event Action<MiningUpgradeType> UpgradePurchased;
+        public float PermanentMoneyMultiplier => permanentMoneyMultiplier;
 
         public int GetStacks(MiningUpgradeType type)
         {
@@ -106,10 +108,27 @@ namespace MiningSimulator.Ores
                 return 0;
             }
 
-            float upgradedReward = baseReward * GetMultiplier(MiningUpgradeType.MoneyReward) + rewardRemainder;
+            float upgradedReward = baseReward * GetMultiplier(MiningUpgradeType.MoneyReward) *
+                                   permanentMoneyMultiplier + rewardRemainder;
             int wholeReward = Mathf.FloorToInt(upgradedReward);
             rewardRemainder = upgradedReward - wholeReward;
             return wholeReward;
+        }
+
+        public void SetPermanentMoneyMultiplier(float multiplier)
+        {
+            permanentMoneyMultiplier = Mathf.Max(1f, multiplier);
+        }
+
+        public void ResetAllUpgrades()
+        {
+            moneyRewardStacks = 0;
+            rareOreSpawnStacks = 0;
+            oreDamageStacks = 0;
+            oreSpawnSpeedStacks = 0;
+            npcMoveSpeedStacks = 0;
+            rewardRemainder = 0f;
+            UpgradesChanged?.Invoke();
         }
 
         private void OnValidate()

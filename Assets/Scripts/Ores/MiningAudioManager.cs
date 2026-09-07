@@ -12,6 +12,8 @@ namespace MiningSimulator.Ores
         [SerializeField] private NpcShop npcShop;
         [SerializeField] private MiningUpgradeSystem upgradeSystem;
         [SerializeField] private MiningUpgradePanel upgradePanel;
+        [SerializeField] private MiningRebirthSystem rebirthSystem;
+        [SerializeField] private MiningRebirthPanel rebirthPanel;
         [SerializeField] private AudioSource musicSource;
         [SerializeField] private AudioSource sfxSource;
 
@@ -25,6 +27,7 @@ namespace MiningSimulator.Ores
 
         private void Awake()
         {
+            ResolveSources();
             ConfigureSources();
         }
 
@@ -57,6 +60,23 @@ namespace MiningSimulator.Ores
                 upgradePanel.PanelClosed -= HandlePanelClosed;
                 upgradePanel.PanelClosed += HandlePanelClosed;
             }
+
+            if (rebirthSystem != null)
+            {
+                rebirthSystem.RebirthCompleted -= HandleRebirthCompleted;
+                rebirthSystem.RebirthCompleted += HandleRebirthCompleted;
+            }
+
+            if (rebirthPanel != null)
+            {
+                rebirthPanel.PanelOpened -= HandlePanelOpened;
+                rebirthPanel.PanelOpened += HandlePanelOpened;
+                rebirthPanel.PanelClosed -= HandlePanelClosed;
+                rebirthPanel.PanelClosed += HandlePanelClosed;
+            }
+
+            ResolveSources();
+            ConfigureSources();
         }
 
         private void Start()
@@ -90,12 +110,23 @@ namespace MiningSimulator.Ores
                 upgradePanel.PanelOpened -= HandlePanelOpened;
                 upgradePanel.PanelClosed -= HandlePanelClosed;
             }
+
+            if (rebirthSystem != null)
+            {
+                rebirthSystem.RebirthCompleted -= HandleRebirthCompleted;
+            }
+
+            if (rebirthPanel != null)
+            {
+                rebirthPanel.PanelOpened -= HandlePanelOpened;
+                rebirthPanel.PanelClosed -= HandlePanelClosed;
+            }
         }
 
         public void PlayBackgroundMusic()
         {
             if (audioData == null || musicSource == null ||
-                audioData.BackgroundMusic == null || musicMuted)
+                !EnsureClipLoaded(audioData.BackgroundMusic) || musicMuted)
             {
                 return;
             }
@@ -142,7 +173,7 @@ namespace MiningSimulator.Ores
 
         public void PlaySfx(AudioClip clip)
         {
-            if (clip == null || audioData == null || sfxSource == null || sfxMuted)
+            if (audioData == null || sfxSource == null || sfxMuted || !EnsureClipLoaded(clip))
             {
                 return;
             }
@@ -177,6 +208,53 @@ namespace MiningSimulator.Ores
                 sfxSource.mute = sfxMuted;
                 sfxSource.outputAudioMixerGroup = audioData.SfxMixerGroup;
             }
+        }
+
+        private void ResolveSources()
+        {
+            Transform audioRoot = transform.Find("Audio");
+            if (audioRoot == null)
+            {
+                var audioObject = new GameObject("Audio");
+                audioObject.transform.SetParent(transform, false);
+                audioRoot = audioObject.transform;
+            }
+
+            musicSource = ResolveSource(musicSource, audioRoot, "Music Source");
+            sfxSource = ResolveSource(sfxSource, audioRoot, "SFX Source");
+            if (sfxSource == musicSource)
+            {
+                sfxSource = ResolveSource(null, audioRoot, "SFX Source");
+            }
+        }
+
+        private static AudioSource ResolveSource(AudioSource current, Transform parent, string objectName)
+        {
+            if (current != null)
+            {
+                return current;
+            }
+
+            Transform sourceTransform = parent.Find(objectName);
+            if (sourceTransform == null)
+            {
+                var sourceObject = new GameObject(objectName);
+                sourceObject.transform.SetParent(parent, false);
+                sourceTransform = sourceObject.transform;
+            }
+
+            return sourceTransform.GetComponent<AudioSource>() ??
+                   sourceTransform.gameObject.AddComponent<AudioSource>();
+        }
+
+        private static bool EnsureClipLoaded(AudioClip clip)
+        {
+            if (clip == null || clip.loadState == AudioDataLoadState.Failed)
+            {
+                return false;
+            }
+
+            return clip.loadState != AudioDataLoadState.Unloaded || clip.LoadAudioData();
         }
 
         private void HandleOreDamaged(Ore ore)
@@ -227,6 +305,14 @@ namespace MiningSimulator.Ores
             if (audioData != null)
             {
                 PlaySfx(audioData.PanelCloseSfx);
+            }
+        }
+
+        private void HandleRebirthCompleted(int count)
+        {
+            if (audioData != null)
+            {
+                PlaySfx(audioData.RebirthSfx);
             }
         }
     }

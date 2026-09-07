@@ -41,5 +41,16 @@ namespace MiningSimulator.Ores
             MoneyChanged?.Invoke(currentMoney);
             return true;
         }
+
+        public void ResetMoney()
+        {
+            if (currentMoney == 0)
+            {
+                return;
+            }
+
+            currentMoney = 0;
+            MoneyChanged?.Invoke(currentMoney);
+        }
     }
 }

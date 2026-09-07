@@ -39,6 +39,7 @@
 | `Assets/GameData/Upgrades` | Mining upgrade percentages, stack limits, and price progression | Confirmed | Upgrade panel feature |
 | `Assets/GameData/UI` | Editable mining HUD layout, colors, typography, and outline values | Confirmed | Upgrade panel presentation |
 | `Assets/GameData/Audio` | Background music, SFX clips, volumes, pitch, and playback limits | Confirmed | Audio manager feature |
+| `Assets/GameData/Rebirth` | Rebirth requirement growth, permanent money boost, and save key | Confirmed | Rebirth feature |
 | `Assets/Scripts/Ores` | First-party ore runtime and editor code | Confirmed | Starter ore feature |
 | `Assets/Scenes` | Unity starter scene | Confirmed | Repository inspection |
 | `Assets/Settings` | URP renderer and pipeline assets | Confirmed | Repository inspection |
@@ -88,10 +89,17 @@
 - `MiningGameManager` is a serialized composition root that exposes the existing mining systems without
   replacing their ownership or introducing a global singleton.
 - `MiningAudioManager` owns one looping music source and one shared SFX source. It reacts to ore hits,
-  ore breaks, NPC purchases, upgrade purchases, and upgrade-panel navigation. All clips and playback
-  values live in `Assets/GameData/Audio/MiningAudioData.asset`.
+  ore breaks, NPC purchases, upgrade purchases, panel navigation, and rebirth. It repairs missing
+  AudioSource references at runtime. All clips and playback values live in
+  `Assets/GameData/Audio/MiningAudioData.asset`.
 - `Mining Simulator/Tools/Audio Manager` opens an editor tool for audio assignment and runtime setup.
-- No save system exists yet.
+- `MiningRebirthSystem` resets money and all temporary upgrade stacks at the configured requirement,
+  persists completed rebirths with a versioned PlayerPrefs key, and applies the permanent money
+  multiplier before ore rewards are calculated. Its values live in `MiningRebirthData.asset`.
+- `MiningRebirthPanel` presents an editable red/white confirmation modal and an event-driven HUD with
+  a green UI MicroBar. Rebirth layout, typography, colors, and smooth button animation live in
+  `MiningUiData.asset`.
+- No general save system exists yet; only rebirth count has dedicated persistence.
 
 ## Coding Conventions
 

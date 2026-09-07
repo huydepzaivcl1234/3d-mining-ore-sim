@@ -128,6 +128,40 @@ namespace MiningSimulator.Ores
         [SerializeField] private Color navigationButtonColor = new(0.14f, 0.72f, 0.52f, 1f);
         [SerializeField] private Color titleTextColor = Color.white;
 
+        [Header("Rebirth HUD Layout")]
+        [SerializeField] private Vector2 rebirthHudPosition = new(-24f, -24f);
+        [SerializeField] private Vector2 rebirthHudSize = new(380f, 172f);
+        [SerializeField] private Vector2 rebirthHudHeaderSize = new(380f, 50f);
+        [SerializeField] private Vector2 rebirthBoostPosition = new(20f, -56f);
+        [SerializeField] private Vector2 rebirthBoostSize = new(340f, 24f);
+        [SerializeField] private Vector2 rebirthProgressPosition = new(20f, -84f);
+        [SerializeField] private Vector2 rebirthProgressSize = new(340f, 28f);
+        [SerializeField] private Vector2 rebirthOpenButtonPosition = new(20f, -126f);
+        [SerializeField] private Vector2 rebirthOpenButtonSize = new(340f, 34f);
+        [Min(1f), SerializeField] private float rebirthTitleFontSize = 23f;
+        [Min(1f), SerializeField] private float rebirthInfoFontSize = 17f;
+
+        [Header("Rebirth Confirmation Layout")]
+        [SerializeField] private Vector2 rebirthModalSize = new(620f, 480f);
+        [SerializeField] private Vector2 rebirthModalHeaderSize = new(620f, 78f);
+        [SerializeField] private Vector2 rebirthWarningPosition = new(45f, -112f);
+        [SerializeField] private Vector2 rebirthWarningSize = new(530f, 150f);
+        [SerializeField] private Vector2 rebirthNextBoostPosition = new(45f, -270f);
+        [SerializeField] private Vector2 rebirthNextBoostSize = new(530f, 50f);
+        [SerializeField] private Vector2 rebirthConfirmButtonPosition = new(55f, -382f);
+        [SerializeField] private Vector2 rebirthCancelButtonPosition = new(325f, -382f);
+        [SerializeField] private Vector2 rebirthModalButtonSize = new(240f, 58f);
+        [Min(1f), SerializeField] private float rebirthWarningFontSize = 26f;
+        [Min(1f), SerializeField] private float rebirthModalTextFontSize = 22f;
+
+        [Header("Rebirth Colors")]
+        [SerializeField] private Color rebirthHudColor = new(0.96f, 0.98f, 1f, 0.96f);
+        [SerializeField] private Color rebirthHeaderColor = new(1f, 0.15f, 0.18f, 1f);
+        [SerializeField] private Color rebirthProgressColor = new(0.12f, 0.92f, 0.18f, 1f);
+        [SerializeField] private Color rebirthProgressGhostColor = new(0.55f, 1f, 0.58f, 1f);
+        [SerializeField] private Color rebirthConfirmColor = new(0.12f, 0.95f, 0.16f, 1f);
+        [SerializeField] private Color rebirthCancelColor = new(1f, 0.12f, 0.18f, 1f);
+
         public Vector2 ReferenceResolution => referenceResolution;
         public float MatchWidthOrHeight => matchWidthOrHeight;
         public int CanvasSortingOrder => canvasSortingOrder;
@@ -230,6 +264,34 @@ namespace MiningSimulator.Ores
         public Color CloseButtonColor => closeButtonColor;
         public Color NavigationButtonColor => navigationButtonColor;
         public Color TitleTextColor => titleTextColor;
+        public Vector2 RebirthHudPosition => rebirthHudPosition;
+        public Vector2 RebirthHudSize => rebirthHudSize;
+        public Vector2 RebirthHudHeaderSize => rebirthHudHeaderSize;
+        public Vector2 RebirthBoostPosition => rebirthBoostPosition;
+        public Vector2 RebirthBoostSize => rebirthBoostSize;
+        public Vector2 RebirthProgressPosition => rebirthProgressPosition;
+        public Vector2 RebirthProgressSize => rebirthProgressSize;
+        public Vector2 RebirthOpenButtonPosition => rebirthOpenButtonPosition;
+        public Vector2 RebirthOpenButtonSize => rebirthOpenButtonSize;
+        public float RebirthTitleFontSize => rebirthTitleFontSize;
+        public float RebirthInfoFontSize => rebirthInfoFontSize;
+        public Vector2 RebirthModalSize => rebirthModalSize;
+        public Vector2 RebirthModalHeaderSize => rebirthModalHeaderSize;
+        public Vector2 RebirthWarningPosition => rebirthWarningPosition;
+        public Vector2 RebirthWarningSize => rebirthWarningSize;
+        public Vector2 RebirthNextBoostPosition => rebirthNextBoostPosition;
+        public Vector2 RebirthNextBoostSize => rebirthNextBoostSize;
+        public Vector2 RebirthConfirmButtonPosition => rebirthConfirmButtonPosition;
+        public Vector2 RebirthCancelButtonPosition => rebirthCancelButtonPosition;
+        public Vector2 RebirthModalButtonSize => rebirthModalButtonSize;
+        public float RebirthWarningFontSize => rebirthWarningFontSize;
+        public float RebirthModalTextFontSize => rebirthModalTextFontSize;
+        public Color RebirthHudColor => rebirthHudColor;
+        public Color RebirthHeaderColor => rebirthHeaderColor;
+        public Color RebirthProgressColor => rebirthProgressColor;
+        public Color RebirthProgressGhostColor => rebirthProgressGhostColor;
+        public Color RebirthConfirmColor => rebirthConfirmColor;
+        public Color RebirthCancelColor => rebirthCancelColor;
 
         private void OnValidate()
         {
@@ -267,6 +329,26 @@ namespace MiningSimulator.Ores
             rewardPopupRiseDistance = Mathf.Max(0f, rewardPopupRiseDistance);
             rewardPopupWorldScale = Mathf.Max(0.001f, rewardPopupWorldScale);
             rewardPopupFontSize = Mathf.Max(1f, rewardPopupFontSize);
+            rebirthHudSize.x = Mathf.Max(1f, rebirthHudSize.x);
+            rebirthHudSize.y = Mathf.Max(1f, rebirthHudSize.y);
+            rebirthHudHeaderSize.x = Mathf.Max(1f, rebirthHudHeaderSize.x);
+            rebirthHudHeaderSize.y = Mathf.Max(1f, rebirthHudHeaderSize.y);
+            rebirthBoostSize.x = Mathf.Max(1f, rebirthBoostSize.x);
+            rebirthBoostSize.y = Mathf.Max(1f, rebirthBoostSize.y);
+            rebirthProgressSize.x = Mathf.Max(1f, rebirthProgressSize.x);
+            rebirthProgressSize.y = Mathf.Max(1f, rebirthProgressSize.y);
+            rebirthOpenButtonSize.x = Mathf.Max(1f, rebirthOpenButtonSize.x);
+            rebirthOpenButtonSize.y = Mathf.Max(1f, rebirthOpenButtonSize.y);
+            rebirthModalSize.x = Mathf.Max(1f, rebirthModalSize.x);
+            rebirthModalSize.y = Mathf.Max(1f, rebirthModalSize.y);
+            rebirthModalHeaderSize.x = Mathf.Max(1f, rebirthModalHeaderSize.x);
+            rebirthModalHeaderSize.y = Mathf.Max(1f, rebirthModalHeaderSize.y);
+            rebirthModalButtonSize.x = Mathf.Max(1f, rebirthModalButtonSize.x);
+            rebirthModalButtonSize.y = Mathf.Max(1f, rebirthModalButtonSize.y);
+            rebirthTitleFontSize = Mathf.Max(1f, rebirthTitleFontSize);
+            rebirthInfoFontSize = Mathf.Max(1f, rebirthInfoFontSize);
+            rebirthWarningFontSize = Mathf.Max(1f, rebirthWarningFontSize);
+            rebirthModalTextFontSize = Mathf.Max(1f, rebirthModalTextFontSize);
         }
     }
 }

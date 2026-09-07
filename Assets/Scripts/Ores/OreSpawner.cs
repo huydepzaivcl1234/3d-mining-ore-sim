@@ -330,7 +330,13 @@ namespace MiningSimulator.Ores
 
         private void HandleRewardGranted(Ore ore, int reward)
         {
-            if (ore == null || rewardPopupPrefab == null || uiData == null)
+            if (ore == null)
+            {
+                return;
+            }
+
+            OreRewardGranted?.Invoke(ore, reward);
+            if (rewardPopupPrefab == null || uiData == null)
             {
                 return;
             }
@@ -338,7 +344,6 @@ namespace MiningSimulator.Ores
             Vector3 popupPosition = ore.GetWorldTopCenter();
             OreRewardPopup popup = Instantiate(rewardPopupPrefab, popupPosition, Quaternion.identity);
             popup.Initialize(reward, popupPosition, uiData);
-            OreRewardGranted?.Invoke(ore, reward);
         }
 
         private void RegisterExistingOres()

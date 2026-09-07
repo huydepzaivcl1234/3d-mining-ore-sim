@@ -21,6 +21,7 @@ MonoBehaviour:
   oreBreakSfx: {fileID: 0}
   npcPurchasedSfx: {fileID: 0}
   upgradePurchasedSfx: {fileID: 0}
+  rebirthSfx: {fileID: 0}
   panelOpenSfx: {fileID: 0}
   panelCloseSfx: {fileID: 0}
   sfxVolume: 0.8

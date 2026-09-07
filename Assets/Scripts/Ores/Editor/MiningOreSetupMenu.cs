@@ -32,6 +32,8 @@ namespace MiningSimulator.Editor
         private const string UiDataPath = UiDataFolder + "/MiningUiData.asset";
         private const string AudioDataFolder = "Assets/GameData/Audio";
         private const string AudioDataPath = AudioDataFolder + "/MiningAudioData.asset";
+        private const string RebirthDataFolder = "Assets/GameData/Rebirth";
+        private const string RebirthDataPath = RebirthDataFolder + "/MiningRebirthData.asset";
         private const string DataFolder = "Assets/GameData/Ores";
         private const string PrefabFolder = "Assets/Prefabs/Ores";
         private const string NpcPrefabFolder = "Assets/Prefabs/NPC";
@@ -43,6 +45,8 @@ namespace MiningSimulator.Editor
         private const string HudCanvasName = "Mining HUD Canvas";
         private const string HealthBarPrefabPath =
             "Assets/Microlight/MicroBar/Prefabs/SimpleBars/Sprite_SimpleMicroBarSRP.prefab";
+        private const string UiMicroBarPrefabPath =
+            "Assets/Microlight/MicroBar/Prefabs/SimpleBars/Image_SimpleMicroBar.prefab";
         private const string SampleScenePath = "Assets/Scenes/SampleScene.unity";
 
         private readonly struct OreSpec
@@ -102,6 +106,7 @@ namespace MiningSimulator.Editor
             EnsureFolder(UpgradeDataFolder);
             EnsureFolder(UiDataFolder);
             EnsureFolder(AudioDataFolder);
+            EnsureFolder(RebirthDataFolder);
             EnsureFolder(PrefabFolder);
             EnsureFolder(NpcPrefabFolder);
             EnsureFolder(SystemPrefabFolder);
@@ -127,10 +132,11 @@ namespace MiningSimulator.Editor
             MiningUpgradeData upgradeData = CreateOrUpdateUpgradeData();
             MiningUiData uiData = CreateOrUpdateUiData();
             MiningAudioData audioData = CreateOrUpdateAudioData();
+            MiningRebirthData rebirthData = CreateOrUpdateRebirthData();
             OreRewardPopup rewardPopupPrefab = CreateOrUpdateRewardPopupPrefab(uiData);
             MiningNpc npcPrefab = CreateOrUpdateNpcPrefab(npcData);
             CreateOrUpdateRuntimePrefab(npcPrefab, gameData, npcData, spawnData, upgradeData, uiData,
-                audioData, rewardPopupPrefab);
+                audioData, rebirthData, rewardPopupPrefab);
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -408,6 +414,18 @@ namespace MiningSimulator.Editor
             return audioData;
         }
 
+        private static MiningRebirthData CreateOrUpdateRebirthData()
+        {
+            MiningRebirthData rebirthData =
+                AssetDatabase.LoadAssetAtPath<MiningRebirthData>(RebirthDataPath);
+            if (rebirthData == null)
+            {
+                rebirthData = ScriptableObject.CreateInstance<MiningRebirthData>();
+                AssetDatabase.CreateAsset(rebirthData, RebirthDataPath);
+            }
+            return rebirthData;
+        }
+
         private static OreRewardPopup CreateOrUpdateRewardPopupPrefab(MiningUiData uiData)
         {
             GameObject existing = AssetDatabase.LoadAssetAtPath<GameObject>(RewardPopupPrefabPath);
@@ -538,7 +556,8 @@ namespace MiningSimulator.Editor
 
         private static void CreateOrUpdateRuntimePrefab(MiningNpc npcPrefab, MiningGameData gameData,
             NpcData npcData, OreSpawnData spawnData, MiningUpgradeData upgradeData, MiningUiData uiData,
-            MiningAudioData audioData, OreRewardPopup rewardPopupPrefab)
+            MiningAudioData audioData, MiningRebirthData rebirthData,
+            OreRewardPopup rewardPopupPrefab)
         {
             GameObject existing = AssetDatabase.LoadAssetAtPath<GameObject>(RuntimePrefabPath);
             bool isNew = existing == null;
@@ -557,6 +576,10 @@ namespace MiningSimulator.Editor
                                                     runtime.AddComponent<MiningUpgradeSystem>();
                 MiningUpgradePanel upgradePanel = runtime.GetComponent<MiningUpgradePanel>() ??
                                                    runtime.AddComponent<MiningUpgradePanel>();
+                MiningRebirthSystem rebirthSystem = runtime.GetComponent<MiningRebirthSystem>() ??
+                                                      runtime.AddComponent<MiningRebirthSystem>();
+                MiningRebirthPanel rebirthPanel = runtime.GetComponent<MiningRebirthPanel>() ??
+                                                    runtime.AddComponent<MiningRebirthPanel>();
                 MiningAudioManager audioManager = runtime.GetComponent<MiningAudioManager>() ??
                                                   runtime.AddComponent<MiningAudioManager>();
                 MiningGameManager gameManager = runtime.GetComponent<MiningGameManager>() ??
@@ -571,6 +594,14 @@ namespace MiningSimulator.Editor
                                           musicSourceObject.gameObject.AddComponent<AudioSource>();
                 AudioSource sfxSource = sfxSourceObject.GetComponent<AudioSource>() ??
                                         sfxSourceObject.gameObject.AddComponent<AudioSource>();
+                musicSource.playOnAwake = false;
+                musicSource.loop = audioData.LoopMusic;
+                musicSource.volume = audioData.MusicVolume;
+                musicSource.spatialBlend = 0f;
+                sfxSource.playOnAwake = false;
+                sfxSource.loop = false;
+                sfxSource.volume = 1f;
+                sfxSource.spatialBlend = 0f;
 
                 var walletSerialized = new SerializedObject(wallet);
                 SetReferenceIfMissing(walletSerialized.FindProperty("gameData"), gameData);
@@ -608,6 +639,13 @@ namespace MiningSimulator.Editor
                 hudSerialized.ApplyModifiedPropertiesWithoutUndo();
 
                 ConfigureUpgradePanel(runtime, upgradePanel, upgradeSystem, wallet, upgradeData, uiData);
+                ConfigureRebirthHud(runtime, rebirthPanel, rebirthSystem, wallet, uiData);
+
+                var rebirthSerialized = new SerializedObject(rebirthSystem);
+                rebirthSerialized.FindProperty("wallet").objectReferenceValue = wallet;
+                rebirthSerialized.FindProperty("upgradeSystem").objectReferenceValue = upgradeSystem;
+                rebirthSerialized.FindProperty("rebirthData").objectReferenceValue = rebirthData;
+                rebirthSerialized.ApplyModifiedPropertiesWithoutUndo();
 
                 var audioSerialized = new SerializedObject(audioManager);
                 SetReferenceIfMissing(audioSerialized.FindProperty("audioData"), audioData);
@@ -615,8 +653,10 @@ namespace MiningSimulator.Editor
                 SetReferenceIfMissing(audioSerialized.FindProperty("npcShop"), shop);
                 SetReferenceIfMissing(audioSerialized.FindProperty("upgradeSystem"), upgradeSystem);
                 SetReferenceIfMissing(audioSerialized.FindProperty("upgradePanel"), upgradePanel);
-                SetReferenceIfMissing(audioSerialized.FindProperty("musicSource"), musicSource);
-                SetReferenceIfMissing(audioSerialized.FindProperty("sfxSource"), sfxSource);
+                SetReferenceIfMissing(audioSerialized.FindProperty("rebirthSystem"), rebirthSystem);
+                SetReferenceIfMissing(audioSerialized.FindProperty("rebirthPanel"), rebirthPanel);
+                audioSerialized.FindProperty("musicSource").objectReferenceValue = musicSource;
+                audioSerialized.FindProperty("sfxSource").objectReferenceValue = sfxSource;
                 audioSerialized.ApplyModifiedPropertiesWithoutUndo();
 
                 var gameManagerSerialized = new SerializedObject(gameManager);
@@ -624,8 +664,10 @@ namespace MiningSimulator.Editor
                 SetReferenceIfMissing(gameManagerSerialized.FindProperty("oreSpawner"), spawner);
                 SetReferenceIfMissing(gameManagerSerialized.FindProperty("npcShop"), shop);
                 SetReferenceIfMissing(gameManagerSerialized.FindProperty("upgradeSystem"), upgradeSystem);
+                SetReferenceIfMissing(gameManagerSerialized.FindProperty("rebirthSystem"), rebirthSystem);
                 SetReferenceIfMissing(gameManagerSerialized.FindProperty("hud"), hud);
                 SetReferenceIfMissing(gameManagerSerialized.FindProperty("upgradePanel"), upgradePanel);
+                SetReferenceIfMissing(gameManagerSerialized.FindProperty("rebirthPanel"), rebirthPanel);
                 SetReferenceIfMissing(gameManagerSerialized.FindProperty("audioManager"), audioManager);
                 SetReferenceIfMissing(gameManagerSerialized.FindProperty("orbitCamera"), orbitCamera);
                 gameManagerSerialized.ApplyModifiedPropertiesWithoutUndo();
@@ -955,6 +997,193 @@ namespace MiningSimulator.Editor
                 uiData.UpgradeIconColor, uiData);
             StyleUpgradeCardIcon(button.transform.Find("Icon"), iconSprite, uiData);
             return button;
+        }
+
+        private static void ConfigureRebirthHud(GameObject runtime, MiningRebirthPanel panelController,
+            MiningRebirthSystem rebirthSystem, PlayerWallet wallet, MiningUiData uiData)
+        {
+            Transform canvas = runtime.transform.Find(HudCanvasName);
+            if (canvas == null || uiData == null)
+            {
+                return;
+            }
+
+            Transform hud = EnsureUiObject(canvas, "Rebirth HUD", typeof(Image));
+            ConfigureTopRightRect(hud, uiData.RebirthHudPosition, uiData.RebirthHudSize);
+            hud.GetComponent<Image>().color = uiData.RebirthHudColor;
+            ApplyOutline(hud.gameObject, uiData.OutlineColor, uiData.OutlineThickness);
+
+            Transform hudHeader = EnsureUiObject(hud, "Header", typeof(Image));
+            ConfigureTopLeftRect(hudHeader, Vector2.zero, uiData.RebirthHudHeaderSize);
+            hudHeader.GetComponent<Image>().color = uiData.RebirthHeaderColor;
+            ApplyOutline(hudHeader.gameObject, uiData.OutlineColor, uiData.OutlineThickness);
+            TextMeshProUGUI hudTitle = EnsureText(hudHeader, "Title");
+            StretchRect(hudTitle.rectTransform);
+            hudTitle.text = "REBIRTH";
+            hudTitle.fontSize = uiData.RebirthTitleFontSize;
+            hudTitle.color = uiData.TitleTextColor;
+            hudTitle.alignment = TextAlignmentOptions.Center;
+
+            TextMeshProUGUI boostLabel = EnsureText(hud, "Boost");
+            ConfigureTopLeftRect(boostLabel.transform, uiData.RebirthBoostPosition,
+                uiData.RebirthBoostSize);
+            boostLabel.text = "REBIRTH 0  •  x1.00 TIỀN";
+            boostLabel.fontSize = uiData.RebirthInfoFontSize;
+            boostLabel.color = uiData.CardTextColor;
+            boostLabel.alignment = TextAlignmentOptions.Center;
+
+            MicroBar progressBar = EnsureRebirthProgressBar(hud, uiData);
+            TextMeshProUGUI progressLabel = EnsureText(hud, "Progress Label");
+            ConfigureTopLeftRect(progressLabel.transform, uiData.RebirthProgressPosition,
+                uiData.RebirthProgressSize);
+            progressLabel.text = "0 / 1,000 TIỀN";
+            progressLabel.fontSize = uiData.RebirthInfoFontSize;
+            progressLabel.color = uiData.TitleTextColor;
+            progressLabel.alignment = TextAlignmentOptions.Center;
+            progressLabel.raycastTarget = false;
+
+            Button openButton = EnsureStyledButton(hud, "Open Rebirth",
+                uiData.RebirthOpenButtonPosition, uiData.RebirthOpenButtonSize,
+                uiData.RebirthHeaderColor, uiData.TitleTextColor, uiData);
+            TextMeshProUGUI openLabel = openButton.GetComponentInChildren<TextMeshProUGUI>(true);
+            openLabel.text = "REBIRTH";
+            openLabel.fontSize = uiData.RebirthInfoFontSize;
+
+            Transform modal = EnsureUiObject(canvas, "Rebirth Confirmation", typeof(Image));
+            ConfigureCenteredRect(modal, Vector2.zero, uiData.RebirthModalSize);
+            modal.GetComponent<Image>().color = uiData.PanelColor;
+            ApplyOutline(modal.gameObject, uiData.OutlineColor, uiData.OutlineThickness);
+
+            Transform modalHeader = EnsureUiObject(modal, "Header", typeof(Image));
+            ConfigureTopLeftRect(modalHeader, Vector2.zero, uiData.RebirthModalHeaderSize);
+            modalHeader.GetComponent<Image>().color = uiData.RebirthHeaderColor;
+            ApplyOutline(modalHeader.gameObject, uiData.OutlineColor, uiData.OutlineThickness);
+            TextMeshProUGUI modalTitle = EnsureText(modalHeader, "Title");
+            StretchRect(modalTitle.rectTransform);
+            modalTitle.text = "REBIRTH!";
+            modalTitle.fontSize = uiData.TitleFontSize;
+            modalTitle.color = uiData.TitleTextColor;
+            modalTitle.alignment = TextAlignmentOptions.Center;
+
+            TextMeshProUGUI warning = EnsureText(modal, "Warning");
+            ConfigureTopLeftRect(warning.transform, uiData.RebirthWarningPosition,
+                uiData.RebirthWarningSize);
+            warning.text = "CẢNH BÁO!\n\nBạn sắp Rebirth! Toàn bộ tiền và mọi nâng cấp hiện tại sẽ bị xóa.";
+            warning.fontSize = uiData.RebirthWarningFontSize;
+            warning.color = uiData.CardTextColor;
+            warning.alignment = TextAlignmentOptions.Center;
+            warning.textWrappingMode = TextWrappingModes.Normal;
+
+            TextMeshProUGUI nextBoost = EnsureText(modal, "Next Boost");
+            ConfigureTopLeftRect(nextBoost.transform, uiData.RebirthNextBoostPosition,
+                uiData.RebirthNextBoostSize);
+            nextBoost.text = "Boost vĩnh viễn sau Rebirth: x1.10 tiền";
+            nextBoost.fontSize = uiData.RebirthModalTextFontSize;
+            nextBoost.color = uiData.CardTextColor;
+            nextBoost.alignment = TextAlignmentOptions.Center;
+
+            Button confirmButton = EnsureStyledButton(modal, "Confirm Rebirth",
+                uiData.RebirthConfirmButtonPosition, uiData.RebirthModalButtonSize,
+                uiData.RebirthConfirmColor, uiData.CardTextColor, uiData);
+            TextMeshProUGUI confirmLabel = confirmButton.GetComponentInChildren<TextMeshProUGUI>(true);
+            confirmLabel.text = "REBIRTH!";
+            confirmLabel.fontSize = uiData.RebirthModalTextFontSize;
+
+            Button cancelButton = EnsureStyledButton(modal, "Cancel Rebirth",
+                uiData.RebirthCancelButtonPosition, uiData.RebirthModalButtonSize,
+                uiData.RebirthCancelColor, uiData.TitleTextColor, uiData);
+            TextMeshProUGUI cancelLabel = cancelButton.GetComponentInChildren<TextMeshProUGUI>(true);
+            cancelLabel.text = "ĐỂ SAU";
+            cancelLabel.fontSize = uiData.RebirthModalTextFontSize;
+
+            // Keep the modal selectable while editing. MiningRebirthPanel hides it in Awake.
+            modal.gameObject.SetActive(true);
+
+            var serialized = new SerializedObject(panelController);
+            serialized.FindProperty("rebirthSystem").objectReferenceValue = rebirthSystem;
+            serialized.FindProperty("wallet").objectReferenceValue = wallet;
+            serialized.FindProperty("confirmationPanel").objectReferenceValue = modal.gameObject;
+            serialized.FindProperty("openButton").objectReferenceValue = openButton;
+            serialized.FindProperty("confirmButton").objectReferenceValue = confirmButton;
+            serialized.FindProperty("cancelButton").objectReferenceValue = cancelButton;
+            serialized.FindProperty("progressLabel").objectReferenceValue = progressLabel;
+            serialized.FindProperty("boostLabel").objectReferenceValue = boostLabel;
+            serialized.FindProperty("warningLabel").objectReferenceValue = warning;
+            serialized.FindProperty("nextBoostLabel").objectReferenceValue = nextBoost;
+            serialized.FindProperty("progressBar").objectReferenceValue = progressBar;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static MicroBar EnsureRebirthProgressBar(Transform parent, MiningUiData uiData)
+        {
+            Transform existing = parent.Find("Progress Bar");
+            if (existing == null)
+            {
+                GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(UiMicroBarPrefabPath);
+                if (prefab == null)
+                {
+                    Debug.LogError($"MicroBar UI prefab is missing at {UiMicroBarPrefabPath}.");
+                    return null;
+                }
+
+                GameObject instance = PrefabUtility.InstantiatePrefab(prefab, parent) as GameObject;
+                if (instance == null)
+                {
+                    Debug.LogError("Could not create the Rebirth progress MicroBar.");
+                    return null;
+                }
+                instance.name = "Progress Bar";
+                existing = instance.transform;
+            }
+
+            ConfigureTopLeftRect(existing, uiData.RebirthProgressPosition, uiData.RebirthProgressSize);
+            MicroBar bar = existing.GetComponent<MicroBar>();
+            if (bar == null)
+            {
+                Debug.LogError("Rebirth Progress Bar has no MicroBar component.", existing);
+                return null;
+            }
+
+            var serialized = new SerializedObject(bar);
+            SerializedProperty simpleBar = serialized.FindProperty("simpleBar");
+            simpleBar.FindPropertyRelative("_adaptiveColor").boolValue = false;
+            simpleBar.FindPropertyRelative("_barPrimaryColor").colorValue = uiData.RebirthProgressColor;
+            simpleBar.FindPropertyRelative("_ghostBarDamageColor").colorValue =
+                uiData.RebirthProgressGhostColor;
+            simpleBar.FindPropertyRelative("_ghostBarHealColor").colorValue =
+                uiData.RebirthProgressGhostColor;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            return bar;
+        }
+
+        private static void ConfigureTopRightRect(Transform target, Vector2 position, Vector2 size)
+        {
+            RectTransform rect = target as RectTransform;
+            if (rect == null)
+            {
+                return;
+            }
+
+            rect.anchorMin = new Vector2(1f, 1f);
+            rect.anchorMax = new Vector2(1f, 1f);
+            rect.pivot = new Vector2(1f, 1f);
+            rect.anchoredPosition = position;
+            rect.sizeDelta = size;
+        }
+
+        private static void ConfigureCenteredRect(Transform target, Vector2 position, Vector2 size)
+        {
+            RectTransform rect = target as RectTransform;
+            if (rect == null)
+            {
+                return;
+            }
+
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = position;
+            rect.sizeDelta = size;
         }
 
         private static void StyleUpgradeCardIcon(Transform icon, Sprite iconSprite, MiningUiData uiData)
