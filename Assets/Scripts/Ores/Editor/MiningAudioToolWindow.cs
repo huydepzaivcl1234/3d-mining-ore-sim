@@ -28,10 +28,7 @@ namespace MiningSimulator.Editor
 
         private void OnDisable()
         {
-            if (audioDataEditor != null)
-            {
-                DestroyImmediate(audioDataEditor);
-            }
+            ReleaseAudioDataEditor();
         }
 
         private void OnGUI()
@@ -49,8 +46,15 @@ namespace MiningSimulator.Editor
             else
             {
                 scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
-                audioDataEditor ??= UnityEditor.Editor.CreateEditor(audioData);
-                audioDataEditor.OnInspectorGUI();
+                if (audioDataEditor == null)
+                {
+                    audioDataEditor = UnityEditor.Editor.CreateEditor(audioData);
+                }
+
+                if (audioDataEditor != null)
+                {
+                    audioDataEditor.OnInspectorGUI();
+                }
                 EditorGUILayout.EndScrollView();
 
                 if (GUILayout.Button("Chọn MiningAudioData trong Project"))
@@ -79,13 +83,21 @@ namespace MiningSimulator.Editor
 
         private void LoadAudioData()
         {
+            ReleaseAudioDataEditor();
             audioData = AssetDatabase.LoadAssetAtPath<MiningAudioData>(AudioDataPath);
+            Repaint();
+        }
+
+        private void ReleaseAudioDataEditor()
+        {
             if (audioDataEditor != null)
             {
                 DestroyImmediate(audioDataEditor);
-                audioDataEditor = null;
             }
-            Repaint();
+
+            // Unity objects can compare equal to null after destruction while their managed
+            // wrapper is still non-null. Clear it explicitly so the next GUI pass rebuilds it.
+            audioDataEditor = null;
         }
     }
 }
