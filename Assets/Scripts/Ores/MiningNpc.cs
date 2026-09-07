@@ -372,7 +372,7 @@ namespace MiningSimulator.Ores
                 float sideDot = Vector3.Dot(toBlocker, side);
                 if (Mathf.Abs(sideDot) <= Mathf.Epsilon)
                 {
-                    sideDot = ((GetInstanceID() ^ blockingOre.GetInstanceID()) & 1) == 0 ? -1f : 1f;
+                    sideDot = ((GetEntityId() ^ blockingOre.GetEntityId()) & 1) == 0 ? -1f : 1f;
                 }
 
                 avoidanceSide = sideDot > 0f ? -1f : 1f;
@@ -401,7 +401,7 @@ namespace MiningSimulator.Ores
                 float distance = away.magnitude;
                 if (distance <= Mathf.Epsilon)
                 {
-                    away = transform.GetInstanceID() < otherNpc.transform.GetInstanceID()
+                    away = transform.GetEntityId() < otherNpc.transform.GetEntityId()
                         ? transform.right
                         : -transform.right;
                     distance = npcData.ColliderRadius;
