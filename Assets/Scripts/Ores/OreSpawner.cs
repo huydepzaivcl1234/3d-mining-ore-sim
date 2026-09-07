@@ -24,6 +24,20 @@ namespace MiningSimulator.Ores
         public bool TryReserveClosestOre(MiningNpc miner, Vector3 origin, int miningPower,
             out Ore reservedOre, out int slotIndex)
         {
+            return TryReserveClosestOre(miner, origin, miningPower, null, null,
+                out reservedOre, out slotIndex);
+        }
+
+        public bool TryReserveClosestOre(MiningNpc miner, Vector3 origin, int miningPower,
+            Ore excludedOre, out Ore reservedOre, out int slotIndex)
+        {
+            return TryReserveClosestOre(miner, origin, miningPower, excludedOre, null,
+                out reservedOre, out slotIndex);
+        }
+
+        public bool TryReserveClosestOre(MiningNpc miner, Vector3 origin, int miningPower,
+            Ore excludedOre, Ore additionallyExcludedOre, out Ore reservedOre, out int slotIndex)
+        {
             if (spawnData == null)
             {
                 reservedOre = null;
@@ -36,12 +50,13 @@ namespace MiningSimulator.Ores
 
             foreach (Ore ore in activeOres)
             {
-                if (ore == null || !ore.CanAcceptMiner(miner, miningPower))
+                if (ore == null || ore == excludedOre || ore == additionallyExcludedOre ||
+                    !ore.CanAcceptMiner(miner, miningPower))
                 {
                     continue;
                 }
 
-                float sqrDistance = (ore.transform.position - origin).sqrMagnitude;
+                float sqrDistance = ore.SqrDistanceToSurface(origin);
                 if (sqrDistance >= closestSqrDistance)
                 {
                     continue;
@@ -60,6 +75,13 @@ namespace MiningSimulator.Ores
             reservedOre = null;
             slotIndex = -1;
             return false;
+        }
+
+        public bool TryReserveOre(MiningNpc miner, Ore ore, int miningPower, out int slotIndex)
+        {
+            slotIndex = -1;
+            return ore != null && activeOres.Contains(ore) &&
+                   ore.TryReserveMiner(miner, miningPower, out slotIndex);
         }
 
         private void OnEnable()

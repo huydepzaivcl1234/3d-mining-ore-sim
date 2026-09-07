@@ -18,6 +18,10 @@ namespace MiningSimulator.Ores
         [Min(0.1f), SerializeField] private float miningRange = 1.8f;
         [Min(0.01f), SerializeField] private float stoppingDistance = 0.12f;
         [Min(0.01f), SerializeField] private float resumeMovingDistance = 0.2f;
+        [Min(0.1f), SerializeField] private float movementAcceleration = 18f;
+        [Min(0.1f), SerializeField] private float brakingAcceleration = 28f;
+        [Min(0f), SerializeField] private float targetSwitchDistanceAdvantage = 0.25f;
+        [Min(0f), SerializeField] private float standSlotSpacingPadding = 0.12f;
         [Min(1), SerializeField] private int miningPower = 6;
         [Min(1), SerializeField] private int damagePerHit = 2;
         [Min(0.05f), SerializeField] private float secondsPerHit = 0.65f;
@@ -28,6 +32,16 @@ namespace MiningSimulator.Ores
         [Min(0.1f), SerializeField] private float colliderHeight = 1.8f;
         [Min(0.01f), SerializeField] private float mass = 1f;
         [SerializeField] private LayerMask collisionLayers = ~0;
+
+        [Header("Dynamic Obstacle Response")]
+        [Min(0.05f), SerializeField] private float obstacleProbeRadius = 0.32f;
+        [Min(0.1f), SerializeField] private float obstacleProbeDistance = 1.25f;
+        [Min(0f), SerializeField] private float obstacleAvoidanceStrength = 1.35f;
+        [Min(0.1f), SerializeField] private float npcSeparationRadius = 1.05f;
+        [Min(0f), SerializeField] private float npcSeparationStrength = 1.2f;
+        [Min(0.1f), SerializeField] private float stuckTimeout = 1.25f;
+        [Min(0.001f), SerializeField] private float stuckProgressDistance = 0.08f;
+        [Min(0.1f), SerializeField] private float ignoredTargetDuration = 1.5f;
 
         [Header("Tool Animation")]
         [Min(0f), SerializeField] private float toolSwingSpeed = 12f;
@@ -53,6 +67,10 @@ namespace MiningSimulator.Ores
         public float MiningRange => miningRange;
         public float StoppingDistance => stoppingDistance;
         public float ResumeMovingDistance => resumeMovingDistance;
+        public float MovementAcceleration => movementAcceleration;
+        public float BrakingAcceleration => brakingAcceleration;
+        public float TargetSwitchDistanceAdvantage => targetSwitchDistanceAdvantage;
+        public float StandSlotSpacingPadding => standSlotSpacingPadding;
         public int MiningPower => miningPower;
         public int DamagePerHit => damagePerHit;
         public float SecondsPerHit => secondsPerHit;
@@ -61,6 +79,14 @@ namespace MiningSimulator.Ores
         public float ColliderHeight => colliderHeight;
         public float Mass => mass;
         public LayerMask CollisionLayers => collisionLayers;
+        public float ObstacleProbeRadius => obstacleProbeRadius;
+        public float ObstacleProbeDistance => obstacleProbeDistance;
+        public float ObstacleAvoidanceStrength => obstacleAvoidanceStrength;
+        public float NpcSeparationRadius => npcSeparationRadius;
+        public float NpcSeparationStrength => npcSeparationStrength;
+        public float StuckTimeout => stuckTimeout;
+        public float StuckProgressDistance => stuckProgressDistance;
+        public float IgnoredTargetDuration => ignoredTargetDuration;
         public float ToolSwingSpeed => toolSwingSpeed;
         public float ToolSwingAngle => toolSwingAngle;
         public float ToolReturnSpeed => toolReturnSpeed;
@@ -83,6 +109,10 @@ namespace MiningSimulator.Ores
             miningRange = Mathf.Max(0.1f, miningRange);
             stoppingDistance = Mathf.Max(0.01f, stoppingDistance);
             resumeMovingDistance = Mathf.Max(stoppingDistance, resumeMovingDistance);
+            movementAcceleration = Mathf.Max(0.1f, movementAcceleration);
+            brakingAcceleration = Mathf.Max(0.1f, brakingAcceleration);
+            targetSwitchDistanceAdvantage = Mathf.Max(0f, targetSwitchDistanceAdvantage);
+            standSlotSpacingPadding = Mathf.Max(0f, standSlotSpacingPadding);
             miningPower = Mathf.Max(1, miningPower);
             damagePerHit = Mathf.Max(1, damagePerHit);
             secondsPerHit = Mathf.Max(0.05f, secondsPerHit);
@@ -90,6 +120,14 @@ namespace MiningSimulator.Ores
             colliderRadius = Mathf.Max(0.05f, colliderRadius);
             colliderHeight = Mathf.Max(colliderRadius * 2f, colliderHeight);
             mass = Mathf.Max(0.01f, mass);
+            obstacleProbeRadius = Mathf.Max(0.05f, obstacleProbeRadius);
+            obstacleProbeDistance = Mathf.Max(0.1f, obstacleProbeDistance);
+            obstacleAvoidanceStrength = Mathf.Max(0f, obstacleAvoidanceStrength);
+            npcSeparationRadius = Mathf.Max(colliderRadius * 2f, npcSeparationRadius);
+            npcSeparationStrength = Mathf.Max(0f, npcSeparationStrength);
+            stuckTimeout = Mathf.Max(0.1f, stuckTimeout);
+            stuckProgressDistance = Mathf.Max(0.001f, stuckProgressDistance);
+            ignoredTargetDuration = Mathf.Max(0.1f, ignoredTargetDuration);
             toolSwingSpeed = Mathf.Max(0f, toolSwingSpeed);
             toolSwingAngle = Mathf.Max(0f, toolSwingAngle);
             toolReturnSpeed = Mathf.Max(0f, toolReturnSpeed);

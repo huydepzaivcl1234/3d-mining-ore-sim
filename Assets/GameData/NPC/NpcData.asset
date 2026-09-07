@@ -21,6 +21,10 @@ MonoBehaviour:
   miningRange: 1.8
   stoppingDistance: 0.12
   resumeMovingDistance: 0.2
+  movementAcceleration: 18
+  brakingAcceleration: 28
+  targetSwitchDistanceAdvantage: 0.25
+  standSlotSpacingPadding: 0.12
   miningPower: 6
   damagePerHit: 2
   secondsPerHit: 0.65
@@ -31,6 +35,14 @@ MonoBehaviour:
   collisionLayers:
     serializedVersion: 2
     m_Bits: 4294967295
+  obstacleProbeRadius: 0.32
+  obstacleProbeDistance: 1.25
+  obstacleAvoidanceStrength: 1.35
+  npcSeparationRadius: 1.05
+  npcSeparationStrength: 1.2
+  stuckTimeout: 1.25
+  stuckProgressDistance: 0.08
+  ignoredTargetDuration: 1.5
   toolSwingSpeed: 12
   toolSwingAngle: 42
   toolReturnSpeed: 14

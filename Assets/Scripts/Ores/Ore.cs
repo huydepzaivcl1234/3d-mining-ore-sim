@@ -18,6 +18,7 @@ namespace MiningSimulator.Ores
 
         private bool rewardGranted;
         private float damageRemainder;
+        private Collider[] miningColliders;
         private readonly Dictionary<MiningNpc, int> reservedMiners = new();
 
         public OreData Data => data;
@@ -84,8 +85,67 @@ namespace MiningSimulator.Ores
             }
         }
 
+        public Vector3 GetMiningStandPosition(int slotIndex, float minerRadius, float spacingPadding)
+        {
+            int slotCount = data != null ? Mathf.Max(1, data.MaximumMiningNpcs) : 1;
+            float angle = 360f * Mathf.Clamp(slotIndex, 0, slotCount - 1) / slotCount;
+            Vector3 direction = Quaternion.Euler(0f, angle, 0f) * Vector3.forward;
+
+            float oreRadius = 0f;
+            foreach (Collider targetCollider in GetMiningColliders())
+            {
+                if (targetCollider == null || !targetCollider.enabled || targetCollider.isTrigger)
+                {
+                    continue;
+                }
+
+                Vector3 extents = targetCollider.bounds.extents;
+                oreRadius = Mathf.Max(oreRadius, extents.x, extents.z);
+            }
+
+            float collisionSafeRadius = oreRadius + minerRadius + spacingPadding;
+            if (slotCount > 1)
+            {
+                float halfChordAngle = Mathf.PI / slotCount;
+                float slotSafeRadius = (minerRadius + spacingPadding * 0.5f) /
+                                       Mathf.Max(Mathf.Sin(halfChordAngle), 0.01f);
+                collisionSafeRadius = Mathf.Max(collisionSafeRadius, slotSafeRadius);
+            }
+
+            float configuredRadius = data != null ? data.NpcStandDistance : 0f;
+            return transform.position + direction * Mathf.Max(configuredRadius, collisionSafeRadius);
+        }
+
+        public float SqrDistanceToSurface(Vector3 worldPosition)
+        {
+            float closestDistance = float.PositiveInfinity;
+            bool foundCollider = false;
+            foreach (Collider targetCollider in GetMiningColliders())
+            {
+                if (targetCollider == null || !targetCollider.enabled || targetCollider.isTrigger)
+                {
+                    continue;
+                }
+
+                Vector3 closestPoint = targetCollider.ClosestPoint(worldPosition);
+                closestPoint.y = worldPosition.y;
+                closestDistance = Mathf.Min(closestDistance, (closestPoint - worldPosition).sqrMagnitude);
+                foundCollider = true;
+            }
+
+            if (foundCollider)
+            {
+                return closestDistance;
+            }
+
+            Vector3 offset = transform.position - worldPosition;
+            offset.y = 0f;
+            return offset.sqrMagnitude;
+        }
+
         private void Awake()
         {
+            miningColliders = GetComponentsInChildren<Collider>();
             ResetDurability();
         }
 
@@ -101,6 +161,7 @@ namespace MiningSimulator.Ores
             data = oreData;
             wallet = playerWallet;
             upgradeSystem = targetUpgradeSystem;
+            miningColliders = GetComponentsInChildren<Collider>();
             ResetDurability();
         }
 
@@ -209,6 +270,12 @@ namespace MiningSimulator.Ores
             {
                 reservedMiners.Remove(miner);
             }
+        }
+
+        private Collider[] GetMiningColliders()
+        {
+            miningColliders ??= GetComponentsInChildren<Collider>();
+            return miningColliders;
         }
     }
 }
