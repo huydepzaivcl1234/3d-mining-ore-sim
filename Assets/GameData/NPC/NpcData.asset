@@ -29,17 +29,22 @@ MonoBehaviour:
   damagePerHit: 2
   secondsPerHit: 0.65
   targetRefreshInterval: 0.35
+  oreSightProbeRadius: 0.35
+  oreSightDistance: 2.2
+  oreSightOriginHeight: 0.7
   colliderRadius: 0.4
   colliderHeight: 1.8
   mass: 1
   collisionLayers:
     serializedVersion: 2
     m_Bits: 4294967295
+  ignoreNpcPhysicalCollisions: 1
   obstacleProbeRadius: 0.32
   obstacleProbeDistance: 1.25
   obstacleAvoidanceStrength: 1.35
   npcSeparationRadius: 1.05
   npcSeparationStrength: 1.2
+  npcSeparationResponsiveness: 8
   stuckTimeout: 1.25
   stuckProgressDistance: 0.08
   ignoredTargetDuration: 1.5

@@ -17,13 +17,13 @@ MonoBehaviour:
   canvasSortingOrder: 100
   openUpgradePanelOnPlay: 0
   shopPanelPosition: {x: 24, y: -24}
-  shopPanelSize: {x: 330, y: 260}
+  shopPanelSize: {x: 330, y: 320}
   shopTextSize: {x: 294, y: 32}
-  moneyTextPosition: {x: 18, y: -16}
-  npcCountTextPosition: {x: 18, y: -52}
-  buyButtonPosition: {x: 18, y: -88}
+  moneyTextPosition: {x: 18, y: -70}
+  npcCountTextPosition: {x: 18, y: -106}
+  buyButtonPosition: {x: 18, y: -146}
   buyButtonSize: {x: 294, y: 54}
-  statusTextPosition: {x: 18, y: -151}
+  statusTextPosition: {x: 18, y: -210}
   moneyFontSize: 26
   npcCountFontSize: 21
   buyButtonFontSize: 22
@@ -33,6 +33,20 @@ MonoBehaviour:
   statusTextColor: {r: 1, g: 0.82, b: 0.28, a: 1}
   buyButtonColor: {r: 0.95, g: 0.57, b: 0.1, a: 1}
   buyButtonTextColor: {r: 0.08, g: 0.06, b: 0.03, a: 1}
+  shopTitle: KHU ĐÀO QUẶNG
+  shopHeaderSize: {x: 330, y: 54}
+  shopTitleFontSize: 21
+  shopHeaderColor: {r: 0.2, g: 0.65, b: 0.94, a: 1}
+  rewardPopupFormat: +{0}
+  rewardPopupPreviewAmount: 100
+  rewardPopupWorldOffset: {x: 0, y: 0.35, z: 0}
+  rewardPopupDuration: 1.1
+  rewardPopupRiseDistance: 1.2
+  rewardPopupWorldScale: 0.18
+  rewardPopupFontSize: 5
+  rewardPopupColor: {r: 1, g: 0.82, b: 0.16, a: 1}
+  rewardPopupOutlineColor: {r: 0.08, g: 0.04, b: 0.01, a: 1}
+  rewardPopupOutlineWidth: 0.2
   panelSize: {x: 720, y: 680}
   headerSize: {x: 720, y: 82}
   cardSize: {x: 620, y: 78}
@@ -43,7 +57,7 @@ MonoBehaviour:
   backButtonSize: {x: 180, y: 54}
   backButtonPosition: {x: 270, y: -606}
   openButtonSize: {x: 294, y: 46}
-  openButtonPosition: {x: 18, y: -194}
+  openButtonPosition: {x: 18, y: -266}
   outlineThickness: 4
   titleFontSize: 32
   cardFontSize: 20

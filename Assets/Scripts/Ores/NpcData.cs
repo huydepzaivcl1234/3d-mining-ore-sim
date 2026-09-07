@@ -27,11 +27,17 @@ namespace MiningSimulator.Ores
         [Min(0.05f), SerializeField] private float secondsPerHit = 0.65f;
         [Min(0.05f), SerializeField] private float targetRefreshInterval = 0.35f;
 
+        [Header("Ore Sight")]
+        [Min(0.05f), SerializeField] private float oreSightProbeRadius = 0.35f;
+        [Min(0.1f), SerializeField] private float oreSightDistance = 2.2f;
+        [Min(0f), SerializeField] private float oreSightOriginHeight = 0.7f;
+
         [Header("Collision")]
         [Min(0.05f), SerializeField] private float colliderRadius = 0.4f;
         [Min(0.1f), SerializeField] private float colliderHeight = 1.8f;
         [Min(0.01f), SerializeField] private float mass = 1f;
         [SerializeField] private LayerMask collisionLayers = ~0;
+        [SerializeField] private bool ignoreNpcPhysicalCollisions = true;
 
         [Header("Dynamic Obstacle Response")]
         [Min(0.05f), SerializeField] private float obstacleProbeRadius = 0.32f;
@@ -39,6 +45,7 @@ namespace MiningSimulator.Ores
         [Min(0f), SerializeField] private float obstacleAvoidanceStrength = 1.35f;
         [Min(0.1f), SerializeField] private float npcSeparationRadius = 1.05f;
         [Min(0f), SerializeField] private float npcSeparationStrength = 1.2f;
+        [Min(0.1f), SerializeField] private float npcSeparationResponsiveness = 8f;
         [Min(0.1f), SerializeField] private float stuckTimeout = 1.25f;
         [Min(0.001f), SerializeField] private float stuckProgressDistance = 0.08f;
         [Min(0.1f), SerializeField] private float ignoredTargetDuration = 1.5f;
@@ -75,15 +82,20 @@ namespace MiningSimulator.Ores
         public int DamagePerHit => damagePerHit;
         public float SecondsPerHit => secondsPerHit;
         public float TargetRefreshInterval => targetRefreshInterval;
+        public float OreSightProbeRadius => oreSightProbeRadius;
+        public float OreSightDistance => oreSightDistance;
+        public float OreSightOriginHeight => oreSightOriginHeight;
         public float ColliderRadius => colliderRadius;
         public float ColliderHeight => colliderHeight;
         public float Mass => mass;
         public LayerMask CollisionLayers => collisionLayers;
+        public bool IgnoreNpcPhysicalCollisions => ignoreNpcPhysicalCollisions;
         public float ObstacleProbeRadius => obstacleProbeRadius;
         public float ObstacleProbeDistance => obstacleProbeDistance;
         public float ObstacleAvoidanceStrength => obstacleAvoidanceStrength;
         public float NpcSeparationRadius => npcSeparationRadius;
         public float NpcSeparationStrength => npcSeparationStrength;
+        public float NpcSeparationResponsiveness => npcSeparationResponsiveness;
         public float StuckTimeout => stuckTimeout;
         public float StuckProgressDistance => stuckProgressDistance;
         public float IgnoredTargetDuration => ignoredTargetDuration;
@@ -117,6 +129,9 @@ namespace MiningSimulator.Ores
             damagePerHit = Mathf.Max(1, damagePerHit);
             secondsPerHit = Mathf.Max(0.05f, secondsPerHit);
             targetRefreshInterval = Mathf.Max(0.05f, targetRefreshInterval);
+            oreSightProbeRadius = Mathf.Max(0.05f, oreSightProbeRadius);
+            oreSightDistance = Mathf.Max(miningRange, oreSightDistance);
+            oreSightOriginHeight = Mathf.Max(0f, oreSightOriginHeight);
             colliderRadius = Mathf.Max(0.05f, colliderRadius);
             colliderHeight = Mathf.Max(colliderRadius * 2f, colliderHeight);
             mass = Mathf.Max(0.01f, mass);
@@ -125,6 +140,7 @@ namespace MiningSimulator.Ores
             obstacleAvoidanceStrength = Mathf.Max(0f, obstacleAvoidanceStrength);
             npcSeparationRadius = Mathf.Max(colliderRadius * 2f, npcSeparationRadius);
             npcSeparationStrength = Mathf.Max(0f, npcSeparationStrength);
+            npcSeparationResponsiveness = Mathf.Max(0.1f, npcSeparationResponsiveness);
             stuckTimeout = Mathf.Max(0.1f, stuckTimeout);
             stuckProgressDistance = Mathf.Max(0.001f, stuckProgressDistance);
             ignoredTargetDuration = Mathf.Max(0.1f, ignoredTargetDuration);

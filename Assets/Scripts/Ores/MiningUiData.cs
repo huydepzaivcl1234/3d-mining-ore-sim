@@ -14,13 +14,13 @@ namespace MiningSimulator.Ores
 
         [Header("NPC Shop Layout")]
         [SerializeField] private Vector2 shopPanelPosition = new(24f, -24f);
-        [SerializeField] private Vector2 shopPanelSize = new(330f, 260f);
+        [SerializeField] private Vector2 shopPanelSize = new(330f, 320f);
         [SerializeField] private Vector2 shopTextSize = new(294f, 32f);
-        [SerializeField] private Vector2 moneyTextPosition = new(18f, -16f);
-        [SerializeField] private Vector2 npcCountTextPosition = new(18f, -52f);
-        [SerializeField] private Vector2 buyButtonPosition = new(18f, -88f);
+        [SerializeField] private Vector2 moneyTextPosition = new(18f, -70f);
+        [SerializeField] private Vector2 npcCountTextPosition = new(18f, -106f);
+        [SerializeField] private Vector2 buyButtonPosition = new(18f, -146f);
         [SerializeField] private Vector2 buyButtonSize = new(294f, 54f);
-        [SerializeField] private Vector2 statusTextPosition = new(18f, -151f);
+        [SerializeField] private Vector2 statusTextPosition = new(18f, -210f);
         [Min(1f), SerializeField] private float moneyFontSize = 26f;
         [Min(1f), SerializeField] private float npcCountFontSize = 21f;
         [Min(1f), SerializeField] private float buyButtonFontSize = 22f;
@@ -31,18 +31,36 @@ namespace MiningSimulator.Ores
         [SerializeField] private Color buyButtonColor = new(0.95f, 0.57f, 0.1f, 1f);
         [SerializeField] private Color buyButtonTextColor = new(0.08f, 0.06f, 0.03f, 1f);
 
+        [Header("NPC Shop Style")]
+        [SerializeField] private string shopTitle = "KHU ĐÀO QUẶNG";
+        [SerializeField] private Vector2 shopHeaderSize = new(330f, 54f);
+        [Min(1f), SerializeField] private float shopTitleFontSize = 21f;
+        [SerializeField] private Color shopHeaderColor = new(0.20f, 0.65f, 0.94f, 1f);
+
+        [Header("Ore Reward Popup")]
+        [SerializeField] private string rewardPopupFormat = "+{0}";
+        [Min(0), SerializeField] private int rewardPopupPreviewAmount = 100;
+        [SerializeField] private Vector3 rewardPopupWorldOffset = new(0f, 0.35f, 0f);
+        [Min(0.01f), SerializeField] private float rewardPopupDuration = 1.1f;
+        [Min(0f), SerializeField] private float rewardPopupRiseDistance = 1.2f;
+        [Min(0.001f), SerializeField] private float rewardPopupWorldScale = 0.18f;
+        [Min(1f), SerializeField] private float rewardPopupFontSize = 5f;
+        [SerializeField] private Color rewardPopupColor = new(1f, 0.82f, 0.16f, 1f);
+        [SerializeField] private Color rewardPopupOutlineColor = new(0.08f, 0.04f, 0.01f, 1f);
+        [Range(0f, 1f), SerializeField] private float rewardPopupOutlineWidth = 0.2f;
+
         [Header("Upgrade Panel Layout")]
-        [SerializeField] private Vector2 panelSize = new(720f, 560f);
+        [SerializeField] private Vector2 panelSize = new(720f, 680f);
         [SerializeField] private Vector2 headerSize = new(720f, 82f);
-        [SerializeField] private Vector2 cardSize = new(620f, 92f);
-        [SerializeField] private Vector2 firstCardPosition = new(50f, -116f);
-        [Min(0f), SerializeField] private float cardSpacing = 108f;
+        [SerializeField] private Vector2 cardSize = new(620f, 78f);
+        [SerializeField] private Vector2 firstCardPosition = new(50f, -104f);
+        [Min(0f), SerializeField] private float cardSpacing = 88f;
         [SerializeField] private Vector2 closeButtonSize = new(58f, 58f);
         [SerializeField] private Vector2 closeButtonPosition = new(678f, -12f);
         [SerializeField] private Vector2 backButtonSize = new(180f, 54f);
-        [SerializeField] private Vector2 backButtonPosition = new(270f, -486f);
+        [SerializeField] private Vector2 backButtonPosition = new(270f, -606f);
         [SerializeField] private Vector2 openButtonSize = new(294f, 46f);
-        [SerializeField] private Vector2 openButtonPosition = new(18f, -194f);
+        [SerializeField] private Vector2 openButtonPosition = new(18f, -266f);
         [Min(0f), SerializeField] private float outlineThickness = 4f;
 
         [Header("Upgrade Panel Typography")]
@@ -82,6 +100,20 @@ namespace MiningSimulator.Ores
         public Color StatusTextColor => statusTextColor;
         public Color BuyButtonColor => buyButtonColor;
         public Color BuyButtonTextColor => buyButtonTextColor;
+        public string ShopTitle => shopTitle;
+        public Vector2 ShopHeaderSize => shopHeaderSize;
+        public float ShopTitleFontSize => shopTitleFontSize;
+        public Color ShopHeaderColor => shopHeaderColor;
+        public string RewardPopupFormat => rewardPopupFormat;
+        public int RewardPopupPreviewAmount => rewardPopupPreviewAmount;
+        public Vector3 RewardPopupWorldOffset => rewardPopupWorldOffset;
+        public float RewardPopupDuration => rewardPopupDuration;
+        public float RewardPopupRiseDistance => rewardPopupRiseDistance;
+        public float RewardPopupWorldScale => rewardPopupWorldScale;
+        public float RewardPopupFontSize => rewardPopupFontSize;
+        public Color RewardPopupColor => rewardPopupColor;
+        public Color RewardPopupOutlineColor => rewardPopupOutlineColor;
+        public float RewardPopupOutlineWidth => rewardPopupOutlineWidth;
         public Vector2 PanelSize => panelSize;
         public Vector2 HeaderSize => headerSize;
         public Vector2 CardSize => cardSize;
@@ -119,6 +151,13 @@ namespace MiningSimulator.Ores
             cardSize.y = Mathf.Max(1f, cardSize.y);
             cardSpacing = Mathf.Max(0f, cardSpacing);
             outlineThickness = Mathf.Max(0f, outlineThickness);
+            shopHeaderSize.x = Mathf.Max(1f, shopHeaderSize.x);
+            shopHeaderSize.y = Mathf.Max(1f, shopHeaderSize.y);
+            rewardPopupDuration = Mathf.Max(0.01f, rewardPopupDuration);
+            rewardPopupPreviewAmount = Mathf.Max(0, rewardPopupPreviewAmount);
+            rewardPopupRiseDistance = Mathf.Max(0f, rewardPopupRiseDistance);
+            rewardPopupWorldScale = Mathf.Max(0.001f, rewardPopupWorldScale);
+            rewardPopupFontSize = Mathf.Max(1f, rewardPopupFontSize);
         }
     }
 }

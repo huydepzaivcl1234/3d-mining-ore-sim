@@ -67,10 +67,14 @@
 - Shared economy, HUD animation, click, and camera tuning lives in `Assets/GameData/MiningGameData.asset`.
 - NPC miners reserve limited slots around compatible ores and use Rigidbody/CapsuleCollider collision.
 - NPC movement and rotation are owned by `FixedUpdate`. Velocity acceleration/braking, collider-safe
-  mining slots, local NPC separation, ore obstacle steering, stuck recovery,
+  mining slots, smoothed local NPC separation, ore sight SphereCast, obstacle steering, stuck recovery,
   committed targets, and cooldown-limited blocking-ore switching are configured in `NpcData`.
   A reserved NPC starts mining immediately when it enters the configured mining range; reaching an
   exact stand-slot coordinate or waiting for stuck recovery is not required.
+- NPC colliders still interact with ores and the environment, while optional NPC-to-NPC physical
+  pushing is disabled in `NpcData` to prevent Rigidbody contact jitter; separation keeps miners apart.
+- Ore depletion raises a reward event. `OreSpawner` creates the authored TMP reward popup prefab at
+  the ore collider top, and popup motion, lifetime, scale, text, and colors live in `MiningUiData`.
 - Rarity is explicit (`Common`, `Uncommon`, `Rare`, `Epic`, `Legendary`). Zero-weight Rare+
   ores unlock progressively through the rare-spawn upgrade using rarity rules in `OreSpawnData`.
 - Upgrade data also controls ore-spawn speed and NPC movement speed stacks, costs, and per-stack percentages.

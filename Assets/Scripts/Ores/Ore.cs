@@ -26,6 +26,7 @@ namespace MiningSimulator.Ores
         public int MaxDurability => data != null ? data.Durability : 0;
         public bool IsDepleted => currentDurability <= 0;
         public event Action<Ore> Depleted;
+        public event Action<Ore, int> RewardGranted;
         public event Action<int, int> DurabilityChanged;
 
         public bool CanAcceptMiner(MiningNpc miner, int miningPower)
@@ -156,6 +157,33 @@ namespace MiningSimulator.Ores
             return offset.sqrMagnitude;
         }
 
+        public Vector3 GetWorldTopCenter()
+        {
+            bool hasBounds = false;
+            Bounds combinedBounds = default;
+            foreach (Collider targetCollider in GetMiningColliders())
+            {
+                if (targetCollider == null || !targetCollider.enabled || targetCollider.isTrigger)
+                {
+                    continue;
+                }
+
+                if (!hasBounds)
+                {
+                    combinedBounds = targetCollider.bounds;
+                    hasBounds = true;
+                }
+                else
+                {
+                    combinedBounds.Encapsulate(targetCollider.bounds);
+                }
+            }
+
+            return hasBounds
+                ? new Vector3(combinedBounds.center.x, combinedBounds.max.y, combinedBounds.center.z)
+                : transform.position;
+        }
+
         private void Awake()
         {
             miningColliders = GetComponentsInChildren<Collider>();
@@ -251,6 +279,7 @@ namespace MiningSimulator.Ores
                 ? upgradeSystem.CalculateMiningReward(data.BaseSellValue)
                 : data.BaseSellValue;
             wallet?.AddMoney(reward);
+            RewardGranted?.Invoke(this, reward);
             Depleted?.Invoke(this);
             Destroy(gameObject, data.DestroyDelay);
         }

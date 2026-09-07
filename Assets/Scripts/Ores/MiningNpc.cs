@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace MiningSimulator.Ores
@@ -7,6 +8,8 @@ namespace MiningSimulator.Ores
     [RequireComponent(typeof(CapsuleCollider), typeof(Rigidbody))]
     public sealed class MiningNpc : MonoBehaviour
     {
+        private static readonly List<MiningNpc> ActiveNpcs = new();
+
         [Header("References")]
         [SerializeField] private OreSpawner oreSpawner;
         [SerializeField] private NpcData npcData;
@@ -29,8 +32,10 @@ namespace MiningSimulator.Ores
         private Vector3 desiredMoveTarget;
         private Vector3 desiredFacingDirection;
         private Vector3 lastProgressPosition;
+        private Vector3 smoothedSeparation;
         private bool hasMoveTarget;
         private bool isMining;
+        private CapsuleCollider capsule;
 
         public void ConfigureTool(Transform targetToolPivot)
         {
@@ -44,12 +49,14 @@ namespace MiningSimulator.Ores
             npcData = targetNpcData;
             nextTargetRefreshTime = 0f;
             ConfigurePhysics();
+            RegisterNpcCollisionPairing();
             ResetProgressTracking();
         }
 
         private void Awake()
         {
             body = GetComponent<Rigidbody>();
+            capsule = GetComponent<CapsuleCollider>();
             if (toolPivot != null)
             {
                 toolRestRotation = toolPivot.localRotation;
@@ -59,11 +66,18 @@ namespace MiningSimulator.Ores
             ResetProgressTracking();
         }
 
+        private void OnEnable()
+        {
+            RegisterNpcCollisionPairing();
+        }
+
         private void OnDisable()
         {
+            ActiveNpcs.Remove(this);
             ReleaseTarget();
             hasMoveTarget = false;
             desiredFacingDirection = Vector3.zero;
+            smoothedSeparation = Vector3.zero;
             StopHorizontalMovement();
         }
 
@@ -99,6 +113,12 @@ namespace MiningSimulator.Ores
             }
 
             Vector3 currentPosition = body != null ? body.position : transform.position;
+            if (targetOre.SqrDistanceToSurface(currentPosition) >
+                npcData.MiningRange * npcData.MiningRange)
+            {
+                TryAdoptVisibleOre(currentPosition);
+            }
+
             Vector3 standPosition = GetReservedStandPosition();
             Vector3 oreOffset = targetOre.transform.position - currentPosition;
             oreOffset.y = 0f;
@@ -145,6 +165,8 @@ namespace MiningSimulator.Ores
             if (!hasMoveTarget || movementOffset.sqrMagnitude <=
                 npcData.StoppingDistance * npcData.StoppingDistance)
             {
+                smoothedSeparation = Vector3.MoveTowards(smoothedSeparation, Vector3.zero,
+                    npcData.NpcSeparationResponsiveness * Time.fixedDeltaTime);
                 ApplyHorizontalVelocity(Vector3.zero, npcData.BrakingAcceleration);
                 RotateTowards(desiredFacingDirection);
                 return;
@@ -159,7 +181,7 @@ namespace MiningSimulator.Ores
                     CanMine(blockingOre) && IsBlockingOreCloser(blockingOre, currentPosition) &&
                     TrySwitchTarget(blockingOre))
                 {
-                    ApplyHorizontalVelocity(Vector3.zero, npcData.BrakingAcceleration);
+                    RotateTowards(movementDirection);
                     return;
                 }
 
@@ -172,7 +194,10 @@ namespace MiningSimulator.Ores
             }
 
             Vector3 separation = CalculateNpcSeparation(currentPosition);
-            movementDirection = (movementDirection + separation * npcData.NpcSeparationStrength).normalized;
+            smoothedSeparation = Vector3.MoveTowards(smoothedSeparation, separation,
+                npcData.NpcSeparationResponsiveness * Time.fixedDeltaTime);
+            movementDirection = (movementDirection +
+                smoothedSeparation * npcData.NpcSeparationStrength).normalized;
 
             float speedMultiplier = oreSpawner != null && oreSpawner.UpgradeSystem != null
                 ? oreSpawner.UpgradeSystem.GetMultiplier(MiningUpgradeType.NpcMoveSpeed)
@@ -260,6 +285,47 @@ namespace MiningSimulator.Ores
             return npcData != null && ore != null && ore.isActiveAndEnabled &&
                    !ore.IsDepleted && ore.Data != null &&
                    ore.Data.MiningPowerRequired <= npcData.MiningPower;
+        }
+
+        private void TryAdoptVisibleOre(Vector3 currentPosition)
+        {
+            Vector3 direction = targetOre != null
+                ? targetOre.transform.position - currentPosition
+                : transform.forward;
+            direction.y = 0f;
+            if (direction.sqrMagnitude <= Mathf.Epsilon)
+            {
+                return;
+            }
+
+            Vector3 origin = currentPosition + Vector3.up * npcData.OreSightOriginHeight;
+            int hitCount = Physics.SphereCastNonAlloc(origin, npcData.OreSightProbeRadius,
+                direction.normalized, obstacleHits, npcData.OreSightDistance,
+                npcData.CollisionLayers, QueryTriggerInteraction.Ignore);
+            Ore visibleOre = null;
+            float closestHitDistance = float.PositiveInfinity;
+            float miningRangeSqr = npcData.MiningRange * npcData.MiningRange;
+            for (int index = 0; index < hitCount; index++)
+            {
+                RaycastHit hit = obstacleHits[index];
+                Ore ore = hit.collider != null ? hit.collider.GetComponentInParent<Ore>() : null;
+                if (ore == null || ore == targetOre ||
+                    (ore == ignoredOre && Time.time < ignoredOreUntil) ||
+                    hit.distance >= closestHitDistance ||
+                    !CanMine(ore) || ore.SqrDistanceToSurface(currentPosition) > miningRangeSqr ||
+                    !ore.CanAcceptMiner(this, npcData.MiningPower))
+                {
+                    continue;
+                }
+
+                visibleOre = ore;
+                closestHitDistance = hit.distance;
+            }
+
+            if (visibleOre != null)
+            {
+                TrySwitchTarget(visibleOre);
+            }
         }
 
         private void ReleaseTarget()
@@ -444,7 +510,7 @@ namespace MiningSimulator.Ores
                 return;
             }
 
-            CapsuleCollider capsule = GetComponent<CapsuleCollider>();
+            capsule ??= GetComponent<CapsuleCollider>();
             if (capsule != null)
             {
                 capsule.radius = npcData.ColliderRadius;
@@ -458,6 +524,41 @@ namespace MiningSimulator.Ores
                 body.interpolation = RigidbodyInterpolation.Interpolate;
                 body.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
                 body.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+            }
+        }
+
+        private void RegisterNpcCollisionPairing()
+        {
+            capsule ??= GetComponent<CapsuleCollider>();
+            if (capsule == null || npcData == null || !npcData.IgnoreNpcPhysicalCollisions)
+            {
+                return;
+            }
+
+            for (int index = ActiveNpcs.Count - 1; index >= 0; index--)
+            {
+                MiningNpc other = ActiveNpcs[index];
+                if (other == null)
+                {
+                    ActiveNpcs.RemoveAt(index);
+                    continue;
+                }
+
+                if (other == this)
+                {
+                    continue;
+                }
+
+                other.capsule ??= other.GetComponent<CapsuleCollider>();
+                if (other.capsule != null)
+                {
+                    Physics.IgnoreCollision(capsule, other.capsule, true);
+                }
+            }
+
+            if (!ActiveNpcs.Contains(this))
+            {
+                ActiveNpcs.Add(this);
             }
         }
     }

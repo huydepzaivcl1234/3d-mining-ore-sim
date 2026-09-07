@@ -34,8 +34,10 @@ namespace MiningSimulator.Editor
         private const string PrefabFolder = "Assets/Prefabs/Ores";
         private const string NpcPrefabFolder = "Assets/Prefabs/NPC";
         private const string SystemPrefabFolder = "Assets/Prefabs/Systems";
+        private const string UiPrefabFolder = "Assets/Prefabs/UI";
         private const string NpcPrefabPath = NpcPrefabFolder + "/MiningNpc.prefab";
         private const string RuntimePrefabPath = SystemPrefabFolder + "/MiningRuntime.prefab";
+        private const string RewardPopupPrefabPath = UiPrefabFolder + "/OreRewardPopup.prefab";
         private const string HudCanvasName = "Mining HUD Canvas";
         private const string HealthBarPrefabPath =
             "Assets/Microlight/MicroBar/Prefabs/SimpleBars/Sprite_SimpleMicroBarSRP.prefab";
@@ -100,6 +102,7 @@ namespace MiningSimulator.Editor
             EnsureFolder(PrefabFolder);
             EnsureFolder(NpcPrefabFolder);
             EnsureFolder(SystemPrefabFolder);
+            EnsureFolder(UiPrefabFolder);
 
             var dataAssets = new OreData[StarterOres.Length];
 
@@ -120,8 +123,10 @@ namespace MiningSimulator.Editor
             OreSpawnData spawnData = CreateOrUpdateSpawnData(dataAssets);
             MiningUpgradeData upgradeData = CreateOrUpdateUpgradeData();
             MiningUiData uiData = CreateOrUpdateUiData();
+            OreRewardPopup rewardPopupPrefab = CreateOrUpdateRewardPopupPrefab(uiData);
             MiningNpc npcPrefab = CreateOrUpdateNpcPrefab(npcData);
-            CreateOrUpdateRuntimePrefab(npcPrefab, gameData, npcData, spawnData, upgradeData, uiData);
+            CreateOrUpdateRuntimePrefab(npcPrefab, gameData, npcData, spawnData, upgradeData, uiData,
+                rewardPopupPrefab);
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -388,6 +393,55 @@ namespace MiningSimulator.Editor
             return uiData;
         }
 
+        private static OreRewardPopup CreateOrUpdateRewardPopupPrefab(MiningUiData uiData)
+        {
+            GameObject existing = AssetDatabase.LoadAssetAtPath<GameObject>(RewardPopupPrefabPath);
+            bool isNew = existing == null;
+            GameObject popupObject = isNew
+                ? new GameObject("Ore Reward Popup", typeof(TextMeshPro), typeof(OreRewardPopup))
+                : PrefabUtility.LoadPrefabContents(RewardPopupPrefabPath);
+
+            try
+            {
+                TextMeshPro label = popupObject.GetComponent<TextMeshPro>() ??
+                                    popupObject.AddComponent<TextMeshPro>();
+                OreRewardPopup popup = popupObject.GetComponent<OreRewardPopup>() ??
+                                        popupObject.AddComponent<OreRewardPopup>();
+                label.text = string.Format(uiData.RewardPopupFormat,
+                    uiData.RewardPopupPreviewAmount);
+                label.alignment = TextAlignmentOptions.Center;
+                label.fontSize = uiData.RewardPopupFontSize;
+                label.color = uiData.RewardPopupColor;
+                label.outlineColor = uiData.RewardPopupOutlineColor;
+                label.outlineWidth = uiData.RewardPopupOutlineWidth;
+                popupObject.transform.localScale = Vector3.one * uiData.RewardPopupWorldScale;
+                Renderer popupRenderer = label.GetComponent<Renderer>();
+                if (popupRenderer != null)
+                {
+                    popupRenderer.sortingOrder = uiData.CanvasSortingOrder;
+                }
+
+                var serialized = new SerializedObject(popup);
+                serialized.FindProperty("label").objectReferenceValue = label;
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+                PrefabUtility.SaveAsPrefabAsset(popupObject, RewardPopupPrefabPath);
+            }
+            finally
+            {
+                if (isNew)
+                {
+                    UnityEngine.Object.DestroyImmediate(popupObject);
+                }
+                else
+                {
+                    PrefabUtility.UnloadPrefabContents(popupObject);
+                }
+            }
+
+            GameObject saved = AssetDatabase.LoadAssetAtPath<GameObject>(RewardPopupPrefabPath);
+            return saved != null ? saved.GetComponent<OreRewardPopup>() : null;
+        }
+
         private static MiningNpc CreateOrUpdateNpcPrefab(NpcData npcData)
         {
             GameObject existing = AssetDatabase.LoadAssetAtPath<GameObject>(NpcPrefabPath);
@@ -468,7 +522,8 @@ namespace MiningSimulator.Editor
         }
 
         private static void CreateOrUpdateRuntimePrefab(MiningNpc npcPrefab, MiningGameData gameData,
-            NpcData npcData, OreSpawnData spawnData, MiningUpgradeData upgradeData, MiningUiData uiData)
+            NpcData npcData, OreSpawnData spawnData, MiningUpgradeData upgradeData, MiningUiData uiData,
+            OreRewardPopup rewardPopupPrefab)
         {
             GameObject existing = AssetDatabase.LoadAssetAtPath<GameObject>(RuntimePrefabPath);
             bool isNew = existing == null;
@@ -498,6 +553,8 @@ namespace MiningSimulator.Editor
                 SetReferenceIfMissing(serialized.FindProperty("wallet"), wallet);
                 SetReferenceIfMissing(serialized.FindProperty("spawnData"), spawnData);
                 SetReferenceIfMissing(serialized.FindProperty("upgradeSystem"), upgradeSystem);
+                SetReferenceIfMissing(serialized.FindProperty("uiData"), uiData);
+                SetReferenceIfMissing(serialized.FindProperty("rewardPopupPrefab"), rewardPopupPrefab);
                 serialized.ApplyModifiedPropertiesWithoutUndo();
 
                 var upgradeSystemSerialized = new SerializedObject(upgradeSystem);
@@ -551,6 +608,7 @@ namespace MiningSimulator.Editor
             if (existingCanvas != null)
             {
                 WireExistingHud(existingCanvas, hudSerialized);
+                StyleEditableShop(existingCanvas, uiData);
                 return;
             }
 
@@ -594,6 +652,101 @@ namespace MiningSimulator.Editor
             hudSerialized.FindProperty("statusText").objectReferenceValue = statusText;
             hudSerialized.FindProperty("buyButton").objectReferenceValue = buyButton;
             hudSerialized.FindProperty("buyButtonLabel").objectReferenceValue = buyLabel;
+            StyleEditableShop(canvasObject.transform, uiData);
+        }
+
+        private static void StyleEditableShop(Transform canvas, MiningUiData uiData)
+        {
+            if (canvas == null || uiData == null)
+            {
+                return;
+            }
+
+            Canvas targetCanvas = canvas.GetComponent<Canvas>();
+            if (targetCanvas != null)
+            {
+                targetCanvas.sortingOrder = uiData.CanvasSortingOrder;
+            }
+
+            Transform panel = canvas.Find("NPC Shop");
+            if (panel == null)
+            {
+                return;
+            }
+
+            RectTransform panelRect = panel.GetComponent<RectTransform>();
+            panelRect.anchorMin = new Vector2(0f, 1f);
+            panelRect.anchorMax = new Vector2(0f, 1f);
+            panelRect.pivot = new Vector2(0f, 1f);
+            panelRect.anchoredPosition = uiData.ShopPanelPosition;
+            panelRect.sizeDelta = uiData.ShopPanelSize;
+            Image panelImage = panel.GetComponent<Image>() ?? panel.gameObject.AddComponent<Image>();
+            panelImage.color = uiData.ShopPanelColor;
+            ApplyOutline(panel.gameObject, uiData.OutlineColor, uiData.OutlineThickness);
+
+            Transform header = EnsureUiObject(panel, "Header", typeof(Image));
+            RectTransform headerRect = header.GetComponent<RectTransform>();
+            headerRect.anchorMin = new Vector2(0f, 1f);
+            headerRect.anchorMax = new Vector2(0f, 1f);
+            headerRect.pivot = new Vector2(0f, 1f);
+            headerRect.anchoredPosition = Vector2.zero;
+            headerRect.sizeDelta = uiData.ShopHeaderSize;
+            header.GetComponent<Image>().color = uiData.ShopHeaderColor;
+            ApplyOutline(header.gameObject, uiData.OutlineColor, uiData.OutlineThickness);
+
+            TextMeshProUGUI title = EnsureText(header, "Title");
+            StretchRect(title.rectTransform);
+            title.text = uiData.ShopTitle;
+            title.fontSize = uiData.ShopTitleFontSize;
+            title.color = uiData.TitleTextColor;
+            title.alignment = TextAlignmentOptions.Center;
+
+            StyleShopText(panel.Find("Money"), uiData.MoneyTextPosition, uiData.ShopTextSize,
+                uiData.MoneyFontSize, uiData.ShopTextColor);
+            StyleShopText(panel.Find("NPC Count"), uiData.NpcCountTextPosition, uiData.ShopTextSize,
+                uiData.NpcCountFontSize, uiData.ShopTextColor);
+            StyleShopText(panel.Find("Status"), uiData.StatusTextPosition, uiData.ShopTextSize,
+                uiData.StatusFontSize, uiData.StatusTextColor);
+
+            Transform buyButton = panel.Find("Buy Mining NPC");
+            ConfigureTopLeftRect(buyButton, uiData.BuyButtonPosition, uiData.BuyButtonSize);
+            StyleButton(buyButton, uiData.BuyButtonColor, uiData.BuyButtonTextColor,
+                uiData.OutlineColor, uiData.OutlineThickness);
+            TextMeshProUGUI buyLabel = buyButton?.GetComponentInChildren<TextMeshProUGUI>(true);
+            if (buyLabel != null)
+            {
+                buyLabel.fontSize = uiData.BuyButtonFontSize;
+            }
+        }
+
+        private static void StyleShopText(Transform target, Vector2 position, Vector2 size,
+            float fontSize, Color color)
+        {
+            ConfigureTopLeftRect(target, position, size);
+            TextMeshProUGUI text = target?.GetComponent<TextMeshProUGUI>();
+            if (text == null)
+            {
+                return;
+            }
+
+            text.fontSize = fontSize;
+            text.color = color;
+            text.alignment = TextAlignmentOptions.Left;
+        }
+
+        private static void ConfigureTopLeftRect(Transform target, Vector2 position, Vector2 size)
+        {
+            RectTransform rect = target as RectTransform;
+            if (rect == null)
+            {
+                return;
+            }
+
+            rect.anchorMin = new Vector2(0f, 1f);
+            rect.anchorMax = new Vector2(0f, 1f);
+            rect.pivot = new Vector2(0f, 1f);
+            rect.anchoredPosition = position;
+            rect.sizeDelta = size;
         }
 
         private static void ConfigureUpgradePanel(GameObject runtime, MiningUpgradePanel panelController,
