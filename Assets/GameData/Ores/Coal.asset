@@ -26,7 +26,7 @@ MonoBehaviour:
   rareOre: 0
   rarity: 1
   spawnRotationOffset: {x: -180, y: 0, z: 0}
-  spawnHeightOffset: 0
+  spawnHeightOffset: -0.5
   healthBarWorldOffset: {x: 0, y: 0.25, z: 0}
   healthBarScale: 0.65
   prefab: {fileID: 8857154005313688155, guid: 8ec9e9f366187c146b7d3529028d8fc4, type: 3}

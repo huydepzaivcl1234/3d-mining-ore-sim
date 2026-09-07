@@ -25,9 +25,9 @@ MonoBehaviour:
   npcStandDistance: 1.4
   rareOre: 0
   rarity: 3
-  spawnRotationOffset: {x: 0, y: 0, z: 0}
-  spawnHeightOffset: 0
+  spawnRotationOffset: {x: -180, y: 0, z: 0}
+  spawnHeightOffset: -0.5
   healthBarWorldOffset: {x: 0, y: 0.25, z: 0}
   healthBarScale: 0.65
-  prefab: {fileID: 0}
+  prefab: {fileID: 884530587047636149, guid: c41728d3ff0621e45b3fc1b39cef3087, type: 3}
   mapColor: {r: 0.12, g: 0.78, b: 1, a: 1}

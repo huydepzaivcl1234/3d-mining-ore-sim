@@ -610,7 +610,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6482836142136858352, guid: 3c7e9dc37484d9142b7d383f38802b89, type: 3}
       propertyPath: m_fontColor32.rgba
-      value: 4278718228
+      value: 4294967295
       objectReference: {fileID: 0}
     - target: {fileID: 6482836142136858352, guid: 3c7e9dc37484d9142b7d383f38802b89, type: 3}
       propertyPath: m_TextStyleHashCode
