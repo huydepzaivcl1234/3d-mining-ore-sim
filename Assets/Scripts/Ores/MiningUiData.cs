@@ -56,6 +56,7 @@ namespace MiningSimulator.Ores
         [Header("Upgrade Card Icons")]
         [SerializeField] private Vector2 upgradeCardIconSize = new(52f, 52f);
         [SerializeField] private Vector2 upgradeCardIconPosition = new(14f, -13f);
+        [Min(0f), SerializeField] private float upgradeCardIconPadding = 1f;
         [SerializeField] private Sprite moneyRewardIconSprite;
         [SerializeField] private Sprite rareOreIconSprite;
         [SerializeField] private Sprite oreDamageIconSprite;
@@ -66,6 +67,18 @@ namespace MiningSimulator.Ores
         [SerializeField] private string oreDamageIconFallback = "!";
         [SerializeField] private string oreSpawnSpeedIconFallback = "S";
         [SerializeField] private string npcMoveSpeedIconFallback = ">>";
+
+        [Header("Smooth Button Animation")]
+        [SerializeField] private bool smoothButtonAnimationEnabled = true;
+        [Min(1f), SerializeField] private float buttonHoverScale = 1.035f;
+        [Min(1f), SerializeField] private float buttonHoverPunchScale = 1.075f;
+        [Range(0.5f, 1f), SerializeField] private float buttonPressedScale = 0.96f;
+        [Min(1f), SerializeField] private float buttonClickBounceScale = 1.08f;
+        [Min(0.01f), SerializeField] private float buttonHoverPunchDuration = 0.08f;
+        [Min(0.01f), SerializeField] private float buttonHoverSettleDuration = 0.10f;
+        [Min(0.01f), SerializeField] private float buttonPressDuration = 0.06f;
+        [Min(0.01f), SerializeField] private float buttonClickBounceDuration = 0.09f;
+        [Min(0.01f), SerializeField] private float buttonClickSettleDuration = 0.12f;
 
         [Header("NPC Shop Style")]
         [SerializeField] private string shopTitle = "KHU ĐÀO QUẶNG";
@@ -158,6 +171,7 @@ namespace MiningSimulator.Ores
         public string OpenUpgradeIconFallback => openUpgradeIconFallback;
         public Vector2 UpgradeCardIconSize => upgradeCardIconSize;
         public Vector2 UpgradeCardIconPosition => upgradeCardIconPosition;
+        public float UpgradeCardIconPadding => upgradeCardIconPadding;
         public Sprite MoneyRewardIconSprite => moneyRewardIconSprite;
         public Sprite RareOreIconSprite => rareOreIconSprite;
         public Sprite OreDamageIconSprite => oreDamageIconSprite;
@@ -168,6 +182,16 @@ namespace MiningSimulator.Ores
         public string OreDamageIconFallback => oreDamageIconFallback;
         public string OreSpawnSpeedIconFallback => oreSpawnSpeedIconFallback;
         public string NpcMoveSpeedIconFallback => npcMoveSpeedIconFallback;
+        public bool SmoothButtonAnimationEnabled => smoothButtonAnimationEnabled;
+        public float ButtonHoverScale => buttonHoverScale;
+        public float ButtonHoverPunchScale => buttonHoverPunchScale;
+        public float ButtonPressedScale => buttonPressedScale;
+        public float ButtonClickBounceScale => buttonClickBounceScale;
+        public float ButtonHoverPunchDuration => buttonHoverPunchDuration;
+        public float ButtonHoverSettleDuration => buttonHoverSettleDuration;
+        public float ButtonPressDuration => buttonPressDuration;
+        public float ButtonClickBounceDuration => buttonClickBounceDuration;
+        public float ButtonClickSettleDuration => buttonClickSettleDuration;
         public string ShopTitle => shopTitle;
         public Vector2 ShopHeaderSize => shopHeaderSize;
         public float ShopTitleFontSize => shopTitleFontSize;
@@ -224,6 +248,16 @@ namespace MiningSimulator.Ores
             hudIconPadding = Mathf.Max(0f, hudIconPadding);
             upgradeCardIconSize.x = Mathf.Max(1f, upgradeCardIconSize.x);
             upgradeCardIconSize.y = Mathf.Max(1f, upgradeCardIconSize.y);
+            upgradeCardIconPadding = Mathf.Max(0f, upgradeCardIconPadding);
+            buttonHoverScale = Mathf.Max(1f, buttonHoverScale);
+            buttonHoverPunchScale = Mathf.Max(buttonHoverScale, buttonHoverPunchScale);
+            buttonPressedScale = Mathf.Clamp(buttonPressedScale, 0.5f, 1f);
+            buttonClickBounceScale = Mathf.Max(buttonHoverScale, buttonClickBounceScale);
+            buttonHoverPunchDuration = Mathf.Max(0.01f, buttonHoverPunchDuration);
+            buttonHoverSettleDuration = Mathf.Max(0.01f, buttonHoverSettleDuration);
+            buttonPressDuration = Mathf.Max(0.01f, buttonPressDuration);
+            buttonClickBounceDuration = Mathf.Max(0.01f, buttonClickBounceDuration);
+            buttonClickSettleDuration = Mathf.Max(0.01f, buttonClickSettleDuration);
             cardSpacing = Mathf.Max(0f, cardSpacing);
             outlineThickness = Mathf.Max(0f, outlineThickness);
             shopHeaderSize.x = Mathf.Max(1f, shopHeaderSize.x);

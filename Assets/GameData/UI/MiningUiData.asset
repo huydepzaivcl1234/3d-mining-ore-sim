@@ -55,16 +55,27 @@ MonoBehaviour:
   openUpgradeIconFallback: UP
   upgradeCardIconSize: {x: 52, y: 52}
   upgradeCardIconPosition: {x: 14, y: -13}
-  moneyRewardIconSprite: {fileID: 0}
-  rareOreIconSprite: {fileID: 0}
-  oreDamageIconSprite: {fileID: 0}
-  oreSpawnSpeedIconSprite: {fileID: 0}
-  npcMoveSpeedIconSprite: {fileID: 0}
+  upgradeCardIconPadding: 1
+  moneyRewardIconSprite: {fileID: 21300000, guid: 8f0be4d69f2c4bed9d87f2300af36e8e, type: 3}
+  rareOreIconSprite: {fileID: 21300000, guid: 3de4b9cc4f6346bf8b55e7c1ca9bc0ad, type: 3}
+  oreDamageIconSprite: {fileID: 21300000, guid: bd3453b0181f4bb08c8b2a42e54e0957, type: 3}
+  oreSpawnSpeedIconSprite: {fileID: 21300000, guid: 79e259b7491d4a8f83a46b760a2690f1, type: 3}
+  npcMoveSpeedIconSprite: {fileID: 21300000, guid: 91682228e8024b459ce2f36dbd1ef34a, type: 3}
   moneyRewardIconFallback: $
   rareOreIconFallback: R
   oreDamageIconFallback: '!'
   oreSpawnSpeedIconFallback: S
   npcMoveSpeedIconFallback: '>>'
+  smoothButtonAnimationEnabled: 1
+  buttonHoverScale: 1.035
+  buttonHoverPunchScale: 1.075
+  buttonPressedScale: 0.96
+  buttonClickBounceScale: 1.08
+  buttonHoverPunchDuration: 0.08
+  buttonHoverSettleDuration: 0.1
+  buttonPressDuration: 0.06
+  buttonClickBounceDuration: 0.09
+  buttonClickSettleDuration: 0.12
   shopTitle: KHU ĐÀO QUẶNG
   shopHeaderSize: {x: 330, y: 54}
   shopTitleFontSize: 21

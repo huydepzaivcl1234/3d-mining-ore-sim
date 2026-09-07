@@ -82,6 +82,9 @@
 - The editable runtime HUD uses TextMeshPro components and is created as serialized prefab content by the setup menu.
 - HUD statistics, shop buttons, and upgrade cards have editable icon slots with TMP fallback symbols;
   icon sprites, size, position, colors, and padding live in `MiningUiData`.
+- The five upgrade cards use dedicated transparent sprites from `Assets/UI/Icons/Upgrades`.
+  All authored HUD buttons use interruptible, unscaled-time hover punch and click bounce feedback;
+  scale and duration values live in `MiningUiData`.
 - `MiningGameManager` is a serialized composition root that exposes the existing mining systems without
   replacing their ownership or introducing a global singleton.
 - `MiningAudioManager` owns one looping music source and one shared SFX source. It reacts to ore hits,

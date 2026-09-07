@@ -690,7 +690,7 @@ namespace MiningSimulator.Editor
             Button buyButton = CreateButton(panel.transform, "Buy Mining NPC", uiData.BuyButtonPosition,
                 uiData.BuyButtonSize, Mathf.RoundToInt(uiData.BuyButtonFontSize), out TextMeshProUGUI buyLabel);
             StyleButton(buyButton.transform, uiData.BuyButtonColor, uiData.BuyButtonTextColor,
-                uiData.OutlineColor, uiData.OutlineThickness);
+                uiData.OutlineColor, uiData.OutlineThickness, uiData);
             TextMeshProUGUI statusText = CreateText(panel.transform, "Status", uiData.StatusTextPosition,
                 Mathf.RoundToInt(uiData.StatusFontSize), uiData.ShopTextSize, uiData.StatusTextColor);
             statusText.text = "Chuột phải: xoay • WASD: di chuyển";
@@ -759,7 +759,7 @@ namespace MiningSimulator.Editor
             Transform buyButton = panel.Find("Buy Mining NPC");
             ConfigureTopLeftRect(buyButton, uiData.BuyButtonPosition, uiData.BuyButtonSize);
             StyleButton(buyButton, uiData.BuyButtonColor, uiData.BuyButtonTextColor,
-                uiData.OutlineColor, uiData.OutlineThickness);
+                uiData.OutlineColor, uiData.OutlineThickness, uiData);
             TextMeshProUGUI buyLabel = buyButton?.Find("Label")?.GetComponent<TextMeshProUGUI>();
             if (buyLabel != null)
             {
@@ -839,7 +839,7 @@ namespace MiningSimulator.Editor
                 openButtonTransform = openButton.transform;
             }
             StyleButton(openButtonTransform, uiData.NavigationButtonColor, uiData.TitleTextColor,
-                uiData.OutlineColor, uiData.OutlineThickness);
+                uiData.OutlineColor, uiData.OutlineThickness, uiData);
             EnsureHudIcon(openButtonTransform, "Icon", uiData.OpenUpgradeIconPosition,
                 uiData.HudIconSize, uiData.OpenUpgradeIconSprite, uiData.OpenUpgradeIconFallback,
                 uiData.UpgradeIconColor, uiData);
@@ -953,7 +953,36 @@ namespace MiningSimulator.Editor
             EnsureHudIcon(button.transform, "Icon", uiData.UpgradeCardIconPosition,
                 uiData.UpgradeCardIconSize, iconSprite, iconFallback,
                 uiData.UpgradeIconColor, uiData);
+            StyleUpgradeCardIcon(button.transform.Find("Icon"), iconSprite, uiData);
             return button;
+        }
+
+        private static void StyleUpgradeCardIcon(Transform icon, Sprite iconSprite, MiningUiData uiData)
+        {
+            if (icon == null || iconSprite == null)
+            {
+                return;
+            }
+
+            Image background = icon.GetComponent<Image>();
+            if (background != null)
+            {
+                background.color = Color.clear;
+            }
+
+            Outline outline = icon.GetComponent<Outline>();
+            if (outline != null)
+            {
+                outline.effectColor = Color.clear;
+                outline.effectDistance = Vector2.zero;
+            }
+
+            RectTransform spriteRect = icon.Find("Sprite")?.GetComponent<RectTransform>();
+            if (spriteRect != null)
+            {
+                spriteRect.offsetMin = Vector2.one * uiData.UpgradeCardIconPadding;
+                spriteRect.offsetMax = Vector2.one * -uiData.UpgradeCardIconPadding;
+            }
         }
 
         private static void EnsureHudIcon(Transform parent, string name, Vector2 position,
@@ -1014,7 +1043,34 @@ namespace MiningSimulator.Editor
             label.fontSize = uiData.CardFontSize;
             label.color = textColor;
             label.alignment = TextAlignmentOptions.Center;
+            ConfigureSmoothButton(transform, uiData);
             return transform.GetComponent<Button>();
+        }
+
+        private static void ConfigureSmoothButton(Transform buttonTransform, MiningUiData uiData)
+        {
+            if (buttonTransform == null || uiData == null)
+            {
+                return;
+            }
+
+            SmoothButtonPunch animation = buttonTransform.GetComponent<SmoothButtonPunch>();
+            if (!uiData.SmoothButtonAnimationEnabled)
+            {
+                if (animation != null)
+                {
+                    animation.enabled = false;
+                }
+                return;
+            }
+
+            animation ??= buttonTransform.gameObject.AddComponent<SmoothButtonPunch>();
+            animation.enabled = true;
+            animation.Configure(uiData.ButtonHoverScale, uiData.ButtonHoverPunchScale,
+                uiData.ButtonPressedScale, uiData.ButtonClickBounceScale,
+                uiData.ButtonHoverPunchDuration, uiData.ButtonHoverSettleDuration,
+                uiData.ButtonPressDuration, uiData.ButtonClickBounceDuration,
+                uiData.ButtonClickSettleDuration);
         }
 
         private static Transform EnsureUiObject(Transform parent, string name, params Type[] components)
@@ -1058,7 +1114,7 @@ namespace MiningSimulator.Editor
         }
 
         private static void StyleButton(Transform buttonTransform, Color background, Color textColor,
-            Color outlineColor, float outlineThickness)
+            Color outlineColor, float outlineThickness, MiningUiData uiData)
         {
             if (buttonTransform == null)
             {
@@ -1076,6 +1132,7 @@ namespace MiningSimulator.Editor
                 label.color = textColor;
             }
             ApplyOutline(buttonTransform.gameObject, outlineColor, outlineThickness);
+            ConfigureSmoothButton(buttonTransform, uiData);
         }
 
         private static string GetUpgradePreview(MiningUpgradeDefinition definition)

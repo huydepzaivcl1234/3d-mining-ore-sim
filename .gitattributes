@@ -135,6 +135,9 @@ Packages/packages-lock.json linguist-generated
 *.tiff                  lfs
 *.webp                  lfs
 
+# Small generated UI icons stay as regular Git blobs so editor tooling can update them directly.
+Assets/UI/Icons/Upgrades/*.png -filter -diff -merge binary
+
 # Compressed Archive
 *.7z                    lfs
 *.bz2                   lfs
