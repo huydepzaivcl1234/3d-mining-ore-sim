@@ -103,6 +103,10 @@ namespace MiningSimulator.Ores
         [SerializeField] private Color audioSliderColor = new(0.14f, 0.72f, 0.52f, 1f);
         [SerializeField] private Color audioSliderBackgroundColor = new(0.15f, 0.18f, 0.22f, 1f);
 
+        [Header("Panel Slide Animation")]
+        [Min(0.01f), SerializeField] private float panelTransitionDuration = 0.28f;
+        [Min(0f), SerializeField] private float panelSlideExtraDistance = 80f;
+
         [Header("NPC Shop Style")]
         [SerializeField] private string shopTitle = "KHU ĐÀO QUẶNG";
         [SerializeField] private Vector2 shopHeaderSize = new(330f, 54f);
@@ -270,6 +274,8 @@ namespace MiningSimulator.Ores
         public Color AudioHeaderColor => audioHeaderColor;
         public Color AudioSliderColor => audioSliderColor;
         public Color AudioSliderBackgroundColor => audioSliderBackgroundColor;
+        public float PanelTransitionDuration => panelTransitionDuration;
+        public float PanelSlideExtraDistance => panelSlideExtraDistance;
         public string ShopTitle => shopTitle;
         public Vector2 ShopHeaderSize => shopHeaderSize;
         public float ShopTitleFontSize => shopTitleFontSize;
@@ -383,6 +389,8 @@ namespace MiningSimulator.Ores
             audioCloseButtonSize.y = Mathf.Max(1f, audioCloseButtonSize.y);
             audioTitleFontSize = Mathf.Max(1f, audioTitleFontSize);
             audioLabelFontSize = Mathf.Max(1f, audioLabelFontSize);
+            panelTransitionDuration = Mathf.Max(0.01f, panelTransitionDuration);
+            panelSlideExtraDistance = Mathf.Max(0f, panelSlideExtraDistance);
             cardSpacing = Mathf.Max(0f, cardSpacing);
             outlineThickness = Mathf.Max(0f, outlineThickness);
             shopHeaderSize.x = Mathf.Max(1f, shopHeaderSize.x);

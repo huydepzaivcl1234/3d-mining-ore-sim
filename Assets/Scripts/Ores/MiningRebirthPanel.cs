@@ -13,6 +13,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private MiningRebirthSystem rebirthSystem;
         [SerializeField] private PlayerWallet wallet;
         [SerializeField] private GameObject confirmationPanel;
+        [SerializeField] private MiningUiPanelCoordinator panelCoordinator;
         [SerializeField] private Button openButton;
         [SerializeField] private Button confirmButton;
         [SerializeField] private Button cancelButton;
@@ -82,14 +83,32 @@ namespace MiningSimulator.Ores
 
         private void OpenPanel()
         {
-            confirmationPanel?.SetActive(true);
+            if (panelCoordinator != null)
+            {
+                panelCoordinator.OpenPanel(confirmationPanel != null
+                    ? confirmationPanel.GetComponent<RectTransform>()
+                    : null);
+            }
+            else
+            {
+                confirmationPanel?.SetActive(true);
+            }
             Refresh();
             PanelOpened?.Invoke();
         }
 
         private void ClosePanel()
         {
-            confirmationPanel?.SetActive(false);
+            if (panelCoordinator != null)
+            {
+                panelCoordinator.ClosePanel(confirmationPanel != null
+                    ? confirmationPanel.GetComponent<RectTransform>()
+                    : null);
+            }
+            else
+            {
+                confirmationPanel?.SetActive(false);
+            }
             PanelClosed?.Invoke();
         }
 

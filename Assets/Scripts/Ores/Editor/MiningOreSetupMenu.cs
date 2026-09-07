@@ -585,6 +585,9 @@ namespace MiningSimulator.Editor
                 MiningAudioSettingsPanel audioSettingsPanel =
                     runtime.GetComponent<MiningAudioSettingsPanel>() ??
                     runtime.AddComponent<MiningAudioSettingsPanel>();
+                MiningUiPanelCoordinator panelCoordinator =
+                    runtime.GetComponent<MiningUiPanelCoordinator>() ??
+                    runtime.AddComponent<MiningUiPanelCoordinator>();
                 MiningGameManager gameManager = runtime.GetComponent<MiningGameManager>() ??
                                                 runtime.AddComponent<MiningGameManager>();
                 MiningOrbitCamera orbitCamera = runtime.GetComponent<MiningOrbitCamera>() ??
@@ -665,6 +668,8 @@ namespace MiningSimulator.Editor
                 ConfigureUpgradePanel(runtime, upgradePanel, upgradeSystem, wallet, upgradeData, uiData);
                 ConfigureRebirthHud(runtime, rebirthPanel, rebirthSystem, wallet, uiData);
                 ConfigureAudioSettings(runtime, audioSettingsPanel, audioManager, uiData);
+                ConfigureUiPanelCoordinator(runtime, panelCoordinator, uiData);
+                ConfigureButtonSfx(runtime, audioManager);
 
                 var rebirthSerialized = new SerializedObject(rebirthSystem);
                 rebirthSerialized.FindProperty("wallet").objectReferenceValue = wallet;
@@ -680,6 +685,8 @@ namespace MiningSimulator.Editor
                 SetReferenceIfMissing(audioSerialized.FindProperty("upgradePanel"), upgradePanel);
                 SetReferenceIfMissing(audioSerialized.FindProperty("rebirthSystem"), rebirthSystem);
                 SetReferenceIfMissing(audioSerialized.FindProperty("rebirthPanel"), rebirthPanel);
+                SetReferenceIfMissing(audioSerialized.FindProperty("audioSettingsPanel"),
+                    audioSettingsPanel);
                 audioSerialized.FindProperty("musicSource").objectReferenceValue = musicSource;
                 audioSerialized.FindProperty("sfxSource").objectReferenceValue = sfxSource;
                 audioSerialized.ApplyModifiedPropertiesWithoutUndo();
@@ -696,6 +703,8 @@ namespace MiningSimulator.Editor
                 SetReferenceIfMissing(gameManagerSerialized.FindProperty("audioManager"), audioManager);
                 SetReferenceIfMissing(gameManagerSerialized.FindProperty("audioSettingsPanel"),
                     audioSettingsPanel);
+                SetReferenceIfMissing(gameManagerSerialized.FindProperty("panelCoordinator"),
+                    panelCoordinator);
                 SetReferenceIfMissing(gameManagerSerialized.FindProperty("orbitCamera"), orbitCamera);
                 gameManagerSerialized.ApplyModifiedPropertiesWithoutUndo();
 
@@ -995,6 +1004,8 @@ namespace MiningSimulator.Editor
             SetReferenceIfMissing(serialized.FindProperty("wallet"), wallet);
             SetReferenceIfMissing(serialized.FindProperty("shopPanel"), shopPanel.gameObject);
             SetReferenceIfMissing(serialized.FindProperty("upgradePanel"), upgradePanelTransform.gameObject);
+            SetReferenceIfMissing(serialized.FindProperty("panelCoordinator"),
+                runtime.GetComponent<MiningUiPanelCoordinator>());
             serialized.FindProperty("openOnPlay").boolValue = uiData.OpenUpgradePanelOnPlay;
             WireUpgradeButton(serialized, "openButton", null, openButtonTransform);
             WireUpgradeButton(serialized, "backButton", null, upgradePanelTransform.Find("Back"));
@@ -1088,6 +1099,8 @@ namespace MiningSimulator.Editor
             var serialized = new SerializedObject(panelController);
             SetReferenceIfMissing(serialized.FindProperty("audioManager"), audioManager);
             SetReferenceIfMissing(serialized.FindProperty("settingsPanel"), panel.gameObject);
+            SetReferenceIfMissing(serialized.FindProperty("panelCoordinator"),
+                runtime.GetComponent<MiningUiPanelCoordinator>());
             SetReferenceIfMissing(serialized.FindProperty("openButton"),
                 menuButtonTransform.GetComponent<Button>());
             SetReferenceIfMissing(serialized.FindProperty("closeButton"), closeButton);
@@ -1098,6 +1111,50 @@ namespace MiningSimulator.Editor
             SetReferenceIfMissing(serialized.FindProperty("musicValueLabel"), musicValue);
             SetReferenceIfMissing(serialized.FindProperty("sfxValueLabel"), sfxValue);
             serialized.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static void ConfigureUiPanelCoordinator(GameObject runtime,
+            MiningUiPanelCoordinator coordinator, MiningUiData uiData)
+        {
+            Transform canvas = runtime.transform.Find(HudCanvasName);
+            if (canvas == null || coordinator == null)
+            {
+                return;
+            }
+
+            var serialized = new SerializedObject(coordinator);
+            SetReferenceIfMissing(serialized.FindProperty("uiData"), uiData);
+            SetReferenceIfMissing(serialized.FindProperty("shopPanel"),
+                canvas.Find("NPC Shop")?.GetComponent<RectTransform>());
+            SetReferenceIfMissing(serialized.FindProperty("rebirthHud"),
+                canvas.Find("Rebirth HUD")?.GetComponent<RectTransform>());
+            SetReferenceIfMissing(serialized.FindProperty("audioMenuButton"),
+                canvas.Find("Audio Menu Button")?.GetComponent<RectTransform>());
+            SetReferenceIfMissing(serialized.FindProperty("upgradePanel"),
+                canvas.Find("Upgrade Panel")?.GetComponent<RectTransform>());
+            SetReferenceIfMissing(serialized.FindProperty("rebirthPanel"),
+                canvas.Find("Rebirth Confirmation")?.GetComponent<RectTransform>());
+            SetReferenceIfMissing(serialized.FindProperty("audioSettingsPanel"),
+                canvas.Find("Audio Settings Panel")?.GetComponent<RectTransform>());
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static void ConfigureButtonSfx(GameObject runtime, MiningAudioManager audioManager)
+        {
+            Transform canvas = runtime.transform.Find(HudCanvasName);
+            if (canvas == null || audioManager == null)
+            {
+                return;
+            }
+
+            foreach (Button button in canvas.GetComponentsInChildren<Button>(true))
+            {
+                MiningButtonSfx player = button.GetComponent<MiningButtonSfx>() ??
+                                         button.gameObject.AddComponent<MiningButtonSfx>();
+                var serialized = new SerializedObject(player);
+                SetReferenceIfMissing(serialized.FindProperty("audioManager"), audioManager);
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+            }
         }
 
         private static Slider EnsureAudioSliderRow(Transform panel, string objectName, int index,
@@ -1266,6 +1323,8 @@ namespace MiningSimulator.Editor
             serialized.FindProperty("rebirthSystem").objectReferenceValue = rebirthSystem;
             serialized.FindProperty("wallet").objectReferenceValue = wallet;
             serialized.FindProperty("confirmationPanel").objectReferenceValue = modal.gameObject;
+            SetReferenceIfMissing(serialized.FindProperty("panelCoordinator"),
+                runtime.GetComponent<MiningUiPanelCoordinator>());
             serialized.FindProperty("openButton").objectReferenceValue = openButton;
             serialized.FindProperty("confirmButton").objectReferenceValue = confirmButton;
             serialized.FindProperty("cancelButton").objectReferenceValue = cancelButton;

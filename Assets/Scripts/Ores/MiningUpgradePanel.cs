@@ -13,6 +13,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private PlayerWallet wallet;
         [SerializeField] private GameObject shopPanel;
         [SerializeField] private GameObject upgradePanel;
+        [SerializeField] private MiningUiPanelCoordinator panelCoordinator;
         [SerializeField] private Button openButton;
         [SerializeField] private Button backButton;
         [SerializeField] private Button closeButton;
@@ -110,16 +111,34 @@ namespace MiningSimulator.Ores
 
         private void OpenPanel()
         {
-            shopPanel?.SetActive(false);
-            upgradePanel?.SetActive(true);
+            if (panelCoordinator != null)
+            {
+                panelCoordinator.OpenPanel(upgradePanel != null
+                    ? upgradePanel.GetComponent<RectTransform>()
+                    : null);
+            }
+            else
+            {
+                shopPanel?.SetActive(false);
+                upgradePanel?.SetActive(true);
+            }
             Refresh();
             PanelOpened?.Invoke();
         }
 
         private void ClosePanel()
         {
-            upgradePanel?.SetActive(false);
-            shopPanel?.SetActive(true);
+            if (panelCoordinator != null)
+            {
+                panelCoordinator.ClosePanel(upgradePanel != null
+                    ? upgradePanel.GetComponent<RectTransform>()
+                    : null);
+            }
+            else
+            {
+                upgradePanel?.SetActive(false);
+                shopPanel?.SetActive(true);
+            }
             PanelClosed?.Invoke();
         }
 

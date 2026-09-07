@@ -19,6 +19,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private MiningRebirthPanel rebirthPanel;
         [SerializeField] private MiningAudioManager audioManager;
         [SerializeField] private MiningAudioSettingsPanel audioSettingsPanel;
+        [SerializeField] private MiningUiPanelCoordinator panelCoordinator;
         [SerializeField] private MiningOrbitCamera orbitCamera;
 
         public PlayerWallet Wallet => wallet;
@@ -31,12 +32,13 @@ namespace MiningSimulator.Ores
         public MiningRebirthPanel RebirthPanel => rebirthPanel;
         public MiningAudioManager AudioManager => audioManager;
         public MiningAudioSettingsPanel AudioSettingsPanel => audioSettingsPanel;
+        public MiningUiPanelCoordinator PanelCoordinator => panelCoordinator;
         public MiningOrbitCamera OrbitCamera => orbitCamera;
 
         public bool IsConfigured => wallet != null && oreSpawner != null && npcShop != null &&
                                     upgradeSystem != null && rebirthSystem != null && hud != null &&
                                     upgradePanel != null && rebirthPanel != null &&
                                     audioManager != null && audioSettingsPanel != null &&
-                                    orbitCamera != null;
+                                    panelCoordinator != null && orbitCamera != null;
     }
 }

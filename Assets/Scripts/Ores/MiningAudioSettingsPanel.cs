@@ -1,3 +1,4 @@
+using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -10,6 +11,7 @@ namespace MiningSimulator.Ores
     {
         [SerializeField] private MiningAudioManager audioManager;
         [SerializeField] private GameObject settingsPanel;
+        [SerializeField] private MiningUiPanelCoordinator panelCoordinator;
         [SerializeField] private Button openButton;
         [SerializeField] private Button closeButton;
         [SerializeField] private Slider masterSlider;
@@ -18,6 +20,9 @@ namespace MiningSimulator.Ores
         [SerializeField] private TextMeshProUGUI masterValueLabel;
         [SerializeField] private TextMeshProUGUI musicValueLabel;
         [SerializeField] private TextMeshProUGUI sfxValueLabel;
+
+        public event Action PanelOpened;
+        public event Action PanelClosed;
 
         private void Awake()
         {
@@ -46,13 +51,33 @@ namespace MiningSimulator.Ores
         private void OpenPanel()
         {
             RefreshFromManager();
-            settingsPanel?.SetActive(true);
+            if (panelCoordinator != null)
+            {
+                panelCoordinator.OpenPanel(settingsPanel != null
+                    ? settingsPanel.GetComponent<RectTransform>()
+                    : null);
+            }
+            else
+            {
+                settingsPanel?.SetActive(true);
+            }
+            PanelOpened?.Invoke();
         }
 
         private void ClosePanel()
         {
             audioManager?.SaveVolumeSettings();
-            settingsPanel?.SetActive(false);
+            if (panelCoordinator != null)
+            {
+                panelCoordinator.ClosePanel(settingsPanel != null
+                    ? settingsPanel.GetComponent<RectTransform>()
+                    : null);
+            }
+            else
+            {
+                settingsPanel?.SetActive(false);
+            }
+            PanelClosed?.Invoke();
         }
 
         private void SetMasterVolume(float value)

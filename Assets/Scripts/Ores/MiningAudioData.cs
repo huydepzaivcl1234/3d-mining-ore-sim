@@ -22,6 +22,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private AudioClip rebirthSfx;
 
         [Header("UI SFX")]
+        [SerializeField] private AudioClip buttonClickSfx;
         [SerializeField] private AudioClip panelOpenSfx;
         [SerializeField] private AudioClip panelCloseSfx;
 
@@ -43,6 +44,7 @@ namespace MiningSimulator.Ores
         public AudioClip UpgradePurchasedSfx => upgradePurchasedSfx;
         public AudioClip RebirthSfx => rebirthSfx;
         public AudioClip PanelOpenSfx => panelOpenSfx;
+        public AudioClip ButtonClickSfx => buttonClickSfx;
         public AudioClip PanelCloseSfx => panelCloseSfx;
         public float SfxVolume => sfxVolume;
         public AudioMixerGroup SfxMixerGroup => sfxMixerGroup;

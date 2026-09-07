@@ -97,6 +97,8 @@ MonoBehaviour:
   audioHeaderColor: {r: 0.2, g: 0.65, b: 0.94, a: 1}
   audioSliderColor: {r: 0.14, g: 0.72, b: 0.52, a: 1}
   audioSliderBackgroundColor: {r: 0.15, g: 0.18, b: 0.22, a: 1}
+  panelTransitionDuration: 0.28
+  panelSlideExtraDistance: 80
   shopTitle: KHU ĐÀO QUẶNG
   shopHeaderSize: {x: 330, y: 54}
   shopTitleFontSize: 21

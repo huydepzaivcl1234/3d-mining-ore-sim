@@ -18,6 +18,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private MiningUpgradePanel upgradePanel;
         [SerializeField] private MiningRebirthSystem rebirthSystem;
         [SerializeField] private MiningRebirthPanel rebirthPanel;
+        [SerializeField] private MiningAudioSettingsPanel audioSettingsPanel;
         [SerializeField] private AudioSource musicSource;
         [SerializeField] private AudioSource sfxSource;
 
@@ -86,6 +87,14 @@ namespace MiningSimulator.Ores
                 rebirthPanel.PanelClosed += HandlePanelClosed;
             }
 
+            if (audioSettingsPanel != null)
+            {
+                audioSettingsPanel.PanelOpened -= HandlePanelOpened;
+                audioSettingsPanel.PanelOpened += HandlePanelOpened;
+                audioSettingsPanel.PanelClosed -= HandlePanelClosed;
+                audioSettingsPanel.PanelClosed += HandlePanelClosed;
+            }
+
             ResolveSources();
             ConfigureSources();
         }
@@ -131,6 +140,12 @@ namespace MiningSimulator.Ores
             {
                 rebirthPanel.PanelOpened -= HandlePanelOpened;
                 rebirthPanel.PanelClosed -= HandlePanelClosed;
+            }
+
+            if (audioSettingsPanel != null)
+            {
+                audioSettingsPanel.PanelOpened -= HandlePanelOpened;
+                audioSettingsPanel.PanelClosed -= HandlePanelClosed;
             }
         }
 
@@ -217,6 +232,14 @@ namespace MiningSimulator.Ores
 
             sfxSource.pitch = Random.Range(audioData.MinimumPitch, audioData.MaximumPitch);
             sfxSource.PlayOneShot(clip, audioData.SfxVolume);
+        }
+
+        public void PlayButtonSfx()
+        {
+            if (audioData != null)
+            {
+                PlaySfx(audioData.ButtonClickSfx);
+            }
         }
 
         private void ConfigureSources()
