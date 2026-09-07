@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a92bc5e212884308943410de13a33ff6, type: 3}
   m_Name: MiningAudioData
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningAudioData
-  backgroundMusic: {fileID: 0}
+  backgroundMusic: {fileID: 8300000, guid: 88324ae033f921f46b8b9b68a4f06c67, type: 3}
   playMusicOnStart: 1
   loopMusic: 1
   musicVolume: 0.55
