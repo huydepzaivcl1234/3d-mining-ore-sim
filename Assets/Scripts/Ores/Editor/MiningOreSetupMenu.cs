@@ -590,10 +590,17 @@ namespace MiningSimulator.Editor
                 Transform audioRoot = EnsureChildObject(runtime.transform, "Audio");
                 Transform musicSourceObject = EnsureChildObject(audioRoot, "Music Source");
                 Transform sfxSourceObject = EnsureChildObject(audioRoot, "SFX Source");
-                AudioSource musicSource = musicSourceObject.GetComponent<AudioSource>() ??
-                                          musicSourceObject.gameObject.AddComponent<AudioSource>();
-                AudioSource sfxSource = sfxSourceObject.GetComponent<AudioSource>() ??
-                                        sfxSourceObject.gameObject.AddComponent<AudioSource>();
+                AudioSource musicSource = musicSourceObject.GetComponent<AudioSource>();
+                if (musicSource == null)
+                {
+                    musicSource = musicSourceObject.gameObject.AddComponent<AudioSource>();
+                }
+
+                AudioSource sfxSource = sfxSourceObject.GetComponent<AudioSource>();
+                if (sfxSource == null)
+                {
+                    sfxSource = sfxSourceObject.gameObject.AddComponent<AudioSource>();
+                }
                 musicSource.playOnAwake = false;
                 musicSource.loop = audioData.LoopMusic;
                 musicSource.volume = audioData.MusicVolume;

@@ -243,8 +243,13 @@ namespace MiningSimulator.Ores
                 sourceTransform = sourceObject.transform;
             }
 
-            return sourceTransform.GetComponent<AudioSource>() ??
-                   sourceTransform.gameObject.AddComponent<AudioSource>();
+            AudioSource source = sourceTransform.GetComponent<AudioSource>();
+            if (source == null)
+            {
+                source = sourceTransform.gameObject.AddComponent<AudioSource>();
+            }
+
+            return source;
         }
 
         private static bool EnsureClipLoaded(AudioClip clip)
