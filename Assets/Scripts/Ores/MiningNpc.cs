@@ -20,6 +20,7 @@ namespace MiningSimulator.Ores
         private Rigidbody body;
         private float nextHitTime;
         private float nextTargetRefreshTime;
+        private float nextTargetSwitchTime;
         private float ignoredOreUntil;
         private float lastProgressTime;
         private float avoidanceSide = 1f;
@@ -107,7 +108,7 @@ namespace MiningSimulator.Ores
 
             float movementThreshold = isMining
                 ? npcData.ResumeMovingDistance
-                : npcData.StoppingDistance;
+                : npcData.MiningPositionTolerance;
             if (standOffset.sqrMagnitude > movementThreshold * movementThreshold)
             {
                 isMining = false;
@@ -163,7 +164,8 @@ namespace MiningSimulator.Ores
             if (TryGetBlockingOre(movementDirection, probeDistance, out Ore blockingOre,
                 out Vector3 blockingPoint))
             {
-                if (CanMine(blockingOre) && TrySwitchTarget(blockingOre))
+                if (Time.time >= nextTargetSwitchTime && CanMine(blockingOre) &&
+                    TrySwitchTarget(blockingOre))
                 {
                     ApplyHorizontalVelocity(Vector3.zero, npcData.BrakingAcceleration);
                     return;
@@ -212,6 +214,11 @@ namespace MiningSimulator.Ores
             if (targetOre == null)
             {
                 TryAcquireTarget(currentPosition);
+                return;
+            }
+
+            if (Time.time < nextTargetSwitchTime)
+            {
                 return;
             }
 
@@ -270,6 +277,7 @@ namespace MiningSimulator.Ores
             }
 
             isMining = false;
+            nextTargetSwitchTime = Time.time + npcData.TargetSwitchCooldown;
             ResetProgressTracking();
         }
 
@@ -408,9 +416,7 @@ namespace MiningSimulator.Ores
                         separationOrder = string.CompareOrdinal(name, otherNpc.name);
                     }
 
-                    away = separationOrder <= 0
-                        ? transform.right
-                        : -transform.right;
+                    away = separationOrder <= 0 ? Vector3.right : Vector3.left;
                     distance = npcData.ColliderRadius;
                 }
 
@@ -444,6 +450,7 @@ namespace MiningSimulator.Ores
 
         private void RotateTowards(Vector3 direction)
         {
+            body.angularVelocity = Vector3.zero;
             direction.y = 0f;
             if (direction.sqrMagnitude <= Mathf.Epsilon)
             {

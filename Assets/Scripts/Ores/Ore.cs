@@ -91,7 +91,8 @@ namespace MiningSimulator.Ores
             float angle = 360f * Mathf.Clamp(slotIndex, 0, slotCount - 1) / slotCount;
             Vector3 direction = Quaternion.Euler(0f, angle, 0f) * Vector3.forward;
 
-            float oreRadius = 0f;
+            bool hasBounds = false;
+            Bounds combinedBounds = default;
             foreach (Collider targetCollider in GetMiningColliders())
             {
                 if (targetCollider == null || !targetCollider.enabled || targetCollider.isTrigger)
@@ -99,11 +100,23 @@ namespace MiningSimulator.Ores
                     continue;
                 }
 
-                Vector3 extents = targetCollider.bounds.extents;
-                oreRadius = Mathf.Max(oreRadius, extents.x, extents.z);
+                if (!hasBounds)
+                {
+                    combinedBounds = targetCollider.bounds;
+                    hasBounds = true;
+                }
+                else
+                {
+                    combinedBounds.Encapsulate(targetCollider.bounds);
+                }
             }
 
-            float collisionSafeRadius = oreRadius + minerRadius + spacingPadding;
+            Vector3 standCenter = hasBounds ? combinedBounds.center : transform.position;
+            standCenter.y = transform.position.y;
+            Vector3 extents = hasBounds ? combinedBounds.extents : Vector3.zero;
+            float directionalOreRadius = Mathf.Abs(direction.x) * extents.x +
+                                         Mathf.Abs(direction.z) * extents.z;
+            float collisionSafeRadius = directionalOreRadius + minerRadius + spacingPadding;
             if (slotCount > 1)
             {
                 float halfChordAngle = Mathf.PI / slotCount;
@@ -113,7 +126,7 @@ namespace MiningSimulator.Ores
             }
 
             float configuredRadius = data != null ? data.NpcStandDistance : 0f;
-            return transform.position + direction * Mathf.Max(configuredRadius, collisionSafeRadius);
+            return standCenter + direction * Mathf.Max(configuredRadius, collisionSafeRadius);
         }
 
         public float SqrDistanceToSurface(Vector3 worldPosition)
