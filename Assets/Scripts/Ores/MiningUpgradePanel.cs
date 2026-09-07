@@ -21,16 +21,20 @@ namespace MiningSimulator.Ores
         [SerializeField] private Button oreDamageButton;
         [SerializeField] private Button oreSpawnSpeedButton;
         [SerializeField] private Button npcMoveSpeedButton;
+        [SerializeField] private Button npcCapacityButton;
         [SerializeField] private TextMeshProUGUI moneyRewardLabel;
         [SerializeField] private TextMeshProUGUI rareOreSpawnLabel;
         [SerializeField] private TextMeshProUGUI oreDamageLabel;
         [SerializeField] private TextMeshProUGUI oreSpawnSpeedLabel;
         [SerializeField] private TextMeshProUGUI npcMoveSpeedLabel;
+        [SerializeField] private TextMeshProUGUI npcCapacityLabel;
         [SerializeField] private bool openOnPlay;
 
         [Header("Editable Text")]
         [SerializeField] private string upgradeFormat = "{0}\n+{1:0.##}%  [{2}/{3}]  -  {4} tiền";
         [SerializeField] private string maximumFormat = "{0}\n+{1:0.##}%  [{2}/{3}]  -  TỐI ĐA";
+        [SerializeField] private string capacityFormat = "{0}\n+{1:0} thợ mỏ  [{2}/{3}]  -  {4} tiền";
+        [SerializeField] private string capacityMaximumFormat = "{0}\n+{1:0} thợ mỏ  [{2}/{3}]  -  TỐI ĐA";
 
         public event Action PanelOpened;
         public event Action PanelClosed;
@@ -88,6 +92,7 @@ namespace MiningSimulator.Ores
             oreDamageButton?.onClick.AddListener(BuyOreDamage);
             oreSpawnSpeedButton?.onClick.AddListener(BuyOreSpawnSpeed);
             npcMoveSpeedButton?.onClick.AddListener(BuyNpcMoveSpeed);
+            npcCapacityButton?.onClick.AddListener(BuyNpcCapacity);
         }
 
         private void RemoveListeners()
@@ -100,6 +105,7 @@ namespace MiningSimulator.Ores
             oreDamageButton?.onClick.RemoveListener(BuyOreDamage);
             oreSpawnSpeedButton?.onClick.RemoveListener(BuyOreSpawnSpeed);
             npcMoveSpeedButton?.onClick.RemoveListener(BuyNpcMoveSpeed);
+            npcCapacityButton?.onClick.RemoveListener(BuyNpcCapacity);
         }
 
         private void OpenPanel()
@@ -122,6 +128,7 @@ namespace MiningSimulator.Ores
         private void BuyOreDamage() => Buy(MiningUpgradeType.OreDamage);
         private void BuyOreSpawnSpeed() => Buy(MiningUpgradeType.OreSpawnSpeed);
         private void BuyNpcMoveSpeed() => Buy(MiningUpgradeType.NpcMoveSpeed);
+        private void BuyNpcCapacity() => Buy(MiningUpgradeType.NpcCapacity);
 
         private void Buy(MiningUpgradeType type)
         {
@@ -138,6 +145,32 @@ namespace MiningSimulator.Ores
             RefreshUpgrade(MiningUpgradeType.OreDamage, oreDamageButton, oreDamageLabel);
             RefreshUpgrade(MiningUpgradeType.OreSpawnSpeed, oreSpawnSpeedButton, oreSpawnSpeedLabel);
             RefreshUpgrade(MiningUpgradeType.NpcMoveSpeed, npcMoveSpeedButton, npcMoveSpeedLabel);
+            RefreshCapacityUpgrade();
+        }
+
+        private void RefreshCapacityUpgrade()
+        {
+            if (upgradeSystem == null || upgradeSystem.UpgradeData == null)
+            {
+                if (npcCapacityButton != null) npcCapacityButton.interactable = false;
+                return;
+            }
+
+            MiningUpgradeDefinition definition =
+                upgradeSystem.UpgradeData.GetDefinition(MiningUpgradeType.NpcCapacity);
+            int stacks = upgradeSystem.GetStacks(MiningUpgradeType.NpcCapacity);
+            bool maximum = upgradeSystem.IsMaximum(MiningUpgradeType.NpcCapacity);
+            if (npcCapacityLabel != null)
+            {
+                npcCapacityLabel.text = string.Format(maximum ? capacityMaximumFormat : capacityFormat,
+                    definition.DisplayName, definition.ValuePerStack, stacks,
+                    definition.MaximumStacks, upgradeSystem.GetCost(MiningUpgradeType.NpcCapacity));
+            }
+            if (npcCapacityButton != null)
+            {
+                npcCapacityButton.interactable =
+                    upgradeSystem.CanPurchase(MiningUpgradeType.NpcCapacity);
+            }
         }
 
         private void RefreshUpgrade(MiningUpgradeType type, Button button, TextMeshProUGUI label)

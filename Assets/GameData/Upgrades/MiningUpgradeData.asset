@@ -42,3 +42,9 @@ MonoBehaviour:
     maximumStacks: 100
     startingCost: 25
     costIncreasePerPurchase: 10
+  npcCapacity:
+    displayName: Tăng giới hạn thợ mỏ
+    percentPerStack: 1
+    maximumStacks: 25
+    startingCost: 50
+    costIncreasePerPurchase: 25

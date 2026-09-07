@@ -582,6 +582,9 @@ namespace MiningSimulator.Editor
                                                     runtime.AddComponent<MiningRebirthPanel>();
                 MiningAudioManager audioManager = runtime.GetComponent<MiningAudioManager>() ??
                                                   runtime.AddComponent<MiningAudioManager>();
+                MiningAudioSettingsPanel audioSettingsPanel =
+                    runtime.GetComponent<MiningAudioSettingsPanel>() ??
+                    runtime.AddComponent<MiningAudioSettingsPanel>();
                 MiningGameManager gameManager = runtime.GetComponent<MiningGameManager>() ??
                                                 runtime.AddComponent<MiningGameManager>();
                 MiningOrbitCamera orbitCamera = runtime.GetComponent<MiningOrbitCamera>() ??
@@ -636,6 +639,7 @@ namespace MiningSimulator.Editor
                 SetReferenceIfMissing(shopSerialized.FindProperty("oreSpawner"), spawner);
                 SetReferenceIfMissing(shopSerialized.FindProperty("npcPrefab"), npcPrefab);
                 SetReferenceIfMissing(shopSerialized.FindProperty("npcData"), npcData);
+                SetReferenceIfMissing(shopSerialized.FindProperty("upgradeSystem"), upgradeSystem);
                 shopSerialized.ApplyModifiedPropertiesWithoutUndo();
 
                 var hudSerialized = new SerializedObject(hud);
@@ -643,10 +647,24 @@ namespace MiningSimulator.Editor
                 SetReferenceIfMissing(hudSerialized.FindProperty("npcShop"), shop);
                 SetReferenceIfMissing(hudSerialized.FindProperty("gameData"), gameData);
                 CreateEditableHudIfMissing(runtime, hudSerialized, uiData);
+                SerializedProperty npcCountFormat = hudSerialized.FindProperty("npcCountFormat");
+                if (npcCountFormat != null && npcCountFormat.stringValue == "NPC đào quặng: {0}")
+                {
+                    npcCountFormat.stringValue = "NPC đào quặng: {0}/{1}";
+                }
+                SerializedProperty purchaseFailedMessage =
+                    hudSerialized.FindProperty("purchaseFailedMessage");
+                if (purchaseFailedMessage != null &&
+                    purchaseFailedMessage.stringValue == "Không đủ tiền hoặc thiếu cấu hình NPC.")
+                {
+                    purchaseFailedMessage.stringValue =
+                        "Không đủ tiền hoặc đã đạt giới hạn thợ mỏ.";
+                }
                 hudSerialized.ApplyModifiedPropertiesWithoutUndo();
 
                 ConfigureUpgradePanel(runtime, upgradePanel, upgradeSystem, wallet, upgradeData, uiData);
                 ConfigureRebirthHud(runtime, rebirthPanel, rebirthSystem, wallet, uiData);
+                ConfigureAudioSettings(runtime, audioSettingsPanel, audioManager, uiData);
 
                 var rebirthSerialized = new SerializedObject(rebirthSystem);
                 rebirthSerialized.FindProperty("wallet").objectReferenceValue = wallet;
@@ -676,6 +694,8 @@ namespace MiningSimulator.Editor
                 SetReferenceIfMissing(gameManagerSerialized.FindProperty("upgradePanel"), upgradePanel);
                 SetReferenceIfMissing(gameManagerSerialized.FindProperty("rebirthPanel"), rebirthPanel);
                 SetReferenceIfMissing(gameManagerSerialized.FindProperty("audioManager"), audioManager);
+                SetReferenceIfMissing(gameManagerSerialized.FindProperty("audioSettingsPanel"),
+                    audioSettingsPanel);
                 SetReferenceIfMissing(gameManagerSerialized.FindProperty("orbitCamera"), orbitCamera);
                 gameManagerSerialized.ApplyModifiedPropertiesWithoutUndo();
 
@@ -957,6 +977,9 @@ namespace MiningSimulator.Editor
             EnsureUpgradeCard(upgradePanelTransform, "NPC Move Speed Upgrade", 4,
                 GetUpgradePreview(upgradeData.NpcMoveSpeed), uiData.NpcMoveSpeedIconSprite,
                 uiData.NpcMoveSpeedIconFallback, uiData);
+            EnsureUpgradeCard(upgradePanelTransform, "NPC Capacity Upgrade", 5,
+                GetCapacityUpgradePreview(upgradeData.NpcCapacity), uiData.NpcCapacityIconSprite,
+                uiData.NpcCapacityIconFallback, uiData);
 
             Button backButton = EnsureStyledButton(upgradePanelTransform, "Back", uiData.BackButtonPosition,
                 uiData.BackButtonSize, uiData.NavigationButtonColor, uiData.TitleTextColor, uiData);
@@ -986,6 +1009,8 @@ namespace MiningSimulator.Editor
                 upgradePanelTransform.Find("Ore Spawn Speed Upgrade"));
             WireUpgradeButton(serialized, "npcMoveSpeedButton", "npcMoveSpeedLabel",
                 upgradePanelTransform.Find("NPC Move Speed Upgrade"));
+            WireUpgradeButton(serialized, "npcCapacityButton", "npcCapacityLabel",
+                upgradePanelTransform.Find("NPC Capacity Upgrade"));
             serialized.ApplyModifiedPropertiesWithoutUndo();
         }
 
@@ -1004,6 +1029,137 @@ namespace MiningSimulator.Editor
                 uiData.UpgradeIconColor, uiData);
             StyleUpgradeCardIcon(button.transform.Find("Icon"), iconSprite, uiData);
             return button;
+        }
+
+        private static void ConfigureAudioSettings(GameObject runtime,
+            MiningAudioSettingsPanel panelController, MiningAudioManager audioManager,
+            MiningUiData uiData)
+        {
+            Transform canvas = runtime.transform.Find(HudCanvasName);
+            if (canvas == null || uiData == null)
+            {
+                return;
+            }
+
+            Transform menuButtonTransform = EnsureUiObject(canvas, "Audio Menu Button",
+                typeof(Image), typeof(Button));
+            ConfigureTopRightRect(menuButtonTransform, uiData.AudioMenuButtonPosition,
+                uiData.AudioMenuButtonSize);
+            StyleButton(menuButtonTransform, uiData.NavigationButtonColor, uiData.TitleTextColor,
+                uiData.OutlineColor, uiData.OutlineThickness, uiData);
+            TextMeshProUGUI menuLabel = EnsureText(menuButtonTransform, "Label");
+            StretchRect(menuLabel.rectTransform);
+            menuLabel.text = "ÂM THANH";
+            menuLabel.fontSize = uiData.NavigationFontSize;
+            menuLabel.color = uiData.TitleTextColor;
+            menuLabel.alignment = TextAlignmentOptions.Center;
+
+            Transform panel = EnsureUiObject(canvas, "Audio Settings Panel", typeof(Image));
+            ConfigureCenteredRect(panel, Vector2.zero, uiData.AudioPanelSize);
+            panel.GetComponent<Image>().color = uiData.AudioPanelColor;
+            ApplyOutline(panel.gameObject, uiData.OutlineColor, uiData.OutlineThickness);
+
+            Transform header = EnsureUiObject(panel, "Header", typeof(Image));
+            ConfigureTopLeftRect(header, Vector2.zero, uiData.AudioHeaderSize);
+            header.GetComponent<Image>().color = uiData.AudioHeaderColor;
+            ApplyOutline(header.gameObject, uiData.OutlineColor, uiData.OutlineThickness);
+            TextMeshProUGUI title = EnsureText(header, "Title");
+            StretchRect(title.rectTransform);
+            title.text = "CÀI ĐẶT ÂM THANH";
+            title.fontSize = uiData.AudioTitleFontSize;
+            title.color = uiData.TitleTextColor;
+            title.alignment = TextAlignmentOptions.Center;
+
+            Button closeButton = EnsureStyledButton(panel, "Close",
+                uiData.AudioCloseButtonPosition, uiData.AudioCloseButtonSize,
+                uiData.CloseButtonColor, uiData.TitleTextColor, uiData);
+            TextMeshProUGUI closeLabel = closeButton.GetComponentInChildren<TextMeshProUGUI>(true);
+            closeLabel.text = "X";
+            closeLabel.fontSize = uiData.NavigationFontSize;
+
+            Slider masterSlider = EnsureAudioSliderRow(panel, "Master", 0, "MASTER",
+                uiData, out TextMeshProUGUI masterValue);
+            Slider musicSlider = EnsureAudioSliderRow(panel, "Music", 1, "MUSIC",
+                uiData, out TextMeshProUGUI musicValue);
+            Slider sfxSlider = EnsureAudioSliderRow(panel, "SFX", 2, "SFX",
+                uiData, out TextMeshProUGUI sfxValue);
+
+            panel.gameObject.SetActive(true);
+            var serialized = new SerializedObject(panelController);
+            SetReferenceIfMissing(serialized.FindProperty("audioManager"), audioManager);
+            SetReferenceIfMissing(serialized.FindProperty("settingsPanel"), panel.gameObject);
+            SetReferenceIfMissing(serialized.FindProperty("openButton"),
+                menuButtonTransform.GetComponent<Button>());
+            SetReferenceIfMissing(serialized.FindProperty("closeButton"), closeButton);
+            SetReferenceIfMissing(serialized.FindProperty("masterSlider"), masterSlider);
+            SetReferenceIfMissing(serialized.FindProperty("musicSlider"), musicSlider);
+            SetReferenceIfMissing(serialized.FindProperty("sfxSlider"), sfxSlider);
+            SetReferenceIfMissing(serialized.FindProperty("masterValueLabel"), masterValue);
+            SetReferenceIfMissing(serialized.FindProperty("musicValueLabel"), musicValue);
+            SetReferenceIfMissing(serialized.FindProperty("sfxValueLabel"), sfxValue);
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static Slider EnsureAudioSliderRow(Transform panel, string objectName, int index,
+            string displayName, MiningUiData uiData, out TextMeshProUGUI valueLabel)
+        {
+            Vector2 rowPosition = uiData.AudioFirstRowPosition +
+                                  Vector2.down * uiData.AudioRowSpacing * index;
+            TextMeshProUGUI nameLabel = EnsureText(panel, objectName + " Label");
+            ConfigureTopLeftRect(nameLabel.transform, rowPosition, uiData.AudioLabelSize);
+            nameLabel.text = displayName;
+            nameLabel.fontSize = uiData.AudioLabelFontSize;
+            nameLabel.color = uiData.CardTextColor;
+            nameLabel.alignment = TextAlignmentOptions.Left;
+
+            Vector2 sliderPosition = rowPosition +
+                                     Vector2.right * (uiData.AudioLabelSize.x +
+                                                      uiData.AudioColumnSpacing);
+            Transform sliderTransform = EnsureUiObject(panel, objectName + " Slider",
+                typeof(Image), typeof(Slider));
+            ConfigureTopLeftRect(sliderTransform, sliderPosition, uiData.AudioSliderSize);
+            Image background = sliderTransform.GetComponent<Image>();
+            background.color = uiData.AudioSliderBackgroundColor;
+
+            Transform fillArea = EnsureUiObject(sliderTransform, "Fill Area");
+            StretchRect(fillArea.GetComponent<RectTransform>());
+            Transform fill = EnsureUiObject(fillArea, "Fill", typeof(Image));
+            StretchRect(fill.GetComponent<RectTransform>());
+            fill.GetComponent<Image>().color = uiData.AudioSliderColor;
+
+            Transform handleArea = EnsureUiObject(sliderTransform, "Handle Slide Area");
+            StretchRect(handleArea.GetComponent<RectTransform>());
+            Transform handle = EnsureUiObject(handleArea, "Handle", typeof(Image));
+            RectTransform handleRect = handle.GetComponent<RectTransform>();
+            handleRect.anchorMin = new Vector2(0f, 0.5f);
+            handleRect.anchorMax = new Vector2(0f, 0.5f);
+            handleRect.pivot = new Vector2(0.5f, 0.5f);
+            handleRect.sizeDelta = Vector2.one * (uiData.AudioSliderSize.y +
+                                                   uiData.AudioHandleExtraSize);
+            Image handleImage = handle.GetComponent<Image>();
+            handleImage.sprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Knob.psd");
+            handleImage.color = uiData.TitleTextColor;
+
+            Slider slider = sliderTransform.GetComponent<Slider>();
+            slider.minValue = 0f;
+            slider.maxValue = 1f;
+            slider.value = 1f;
+            slider.wholeNumbers = false;
+            slider.direction = Slider.Direction.LeftToRight;
+            slider.fillRect = fill.GetComponent<RectTransform>();
+            slider.handleRect = handleRect;
+            slider.targetGraphic = handleImage;
+
+            Vector2 valuePosition = sliderPosition +
+                                    Vector2.right * (uiData.AudioSliderSize.x +
+                                                     uiData.AudioColumnSpacing);
+            valueLabel = EnsureText(panel, objectName + " Value");
+            ConfigureTopLeftRect(valueLabel.transform, valuePosition, uiData.AudioValueSize);
+            valueLabel.text = "100%";
+            valueLabel.fontSize = uiData.AudioLabelFontSize;
+            valueLabel.color = uiData.CardTextColor;
+            valueLabel.alignment = TextAlignmentOptions.Center;
+            return slider;
         }
 
         private static void ConfigureRebirthHud(GameObject runtime, MiningRebirthPanel panelController,
@@ -1300,6 +1456,8 @@ namespace MiningSimulator.Editor
                 return;
             }
 
+            CenterRectPivot(buttonTransform as RectTransform);
+
             animation ??= buttonTransform.gameObject.AddComponent<SmoothButtonPunch>();
             animation.enabled = true;
             animation.Configure(uiData.ButtonHoverScale, uiData.ButtonHoverPunchScale,
@@ -1307,6 +1465,19 @@ namespace MiningSimulator.Editor
                 uiData.ButtonHoverPunchDuration, uiData.ButtonHoverSettleDuration,
                 uiData.ButtonPressDuration, uiData.ButtonClickBounceDuration,
                 uiData.ButtonClickSettleDuration);
+        }
+
+        private static void CenterRectPivot(RectTransform rect)
+        {
+            if (rect == null)
+            {
+                return;
+            }
+
+            Vector2 centeredPivot = new(0.5f, 0.5f);
+            Vector2 pivotDelta = centeredPivot - rect.pivot;
+            rect.anchoredPosition += Vector2.Scale(pivotDelta, rect.rect.size);
+            rect.pivot = centeredPivot;
         }
 
         private static Transform EnsureUiObject(Transform parent, string name, params Type[] components)
@@ -1374,6 +1545,12 @@ namespace MiningSimulator.Editor
         private static string GetUpgradePreview(MiningUpgradeDefinition definition)
         {
             return $"{definition.DisplayName}\n+{definition.PercentPerStack:0.##}%  " +
+                   $"[0/{definition.MaximumStacks}]  -  {definition.StartingCost} tiền";
+        }
+
+        private static string GetCapacityUpgradePreview(MiningUpgradeDefinition definition)
+        {
+            return $"{definition.DisplayName}\n+{definition.ValuePerStack:0} thợ mỏ  " +
                    $"[0/{definition.MaximumStacks}]  -  {definition.StartingCost} tiền";
         }
 

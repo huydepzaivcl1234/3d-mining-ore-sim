@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: NpcData
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.NpcData
   purchaseCost: 25
+  startingMaximumMiners: 3
   spawnSpread: 1.25
   spawnHeightOffset: 0.9
   spawnAttempts: 12

@@ -38,6 +38,7 @@ namespace MiningSimulator.Ores
             float configuredClickSettleDuration)
         {
             target = GetComponent<RectTransform>();
+            CenterPivotPreservingPosition(target);
             hoverScale = configuredHoverScale;
             hoverPunchScale = configuredHoverPunchScale;
             pressedScale = configuredPressedScale;
@@ -58,6 +59,7 @@ namespace MiningSimulator.Ores
         private void Awake()
         {
             target ??= GetComponent<RectTransform>();
+            CenterPivotPreservingPosition(target);
             button = GetComponent<Button>();
             restingScale = target.localScale;
             initialized = true;
@@ -162,6 +164,19 @@ namespace MiningSimulator.Ores
         private bool CanAnimate()
         {
             return isActiveAndEnabled && (button == null || button.IsInteractable());
+        }
+
+        private static void CenterPivotPreservingPosition(RectTransform rect)
+        {
+            if (rect == null)
+            {
+                return;
+            }
+
+            Vector2 centeredPivot = new(0.5f, 0.5f);
+            Vector2 pivotDelta = centeredPivot - rect.pivot;
+            rect.anchoredPosition += Vector2.Scale(pivotDelta, rect.rect.size);
+            rect.pivot = centeredPivot;
         }
 
         private void PlayHoverPunch()

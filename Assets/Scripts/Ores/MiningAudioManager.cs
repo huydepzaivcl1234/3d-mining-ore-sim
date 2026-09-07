@@ -6,6 +6,10 @@ namespace MiningSimulator.Ores
     [DisallowMultipleComponent]
     public sealed class MiningAudioManager : MonoBehaviour
     {
+        private const string MasterVolumeKey = "MiningSimulator.Audio.Master.v1";
+        private const string MusicVolumeKey = "MiningSimulator.Audio.Music.v1";
+        private const string SfxVolumeKey = "MiningSimulator.Audio.Sfx.v1";
+
         [Header("References")]
         [SerializeField] private MiningAudioData audioData;
         [SerializeField] private OreSpawner oreSpawner;
@@ -20,13 +24,20 @@ namespace MiningSimulator.Ores
         private float nextOreHitSfxTime;
         private bool musicMuted;
         private bool sfxMuted;
+        private float masterVolume = 1f;
+        private float musicVolume = 1f;
+        private float sfxVolume = 1f;
 
         public MiningAudioData AudioData => audioData;
         public bool MusicMuted => musicMuted;
         public bool SfxMuted => sfxMuted;
+        public float MasterVolume => masterVolume;
+        public float MusicVolume => musicVolume;
+        public float SfxVolume => sfxVolume;
 
         private void Awake()
         {
+            LoadVolumeSettings();
             ResolveSources();
             ConfigureSources();
         }
@@ -171,6 +182,32 @@ namespace MiningSimulator.Ores
             }
         }
 
+        public void SetMasterVolume(float volume)
+        {
+            masterVolume = Mathf.Clamp01(volume);
+            PlayerPrefs.SetFloat(MasterVolumeKey, masterVolume);
+            ConfigureSources();
+        }
+
+        public void SetMusicVolume(float volume)
+        {
+            musicVolume = Mathf.Clamp01(volume);
+            PlayerPrefs.SetFloat(MusicVolumeKey, musicVolume);
+            ConfigureSources();
+        }
+
+        public void SetSfxVolume(float volume)
+        {
+            sfxVolume = Mathf.Clamp01(volume);
+            PlayerPrefs.SetFloat(SfxVolumeKey, sfxVolume);
+            ConfigureSources();
+        }
+
+        public void SaveVolumeSettings()
+        {
+            PlayerPrefs.Save();
+        }
+
         public void PlaySfx(AudioClip clip)
         {
             if (audioData == null || sfxSource == null || sfxMuted || !EnsureClipLoaded(clip))
@@ -193,7 +230,7 @@ namespace MiningSimulator.Ores
             {
                 musicSource.playOnAwake = false;
                 musicSource.loop = audioData.LoopMusic;
-                musicSource.volume = audioData.MusicVolume;
+                musicSource.volume = audioData.MusicVolume * masterVolume * musicVolume;
                 musicSource.spatialBlend = 0f;
                 musicSource.mute = musicMuted;
                 musicSource.outputAudioMixerGroup = audioData.MusicMixerGroup;
@@ -203,11 +240,31 @@ namespace MiningSimulator.Ores
             {
                 sfxSource.playOnAwake = false;
                 sfxSource.loop = false;
-                sfxSource.volume = 1f;
+                sfxSource.volume = masterVolume * sfxVolume;
                 sfxSource.spatialBlend = 0f;
                 sfxSource.mute = sfxMuted;
                 sfxSource.outputAudioMixerGroup = audioData.SfxMixerGroup;
             }
+        }
+
+        private void LoadVolumeSettings()
+        {
+            masterVolume = Mathf.Clamp01(PlayerPrefs.GetFloat(MasterVolumeKey, 1f));
+            musicVolume = Mathf.Clamp01(PlayerPrefs.GetFloat(MusicVolumeKey, 1f));
+            sfxVolume = Mathf.Clamp01(PlayerPrefs.GetFloat(SfxVolumeKey, 1f));
+        }
+
+        private void OnApplicationPause(bool paused)
+        {
+            if (paused)
+            {
+                SaveVolumeSettings();
+            }
+        }
+
+        private void OnApplicationQuit()
+        {
+            SaveVolumeSettings();
         }
 
         private void ResolveSources()

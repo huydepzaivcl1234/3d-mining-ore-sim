@@ -8,6 +8,7 @@ namespace MiningSimulator.Ores
     {
         [Header("Purchase And Spawn")]
         [Min(0), SerializeField] private int purchaseCost = 25;
+        [Min(0), SerializeField] private int startingMaximumMiners = 3;
         [Min(0f), SerializeField] private float spawnSpread = 1.25f;
         [SerializeField] private float spawnHeightOffset = 0.9f;
         [Min(1), SerializeField] private int spawnAttempts = 12;
@@ -66,6 +67,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private Vector3 toolHeadLocalScale = new(3.8f, 0.18f, 0.65f);
 
         public int PurchaseCost => purchaseCost;
+        public int StartingMaximumMiners => startingMaximumMiners;
         public float SpawnSpread => spawnSpread;
         public float SpawnHeightOffset => spawnHeightOffset;
         public int SpawnAttempts => spawnAttempts;
@@ -114,6 +116,7 @@ namespace MiningSimulator.Ores
         private void OnValidate()
         {
             purchaseCost = Mathf.Max(0, purchaseCost);
+            startingMaximumMiners = Mathf.Max(0, startingMaximumMiners);
             spawnSpread = Mathf.Max(0f, spawnSpread);
             spawnAttempts = Mathf.Max(1, spawnAttempts);
             moveSpeed = Mathf.Max(0.1f, moveSpeed);

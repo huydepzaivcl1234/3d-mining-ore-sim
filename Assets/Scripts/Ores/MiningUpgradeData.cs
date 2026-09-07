@@ -9,14 +9,16 @@ namespace MiningSimulator.Ores
         RareOreSpawn = 1,
         OreDamage = 2,
         OreSpawnSpeed = 3,
-        NpcMoveSpeed = 4
+        NpcMoveSpeed = 4,
+        NpcCapacity = 5
     }
 
     [Serializable]
     public sealed class MiningUpgradeDefinition
     {
         [SerializeField] private string displayName = "Nâng cấp";
-        [Min(0f), SerializeField] private float percentPerStack = 1f;
+        [InspectorName("Value Per Stack"), Min(0f), SerializeField]
+        private float percentPerStack = 1f;
         [Min(1), SerializeField] private int maximumStacks = 100;
         [Min(0), SerializeField] private int startingCost = 25;
         [Min(0), SerializeField] private int costIncreasePerPurchase = 10;
@@ -33,6 +35,7 @@ namespace MiningSimulator.Ores
 
         public string DisplayName => displayName;
         public float PercentPerStack => percentPerStack;
+        public float ValuePerStack => percentPerStack;
         public int MaximumStacks => maximumStacks;
         public int StartingCost => startingCost;
         public int CostIncreasePerPurchase => costIncreasePerPurchase;
@@ -76,11 +79,16 @@ namespace MiningSimulator.Ores
         [SerializeField] private MiningUpgradeDefinition npcMoveSpeed =
             new("Tăng tốc độ di chuyển NPC", 1f);
 
+        [Header("NPC Capacity")]
+        [SerializeField] private MiningUpgradeDefinition npcCapacity =
+            new("Tăng giới hạn thợ mỏ", 1f, 25, 50, 25);
+
         public MiningUpgradeDefinition MoneyReward => moneyReward;
         public MiningUpgradeDefinition RareOreSpawn => rareOreSpawn;
         public MiningUpgradeDefinition OreDamage => oreDamage;
         public MiningUpgradeDefinition OreSpawnSpeed => oreSpawnSpeed;
         public MiningUpgradeDefinition NpcMoveSpeed => npcMoveSpeed;
+        public MiningUpgradeDefinition NpcCapacity => npcCapacity;
 
         public MiningUpgradeDefinition GetDefinition(MiningUpgradeType type)
         {
@@ -91,6 +99,7 @@ namespace MiningSimulator.Ores
                 MiningUpgradeType.OreDamage => oreDamage,
                 MiningUpgradeType.OreSpawnSpeed => oreSpawnSpeed,
                 MiningUpgradeType.NpcMoveSpeed => npcMoveSpeed,
+                MiningUpgradeType.NpcCapacity => npcCapacity,
                 _ => moneyReward
             };
         }
@@ -102,6 +111,7 @@ namespace MiningSimulator.Ores
             oreDamage?.Validate();
             oreSpawnSpeed?.Validate();
             npcMoveSpeed?.Validate();
+            npcCapacity?.Validate();
         }
     }
 }

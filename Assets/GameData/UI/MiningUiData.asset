@@ -45,9 +45,9 @@ MonoBehaviour:
   npcIconColor: {r: 0.2, g: 0.65, b: 0.94, a: 1}
   upgradeIconColor: {r: 0.14, g: 0.72, b: 0.52, a: 1}
   iconSymbolColor: {r: 1, g: 1, b: 1, a: 1}
-  moneyIconSprite: {fileID: 0}
-  npcIconSprite: {fileID: 0}
-  buyNpcIconSprite: {fileID: 0}
+  moneyIconSprite: {fileID: 21300000, guid: 4f7ca63df9f4a0e4db24cfd637f9b2d2, type: 3}
+  npcIconSprite: {fileID: 21300000, guid: bf740a43e6c32ad4fb5f99f2aa91a9a0, type: 3}
+  buyNpcIconSprite: {fileID: 21300000, guid: bf740a43e6c32ad4fb5f99f2aa91a9a0, type: 3}
   openUpgradeIconSprite: {fileID: 0}
   moneyIconFallback: $
   npcIconFallback: N
@@ -61,11 +61,13 @@ MonoBehaviour:
   oreDamageIconSprite: {fileID: 21300000, guid: bd3453b0181f4bb08c8b2a42e54e0957, type: 3}
   oreSpawnSpeedIconSprite: {fileID: 21300000, guid: 79e259b7491d4a8f83a46b760a2690f1, type: 3}
   npcMoveSpeedIconSprite: {fileID: 21300000, guid: 91682228e8024b459ce2f36dbd1ef34a, type: 3}
+  npcCapacityIconSprite: {fileID: 21300000, guid: bf740a43e6c32ad4fb5f99f2aa91a9a0, type: 3}
   moneyRewardIconFallback: $
   rareOreIconFallback: R
   oreDamageIconFallback: '!'
   oreSpawnSpeedIconFallback: S
   npcMoveSpeedIconFallback: '>>'
+  npcCapacityIconFallback: +1
   smoothButtonAnimationEnabled: 1
   buttonHoverScale: 1.035
   buttonHoverPunchScale: 1.075
@@ -76,6 +78,25 @@ MonoBehaviour:
   buttonPressDuration: 0.06
   buttonClickBounceDuration: 0.09
   buttonClickSettleDuration: 0.12
+  audioMenuButtonPosition: {x: -24, y: -214}
+  audioMenuButtonSize: {x: 180, y: 48}
+  audioPanelSize: {x: 560, y: 420}
+  audioHeaderSize: {x: 560, y: 74}
+  audioSliderSize: {x: 300, y: 28}
+  audioFirstRowPosition: {x: 42, y: -118}
+  audioRowSpacing: 86
+  audioLabelSize: {x: 130, y: 34}
+  audioValueSize: {x: 72, y: 34}
+  audioColumnSpacing: 12
+  audioHandleExtraSize: 8
+  audioCloseButtonPosition: {x: 510, y: -10}
+  audioCloseButtonSize: {x: 48, y: 48}
+  audioTitleFontSize: 30
+  audioLabelFontSize: 22
+  audioPanelColor: {r: 0.93, g: 0.96, b: 0.98, a: 1}
+  audioHeaderColor: {r: 0.2, g: 0.65, b: 0.94, a: 1}
+  audioSliderColor: {r: 0.14, g: 0.72, b: 0.52, a: 1}
+  audioSliderBackgroundColor: {r: 0.15, g: 0.18, b: 0.22, a: 1}
   shopTitle: KHU ĐÀO QUẶNG
   shopHeaderSize: {x: 330, y: 54}
   shopTitleFontSize: 21
@@ -90,7 +111,7 @@ MonoBehaviour:
   rewardPopupColor: {r: 1, g: 0.82, b: 0.16, a: 1}
   rewardPopupOutlineColor: {r: 0.08, g: 0.04, b: 0.01, a: 1}
   rewardPopupOutlineWidth: 0.2
-  panelSize: {x: 720, y: 680}
+  panelSize: {x: 720, y: 780}
   headerSize: {x: 720, y: 82}
   cardSize: {x: 620, y: 78}
   firstCardPosition: {x: 50, y: -104}
@@ -98,7 +119,7 @@ MonoBehaviour:
   closeButtonSize: {x: 58, y: 58}
   closeButtonPosition: {x: 678, y: -12}
   backButtonSize: {x: 180, y: 54}
-  backButtonPosition: {x: 270, y: -606}
+  backButtonPosition: {x: 270, y: -706}
   openButtonSize: {x: 294, y: 46}
   openButtonPosition: {x: 18, y: -266}
   outlineThickness: 4

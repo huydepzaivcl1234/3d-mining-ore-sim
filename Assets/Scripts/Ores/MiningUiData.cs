@@ -62,11 +62,13 @@ namespace MiningSimulator.Ores
         [SerializeField] private Sprite oreDamageIconSprite;
         [SerializeField] private Sprite oreSpawnSpeedIconSprite;
         [SerializeField] private Sprite npcMoveSpeedIconSprite;
+        [SerializeField] private Sprite npcCapacityIconSprite;
         [SerializeField] private string moneyRewardIconFallback = "$";
         [SerializeField] private string rareOreIconFallback = "R";
         [SerializeField] private string oreDamageIconFallback = "!";
         [SerializeField] private string oreSpawnSpeedIconFallback = "S";
         [SerializeField] private string npcMoveSpeedIconFallback = ">>";
+        [SerializeField] private string npcCapacityIconFallback = "+1";
 
         [Header("Smooth Button Animation")]
         [SerializeField] private bool smoothButtonAnimationEnabled = true;
@@ -79,6 +81,27 @@ namespace MiningSimulator.Ores
         [Min(0.01f), SerializeField] private float buttonPressDuration = 0.06f;
         [Min(0.01f), SerializeField] private float buttonClickBounceDuration = 0.09f;
         [Min(0.01f), SerializeField] private float buttonClickSettleDuration = 0.12f;
+
+        [Header("Audio Menu Layout")]
+        [SerializeField] private Vector2 audioMenuButtonPosition = new(-24f, -214f);
+        [SerializeField] private Vector2 audioMenuButtonSize = new(180f, 48f);
+        [SerializeField] private Vector2 audioPanelSize = new(560f, 420f);
+        [SerializeField] private Vector2 audioHeaderSize = new(560f, 74f);
+        [SerializeField] private Vector2 audioSliderSize = new(300f, 28f);
+        [SerializeField] private Vector2 audioFirstRowPosition = new(42f, -118f);
+        [Min(0f), SerializeField] private float audioRowSpacing = 86f;
+        [SerializeField] private Vector2 audioLabelSize = new(130f, 34f);
+        [SerializeField] private Vector2 audioValueSize = new(72f, 34f);
+        [Min(0f), SerializeField] private float audioColumnSpacing = 12f;
+        [Min(0f), SerializeField] private float audioHandleExtraSize = 8f;
+        [SerializeField] private Vector2 audioCloseButtonPosition = new(510f, -10f);
+        [SerializeField] private Vector2 audioCloseButtonSize = new(48f, 48f);
+        [Min(1f), SerializeField] private float audioTitleFontSize = 30f;
+        [Min(1f), SerializeField] private float audioLabelFontSize = 22f;
+        [SerializeField] private Color audioPanelColor = new(0.93f, 0.96f, 0.98f, 1f);
+        [SerializeField] private Color audioHeaderColor = new(0.20f, 0.65f, 0.94f, 1f);
+        [SerializeField] private Color audioSliderColor = new(0.14f, 0.72f, 0.52f, 1f);
+        [SerializeField] private Color audioSliderBackgroundColor = new(0.15f, 0.18f, 0.22f, 1f);
 
         [Header("NPC Shop Style")]
         [SerializeField] private string shopTitle = "KHU ĐÀO QUẶNG";
@@ -99,7 +122,7 @@ namespace MiningSimulator.Ores
         [Range(0f, 1f), SerializeField] private float rewardPopupOutlineWidth = 0.2f;
 
         [Header("Upgrade Panel Layout")]
-        [SerializeField] private Vector2 panelSize = new(720f, 680f);
+        [SerializeField] private Vector2 panelSize = new(720f, 780f);
         [SerializeField] private Vector2 headerSize = new(720f, 82f);
         [SerializeField] private Vector2 cardSize = new(620f, 78f);
         [SerializeField] private Vector2 firstCardPosition = new(50f, -104f);
@@ -107,7 +130,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private Vector2 closeButtonSize = new(58f, 58f);
         [SerializeField] private Vector2 closeButtonPosition = new(678f, -12f);
         [SerializeField] private Vector2 backButtonSize = new(180f, 54f);
-        [SerializeField] private Vector2 backButtonPosition = new(270f, -606f);
+        [SerializeField] private Vector2 backButtonPosition = new(270f, -706f);
         [SerializeField] private Vector2 openButtonSize = new(294f, 46f);
         [SerializeField] private Vector2 openButtonPosition = new(18f, -266f);
         [Min(0f), SerializeField] private float outlineThickness = 4f;
@@ -211,11 +234,13 @@ namespace MiningSimulator.Ores
         public Sprite OreDamageIconSprite => oreDamageIconSprite;
         public Sprite OreSpawnSpeedIconSprite => oreSpawnSpeedIconSprite;
         public Sprite NpcMoveSpeedIconSprite => npcMoveSpeedIconSprite;
+        public Sprite NpcCapacityIconSprite => npcCapacityIconSprite;
         public string MoneyRewardIconFallback => moneyRewardIconFallback;
         public string RareOreIconFallback => rareOreIconFallback;
         public string OreDamageIconFallback => oreDamageIconFallback;
         public string OreSpawnSpeedIconFallback => oreSpawnSpeedIconFallback;
         public string NpcMoveSpeedIconFallback => npcMoveSpeedIconFallback;
+        public string NpcCapacityIconFallback => npcCapacityIconFallback;
         public bool SmoothButtonAnimationEnabled => smoothButtonAnimationEnabled;
         public float ButtonHoverScale => buttonHoverScale;
         public float ButtonHoverPunchScale => buttonHoverPunchScale;
@@ -226,6 +251,25 @@ namespace MiningSimulator.Ores
         public float ButtonPressDuration => buttonPressDuration;
         public float ButtonClickBounceDuration => buttonClickBounceDuration;
         public float ButtonClickSettleDuration => buttonClickSettleDuration;
+        public Vector2 AudioMenuButtonPosition => audioMenuButtonPosition;
+        public Vector2 AudioMenuButtonSize => audioMenuButtonSize;
+        public Vector2 AudioPanelSize => audioPanelSize;
+        public Vector2 AudioHeaderSize => audioHeaderSize;
+        public Vector2 AudioSliderSize => audioSliderSize;
+        public Vector2 AudioFirstRowPosition => audioFirstRowPosition;
+        public float AudioRowSpacing => audioRowSpacing;
+        public Vector2 AudioLabelSize => audioLabelSize;
+        public Vector2 AudioValueSize => audioValueSize;
+        public float AudioColumnSpacing => audioColumnSpacing;
+        public float AudioHandleExtraSize => audioHandleExtraSize;
+        public Vector2 AudioCloseButtonPosition => audioCloseButtonPosition;
+        public Vector2 AudioCloseButtonSize => audioCloseButtonSize;
+        public float AudioTitleFontSize => audioTitleFontSize;
+        public float AudioLabelFontSize => audioLabelFontSize;
+        public Color AudioPanelColor => audioPanelColor;
+        public Color AudioHeaderColor => audioHeaderColor;
+        public Color AudioSliderColor => audioSliderColor;
+        public Color AudioSliderBackgroundColor => audioSliderBackgroundColor;
         public string ShopTitle => shopTitle;
         public Vector2 ShopHeaderSize => shopHeaderSize;
         public float ShopTitleFontSize => shopTitleFontSize;
@@ -320,6 +364,25 @@ namespace MiningSimulator.Ores
             buttonPressDuration = Mathf.Max(0.01f, buttonPressDuration);
             buttonClickBounceDuration = Mathf.Max(0.01f, buttonClickBounceDuration);
             buttonClickSettleDuration = Mathf.Max(0.01f, buttonClickSettleDuration);
+            audioMenuButtonSize.x = Mathf.Max(1f, audioMenuButtonSize.x);
+            audioMenuButtonSize.y = Mathf.Max(1f, audioMenuButtonSize.y);
+            audioPanelSize.x = Mathf.Max(1f, audioPanelSize.x);
+            audioPanelSize.y = Mathf.Max(1f, audioPanelSize.y);
+            audioHeaderSize.x = Mathf.Max(1f, audioHeaderSize.x);
+            audioHeaderSize.y = Mathf.Max(1f, audioHeaderSize.y);
+            audioSliderSize.x = Mathf.Max(1f, audioSliderSize.x);
+            audioSliderSize.y = Mathf.Max(1f, audioSliderSize.y);
+            audioRowSpacing = Mathf.Max(0f, audioRowSpacing);
+            audioLabelSize.x = Mathf.Max(1f, audioLabelSize.x);
+            audioLabelSize.y = Mathf.Max(1f, audioLabelSize.y);
+            audioValueSize.x = Mathf.Max(1f, audioValueSize.x);
+            audioValueSize.y = Mathf.Max(1f, audioValueSize.y);
+            audioColumnSpacing = Mathf.Max(0f, audioColumnSpacing);
+            audioHandleExtraSize = Mathf.Max(0f, audioHandleExtraSize);
+            audioCloseButtonSize.x = Mathf.Max(1f, audioCloseButtonSize.x);
+            audioCloseButtonSize.y = Mathf.Max(1f, audioCloseButtonSize.y);
+            audioTitleFontSize = Mathf.Max(1f, audioTitleFontSize);
+            audioLabelFontSize = Mathf.Max(1f, audioLabelFontSize);
             cardSpacing = Mathf.Max(0f, cardSpacing);
             outlineThickness = Mathf.Max(0f, outlineThickness);
             shopHeaderSize.x = Mathf.Max(1f, shopHeaderSize.x);

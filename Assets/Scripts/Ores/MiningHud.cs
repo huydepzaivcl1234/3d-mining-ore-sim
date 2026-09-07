@@ -21,10 +21,11 @@ namespace MiningSimulator.Ores
 
         [Header("Editable Text")]
         [SerializeField] private string moneyFormat = "Tiền: {0}";
-        [SerializeField] private string npcCountFormat = "NPC đào quặng: {0}";
+        [SerializeField] private string npcCountFormat = "NPC đào quặng: {0}/{1}";
         [SerializeField] private string buyButtonFormat = "Mua NPC đào ({0})";
         [SerializeField] private string purchasedMessage = "Đã mua NPC đào quặng!";
-        [SerializeField] private string purchaseFailedMessage = "Không đủ tiền hoặc thiếu cấu hình NPC.";
+        [SerializeField] private string purchaseFailedMessage =
+            "Không đủ tiền hoặc đã đạt giới hạn thợ mỏ.";
 
         private int displayedMoney;
         private int targetMoney;
@@ -143,7 +144,8 @@ namespace MiningSimulator.Ores
             if (npcCountText != null)
             {
                 int count = npcShop != null ? npcShop.PurchasedCount : 0;
-                npcCountText.text = string.Format(npcCountFormat, count);
+                int maximum = npcShop != null ? npcShop.MaximumMiners : 0;
+                npcCountText.text = string.Format(npcCountFormat, count, maximum);
             }
 
             if (buyButtonLabel != null)

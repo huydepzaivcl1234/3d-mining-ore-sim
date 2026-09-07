@@ -12,19 +12,54 @@ namespace MiningSimulator.Ores
         [SerializeField] private MiningNpc npcPrefab;
         [SerializeField] private Transform spawnPoint;
         [SerializeField] private NpcData npcData;
+        [SerializeField] private MiningUpgradeSystem upgradeSystem;
 
         private int purchasedCount;
 
         public int NpcCost => npcData != null ? npcData.PurchaseCost : 0;
         public int PurchasedCount => purchasedCount;
+        public int MaximumMiners
+        {
+            get
+            {
+                int baseCapacity = npcData != null ? npcData.StartingMaximumMiners : 0;
+                if (upgradeSystem == null || upgradeSystem.UpgradeData == null)
+                {
+                    return baseCapacity;
+                }
+
+                MiningUpgradeDefinition definition =
+                    upgradeSystem.UpgradeData.GetDefinition(MiningUpgradeType.NpcCapacity);
+                long addedCapacity = (long)Mathf.Max(0, Mathf.RoundToInt(definition.ValuePerStack)) *
+                                     upgradeSystem.GetStacks(MiningUpgradeType.NpcCapacity);
+                return (int)Math.Min(int.MaxValue, baseCapacity + addedCapacity);
+            }
+        }
         public bool CanBuy => npcData != null && wallet != null && wallet.CurrentMoney >= NpcCost &&
-                              oreSpawner != null && npcPrefab != null;
+                              oreSpawner != null && npcPrefab != null && purchasedCount < MaximumMiners;
         public event Action<int> NpcCountChanged;
         public event Action<MiningNpc> NpcPurchased;
 
+        private void OnEnable()
+        {
+            if (upgradeSystem != null)
+            {
+                upgradeSystem.UpgradesChanged -= HandleUpgradesChanged;
+                upgradeSystem.UpgradesChanged += HandleUpgradesChanged;
+            }
+        }
+
+        private void OnDisable()
+        {
+            if (upgradeSystem != null)
+            {
+                upgradeSystem.UpgradesChanged -= HandleUpgradesChanged;
+            }
+        }
+
         public bool TryBuyNpc()
         {
-            if (wallet == null || oreSpawner == null || npcPrefab == null ||
+            if (!CanBuy || wallet == null || oreSpawner == null || npcPrefab == null ||
                 npcData == null || !wallet.TrySpend(NpcCost))
             {
                 return false;
@@ -50,6 +85,11 @@ namespace MiningSimulator.Ores
             NpcCountChanged?.Invoke(purchasedCount);
             NpcPurchased?.Invoke(npc);
             return true;
+        }
+
+        private void HandleUpgradesChanged()
+        {
+            NpcCountChanged?.Invoke(purchasedCount);
         }
 
         private bool TryFindAvailableSpawnPosition(Vector3 origin, out Vector3 position)
