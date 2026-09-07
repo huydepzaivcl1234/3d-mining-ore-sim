@@ -17,7 +17,7 @@ MonoBehaviour:
   loopMusic: 1
   musicVolume: 0.55
   musicMixerGroup: {fileID: 0}
-  oreHitSfx: {fileID: 0}
+  oreHitSfx: {fileID: 8300000, guid: 37b621765db9a9a41b987b6dbcaeeb8e, type: 3}
   oreBreakSfx: {fileID: 0}
   npcPurchasedSfx: {fileID: 0}
   upgradePurchasedSfx: {fileID: 0}
