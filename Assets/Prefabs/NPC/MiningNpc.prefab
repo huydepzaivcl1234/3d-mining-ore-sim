@@ -221,7 +221,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningNpc
   oreSpawner: {fileID: 0}
-  gameData: {fileID: 11400000, guid: fa0fc8680dcb4e63a9939950274281de, type: 2}
+  npcData: {fileID: 11400000, guid: c48d624e49324697a2ff1f170be6b3c0, type: 2}
   toolPivot: {fileID: 449656376584547177}
 --- !u!54 &2590881004897712596
 Rigidbody:

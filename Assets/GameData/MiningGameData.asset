@@ -29,7 +29,7 @@ MonoBehaviour:
   cameraFastMoveMultiplier: 2
   cameraRotationDegreesPerPixel: 0.2
   cameraKeyboardRotationSpeed: 90
-  cameraMousePanSpeed: 0.0025
-  cameraZoomSpeed: 0.012
+  cameraMousePanSpeed: 0.5
+  cameraZoomSpeed: 0.5
   cameraMinimumDistance: 4
   cameraMaximumDistance: 45

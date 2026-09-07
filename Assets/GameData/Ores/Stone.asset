@@ -21,10 +21,10 @@ MonoBehaviour:
   clickDamage: 1
   baseSellValue: 1
   destroyDelay: 0
-  maximumMiningNpcs: 3
+  maximumMiningNpcs: 5
   npcStandDistance: 1.4
   rareOre: 0
-  spawnRotationOffset: {x: 0, y: 0, z: 0}
+  spawnRotationOffset: {x: -180, y: 0, z: 0}
   spawnHeightOffset: 0
   healthBarWorldOffset: {x: 0, y: 0.25, z: 0}
   healthBarScale: 0.65
