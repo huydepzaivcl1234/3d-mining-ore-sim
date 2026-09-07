@@ -11,7 +11,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5a5169af41056ce673962c822974ce9c, type: 3}
   m_Name: MiningUiData
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningUiData
   referenceResolution: {x: 1920, y: 1080}
   matchWidthOrHeight: 0.5
   canvasSortingOrder: 100
@@ -45,9 +45,9 @@ MonoBehaviour:
   npcIconColor: {r: 0.2, g: 0.65, b: 0.94, a: 1}
   upgradeIconColor: {r: 0.14, g: 0.72, b: 0.52, a: 1}
   iconSymbolColor: {r: 1, g: 1, b: 1, a: 1}
-  moneyIconSprite: {fileID: 21300000, guid: 4f7ca63df9f4a0e4db24cfd637f9b2d2, type: 3}
-  npcIconSprite: {fileID: 21300000, guid: bf740a43e6c32ad4fb5f99f2aa91a9a0, type: 3}
-  buyNpcIconSprite: {fileID: 21300000, guid: bf740a43e6c32ad4fb5f99f2aa91a9a0, type: 3}
+  moneyIconSprite: {fileID: 0}
+  npcIconSprite: {fileID: 0}
+  buyNpcIconSprite: {fileID: 0}
   openUpgradeIconSprite: {fileID: 0}
   moneyIconFallback: $
   npcIconFallback: N
@@ -56,12 +56,12 @@ MonoBehaviour:
   upgradeCardIconSize: {x: 52, y: 52}
   upgradeCardIconPosition: {x: 14, y: -13}
   upgradeCardIconPadding: 1
-  moneyRewardIconSprite: {fileID: 21300000, guid: 8f0be4d69f2c4bed9d87f2300af36e8e, type: 3}
-  rareOreIconSprite: {fileID: 21300000, guid: 3de4b9cc4f6346bf8b55e7c1ca9bc0ad, type: 3}
-  oreDamageIconSprite: {fileID: 21300000, guid: bd3453b0181f4bb08c8b2a42e54e0957, type: 3}
-  oreSpawnSpeedIconSprite: {fileID: 21300000, guid: 79e259b7491d4a8f83a46b760a2690f1, type: 3}
-  npcMoveSpeedIconSprite: {fileID: 21300000, guid: 91682228e8024b459ce2f36dbd1ef34a, type: 3}
-  npcCapacityIconSprite: {fileID: 21300000, guid: bf740a43e6c32ad4fb5f99f2aa91a9a0, type: 3}
+  moneyRewardIconSprite: {fileID: 0}
+  rareOreIconSprite: {fileID: 0}
+  oreDamageIconSprite: {fileID: 0}
+  oreSpawnSpeedIconSprite: {fileID: 0}
+  npcMoveSpeedIconSprite: {fileID: 0}
+  npcCapacityIconSprite: {fileID: 0}
   moneyRewardIconFallback: $
   rareOreIconFallback: R
   oreDamageIconFallback: '!'
@@ -99,7 +99,7 @@ MonoBehaviour:
   audioSliderBackgroundColor: {r: 0.15, g: 0.18, b: 0.22, a: 1}
   panelTransitionDuration: 0.28
   panelSlideExtraDistance: 80
-  shopTitle: KHU ĐÀO QUẶNG
+  shopTitle: "KHU \u0110\xC0O QU\u1EB6NG"
   shopHeaderSize: {x: 330, y: 54}
   shopTitleFontSize: 21
   shopHeaderColor: {r: 0.2, g: 0.65, b: 0.94, a: 1}
@@ -137,3 +137,31 @@ MonoBehaviour:
   closeButtonColor: {r: 0.96, g: 0.08, b: 0.34, a: 1}
   navigationButtonColor: {r: 0.14, g: 0.72, b: 0.52, a: 1}
   titleTextColor: {r: 1, g: 1, b: 1, a: 1}
+  rebirthHudPosition: {x: -24, y: -24}
+  rebirthHudSize: {x: 380, y: 172}
+  rebirthHudHeaderSize: {x: 380, y: 50}
+  rebirthBoostPosition: {x: 20, y: -56}
+  rebirthBoostSize: {x: 340, y: 24}
+  rebirthProgressPosition: {x: 20, y: -84}
+  rebirthProgressSize: {x: 340, y: 28}
+  rebirthOpenButtonPosition: {x: 20, y: -126}
+  rebirthOpenButtonSize: {x: 340, y: 34}
+  rebirthTitleFontSize: 23
+  rebirthInfoFontSize: 17
+  rebirthModalSize: {x: 620, y: 480}
+  rebirthModalHeaderSize: {x: 620, y: 78}
+  rebirthWarningPosition: {x: 45, y: -112}
+  rebirthWarningSize: {x: 530, y: 150}
+  rebirthNextBoostPosition: {x: 45, y: -270}
+  rebirthNextBoostSize: {x: 530, y: 50}
+  rebirthConfirmButtonPosition: {x: 55, y: -382}
+  rebirthCancelButtonPosition: {x: 325, y: -382}
+  rebirthModalButtonSize: {x: 240, y: 58}
+  rebirthWarningFontSize: 26
+  rebirthModalTextFontSize: 22
+  rebirthHudColor: {r: 0.96, g: 0.98, b: 1, a: 0.96}
+  rebirthHeaderColor: {r: 1, g: 0.15, b: 0.18, a: 1}
+  rebirthProgressColor: {r: 0.12, g: 0.92, b: 0.18, a: 1}
+  rebirthProgressGhostColor: {r: 0.55, g: 1, b: 0.58, a: 1}
+  rebirthConfirmColor: {r: 0.12, g: 0.95, b: 0.16, a: 1}
+  rebirthCancelColor: {r: 1, g: 0.12, b: 0.18, a: 1}

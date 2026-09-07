@@ -15,12 +15,12 @@ MonoBehaviour:
   backgroundMusic: {fileID: 8300000, guid: 88324ae033f921f46b8b9b68a4f06c67, type: 3}
   playMusicOnStart: 1
   loopMusic: 1
-  musicVolume: 0.55
+  musicVolume: 0.05
   musicMixerGroup: {fileID: 0}
   oreHitSfx: {fileID: 8300000, guid: 37b621765db9a9a41b987b6dbcaeeb8e, type: 3}
-  oreBreakSfx: {fileID: 0}
-  npcPurchasedSfx: {fileID: 0}
-  upgradePurchasedSfx: {fileID: 0}
+  oreBreakSfx: {fileID: 8300000, guid: 7e9ae525bc06a984cab34bcad20ca10a, type: 3}
+  npcPurchasedSfx: {fileID: 8300000, guid: c062f16ffb3abca46b7717172158c05e, type: 3}
+  upgradePurchasedSfx: {fileID: 8300000, guid: c062f16ffb3abca46b7717172158c05e, type: 3}
   rebirthSfx: {fileID: 0}
   buttonClickSfx: {fileID: 0}
   panelOpenSfx: {fileID: 0}

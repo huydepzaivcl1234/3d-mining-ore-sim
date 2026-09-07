@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8f165adaf6ddd17791bb58a1a30783cc, type: 3}
   m_Name: MiningRebirthData
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningRebirthData
-  startingMoneyRequirement: 1000
-  requirementGrowthMultiplier: 2
+  startingMoneyRequirement: 5000
+  requirementGrowthMultiplier: 2.5
   moneyBoostPercentPerRebirth: 10
   rebirthCountSaveKey: MiningSimulator.RebirthCount.v1
