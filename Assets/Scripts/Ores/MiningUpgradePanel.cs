@@ -21,10 +21,23 @@ namespace MiningSimulator.Ores
         [SerializeField] private TextMeshProUGUI moneyRewardLabel;
         [SerializeField] private TextMeshProUGUI rareOreSpawnLabel;
         [SerializeField] private TextMeshProUGUI oreDamageLabel;
+        [SerializeField] private bool openOnPlay;
 
         [Header("Editable Text")]
         [SerializeField] private string upgradeFormat = "{0}\n+{1:0.##}%  [{2}/{3}]  -  {4} tiền";
         [SerializeField] private string maximumFormat = "{0}\n+{1:0.##}%  [{2}/{3}]  -  TỐI ĐA";
+
+        private void Awake()
+        {
+            if (openOnPlay)
+            {
+                OpenPanel();
+            }
+            else
+            {
+                ClosePanel();
+            }
+        }
 
         private void OnEnable()
         {

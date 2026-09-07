@@ -637,13 +637,16 @@ namespace MiningSimulator.Editor
             TextMeshProUGUI backLabel = backButton.GetComponentInChildren<TextMeshProUGUI>(true);
             backLabel.text = "QUAY LẠI";
             backLabel.fontSize = uiData.NavigationFontSize;
-            upgradePanelTransform.gameObject.SetActive(false);
+            // Keep the panel visible in Edit/Prefab Mode so designers can select and edit it.
+            // MiningUpgradePanel applies the play-mode visibility during Awake.
+            upgradePanelTransform.gameObject.SetActive(true);
 
             var serialized = new SerializedObject(panelController);
             SetReferenceIfMissing(serialized.FindProperty("upgradeSystem"), upgradeSystem);
             SetReferenceIfMissing(serialized.FindProperty("wallet"), wallet);
             SetReferenceIfMissing(serialized.FindProperty("shopPanel"), shopPanel.gameObject);
             SetReferenceIfMissing(serialized.FindProperty("upgradePanel"), upgradePanelTransform.gameObject);
+            serialized.FindProperty("openOnPlay").boolValue = uiData.OpenUpgradePanelOnPlay;
             WireUpgradeButton(serialized, "openButton", null, openButtonTransform);
             WireUpgradeButton(serialized, "backButton", null, upgradePanelTransform.Find("Back"));
             WireUpgradeButton(serialized, "closeButton", null, upgradePanelTransform.Find("Close"));

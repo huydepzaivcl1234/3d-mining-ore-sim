@@ -10,6 +10,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private Vector2 referenceResolution = new(1920f, 1080f);
         [Range(0f, 1f), SerializeField] private float matchWidthOrHeight = 0.5f;
         [SerializeField] private int canvasSortingOrder = 100;
+        [SerializeField] private bool openUpgradePanelOnPlay;
 
         [Header("NPC Shop Layout")]
         [SerializeField] private Vector2 shopPanelPosition = new(24f, -24f);
@@ -63,6 +64,7 @@ namespace MiningSimulator.Ores
         public Vector2 ReferenceResolution => referenceResolution;
         public float MatchWidthOrHeight => matchWidthOrHeight;
         public int CanvasSortingOrder => canvasSortingOrder;
+        public bool OpenUpgradePanelOnPlay => openUpgradePanelOnPlay;
         public Vector2 ShopPanelPosition => shopPanelPosition;
         public Vector2 ShopPanelSize => shopPanelSize;
         public Vector2 ShopTextSize => shopTextSize;

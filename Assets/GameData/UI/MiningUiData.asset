@@ -15,6 +15,7 @@ MonoBehaviour:
   referenceResolution: {x: 1920, y: 1080}
   matchWidthOrHeight: 0.5
   canvasSortingOrder: 100
+  openUpgradePanelOnPlay: 0
   shopPanelPosition: {x: 24, y: -24}
   shopPanelSize: {x: 330, y: 260}
   shopTextSize: {x: 294, y: 32}
