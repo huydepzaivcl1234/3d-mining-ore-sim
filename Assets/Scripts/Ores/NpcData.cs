@@ -16,6 +16,8 @@ namespace MiningSimulator.Ores
         [Min(0.1f), SerializeField] private float moveSpeed = 3.5f;
         [Min(0f), SerializeField] private float turnSpeed = 720f;
         [Min(0.1f), SerializeField] private float miningRange = 1.8f;
+        [Min(0.01f), SerializeField] private float stoppingDistance = 0.12f;
+        [Min(0.01f), SerializeField] private float resumeMovingDistance = 0.2f;
         [Min(1), SerializeField] private int miningPower = 6;
         [Min(1), SerializeField] private int damagePerHit = 2;
         [Min(0.05f), SerializeField] private float secondsPerHit = 0.65f;
@@ -49,6 +51,8 @@ namespace MiningSimulator.Ores
         public float MoveSpeed => moveSpeed;
         public float TurnSpeed => turnSpeed;
         public float MiningRange => miningRange;
+        public float StoppingDistance => stoppingDistance;
+        public float ResumeMovingDistance => resumeMovingDistance;
         public int MiningPower => miningPower;
         public int DamagePerHit => damagePerHit;
         public float SecondsPerHit => secondsPerHit;
@@ -77,6 +81,8 @@ namespace MiningSimulator.Ores
             moveSpeed = Mathf.Max(0.1f, moveSpeed);
             turnSpeed = Mathf.Max(0f, turnSpeed);
             miningRange = Mathf.Max(0.1f, miningRange);
+            stoppingDistance = Mathf.Max(0.01f, stoppingDistance);
+            resumeMovingDistance = Mathf.Max(stoppingDistance, resumeMovingDistance);
             miningPower = Mathf.Max(1, miningPower);
             damagePerHit = Mathf.Max(1, damagePerHit);
             secondsPerHit = Mathf.Max(0.05f, secondsPerHit);

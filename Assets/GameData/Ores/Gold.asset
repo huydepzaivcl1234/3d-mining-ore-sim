@@ -10,24 +10,24 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d859909622396a747a6c00395cd02515, type: 3}
-  m_Name: Coal
+  m_Name: Gold
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.OreData
-  kind: 1
-  displayName: Coal
-  description: Dark fuel ore unlocked after basic stone mining.
-  tier: 2
-  miningPowerRequired: 3
-  durability: 20
-  clickDamage: 2
-  baseSellValue: 4
+  kind: 4
+  displayName: Gold
+  description: Rare gold deposits with a high sell value.
+  tier: 5
+  miningPowerRequired: 15
+  durability: 90
+  clickDamage: 5
+  baseSellValue: 35
   destroyDelay: 0
   maximumMiningNpcs: 3
   npcStandDistance: 1.4
   rareOre: 0
-  rarity: 1
-  spawnRotationOffset: {x: -180, y: 0, z: 0}
+  rarity: 2
+  spawnRotationOffset: {x: 0, y: 0, z: 0}
   spawnHeightOffset: 0
   healthBarWorldOffset: {x: 0, y: 0.25, z: 0}
   healthBarScale: 0.65
-  prefab: {fileID: 8857154005313688155, guid: 8ec9e9f366187c146b7d3529028d8fc4, type: 3}
-  mapColor: {r: 0.1, g: 0.12, b: 0.14, a: 1}
+  prefab: {fileID: 0}
+  mapColor: {r: 1, g: 0.68, b: 0.08, a: 1}

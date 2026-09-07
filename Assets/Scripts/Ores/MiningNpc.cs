@@ -18,7 +18,9 @@ namespace MiningSimulator.Ores
         private float nextTargetRefreshTime;
         private int reservedSlot = -1;
         private Quaternion toolRestRotation;
-        private Vector3 desiredMoveDirection;
+        private Vector3 desiredMoveTarget;
+        private Vector3 desiredFacingDirection;
+        private bool hasMoveTarget;
         private bool isMining;
 
         public void ConfigureTool(Transform targetToolPivot)
@@ -48,13 +50,14 @@ namespace MiningSimulator.Ores
         private void OnDisable()
         {
             ReleaseTarget();
-            desiredMoveDirection = Vector3.zero;
+            hasMoveTarget = false;
+            desiredFacingDirection = Vector3.zero;
         }
 
         private void Update()
         {
-            desiredMoveDirection = Vector3.zero;
-            isMining = false;
+            hasMoveTarget = false;
+            desiredFacingDirection = Vector3.zero;
             if (oreSpawner == null || npcData == null)
             {
                 ReleaseTarget();
@@ -78,17 +81,27 @@ namespace MiningSimulator.Ores
             }
 
             Vector3 standPosition = GetReservedStandPosition();
-            Vector3 standOffset = standPosition - transform.position;
+            Vector3 currentPosition = body != null ? body.position : transform.position;
+            Vector3 standOffset = standPosition - currentPosition;
             standOffset.y = 0f;
-            Vector3 oreOffset = targetOre.transform.position - transform.position;
+            Vector3 oreOffset = targetOre.transform.position - currentPosition;
             oreOffset.y = 0f;
+            desiredFacingDirection = oreOffset;
 
-            FaceDirection(oreOffset);
+            float movementThreshold = isMining
+                ? npcData.ResumeMovingDistance
+                : npcData.StoppingDistance;
+            if (standOffset.sqrMagnitude > movementThreshold * movementThreshold)
+            {
+                isMining = false;
+                desiredMoveTarget = standPosition;
+                hasMoveTarget = true;
+                return;
+            }
+
             if (oreOffset.sqrMagnitude > npcData.MiningRange * npcData.MiningRange)
             {
-                desiredMoveDirection = standOffset.sqrMagnitude > 0.0001f
-                    ? standOffset.normalized
-                    : oreOffset.normalized;
+                isMining = false;
                 return;
             }
 
@@ -109,23 +122,36 @@ namespace MiningSimulator.Ores
 
         private void FixedUpdate()
         {
-            if (desiredMoveDirection.sqrMagnitude < 0.0001f || npcData == null)
+            if (npcData == null)
             {
                 return;
             }
 
-            Vector3 movement = desiredMoveDirection * (npcData.MoveSpeed * Time.fixedDeltaTime);
+            float speedMultiplier = oreSpawner != null && oreSpawner.UpgradeSystem != null
+                ? oreSpawner.UpgradeSystem.GetMultiplier(MiningUpgradeType.NpcMoveSpeed)
+                : 1f;
+            Vector3 flatTarget = desiredMoveTarget;
+            flatTarget.y = body != null ? body.position.y : transform.position.y;
+            Vector3 movementDirection = hasMoveTarget
+                ? flatTarget - (body != null ? body.position : transform.position)
+                : desiredFacingDirection;
+            movementDirection.y = 0f;
+
             if (body != null)
             {
-                body.MovePosition(body.position + movement);
-                Quaternion targetRotation = Quaternion.LookRotation(desiredMoveDirection, Vector3.up);
-                body.MoveRotation(Quaternion.RotateTowards(
-                    body.rotation, targetRotation, npcData.TurnSpeed * Time.fixedDeltaTime));
-            }
-            else
-            {
-                transform.position += movement;
-                FaceDirection(desiredMoveDirection);
+                if (hasMoveTarget)
+                {
+                    Vector3 nextPosition = Vector3.MoveTowards(body.position, flatTarget,
+                        npcData.MoveSpeed * speedMultiplier * Time.fixedDeltaTime);
+                    body.MovePosition(nextPosition);
+                }
+
+                if (movementDirection.sqrMagnitude > Mathf.Epsilon)
+                {
+                    Quaternion targetRotation = Quaternion.LookRotation(movementDirection.normalized, Vector3.up);
+                    body.MoveRotation(Quaternion.RotateTowards(
+                        body.rotation, targetRotation, npcData.TurnSpeed * Time.fixedDeltaTime));
+                }
             }
         }
 
@@ -181,6 +207,8 @@ namespace MiningSimulator.Ores
 
             targetOre = null;
             reservedSlot = -1;
+            hasMoveTarget = false;
+            isMining = false;
         }
 
         private void ConfigurePhysics()
@@ -207,16 +235,5 @@ namespace MiningSimulator.Ores
             }
         }
 
-        private void FaceDirection(Vector3 direction)
-        {
-            if (direction.sqrMagnitude < 0.0001f || npcData == null)
-            {
-                return;
-            }
-
-            Quaternion targetRotation = Quaternion.LookRotation(direction.normalized, Vector3.up);
-            transform.rotation = Quaternion.RotateTowards(
-                transform.rotation, targetRotation, npcData.TurnSpeed * Time.deltaTime);
-        }
     }
 }

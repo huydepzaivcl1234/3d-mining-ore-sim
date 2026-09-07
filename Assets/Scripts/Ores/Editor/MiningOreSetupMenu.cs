@@ -45,7 +45,7 @@ namespace MiningSimulator.Editor
         {
             public OreSpec(OreKind kind, string name, string description, int tier,
                 int miningPower, int durability, int clickDamage, int sellValue,
-                bool rareOre, Color mapColor, string modelFile)
+                OreRarity rarity, Color mapColor, string modelFile)
             {
                 Kind = kind;
                 Name = name;
@@ -55,7 +55,7 @@ namespace MiningSimulator.Editor
                 Durability = durability;
                 ClickDamage = clickDamage;
                 SellValue = sellValue;
-                RareOre = rareOre;
+                Rarity = rarity;
                 MapColor = mapColor;
                 ModelFile = modelFile;
             }
@@ -68,7 +68,7 @@ namespace MiningSimulator.Editor
             public int Durability { get; }
             public int ClickDamage { get; }
             public int SellValue { get; }
-            public bool RareOre { get; }
+            public OreRarity Rarity { get; }
             public Color MapColor { get; }
             public string ModelFile { get; }
         }
@@ -76,11 +76,17 @@ namespace MiningSimulator.Editor
         private static readonly OreSpec[] StarterOres =
         {
             new(OreKind.Stone, "Stone", "Common stone. The first material a miner can break.",
-                1, 1, 10, 1, 1, false, new Color(0.48f, 0.52f, 0.56f), "stone_tier1.fbx"),
+                1, 1, 10, 1, 1, OreRarity.Common, new Color(0.48f, 0.52f, 0.56f), "stone_tier1.fbx"),
             new(OreKind.Coal, "Coal", "Dark fuel ore unlocked after basic stone mining.",
-                2, 3, 20, 2, 4, true, new Color(0.10f, 0.12f, 0.14f), "coal_tier2.fbx"),
+                2, 3, 20, 2, 4, OreRarity.Uncommon, new Color(0.10f, 0.12f, 0.14f), "coal_tier2.fbx"),
             new(OreKind.Copper, "Copper", "Valuable metallic ore used for stronger upgrades.",
-                3, 6, 35, 3, 9, true, new Color(0.82f, 0.32f, 0.08f), "copper_tier3.fbx")
+                3, 6, 35, 3, 9, OreRarity.Uncommon, new Color(0.82f, 0.32f, 0.08f), "copper_tier3.fbx"),
+            new(OreKind.Iron, "Iron", "Rare iron deposits used for advanced mining equipment.",
+                4, 10, 60, 4, 18, OreRarity.Rare, new Color(0.55f, 0.60f, 0.66f), "iron_tier4.fbx"),
+            new(OreKind.Gold, "Gold", "Rare gold deposits with a high sell value.",
+                5, 15, 90, 5, 35, OreRarity.Rare, new Color(1f, 0.68f, 0.08f), "gold_tier5.fbx"),
+            new(OreKind.Diamond, "Diamond", "Epic crystal ore requiring powerful miners.",
+                6, 25, 150, 6, 75, OreRarity.Epic, new Color(0.12f, 0.78f, 1f), "diamond_tier6.fbx")
         };
 
         [MenuItem("Mining Simulator/Setup/Create or Update Starter Ores")]
@@ -176,6 +182,13 @@ namespace MiningSimulator.Editor
                 {
                     npcStandDistance.floatValue = 1.4f;
                 }
+                SerializedProperty legacyRareOre = existingSerialized.FindProperty("rareOre");
+                SerializedProperty rarity = existingSerialized.FindProperty("rarity");
+                if (legacyRareOre != null && legacyRareOre.boolValue && rarity != null)
+                {
+                    rarity.enumValueIndex = (int)spec.Rarity;
+                    legacyRareOre.boolValue = false;
+                }
                 existingSerialized.ApplyModifiedPropertiesWithoutUndo();
                 EditorUtility.SetDirty(existing);
                 return existing;
@@ -194,7 +207,8 @@ namespace MiningSimulator.Editor
             serialized.FindProperty("baseSellValue").intValue = spec.SellValue;
             serialized.FindProperty("maximumMiningNpcs").intValue = 3;
             serialized.FindProperty("npcStandDistance").floatValue = 1.4f;
-            serialized.FindProperty("rareOre").boolValue = spec.RareOre;
+            serialized.FindProperty("rareOre").boolValue = false;
+            serialized.FindProperty("rarity").enumValueIndex = (int)spec.Rarity;
             serialized.FindProperty("mapColor").colorValue = spec.MapColor;
             serialized.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(data);
@@ -294,7 +308,7 @@ namespace MiningSimulator.Editor
             if (table != null && table.arraySize == 0)
             {
                 table.arraySize = dataAssets.Length;
-                float[] defaultWeights = { 60f, 30f, 10f };
+                float[] defaultWeights = { 60f, 30f, 10f, 0f, 0f, 0f };
                 for (int index = 0; index < dataAssets.Length; index++)
                 {
                     SerializedProperty entry = table.GetArrayElementAtIndex(index);
@@ -302,9 +316,52 @@ namespace MiningSimulator.Editor
                     entry.FindPropertyRelative("spawnWeight").floatValue =
                         index < defaultWeights.Length ? defaultWeights[index] : 1f;
                 }
-                serialized.ApplyModifiedPropertiesWithoutUndo();
-                EditorUtility.SetDirty(spawnData);
             }
+            else if (table != null)
+            {
+                foreach (OreData dataAsset in dataAssets)
+                {
+                    bool exists = false;
+                    for (int index = 0; index < table.arraySize; index++)
+                    {
+                        SerializedProperty entry = table.GetArrayElementAtIndex(index);
+                        if (entry.FindPropertyRelative("ore").objectReferenceValue == dataAsset)
+                        {
+                            exists = true;
+                            break;
+                        }
+                    }
+
+                    if (!exists)
+                    {
+                        int newIndex = table.arraySize;
+                        table.InsertArrayElementAtIndex(newIndex);
+                        SerializedProperty newEntry = table.GetArrayElementAtIndex(newIndex);
+                        newEntry.FindPropertyRelative("ore").objectReferenceValue = dataAsset;
+                        newEntry.FindPropertyRelative("spawnWeight").floatValue = 0f;
+                    }
+                }
+            }
+
+            SerializedProperty rarityRules = serialized.FindProperty("rarityRules");
+            if (rarityRules != null && rarityRules.arraySize == 0)
+            {
+                rarityRules.arraySize = 5;
+                float[] unlockWeights = { 0f, 0f, 20f, 4f, 1f };
+                for (int index = 0; index < rarityRules.arraySize; index++)
+                {
+                    SerializedProperty rule = rarityRules.GetArrayElementAtIndex(index);
+                    rule.FindPropertyRelative("rarity").enumValueIndex = index;
+                    rule.FindPropertyRelative("baseWeightMultiplier").floatValue = 1f;
+                    rule.FindPropertyRelative("affectedByRareUpgrade").boolValue =
+                        index >= (int)OreRarity.Rare;
+                    rule.FindPropertyRelative("zeroWeightUnlockAtOneHundredPercentBonus").floatValue =
+                        unlockWeights[index];
+                }
+            }
+
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(spawnData);
             return spawnData;
         }
 
@@ -631,6 +688,10 @@ namespace MiningSimulator.Editor
                 GetUpgradePreview(upgradeData.RareOreSpawn), uiData);
             EnsureUpgradeCard(upgradePanelTransform, "Ore Damage Upgrade", 2,
                 GetUpgradePreview(upgradeData.OreDamage), uiData);
+            EnsureUpgradeCard(upgradePanelTransform, "Ore Spawn Speed Upgrade", 3,
+                GetUpgradePreview(upgradeData.OreSpawnSpeed), uiData);
+            EnsureUpgradeCard(upgradePanelTransform, "NPC Move Speed Upgrade", 4,
+                GetUpgradePreview(upgradeData.NpcMoveSpeed), uiData);
 
             Button backButton = EnsureStyledButton(upgradePanelTransform, "Back", uiData.BackButtonPosition,
                 uiData.BackButtonSize, uiData.NavigationButtonColor, uiData.TitleTextColor, uiData);
@@ -656,6 +717,10 @@ namespace MiningSimulator.Editor
                 upgradePanelTransform.Find("Rare Ore Upgrade"));
             WireUpgradeButton(serialized, "oreDamageButton", "oreDamageLabel",
                 upgradePanelTransform.Find("Ore Damage Upgrade"));
+            WireUpgradeButton(serialized, "oreSpawnSpeedButton", "oreSpawnSpeedLabel",
+                upgradePanelTransform.Find("Ore Spawn Speed Upgrade"));
+            WireUpgradeButton(serialized, "npcMoveSpeedButton", "npcMoveSpeedLabel",
+                upgradePanelTransform.Find("NPC Move Speed Upgrade"));
             serialized.ApplyModifiedPropertiesWithoutUndo();
         }
 

@@ -6,7 +6,19 @@ namespace MiningSimulator.Ores
     {
         Stone = 0,
         Coal = 1,
-        Copper = 2
+        Copper = 2,
+        Iron = 3,
+        Gold = 4,
+        Diamond = 5
+    }
+
+    public enum OreRarity
+    {
+        Common = 0,
+        Uncommon = 1,
+        Rare = 2,
+        Epic = 3,
+        Legendary = 4
     }
 
     /// <summary>
@@ -38,7 +50,8 @@ namespace MiningSimulator.Ores
         [Min(0.1f), SerializeField] private float npcStandDistance = 1.4f;
 
         [Header("Presentation")]
-        [SerializeField] private bool rareOre;
+        [HideInInspector, SerializeField] private bool rareOre;
+        [SerializeField] private OreRarity rarity;
         [SerializeField] private Vector3 spawnRotationOffset;
         [Tooltip("Extra world-space height applied after the collider is placed above the ground.")]
         [SerializeField] private float spawnHeightOffset;
@@ -60,7 +73,8 @@ namespace MiningSimulator.Ores
         public float DestroyDelay => destroyDelay;
         public int MaximumMiningNpcs => maximumMiningNpcs;
         public float NpcStandDistance => npcStandDistance;
-        public bool RareOre => rareOre;
+        public OreRarity Rarity => rarity;
+        public bool RareOre => rarity >= OreRarity.Rare;
         public Vector3 SpawnRotationOffset => spawnRotationOffset;
         public float SpawnHeightOffset => spawnHeightOffset;
         public Vector3 HealthBarWorldOffset => healthBarWorldOffset;

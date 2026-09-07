@@ -98,18 +98,18 @@ def create_label(text, location, color):
     return label
 
 
-def create_ore_collection(ore_id, display_name, tier, x, base_mat, accent_mat, style):
+def create_ore_collection(ore_id, display_name, tier, position, base_mat, accent_mat, style):
     collection = bpy.data.collections.new("ORE_" + ore_id.upper())
     bpy.context.scene.collection.children.link(collection)
 
     root = bpy.data.objects.new(ore_id + "_root", None)
     collection.objects.link(root)
-    root.location.x = x
+    root.location = (*position, 0)
     root["ore_id"] = ore_id
     root["display_name"] = display_name
     root["tier"] = tier
-    root["mining_power_required"] = {1: 1, 2: 3, 3: 6}[tier]
-    root["base_sell_value"] = {1: 1, 2: 4, 3: 9}[tier]
+    root["mining_power_required"] = {1: 1, 2: 3, 3: 6, 4: 10, 5: 15, 6: 25}[tier]
+    root["base_sell_value"] = {1: 1, 2: 4, 3: 9, 4: 18, 5: 35, 6: 75}[tier]
 
     rock = create_rock(ore_id + "_body", collection, base_mat, 100 + tier, subdivisions=2)
     rock.parent = root
@@ -130,7 +130,7 @@ def create_ore_collection(ore_id, display_name, tier, x, base_mat, accent_mat, s
             ((0.23, -0.49, 0.58), (0.13, 0.10, 0.22), (-0.1, 0.3, -0.2)),
             ((-0.25, -0.52, -0.26), (0.16, 0.10, 0.23), (0.35, 0.1, 0.25)),
         ]
-    else:
+    elif style == "copper":
         detail_mat = accent_mat
         placements = [
             ((-0.56, -0.45, 0.28), (0.25, 0.12, 0.34), (0.1, 0.4, -0.4)),
@@ -140,6 +140,37 @@ def create_ore_collection(ore_id, display_name, tier, x, base_mat, accent_mat, s
             ((0.04, -0.48, 0.58), (0.16, 0.10, 0.23), (0.25, 0.05, -0.15)),
             ((-0.38, -0.52, -0.29), (0.2, 0.09, 0.24), (0.05, -0.3, -0.15)),
         ]
+    elif style == "iron":
+        detail_mat = accent_mat
+        placements = [
+            ((-0.54, -0.48, 0.30), (0.30, 0.10, 0.34), (0.10, 0.45, -0.35)),
+            ((-0.05, -0.70, 0.05), (0.38, 0.09, 0.22), (-0.18, 0.12, 0.20)),
+            ((0.45, -0.53, 0.25), (0.28, 0.11, 0.42), (0.16, -0.38, 0.26)),
+            ((0.22, -0.50, -0.50), (0.19, 0.08, 0.31), (0.20, 0.18, -0.12)),
+            ((-0.32, -0.49, -0.38), (0.22, 0.08, 0.27), (-0.12, -0.28, 0.20)),
+        ]
+    elif style == "gold":
+        detail_mat = accent_mat
+        placements = [
+            ((-0.48, -0.55, 0.30), (0.25, 0.16, 0.28), (0.12, 0.35, -0.22)),
+            ((-0.06, -0.72, 0.03), (0.30, 0.15, 0.25), (-0.10, 0.08, 0.16)),
+            ((0.43, -0.57, 0.25), (0.27, 0.15, 0.34), (0.18, -0.30, 0.25)),
+            ((0.14, -0.47, 0.57), (0.18, 0.12, 0.22), (0.15, 0.18, -0.15)),
+            ((-0.33, -0.49, -0.40), (0.20, 0.12, 0.24), (-0.10, -0.24, 0.22)),
+            ((0.52, -0.35, -0.22), (0.14, 0.10, 0.19), (0.24, 0.10, 0.28)),
+        ]
+    else:
+        crystals = [
+            ((-0.38, -0.48, 0.18), (0.65, 0.65, 1.25), (0.18, -0.35, -0.32)),
+            ((0.05, -0.63, 0.16), (0.82, 0.82, 1.55), (-0.10, 0.12, 0.08)),
+            ((0.40, -0.48, 0.22), (0.60, 0.60, 1.10), (0.20, 0.32, 0.28)),
+            ((0.18, -0.43, -0.42), (0.45, 0.45, 0.90), (-0.16, -0.22, 0.18)),
+            ((-0.28, -0.45, -0.38), (0.48, 0.48, 0.82), (0.22, 0.16, -0.18)),
+        ]
+        for index, (location, scale, rotation) in enumerate(crystals, start=1):
+            add_crystal(f"{ore_id}_crystal_{index:02d}", collection, root, accent_mat,
+                        location, scale, rotation)
+        return collection, root
 
     for index, (location, scale, rotation) in enumerate(placements, start=1):
         add_chunk(
@@ -184,21 +215,24 @@ def export_collection(collection, root, glb_output_path, fbx_output_path):
 
 
 def setup_presentation(text_mat):
-    bpy.ops.mesh.primitive_plane_add(size=14, location=(0, 0, -0.93))
+    bpy.ops.mesh.primitive_plane_add(size=18, location=(0, 0, -0.93))
     floor = bpy.context.object
     floor.name = "Preview_Ground"
     floor_mat = make_material("MAT_PreviewGround", (0.035, 0.045, 0.055), 0.92)
     floor.data.materials.append(floor_mat)
 
-    create_label("TIER 1  STONE", (-3.0, -1.25, -0.82), text_mat)
-    create_label("TIER 2  COAL", (0.0, -1.25, -0.82), text_mat)
-    create_label("TIER 3  COPPER", (3.0, -1.25, -0.82), text_mat)
+    create_label("COMMON  STONE", (-3.2, -1.35, -0.82), text_mat)
+    create_label("UNCOMMON  COAL", (0.0, -1.35, -0.82), text_mat)
+    create_label("UNCOMMON  COPPER", (3.2, -1.35, -0.82), text_mat)
+    create_label("RARE  IRON", (-3.2, 2.05, -0.82), text_mat)
+    create_label("RARE  GOLD", (0.0, 2.05, -0.82), text_mat)
+    create_label("EPIC  DIAMOND", (3.2, 2.05, -0.82), text_mat)
 
-    bpy.ops.object.camera_add(location=(7.9, -11.8, 7.0))
+    bpy.ops.object.camera_add(location=(8.8, -14.8, 10.2))
     camera = bpy.context.object
     camera.name = "Preview_Camera"
     bpy.context.scene.camera = camera
-    direction = Vector((0, 0, 0.0)) - camera.location
+    direction = Vector((0, 0.5, 0.0)) - camera.location
     camera.rotation_euler = direction.to_track_quat("-Z", "Y").to_euler()
     camera.data.lens = 52
 
@@ -218,7 +252,7 @@ def setup_presentation(text_mat):
         light.rotation_euler = (Vector((0, 0, 0)) - light.location).to_track_quat("-Z", "Y").to_euler()
 
     scene = bpy.context.scene
-    scene.render.engine = "BLENDER_EEVEE"
+    scene.render.engine = "BLENDER_EEVEE_NEXT"
     scene.render.resolution_x = 1280
     scene.render.resolution_y = 720
     scene.render.resolution_percentage = 100
@@ -242,15 +276,25 @@ def main():
     coal_detail = make_material("MAT_Coal_Deposit", (0.095, 0.115, 0.135), 0.24, 0.12)
     copper_base = make_material("MAT_Copper_Rock", (0.27, 0.18, 0.13), 0.88)
     copper_detail = make_material("MAT_Copper_Deposit", (0.82, 0.29, 0.075), 0.28, 0.72)
+    iron_base = make_material("MAT_Iron_Rock", (0.20, 0.22, 0.25), 0.90)
+    iron_detail = make_material("MAT_Iron_Deposit", (0.56, 0.61, 0.68), 0.30, 0.78)
+    gold_base = make_material("MAT_Gold_Rock", (0.25, 0.18, 0.09), 0.90)
+    gold_detail = make_material("MAT_Gold_Deposit", (1.0, 0.58, 0.045), 0.20, 0.90)
+    diamond_base = make_material("MAT_Diamond_Rock", (0.10, 0.16, 0.22), 0.82)
+    diamond_detail = make_material("MAT_Diamond_Crystal", (0.08, 0.72, 1.0), 0.12, 0.22)
     text_mat = make_material("MAT_Label", (0.86, 0.91, 0.98), 0.55)
 
     ores = [
-        create_ore_collection("stone", "Stone", 1, -3.0, stone_base, stone_detail, "stone"),
-        create_ore_collection("coal", "Coal", 2, 0.0, coal_base, coal_detail, "coal"),
-        create_ore_collection("copper", "Copper", 3, 3.0, copper_base, copper_detail, "copper"),
+        create_ore_collection("stone", "Stone", 1, (-3.2, -0.2), stone_base, stone_detail, "stone"),
+        create_ore_collection("coal", "Coal", 2, (0.0, -0.2), coal_base, coal_detail, "coal"),
+        create_ore_collection("copper", "Copper", 3, (3.2, -0.2), copper_base, copper_detail, "copper"),
+        create_ore_collection("iron", "Iron", 4, (-3.2, 3.2), iron_base, iron_detail, "iron"),
+        create_ore_collection("gold", "Gold", 5, (0.0, 3.2), gold_base, gold_detail, "gold"),
+        create_ore_collection("diamond", "Diamond", 6, (3.2, 3.2), diamond_base, diamond_detail, "diamond"),
     ]
 
-    for (collection, root), stem in zip(ores, ("stone_tier1", "coal_tier2", "copper_tier3")):
+    stems = ("stone_tier1", "coal_tier2", "copper_tier3", "iron_tier4", "gold_tier5", "diamond_tier6")
+    for (collection, root), stem in zip(ores, stems):
         export_collection(
             collection,
             root,
@@ -260,10 +304,10 @@ def main():
 
     setup_presentation(text_mat)
     scene = bpy.context.scene
-    scene["asset_set"] = "Mining Ore Starter Set"
+    scene["asset_set"] = "Mining Ore Six-Ore Set"
     scene["units"] = "meters"
-    scene["tier_order"] = "Stone=1, Coal=2, Copper=3"
-    blend_path = os.path.join(BLEND_DIR, "mining_ores.blend")
+    scene["rarity_order"] = "Stone=Common, Coal=Uncommon, Copper=Uncommon, Iron=Rare, Gold=Rare, Diamond=Epic"
+    blend_path = os.path.join(BLEND_DIR, "mining_ores_six.blend")
     bpy.ops.wm.save_as_mainfile(filepath=blend_path)
     bpy.ops.render.render(write_still=True)
     print("CREATED", blend_path)

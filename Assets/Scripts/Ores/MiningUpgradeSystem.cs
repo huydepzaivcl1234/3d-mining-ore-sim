@@ -13,6 +13,8 @@ namespace MiningSimulator.Ores
         [SerializeField, Min(0)] private int moneyRewardStacks;
         [SerializeField, Min(0)] private int rareOreSpawnStacks;
         [SerializeField, Min(0)] private int oreDamageStacks;
+        [SerializeField, Min(0)] private int oreSpawnSpeedStacks;
+        [SerializeField, Min(0)] private int npcMoveSpeedStacks;
 
         private float rewardRemainder;
 
@@ -26,6 +28,8 @@ namespace MiningSimulator.Ores
                 MiningUpgradeType.MoneyReward => moneyRewardStacks,
                 MiningUpgradeType.RareOreSpawn => rareOreSpawnStacks,
                 MiningUpgradeType.OreDamage => oreDamageStacks,
+                MiningUpgradeType.OreSpawnSpeed => oreSpawnSpeedStacks,
+                MiningUpgradeType.NpcMoveSpeed => npcMoveSpeedStacks,
                 _ => 0
             };
         }
@@ -70,6 +74,12 @@ namespace MiningSimulator.Ores
                 case MiningUpgradeType.OreDamage:
                     oreDamageStacks++;
                     break;
+                case MiningUpgradeType.OreSpawnSpeed:
+                    oreSpawnSpeedStacks++;
+                    break;
+                case MiningUpgradeType.NpcMoveSpeed:
+                    npcMoveSpeedStacks++;
+                    break;
             }
 
             UpgradesChanged?.Invoke();
@@ -110,6 +120,10 @@ namespace MiningSimulator.Ores
             moneyRewardStacks = Mathf.Clamp(moneyRewardStacks, 0, upgradeData.MoneyReward.MaximumStacks);
             rareOreSpawnStacks = Mathf.Clamp(rareOreSpawnStacks, 0, upgradeData.RareOreSpawn.MaximumStacks);
             oreDamageStacks = Mathf.Clamp(oreDamageStacks, 0, upgradeData.OreDamage.MaximumStacks);
+            oreSpawnSpeedStacks = Mathf.Clamp(oreSpawnSpeedStacks, 0,
+                upgradeData.OreSpawnSpeed.MaximumStacks);
+            npcMoveSpeedStacks = Mathf.Clamp(npcMoveSpeedStacks, 0,
+                upgradeData.NpcMoveSpeed.MaximumStacks);
         }
     }
 }

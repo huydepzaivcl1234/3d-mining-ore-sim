@@ -18,9 +18,13 @@ namespace MiningSimulator.Ores
         [SerializeField] private Button moneyRewardButton;
         [SerializeField] private Button rareOreSpawnButton;
         [SerializeField] private Button oreDamageButton;
+        [SerializeField] private Button oreSpawnSpeedButton;
+        [SerializeField] private Button npcMoveSpeedButton;
         [SerializeField] private TextMeshProUGUI moneyRewardLabel;
         [SerializeField] private TextMeshProUGUI rareOreSpawnLabel;
         [SerializeField] private TextMeshProUGUI oreDamageLabel;
+        [SerializeField] private TextMeshProUGUI oreSpawnSpeedLabel;
+        [SerializeField] private TextMeshProUGUI npcMoveSpeedLabel;
         [SerializeField] private bool openOnPlay;
 
         [Header("Editable Text")]
@@ -76,6 +80,8 @@ namespace MiningSimulator.Ores
             moneyRewardButton?.onClick.AddListener(BuyMoneyReward);
             rareOreSpawnButton?.onClick.AddListener(BuyRareOreSpawn);
             oreDamageButton?.onClick.AddListener(BuyOreDamage);
+            oreSpawnSpeedButton?.onClick.AddListener(BuyOreSpawnSpeed);
+            npcMoveSpeedButton?.onClick.AddListener(BuyNpcMoveSpeed);
         }
 
         private void RemoveListeners()
@@ -86,6 +92,8 @@ namespace MiningSimulator.Ores
             moneyRewardButton?.onClick.RemoveListener(BuyMoneyReward);
             rareOreSpawnButton?.onClick.RemoveListener(BuyRareOreSpawn);
             oreDamageButton?.onClick.RemoveListener(BuyOreDamage);
+            oreSpawnSpeedButton?.onClick.RemoveListener(BuyOreSpawnSpeed);
+            npcMoveSpeedButton?.onClick.RemoveListener(BuyNpcMoveSpeed);
         }
 
         private void OpenPanel()
@@ -104,6 +112,8 @@ namespace MiningSimulator.Ores
         private void BuyMoneyReward() => Buy(MiningUpgradeType.MoneyReward);
         private void BuyRareOreSpawn() => Buy(MiningUpgradeType.RareOreSpawn);
         private void BuyOreDamage() => Buy(MiningUpgradeType.OreDamage);
+        private void BuyOreSpawnSpeed() => Buy(MiningUpgradeType.OreSpawnSpeed);
+        private void BuyNpcMoveSpeed() => Buy(MiningUpgradeType.NpcMoveSpeed);
 
         private void Buy(MiningUpgradeType type)
         {
@@ -118,6 +128,8 @@ namespace MiningSimulator.Ores
             RefreshUpgrade(MiningUpgradeType.MoneyReward, moneyRewardButton, moneyRewardLabel);
             RefreshUpgrade(MiningUpgradeType.RareOreSpawn, rareOreSpawnButton, rareOreSpawnLabel);
             RefreshUpgrade(MiningUpgradeType.OreDamage, oreDamageButton, oreDamageLabel);
+            RefreshUpgrade(MiningUpgradeType.OreSpawnSpeed, oreSpawnSpeedButton, oreSpawnSpeedLabel);
+            RefreshUpgrade(MiningUpgradeType.NpcMoveSpeed, npcMoveSpeedButton, npcMoveSpeedLabel);
         }
 
         private void RefreshUpgrade(MiningUpgradeType type, Button button, TextMeshProUGUI label)

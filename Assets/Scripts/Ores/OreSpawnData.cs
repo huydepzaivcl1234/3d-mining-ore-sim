@@ -15,12 +15,31 @@ namespace MiningSimulator.Ores
         public float SpawnWeight => spawnWeight;
     }
 
+    [Serializable]
+    public sealed class OreRaritySpawnRule
+    {
+        [SerializeField] private OreRarity rarity;
+        [Min(0f), SerializeField] private float baseWeightMultiplier = 1f;
+        [SerializeField] private bool affectedByRareUpgrade;
+        [Min(0f), SerializeField] private float zeroWeightUnlockAtOneHundredPercentBonus;
+
+        public OreRarity Rarity => rarity;
+        public float BaseWeightMultiplier => baseWeightMultiplier;
+        public bool AffectedByRareUpgrade => affectedByRareUpgrade;
+        public float ZeroWeightUnlockAtOneHundredPercentBonus =>
+            zeroWeightUnlockAtOneHundredPercentBonus;
+    }
+
     /// <summary>Designer-owned ore spawn ratios, timing, limits, and placement.</summary>
     [CreateAssetMenu(fileName = "OreSpawnData", menuName = "Mining Simulator/Game Data/Ore Spawn")]
     public sealed class OreSpawnData : ScriptableObject
     {
         [Header("Spawn Table")]
         [SerializeField] private List<OreSpawnEntry> oreSpawnTable = new();
+
+        [Header("Rarity Rules")]
+        [Tooltip("Controls rarity weight and how zero-weight rare ores unlock through the rare-spawn upgrade.")]
+        [SerializeField] private List<OreRaritySpawnRule> rarityRules = new();
 
         [Header("Timing And Population")]
         [SerializeField] private bool spawnOnEnable = true;
@@ -50,6 +69,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private Color spawnAreaGizmoColor = new(0.95f, 0.65f, 0.12f, 0.65f);
 
         public IReadOnlyList<OreSpawnEntry> OreSpawnTable => oreSpawnTable;
+        public IReadOnlyList<OreRaritySpawnRule> RarityRules => rarityRules;
         public bool SpawnOnEnable => spawnOnEnable;
         public int InitialSpawnCount => initialSpawnCount;
         public int MaximumAliveOres => maximumAliveOres;
@@ -67,6 +87,18 @@ namespace MiningSimulator.Ores
         public float GroundRayStartHeight => groundRayStartHeight;
         public float GroundRayDistance => groundRayDistance;
         public Color SpawnAreaGizmoColor => spawnAreaGizmoColor;
+
+        public OreRaritySpawnRule GetRarityRule(OreRarity rarity)
+        {
+            foreach (OreRaritySpawnRule rule in rarityRules)
+            {
+                if (rule != null && rule.Rarity == rarity)
+                {
+                    return rule;
+                }
+            }
+            return null;
+        }
 
         private void OnValidate()
         {

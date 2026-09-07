@@ -7,7 +7,8 @@
 - Project root: `C:/Users/huyancut/3d mining sim`
 - Last analyzed: 2026-09-06
 - Last analyzed commit: `9b33ee3`
-- Early-stage 3D mining simulator. The initial gameplay content is Stone, Coal, and Copper.
+- Early-stage 3D mining simulator. Gameplay content covers Stone, Coal, Copper,
+  Iron, Gold, and Diamond, with Legendary reserved for future ores.
 
 ## Confirmed Environment
 
@@ -65,6 +66,10 @@
 - Upgrade panel presentation is authored as real prefab UI and seeded from `Assets/GameData/UI/MiningUiData.asset`.
 - Shared economy, HUD animation, click, and camera tuning lives in `Assets/GameData/MiningGameData.asset`.
 - NPC miners reserve limited slots around compatible ores and use Rigidbody/CapsuleCollider collision.
+- NPC movement and rotation are owned by `FixedUpdate`; configurable stop/resume distances prevent boundary jitter.
+- Rarity is explicit (`Common`, `Uncommon`, `Rare`, `Epic`, `Legendary`). Zero-weight Rare+
+  ores unlock progressively through the rare-spawn upgrade using rarity rules in `OreSpawnData`.
+- Upgrade data also controls ore-spawn speed and NPC movement speed stacks, costs, and per-stack percentages.
 - The editable runtime HUD uses TextMeshPro components and is created as serialized prefab content by the setup menu.
 - No global managers or save system exists yet.
 

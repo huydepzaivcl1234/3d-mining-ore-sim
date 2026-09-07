@@ -7,7 +7,9 @@ namespace MiningSimulator.Ores
     {
         MoneyReward = 0,
         RareOreSpawn = 1,
-        OreDamage = 2
+        OreDamage = 2,
+        OreSpawnSpeed = 3,
+        NpcMoveSpeed = 4
     }
 
     [Serializable]
@@ -50,7 +52,7 @@ namespace MiningSimulator.Ores
         }
     }
 
-    /// <summary>Designer-owned values for the three mining upgrades.</summary>
+    /// <summary>Designer-owned values for mining upgrades.</summary>
     [CreateAssetMenu(fileName = "MiningUpgradeData", menuName = "Mining Simulator/Game Data/Upgrades")]
     public sealed class MiningUpgradeData : ScriptableObject
     {
@@ -66,9 +68,19 @@ namespace MiningSimulator.Ores
         [SerializeField] private MiningUpgradeDefinition oreDamage =
             new("Tăng sát thương lên quặng", 1f);
 
+        [Header("Ore Spawn Speed")]
+        [SerializeField] private MiningUpgradeDefinition oreSpawnSpeed =
+            new("Tăng tốc độ spawn quặng", 1f);
+
+        [Header("NPC Move Speed")]
+        [SerializeField] private MiningUpgradeDefinition npcMoveSpeed =
+            new("Tăng tốc độ di chuyển NPC", 1f);
+
         public MiningUpgradeDefinition MoneyReward => moneyReward;
         public MiningUpgradeDefinition RareOreSpawn => rareOreSpawn;
         public MiningUpgradeDefinition OreDamage => oreDamage;
+        public MiningUpgradeDefinition OreSpawnSpeed => oreSpawnSpeed;
+        public MiningUpgradeDefinition NpcMoveSpeed => npcMoveSpeed;
 
         public MiningUpgradeDefinition GetDefinition(MiningUpgradeType type)
         {
@@ -77,6 +89,8 @@ namespace MiningSimulator.Ores
                 MiningUpgradeType.MoneyReward => moneyReward,
                 MiningUpgradeType.RareOreSpawn => rareOreSpawn,
                 MiningUpgradeType.OreDamage => oreDamage,
+                MiningUpgradeType.OreSpawnSpeed => oreSpawnSpeed,
+                MiningUpgradeType.NpcMoveSpeed => npcMoveSpeed,
                 _ => moneyReward
             };
         }
@@ -86,6 +100,8 @@ namespace MiningSimulator.Ores
             moneyReward?.Validate();
             rareOreSpawn?.Validate();
             oreDamage?.Validate();
+            oreSpawnSpeed?.Validate();
+            npcMoveSpeed?.Validate();
         }
     }
 }

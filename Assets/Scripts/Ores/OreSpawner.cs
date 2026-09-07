@@ -19,6 +19,7 @@ namespace MiningSimulator.Ores
         private bool initialSpawnCompleted;
 
         public int ActiveCount => activeOres.Count;
+        public MiningUpgradeSystem UpgradeSystem => upgradeSystem;
 
         public bool TryReserveClosestOre(MiningNpc miner, Vector3 origin, int miningPower,
             out Ore reservedOre, out int slotIndex)
@@ -148,7 +149,10 @@ namespace MiningSimulator.Ores
         {
             while (enabled)
             {
-                yield return new WaitForSeconds(spawnData.SecondsPerSpawn);
+                float speedMultiplier = upgradeSystem != null
+                    ? upgradeSystem.GetMultiplier(MiningUpgradeType.OreSpawnSpeed)
+                    : 1f;
+                yield return new WaitForSeconds(spawnData.SecondsPerSpawn / speedMultiplier);
                 SpawnOne();
             }
         }
@@ -158,9 +162,9 @@ namespace MiningSimulator.Ores
             float totalWeight = 0f;
             foreach (OreSpawnEntry entry in spawnData.OreSpawnTable)
             {
-                if (entry?.Ore != null && entry.SpawnWeight > 0f && entry.Ore.Prefab != null)
+                if (entry?.Ore != null && entry.Ore.Prefab != null)
                 {
-                    totalWeight += GetEffectiveWeight(entry);
+                    totalWeight += Mathf.Max(0f, GetEffectiveWeight(entry));
                 }
             }
 
@@ -172,12 +176,17 @@ namespace MiningSimulator.Ores
             float choice = UnityEngine.Random.value * totalWeight;
             foreach (OreSpawnEntry entry in spawnData.OreSpawnTable)
             {
-                if (entry?.Ore == null || entry.SpawnWeight <= 0f || entry.Ore.Prefab == null)
+                if (entry?.Ore == null || entry.Ore.Prefab == null)
                 {
                     continue;
                 }
 
-                choice -= GetEffectiveWeight(entry);
+                float effectiveWeight = GetEffectiveWeight(entry);
+                if (effectiveWeight <= 0f)
+                {
+                    continue;
+                }
+                choice -= effectiveWeight;
                 if (choice <= 0f)
                 {
                     return entry.Ore;
@@ -189,10 +198,22 @@ namespace MiningSimulator.Ores
 
         private float GetEffectiveWeight(OreSpawnEntry entry)
         {
-            float multiplier = entry.Ore.RareOre && upgradeSystem != null
-                ? upgradeSystem.GetMultiplier(MiningUpgradeType.RareOreSpawn)
-                : 1f;
-            return entry.SpawnWeight * multiplier;
+            OreRaritySpawnRule rule = spawnData.GetRarityRule(entry.Ore.Rarity);
+            float rarityMultiplier = rule != null ? rule.BaseWeightMultiplier : 1f;
+            float baseWeight = Mathf.Max(0f, entry.SpawnWeight) * rarityMultiplier;
+            if (rule == null || !rule.AffectedByRareUpgrade || upgradeSystem == null)
+            {
+                return baseWeight;
+            }
+
+            float bonusFraction = Mathf.Max(0f,
+                upgradeSystem.GetMultiplier(MiningUpgradeType.RareOreSpawn) - 1f);
+            if (baseWeight > 0f)
+            {
+                return baseWeight * (1f + bonusFraction);
+            }
+
+            return rule.ZeroWeightUnlockAtOneHundredPercentBonus * bonusFraction;
         }
 
         private void KeepAboveSurface(GameObject instance, float surfaceY)

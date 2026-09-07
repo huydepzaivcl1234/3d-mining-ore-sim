@@ -13,20 +13,32 @@ MonoBehaviour:
   m_Name: MiningUpgradeData
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningUpgradeData
   moneyReward:
-    displayName: "T\u0103ng ti\u1EC1n nh\u1EADn \u0111\u01B0\u1EE3c"
+    displayName: Tăng tiền nhận được
     percentPerStack: 1
     maximumStacks: 100
     startingCost: 25
     costIncreasePerPurchase: 50
   rareOreSpawn:
-    displayName: "T\u0103ng t\u1EC9 l\u1EC7 qu\u1EB7ng hi\u1EBFm"
+    displayName: Tăng tỉ lệ quặng hiếm
     percentPerStack: 0.5
     maximumStacks: 100
     startingCost: 25
     costIncreasePerPurchase: 100
   oreDamage:
-    displayName: "T\u0103ng s\xE1t th\u01B0\u01A1ng l\xEAn qu\u1EB7ng"
+    displayName: Tăng sát thương lên quặng
     percentPerStack: 1
     maximumStacks: 100
     startingCost: 25
     costIncreasePerPurchase: 30
+  oreSpawnSpeed:
+    displayName: Tăng tốc độ spawn quặng
+    percentPerStack: 1
+    maximumStacks: 100
+    startingCost: 25
+    costIncreasePerPurchase: 10
+  npcMoveSpeed:
+    displayName: Tăng tốc độ di chuyển NPC
+    percentPerStack: 1
+    maximumStacks: 100
+    startingCost: 25
+    costIncreasePerPurchase: 10

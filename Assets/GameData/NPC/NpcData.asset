@@ -19,6 +19,8 @@ MonoBehaviour:
   moveSpeed: 3.5
   turnSpeed: 720
   miningRange: 1.8
+  stoppingDistance: 0.12
+  resumeMovingDistance: 0.2
   miningPower: 6
   damagePerHit: 2
   secondsPerHit: 0.65

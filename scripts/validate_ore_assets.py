@@ -11,6 +11,9 @@ EXPECTED = {
     "stone_tier1.glb": ("stone", 1),
     "coal_tier2.glb": ("coal", 2),
     "copper_tier3.glb": ("copper", 3),
+    "iron_tier4.glb": ("iron", 4),
+    "gold_tier5.glb": ("gold", 5),
+    "diamond_tier6.glb": ("diamond", 6),
 }
 
 
@@ -43,7 +46,7 @@ for filename, (ore_id, tier) in EXPECTED.items():
     triangles = sum(sum(max(0, len(poly.vertices) - 2) for poly in mesh.data.polygons) for mesh in meshes)
     print(f"VALID {filename}: meshes={len(meshes)} triangles={triangles} tier={tier}")
 
-blend_path = os.path.join(BLEND_DIR, "mining_ores.blend")
+blend_path = os.path.join(BLEND_DIR, "mining_ores_six.blend")
 if not os.path.isfile(blend_path) or os.path.getsize(blend_path) < 1000:
     fail(f"Missing editable Blender source: {blend_path}")
 
