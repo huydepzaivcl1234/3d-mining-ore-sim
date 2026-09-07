@@ -19,11 +19,12 @@ MonoBehaviour:
   shopPanelPosition: {x: 24, y: -24}
   shopPanelSize: {x: 330, y: 320}
   shopTextSize: {x: 294, y: 32}
-  moneyTextPosition: {x: 18, y: -70}
-  npcCountTextPosition: {x: 18, y: -106}
-  buyButtonPosition: {x: 18, y: -146}
+  shopStatTextSize: {x: 240, y: 32}
+  moneyTextPosition: {x: 70, y: -70}
+  npcCountTextPosition: {x: 70, y: -116}
+  buyButtonPosition: {x: 18, y: -158}
   buyButtonSize: {x: 294, y: 54}
-  statusTextPosition: {x: 18, y: -210}
+  statusTextPosition: {x: 18, y: -220}
   moneyFontSize: 26
   npcCountFontSize: 21
   buyButtonFontSize: 22
@@ -33,6 +34,37 @@ MonoBehaviour:
   statusTextColor: {r: 1, g: 0.82, b: 0.28, a: 1}
   buyButtonColor: {r: 0.95, g: 0.57, b: 0.1, a: 1}
   buyButtonTextColor: {r: 0.08, g: 0.06, b: 0.03, a: 1}
+  hudIconSize: {x: 42, y: 42}
+  moneyIconPosition: {x: 16, y: -62}
+  npcIconPosition: {x: 16, y: -108}
+  buyButtonIconPosition: {x: 8, y: -6}
+  openUpgradeIconPosition: {x: 8, y: -2}
+  hudIconFontSize: 22
+  hudIconPadding: 8
+  moneyIconColor: {r: 1, g: 0.72, b: 0.08, a: 1}
+  npcIconColor: {r: 0.2, g: 0.65, b: 0.94, a: 1}
+  upgradeIconColor: {r: 0.14, g: 0.72, b: 0.52, a: 1}
+  iconSymbolColor: {r: 1, g: 1, b: 1, a: 1}
+  moneyIconSprite: {fileID: 0}
+  npcIconSprite: {fileID: 0}
+  buyNpcIconSprite: {fileID: 0}
+  openUpgradeIconSprite: {fileID: 0}
+  moneyIconFallback: $
+  npcIconFallback: N
+  buyNpcIconFallback: +
+  openUpgradeIconFallback: UP
+  upgradeCardIconSize: {x: 52, y: 52}
+  upgradeCardIconPosition: {x: 14, y: -13}
+  moneyRewardIconSprite: {fileID: 0}
+  rareOreIconSprite: {fileID: 0}
+  oreDamageIconSprite: {fileID: 0}
+  oreSpawnSpeedIconSprite: {fileID: 0}
+  npcMoveSpeedIconSprite: {fileID: 0}
+  moneyRewardIconFallback: $
+  rareOreIconFallback: R
+  oreDamageIconFallback: '!'
+  oreSpawnSpeedIconFallback: S
+  npcMoveSpeedIconFallback: '>>'
   shopTitle: KHU ĐÀO QUẶNG
   shopHeaderSize: {x: 330, y: 54}
   shopTitleFontSize: 21
@@ -62,7 +94,7 @@ MonoBehaviour:
   titleFontSize: 32
   cardFontSize: 20
   navigationFontSize: 20
-  cardTextMargin: {x: 22, y: 0, z: 18, w: 0}
+  cardTextMargin: {x: 82, y: 0, z: 18, w: 0}
   panelColor: {r: 0.93, g: 0.96, b: 0.98, a: 1}
   headerColor: {r: 0.2, g: 0.65, b: 0.94, a: 1}
   outlineColor: {r: 0.025, g: 0.055, b: 0.09, a: 1}

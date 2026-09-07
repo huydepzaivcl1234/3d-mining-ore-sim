@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a92bc5e212884308943410de13a33ff6, type: 3}
+  m_Name: MiningAudioData
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningAudioData
+  backgroundMusic: {fileID: 0}
+  playMusicOnStart: 1
+  loopMusic: 1
+  musicVolume: 0.55
+  musicMixerGroup: {fileID: 0}
+  oreHitSfx: {fileID: 0}
+  oreBreakSfx: {fileID: 0}
+  npcPurchasedSfx: {fileID: 0}
+  upgradePurchasedSfx: {fileID: 0}
+  panelOpenSfx: {fileID: 0}
+  panelCloseSfx: {fileID: 0}
+  sfxVolume: 0.8
+  sfxMixerGroup: {fileID: 0}
+  minimumPitch: 0.96
+  maximumPitch: 1.04
+  oreHitMinimumInterval: 0.06

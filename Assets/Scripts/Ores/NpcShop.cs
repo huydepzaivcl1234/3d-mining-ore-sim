@@ -20,6 +20,7 @@ namespace MiningSimulator.Ores
         public bool CanBuy => npcData != null && wallet != null && wallet.CurrentMoney >= NpcCost &&
                               oreSpawner != null && npcPrefab != null;
         public event Action<int> NpcCountChanged;
+        public event Action<MiningNpc> NpcPurchased;
 
         public bool TryBuyNpc()
         {
@@ -47,6 +48,7 @@ namespace MiningSimulator.Ores
             npc.Initialize(oreSpawner, npcData);
             purchasedCount++;
             NpcCountChanged?.Invoke(purchasedCount);
+            NpcPurchased?.Invoke(npc);
             return true;
         }
 

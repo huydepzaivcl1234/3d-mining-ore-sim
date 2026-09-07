@@ -30,6 +30,8 @@ namespace MiningSimulator.Editor
         private const string UpgradeDataPath = UpgradeDataFolder + "/MiningUpgradeData.asset";
         private const string UiDataFolder = "Assets/GameData/UI";
         private const string UiDataPath = UiDataFolder + "/MiningUiData.asset";
+        private const string AudioDataFolder = "Assets/GameData/Audio";
+        private const string AudioDataPath = AudioDataFolder + "/MiningAudioData.asset";
         private const string DataFolder = "Assets/GameData/Ores";
         private const string PrefabFolder = "Assets/Prefabs/Ores";
         private const string NpcPrefabFolder = "Assets/Prefabs/NPC";
@@ -99,6 +101,7 @@ namespace MiningSimulator.Editor
             EnsureFolder(SpawnDataFolder);
             EnsureFolder(UpgradeDataFolder);
             EnsureFolder(UiDataFolder);
+            EnsureFolder(AudioDataFolder);
             EnsureFolder(PrefabFolder);
             EnsureFolder(NpcPrefabFolder);
             EnsureFolder(SystemPrefabFolder);
@@ -123,10 +126,11 @@ namespace MiningSimulator.Editor
             OreSpawnData spawnData = CreateOrUpdateSpawnData(dataAssets);
             MiningUpgradeData upgradeData = CreateOrUpdateUpgradeData();
             MiningUiData uiData = CreateOrUpdateUiData();
+            MiningAudioData audioData = CreateOrUpdateAudioData();
             OreRewardPopup rewardPopupPrefab = CreateOrUpdateRewardPopupPrefab(uiData);
             MiningNpc npcPrefab = CreateOrUpdateNpcPrefab(npcData);
             CreateOrUpdateRuntimePrefab(npcPrefab, gameData, npcData, spawnData, upgradeData, uiData,
-                rewardPopupPrefab);
+                audioData, rewardPopupPrefab);
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -393,6 +397,17 @@ namespace MiningSimulator.Editor
             return uiData;
         }
 
+        private static MiningAudioData CreateOrUpdateAudioData()
+        {
+            MiningAudioData audioData = AssetDatabase.LoadAssetAtPath<MiningAudioData>(AudioDataPath);
+            if (audioData == null)
+            {
+                audioData = ScriptableObject.CreateInstance<MiningAudioData>();
+                AssetDatabase.CreateAsset(audioData, AudioDataPath);
+            }
+            return audioData;
+        }
+
         private static OreRewardPopup CreateOrUpdateRewardPopupPrefab(MiningUiData uiData)
         {
             GameObject existing = AssetDatabase.LoadAssetAtPath<GameObject>(RewardPopupPrefabPath);
@@ -523,7 +538,7 @@ namespace MiningSimulator.Editor
 
         private static void CreateOrUpdateRuntimePrefab(MiningNpc npcPrefab, MiningGameData gameData,
             NpcData npcData, OreSpawnData spawnData, MiningUpgradeData upgradeData, MiningUiData uiData,
-            OreRewardPopup rewardPopupPrefab)
+            MiningAudioData audioData, OreRewardPopup rewardPopupPrefab)
         {
             GameObject existing = AssetDatabase.LoadAssetAtPath<GameObject>(RuntimePrefabPath);
             bool isNew = existing == null;
@@ -542,8 +557,20 @@ namespace MiningSimulator.Editor
                                                     runtime.AddComponent<MiningUpgradeSystem>();
                 MiningUpgradePanel upgradePanel = runtime.GetComponent<MiningUpgradePanel>() ??
                                                    runtime.AddComponent<MiningUpgradePanel>();
+                MiningAudioManager audioManager = runtime.GetComponent<MiningAudioManager>() ??
+                                                  runtime.AddComponent<MiningAudioManager>();
+                MiningGameManager gameManager = runtime.GetComponent<MiningGameManager>() ??
+                                                runtime.AddComponent<MiningGameManager>();
                 MiningOrbitCamera orbitCamera = runtime.GetComponent<MiningOrbitCamera>() ??
                                                 runtime.AddComponent<MiningOrbitCamera>();
+
+                Transform audioRoot = EnsureChildObject(runtime.transform, "Audio");
+                Transform musicSourceObject = EnsureChildObject(audioRoot, "Music Source");
+                Transform sfxSourceObject = EnsureChildObject(audioRoot, "SFX Source");
+                AudioSource musicSource = musicSourceObject.GetComponent<AudioSource>() ??
+                                          musicSourceObject.gameObject.AddComponent<AudioSource>();
+                AudioSource sfxSource = sfxSourceObject.GetComponent<AudioSource>() ??
+                                        sfxSourceObject.gameObject.AddComponent<AudioSource>();
 
                 var walletSerialized = new SerializedObject(wallet);
                 SetReferenceIfMissing(walletSerialized.FindProperty("gameData"), gameData);
@@ -581,6 +608,27 @@ namespace MiningSimulator.Editor
                 hudSerialized.ApplyModifiedPropertiesWithoutUndo();
 
                 ConfigureUpgradePanel(runtime, upgradePanel, upgradeSystem, wallet, upgradeData, uiData);
+
+                var audioSerialized = new SerializedObject(audioManager);
+                SetReferenceIfMissing(audioSerialized.FindProperty("audioData"), audioData);
+                SetReferenceIfMissing(audioSerialized.FindProperty("oreSpawner"), spawner);
+                SetReferenceIfMissing(audioSerialized.FindProperty("npcShop"), shop);
+                SetReferenceIfMissing(audioSerialized.FindProperty("upgradeSystem"), upgradeSystem);
+                SetReferenceIfMissing(audioSerialized.FindProperty("upgradePanel"), upgradePanel);
+                SetReferenceIfMissing(audioSerialized.FindProperty("musicSource"), musicSource);
+                SetReferenceIfMissing(audioSerialized.FindProperty("sfxSource"), sfxSource);
+                audioSerialized.ApplyModifiedPropertiesWithoutUndo();
+
+                var gameManagerSerialized = new SerializedObject(gameManager);
+                SetReferenceIfMissing(gameManagerSerialized.FindProperty("wallet"), wallet);
+                SetReferenceIfMissing(gameManagerSerialized.FindProperty("oreSpawner"), spawner);
+                SetReferenceIfMissing(gameManagerSerialized.FindProperty("npcShop"), shop);
+                SetReferenceIfMissing(gameManagerSerialized.FindProperty("upgradeSystem"), upgradeSystem);
+                SetReferenceIfMissing(gameManagerSerialized.FindProperty("hud"), hud);
+                SetReferenceIfMissing(gameManagerSerialized.FindProperty("upgradePanel"), upgradePanel);
+                SetReferenceIfMissing(gameManagerSerialized.FindProperty("audioManager"), audioManager);
+                SetReferenceIfMissing(gameManagerSerialized.FindProperty("orbitCamera"), orbitCamera);
+                gameManagerSerialized.ApplyModifiedPropertiesWithoutUndo();
 
                 var cameraSerialized = new SerializedObject(orbitCamera);
                 SetReferenceIfMissing(cameraSerialized.FindProperty("gameData"), gameData);
@@ -701,9 +749,9 @@ namespace MiningSimulator.Editor
             title.color = uiData.TitleTextColor;
             title.alignment = TextAlignmentOptions.Center;
 
-            StyleShopText(panel.Find("Money"), uiData.MoneyTextPosition, uiData.ShopTextSize,
+            StyleShopText(panel.Find("Money"), uiData.MoneyTextPosition, uiData.ShopStatTextSize,
                 uiData.MoneyFontSize, uiData.ShopTextColor);
-            StyleShopText(panel.Find("NPC Count"), uiData.NpcCountTextPosition, uiData.ShopTextSize,
+            StyleShopText(panel.Find("NPC Count"), uiData.NpcCountTextPosition, uiData.ShopStatTextSize,
                 uiData.NpcCountFontSize, uiData.ShopTextColor);
             StyleShopText(panel.Find("Status"), uiData.StatusTextPosition, uiData.ShopTextSize,
                 uiData.StatusFontSize, uiData.StatusTextColor);
@@ -712,11 +760,18 @@ namespace MiningSimulator.Editor
             ConfigureTopLeftRect(buyButton, uiData.BuyButtonPosition, uiData.BuyButtonSize);
             StyleButton(buyButton, uiData.BuyButtonColor, uiData.BuyButtonTextColor,
                 uiData.OutlineColor, uiData.OutlineThickness);
-            TextMeshProUGUI buyLabel = buyButton?.GetComponentInChildren<TextMeshProUGUI>(true);
+            TextMeshProUGUI buyLabel = buyButton?.Find("Label")?.GetComponent<TextMeshProUGUI>();
             if (buyLabel != null)
             {
                 buyLabel.fontSize = uiData.BuyButtonFontSize;
             }
+
+            EnsureHudIcon(panel, "Money Icon", uiData.MoneyIconPosition, uiData.HudIconSize,
+                uiData.MoneyIconSprite, uiData.MoneyIconFallback, uiData.MoneyIconColor, uiData);
+            EnsureHudIcon(panel, "NPC Icon", uiData.NpcIconPosition, uiData.HudIconSize,
+                uiData.NpcIconSprite, uiData.NpcIconFallback, uiData.NpcIconColor, uiData);
+            EnsureHudIcon(buyButton, "Icon", uiData.BuyButtonIconPosition, uiData.HudIconSize,
+                uiData.BuyNpcIconSprite, uiData.BuyNpcIconFallback, uiData.MoneyIconColor, uiData);
         }
 
         private static void StyleShopText(Transform target, Vector2 position, Vector2 size,
@@ -785,6 +840,9 @@ namespace MiningSimulator.Editor
             }
             StyleButton(openButtonTransform, uiData.NavigationButtonColor, uiData.TitleTextColor,
                 uiData.OutlineColor, uiData.OutlineThickness);
+            EnsureHudIcon(openButtonTransform, "Icon", uiData.OpenUpgradeIconPosition,
+                uiData.HudIconSize, uiData.OpenUpgradeIconSprite, uiData.OpenUpgradeIconFallback,
+                uiData.UpgradeIconColor, uiData);
 
             Transform upgradePanelTransform = canvas.Find("Upgrade Panel");
             if (upgradePanelTransform == null)
@@ -836,15 +894,20 @@ namespace MiningSimulator.Editor
             closeLabel.fontSize = uiData.NavigationFontSize;
 
             EnsureUpgradeCard(upgradePanelTransform, "Money Reward Upgrade", 0,
-                GetUpgradePreview(upgradeData.MoneyReward), uiData);
+                GetUpgradePreview(upgradeData.MoneyReward), uiData.MoneyRewardIconSprite,
+                uiData.MoneyRewardIconFallback, uiData);
             EnsureUpgradeCard(upgradePanelTransform, "Rare Ore Upgrade", 1,
-                GetUpgradePreview(upgradeData.RareOreSpawn), uiData);
+                GetUpgradePreview(upgradeData.RareOreSpawn), uiData.RareOreIconSprite,
+                uiData.RareOreIconFallback, uiData);
             EnsureUpgradeCard(upgradePanelTransform, "Ore Damage Upgrade", 2,
-                GetUpgradePreview(upgradeData.OreDamage), uiData);
+                GetUpgradePreview(upgradeData.OreDamage), uiData.OreDamageIconSprite,
+                uiData.OreDamageIconFallback, uiData);
             EnsureUpgradeCard(upgradePanelTransform, "Ore Spawn Speed Upgrade", 3,
-                GetUpgradePreview(upgradeData.OreSpawnSpeed), uiData);
+                GetUpgradePreview(upgradeData.OreSpawnSpeed), uiData.OreSpawnSpeedIconSprite,
+                uiData.OreSpawnSpeedIconFallback, uiData);
             EnsureUpgradeCard(upgradePanelTransform, "NPC Move Speed Upgrade", 4,
-                GetUpgradePreview(upgradeData.NpcMoveSpeed), uiData);
+                GetUpgradePreview(upgradeData.NpcMoveSpeed), uiData.NpcMoveSpeedIconSprite,
+                uiData.NpcMoveSpeedIconFallback, uiData);
 
             Button backButton = EnsureStyledButton(upgradePanelTransform, "Back", uiData.BackButtonPosition,
                 uiData.BackButtonSize, uiData.NavigationButtonColor, uiData.TitleTextColor, uiData);
@@ -878,16 +941,59 @@ namespace MiningSimulator.Editor
         }
 
         private static Button EnsureUpgradeCard(Transform parent, string name, int index,
-            string preview, MiningUiData uiData)
+            string preview, Sprite iconSprite, string iconFallback, MiningUiData uiData)
         {
             Vector2 position = uiData.FirstCardPosition + Vector2.down * uiData.CardSpacing * index;
             Button button = EnsureStyledButton(parent, name, position, uiData.CardSize, uiData.CardColor,
                 uiData.CardTextColor, uiData);
-            TextMeshProUGUI label = button.GetComponentInChildren<TextMeshProUGUI>(true);
+            TextMeshProUGUI label = EnsureText(button.transform, "Label");
             label.text = preview;
             label.alignment = TextAlignmentOptions.Left;
             label.margin = uiData.CardTextMargin;
+            EnsureHudIcon(button.transform, "Icon", uiData.UpgradeCardIconPosition,
+                uiData.UpgradeCardIconSize, iconSprite, iconFallback,
+                uiData.UpgradeIconColor, uiData);
             return button;
+        }
+
+        private static void EnsureHudIcon(Transform parent, string name, Vector2 position,
+            Vector2 size, Sprite iconSprite, string fallbackText, Color backgroundColor,
+            MiningUiData uiData)
+        {
+            if (parent == null)
+            {
+                return;
+            }
+
+            Transform icon = EnsureUiObject(parent, name, typeof(Image));
+            ConfigureTopLeftRect(icon, position, size);
+            Image background = icon.GetComponent<Image>();
+            background.sprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Knob.psd");
+            background.type = Image.Type.Simple;
+            background.color = backgroundColor;
+            background.raycastTarget = false;
+            ApplyOutline(icon.gameObject, uiData.OutlineColor, uiData.OutlineThickness);
+
+            Transform spriteTransform = EnsureUiObject(icon, "Sprite", typeof(Image));
+            RectTransform spriteRect = spriteTransform.GetComponent<RectTransform>();
+            StretchRect(spriteRect);
+            spriteRect.offsetMin = Vector2.one * uiData.HudIconPadding;
+            spriteRect.offsetMax = Vector2.one * -uiData.HudIconPadding;
+            Image spriteImage = spriteTransform.GetComponent<Image>();
+            spriteImage.sprite = iconSprite;
+            spriteImage.color = uiData.IconSymbolColor;
+            spriteImage.preserveAspect = true;
+            spriteImage.enabled = iconSprite != null;
+            spriteImage.raycastTarget = false;
+
+            TextMeshProUGUI symbol = EnsureText(icon, "Symbol");
+            StretchRect(symbol.rectTransform);
+            symbol.text = fallbackText;
+            symbol.fontSize = uiData.HudIconFontSize;
+            symbol.color = uiData.IconSymbolColor;
+            symbol.alignment = TextAlignmentOptions.Center;
+            symbol.enabled = iconSprite == null;
+            symbol.raycastTarget = false;
         }
 
         private static Button EnsureStyledButton(Transform parent, string name, Vector2 position,
@@ -963,7 +1069,8 @@ namespace MiningSimulator.Editor
             {
                 image.color = background;
             }
-            TextMeshProUGUI label = buttonTransform.GetComponentInChildren<TextMeshProUGUI>(true);
+            TextMeshProUGUI label = buttonTransform.Find("Label")?.GetComponent<TextMeshProUGUI>() ??
+                                    buttonTransform.GetComponentInChildren<TextMeshProUGUI>(true);
             if (label != null)
             {
                 label.color = textColor;
@@ -1098,6 +1205,19 @@ namespace MiningSimulator.Editor
                 result.AddComponent(component);
             }
             return result;
+        }
+
+        private static Transform EnsureChildObject(Transform parent, string name)
+        {
+            Transform child = parent.Find(name);
+            if (child != null)
+            {
+                return child;
+            }
+
+            GameObject childObject = new(name);
+            childObject.transform.SetParent(parent, false);
+            return childObject.transform;
         }
 
         private static bool EnsureEventSystemInScene(Scene scene, bool registerUndo)

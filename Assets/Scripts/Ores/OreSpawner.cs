@@ -22,6 +22,8 @@ namespace MiningSimulator.Ores
 
         public int ActiveCount => activeOres.Count;
         public MiningUpgradeSystem UpgradeSystem => upgradeSystem;
+        public event System.Action<Ore> OreDamaged;
+        public event System.Action<Ore, int> OreRewardGranted;
 
         public bool TryReserveClosestOre(MiningNpc miner, Vector3 origin, int miningPower,
             out Ore reservedOre, out int slotIndex)
@@ -120,6 +122,7 @@ namespace MiningSimulator.Ores
                 if (ore != null)
                 {
                     ore.Depleted -= HandleOreDepleted;
+                    ore.Damaged -= HandleOreDamaged;
                     ore.RewardGranted -= HandleRewardGranted;
                 }
             }
@@ -166,6 +169,7 @@ namespace MiningSimulator.Ores
 
             ore.Initialize(data, wallet, upgradeSystem);
             ore.Depleted += HandleOreDepleted;
+            ore.Damaged += HandleOreDamaged;
             ore.RewardGranted += HandleRewardGranted;
             activeOres.Add(ore);
             return true;
@@ -314,8 +318,14 @@ namespace MiningSimulator.Ores
         private void HandleOreDepleted(Ore ore)
         {
             ore.Depleted -= HandleOreDepleted;
+            ore.Damaged -= HandleOreDamaged;
             ore.RewardGranted -= HandleRewardGranted;
             activeOres.Remove(ore);
+        }
+
+        private void HandleOreDamaged(Ore ore)
+        {
+            OreDamaged?.Invoke(ore);
         }
 
         private void HandleRewardGranted(Ore ore, int reward)
@@ -328,6 +338,7 @@ namespace MiningSimulator.Ores
             Vector3 popupPosition = ore.GetWorldTopCenter();
             OreRewardPopup popup = Instantiate(rewardPopupPrefab, popupPosition, Quaternion.identity);
             popup.Initialize(reward, popupPosition, uiData);
+            OreRewardGranted?.Invoke(ore, reward);
         }
 
         private void RegisterExistingOres()
@@ -340,6 +351,8 @@ namespace MiningSimulator.Ores
                 ore.ConfigureRuntime(wallet, upgradeSystem);
                 ore.Depleted -= HandleOreDepleted;
                 ore.Depleted += HandleOreDepleted;
+                ore.Damaged -= HandleOreDamaged;
+                ore.Damaged += HandleOreDamaged;
                 ore.RewardGranted -= HandleRewardGranted;
                 ore.RewardGranted += HandleRewardGranted;
                 activeOres.Add(ore);

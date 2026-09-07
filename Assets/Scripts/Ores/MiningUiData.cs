@@ -16,11 +16,12 @@ namespace MiningSimulator.Ores
         [SerializeField] private Vector2 shopPanelPosition = new(24f, -24f);
         [SerializeField] private Vector2 shopPanelSize = new(330f, 320f);
         [SerializeField] private Vector2 shopTextSize = new(294f, 32f);
-        [SerializeField] private Vector2 moneyTextPosition = new(18f, -70f);
-        [SerializeField] private Vector2 npcCountTextPosition = new(18f, -106f);
-        [SerializeField] private Vector2 buyButtonPosition = new(18f, -146f);
+        [SerializeField] private Vector2 shopStatTextSize = new(240f, 32f);
+        [SerializeField] private Vector2 moneyTextPosition = new(70f, -70f);
+        [SerializeField] private Vector2 npcCountTextPosition = new(70f, -116f);
+        [SerializeField] private Vector2 buyButtonPosition = new(18f, -158f);
         [SerializeField] private Vector2 buyButtonSize = new(294f, 54f);
-        [SerializeField] private Vector2 statusTextPosition = new(18f, -210f);
+        [SerializeField] private Vector2 statusTextPosition = new(18f, -220f);
         [Min(1f), SerializeField] private float moneyFontSize = 26f;
         [Min(1f), SerializeField] private float npcCountFontSize = 21f;
         [Min(1f), SerializeField] private float buyButtonFontSize = 22f;
@@ -30,6 +31,41 @@ namespace MiningSimulator.Ores
         [SerializeField] private Color statusTextColor = new(1f, 0.82f, 0.28f, 1f);
         [SerializeField] private Color buyButtonColor = new(0.95f, 0.57f, 0.1f, 1f);
         [SerializeField] private Color buyButtonTextColor = new(0.08f, 0.06f, 0.03f, 1f);
+
+        [Header("HUD Icons")]
+        [SerializeField] private Vector2 hudIconSize = new(42f, 42f);
+        [SerializeField] private Vector2 moneyIconPosition = new(16f, -62f);
+        [SerializeField] private Vector2 npcIconPosition = new(16f, -108f);
+        [SerializeField] private Vector2 buyButtonIconPosition = new(8f, -6f);
+        [SerializeField] private Vector2 openUpgradeIconPosition = new(8f, -2f);
+        [Min(1f), SerializeField] private float hudIconFontSize = 22f;
+        [Min(0f), SerializeField] private float hudIconPadding = 8f;
+        [SerializeField] private Color moneyIconColor = new(1f, 0.72f, 0.08f, 1f);
+        [SerializeField] private Color npcIconColor = new(0.20f, 0.65f, 0.94f, 1f);
+        [SerializeField] private Color upgradeIconColor = new(0.14f, 0.72f, 0.52f, 1f);
+        [SerializeField] private Color iconSymbolColor = Color.white;
+        [SerializeField] private Sprite moneyIconSprite;
+        [SerializeField] private Sprite npcIconSprite;
+        [SerializeField] private Sprite buyNpcIconSprite;
+        [SerializeField] private Sprite openUpgradeIconSprite;
+        [SerializeField] private string moneyIconFallback = "$";
+        [SerializeField] private string npcIconFallback = "N";
+        [SerializeField] private string buyNpcIconFallback = "+";
+        [SerializeField] private string openUpgradeIconFallback = "UP";
+
+        [Header("Upgrade Card Icons")]
+        [SerializeField] private Vector2 upgradeCardIconSize = new(52f, 52f);
+        [SerializeField] private Vector2 upgradeCardIconPosition = new(14f, -13f);
+        [SerializeField] private Sprite moneyRewardIconSprite;
+        [SerializeField] private Sprite rareOreIconSprite;
+        [SerializeField] private Sprite oreDamageIconSprite;
+        [SerializeField] private Sprite oreSpawnSpeedIconSprite;
+        [SerializeField] private Sprite npcMoveSpeedIconSprite;
+        [SerializeField] private string moneyRewardIconFallback = "$";
+        [SerializeField] private string rareOreIconFallback = "R";
+        [SerializeField] private string oreDamageIconFallback = "!";
+        [SerializeField] private string oreSpawnSpeedIconFallback = "S";
+        [SerializeField] private string npcMoveSpeedIconFallback = ">>";
 
         [Header("NPC Shop Style")]
         [SerializeField] private string shopTitle = "KHU ĐÀO QUẶNG";
@@ -67,7 +103,7 @@ namespace MiningSimulator.Ores
         [Min(1f), SerializeField] private float titleFontSize = 32f;
         [Min(1f), SerializeField] private float cardFontSize = 20f;
         [Min(1f), SerializeField] private float navigationFontSize = 20f;
-        [SerializeField] private Vector4 cardTextMargin = new(22f, 0f, 18f, 0f);
+        [SerializeField] private Vector4 cardTextMargin = new(82f, 0f, 18f, 0f);
 
         [Header("Upgrade Panel Colors")]
         [SerializeField] private Color panelColor = new(0.93f, 0.96f, 0.98f, 1f);
@@ -86,6 +122,7 @@ namespace MiningSimulator.Ores
         public Vector2 ShopPanelPosition => shopPanelPosition;
         public Vector2 ShopPanelSize => shopPanelSize;
         public Vector2 ShopTextSize => shopTextSize;
+        public Vector2 ShopStatTextSize => shopStatTextSize;
         public Vector2 MoneyTextPosition => moneyTextPosition;
         public Vector2 NpcCountTextPosition => npcCountTextPosition;
         public Vector2 BuyButtonPosition => buyButtonPosition;
@@ -100,6 +137,37 @@ namespace MiningSimulator.Ores
         public Color StatusTextColor => statusTextColor;
         public Color BuyButtonColor => buyButtonColor;
         public Color BuyButtonTextColor => buyButtonTextColor;
+        public Vector2 HudIconSize => hudIconSize;
+        public Vector2 MoneyIconPosition => moneyIconPosition;
+        public Vector2 NpcIconPosition => npcIconPosition;
+        public Vector2 BuyButtonIconPosition => buyButtonIconPosition;
+        public Vector2 OpenUpgradeIconPosition => openUpgradeIconPosition;
+        public float HudIconFontSize => hudIconFontSize;
+        public float HudIconPadding => hudIconPadding;
+        public Color MoneyIconColor => moneyIconColor;
+        public Color NpcIconColor => npcIconColor;
+        public Color UpgradeIconColor => upgradeIconColor;
+        public Color IconSymbolColor => iconSymbolColor;
+        public Sprite MoneyIconSprite => moneyIconSprite;
+        public Sprite NpcIconSprite => npcIconSprite;
+        public Sprite BuyNpcIconSprite => buyNpcIconSprite;
+        public Sprite OpenUpgradeIconSprite => openUpgradeIconSprite;
+        public string MoneyIconFallback => moneyIconFallback;
+        public string NpcIconFallback => npcIconFallback;
+        public string BuyNpcIconFallback => buyNpcIconFallback;
+        public string OpenUpgradeIconFallback => openUpgradeIconFallback;
+        public Vector2 UpgradeCardIconSize => upgradeCardIconSize;
+        public Vector2 UpgradeCardIconPosition => upgradeCardIconPosition;
+        public Sprite MoneyRewardIconSprite => moneyRewardIconSprite;
+        public Sprite RareOreIconSprite => rareOreIconSprite;
+        public Sprite OreDamageIconSprite => oreDamageIconSprite;
+        public Sprite OreSpawnSpeedIconSprite => oreSpawnSpeedIconSprite;
+        public Sprite NpcMoveSpeedIconSprite => npcMoveSpeedIconSprite;
+        public string MoneyRewardIconFallback => moneyRewardIconFallback;
+        public string RareOreIconFallback => rareOreIconFallback;
+        public string OreDamageIconFallback => oreDamageIconFallback;
+        public string OreSpawnSpeedIconFallback => oreSpawnSpeedIconFallback;
+        public string NpcMoveSpeedIconFallback => npcMoveSpeedIconFallback;
         public string ShopTitle => shopTitle;
         public Vector2 ShopHeaderSize => shopHeaderSize;
         public float ShopTitleFontSize => shopTitleFontSize;
@@ -149,6 +217,13 @@ namespace MiningSimulator.Ores
             headerSize.y = Mathf.Max(1f, headerSize.y);
             cardSize.x = Mathf.Max(1f, cardSize.x);
             cardSize.y = Mathf.Max(1f, cardSize.y);
+            shopStatTextSize.x = Mathf.Max(1f, shopStatTextSize.x);
+            shopStatTextSize.y = Mathf.Max(1f, shopStatTextSize.y);
+            hudIconSize.x = Mathf.Max(1f, hudIconSize.x);
+            hudIconSize.y = Mathf.Max(1f, hudIconSize.y);
+            hudIconPadding = Mathf.Max(0f, hudIconPadding);
+            upgradeCardIconSize.x = Mathf.Max(1f, upgradeCardIconSize.x);
+            upgradeCardIconSize.y = Mathf.Max(1f, upgradeCardIconSize.y);
             cardSpacing = Mathf.Max(0f, cardSpacing);
             outlineThickness = Mathf.Max(0f, outlineThickness);
             shopHeaderSize.x = Mathf.Max(1f, shopHeaderSize.x);

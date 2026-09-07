@@ -20,6 +20,7 @@ namespace MiningSimulator.Ores
 
         public MiningUpgradeData UpgradeData => upgradeData;
         public event Action UpgradesChanged;
+        public event Action<MiningUpgradeType> UpgradePurchased;
 
         public int GetStacks(MiningUpgradeType type)
         {
@@ -83,6 +84,7 @@ namespace MiningSimulator.Ores
             }
 
             UpgradesChanged?.Invoke();
+            UpgradePurchased?.Invoke(type);
             return true;
         }
 

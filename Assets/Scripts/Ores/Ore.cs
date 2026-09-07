@@ -26,6 +26,7 @@ namespace MiningSimulator.Ores
         public int MaxDurability => data != null ? data.Durability : 0;
         public bool IsDepleted => currentDurability <= 0;
         public event Action<Ore> Depleted;
+        public event Action<Ore> Damaged;
         public event Action<Ore, int> RewardGranted;
         public event Action<int, int> DurabilityChanged;
 
@@ -235,6 +236,10 @@ namespace MiningSimulator.Ores
             if (currentDurability == 0)
             {
                 Deplete();
+            }
+            else
+            {
+                Damaged?.Invoke(this);
             }
 
             return true;

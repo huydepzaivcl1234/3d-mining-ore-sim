@@ -1,3 +1,4 @@
+using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -31,15 +32,20 @@ namespace MiningSimulator.Ores
         [SerializeField] private string upgradeFormat = "{0}\n+{1:0.##}%  [{2}/{3}]  -  {4} tiền";
         [SerializeField] private string maximumFormat = "{0}\n+{1:0.##}%  [{2}/{3}]  -  TỐI ĐA";
 
+        public event Action PanelOpened;
+        public event Action PanelClosed;
+
         private void Awake()
         {
             if (openOnPlay)
             {
-                OpenPanel();
+                shopPanel?.SetActive(false);
+                upgradePanel?.SetActive(true);
             }
             else
             {
-                ClosePanel();
+                upgradePanel?.SetActive(false);
+                shopPanel?.SetActive(true);
             }
         }
 
@@ -101,12 +107,14 @@ namespace MiningSimulator.Ores
             shopPanel?.SetActive(false);
             upgradePanel?.SetActive(true);
             Refresh();
+            PanelOpened?.Invoke();
         }
 
         private void ClosePanel()
         {
             upgradePanel?.SetActive(false);
             shopPanel?.SetActive(true);
+            PanelClosed?.Invoke();
         }
 
         private void BuyMoneyReward() => Buy(MiningUpgradeType.MoneyReward);

@@ -38,6 +38,7 @@
 | `Assets/GameData/Spawning` | Ore spawn ratios, timing, limits, and placement | Confirmed | Spawn manager feature |
 | `Assets/GameData/Upgrades` | Mining upgrade percentages, stack limits, and price progression | Confirmed | Upgrade panel feature |
 | `Assets/GameData/UI` | Editable mining HUD layout, colors, typography, and outline values | Confirmed | Upgrade panel presentation |
+| `Assets/GameData/Audio` | Background music, SFX clips, volumes, pitch, and playback limits | Confirmed | Audio manager feature |
 | `Assets/Scripts/Ores` | First-party ore runtime and editor code | Confirmed | Starter ore feature |
 | `Assets/Scenes` | Unity starter scene | Confirmed | Repository inspection |
 | `Assets/Settings` | URP renderer and pipeline assets | Confirmed | Repository inspection |
@@ -79,7 +80,15 @@
   ores unlock progressively through the rare-spawn upgrade using rarity rules in `OreSpawnData`.
 - Upgrade data also controls ore-spawn speed and NPC movement speed stacks, costs, and per-stack percentages.
 - The editable runtime HUD uses TextMeshPro components and is created as serialized prefab content by the setup menu.
-- No global managers or save system exists yet.
+- HUD statistics, shop buttons, and upgrade cards have editable icon slots with TMP fallback symbols;
+  icon sprites, size, position, colors, and padding live in `MiningUiData`.
+- `MiningGameManager` is a serialized composition root that exposes the existing mining systems without
+  replacing their ownership or introducing a global singleton.
+- `MiningAudioManager` owns one looping music source and one shared SFX source. It reacts to ore hits,
+  ore breaks, NPC purchases, upgrade purchases, and upgrade-panel navigation. All clips and playback
+  values live in `Assets/GameData/Audio/MiningAudioData.asset`.
+- `Mining Simulator/Tools/Audio Manager` opens an editor tool for audio assignment and runtime setup.
+- No save system exists yet.
 
 ## Coding Conventions
 
