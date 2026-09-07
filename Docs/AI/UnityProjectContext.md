@@ -36,6 +36,7 @@
 | `Assets/GameData/NPC` | NPC-only balance and collision data | Confirmed | NPC feature |
 | `Assets/GameData/Spawning` | Ore spawn ratios, timing, limits, and placement | Confirmed | Spawn manager feature |
 | `Assets/GameData/Upgrades` | Mining upgrade percentages, stack limits, and price progression | Confirmed | Upgrade panel feature |
+| `Assets/GameData/UI` | Editable mining HUD layout, colors, typography, and outline values | Confirmed | Upgrade panel presentation |
 | `Assets/Scripts/Ores` | First-party ore runtime and editor code | Confirmed | Starter ore feature |
 | `Assets/Scenes` | Unity starter scene | Confirmed | Repository inspection |
 | `Assets/Settings` | URP renderer and pipeline assets | Confirmed | Repository inspection |
@@ -59,7 +60,9 @@
 - NPC-only tuning lives in `Assets/GameData/NPC/NpcData.asset`.
 - `OreSpawner` is the spawn manager and reads ratios, spawn speed, limits, and placement from `Assets/GameData/Spawning/OreSpawnData.asset`.
 - Ore placement keeps collider bounds above the spawn surface; rotation range and surface clearance remain designer-configurable.
+- Ore health bars use collider bounds in world space, so ore rotation cannot rotate the bar anchor into the ground; per-ore offset and scale live in each `OreData`.
 - The editable TMP upgrade panel buys money, rare-ore weight, and ore-damage stacks from `Assets/GameData/Upgrades/MiningUpgradeData.asset`.
+- Upgrade panel presentation is authored as real prefab UI and seeded from `Assets/GameData/UI/MiningUiData.asset`.
 - Shared economy, HUD animation, click, and camera tuning lives in `Assets/GameData/MiningGameData.asset`.
 - NPC miners reserve limited slots around compatible ores and use Rigidbody/CapsuleCollider collision.
 - The editable runtime HUD uses TextMeshPro components and is created as serialized prefab content by the setup menu.

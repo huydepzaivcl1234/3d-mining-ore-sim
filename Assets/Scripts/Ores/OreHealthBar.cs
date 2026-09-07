@@ -14,12 +14,14 @@ namespace MiningSimulator.Ores
 
         private bool initialized;
         private int initializedMaxHealth;
+        private Collider[] oreColliders;
 
         public void Configure(Ore targetOre, MicroBar targetBar, Transform targetVisualRoot)
         {
             ore = targetOre;
             healthBar = targetBar;
             visualRoot = targetVisualRoot;
+            CacheOreColliders();
         }
 
         private void Awake()
@@ -28,6 +30,7 @@ namespace MiningSimulator.Ores
             healthBar ??= GetComponent<MicroBar>();
             visualRoot ??= transform;
             targetCamera ??= Camera.main;
+            CacheOreColliders();
         }
 
         private void OnEnable()
@@ -51,12 +54,82 @@ namespace MiningSimulator.Ores
                 targetCamera = Camera.main;
             }
 
-            if (targetCamera != null && visualRoot != null)
+            if (visualRoot == null || ore == null || ore.Data == null)
+            {
+                return;
+            }
+
+            visualRoot.position = GetWorldAnchor() + ore.Data.HealthBarWorldOffset;
+            SetWorldScale(ore.Data.HealthBarScale);
+
+            if (targetCamera != null)
             {
                 visualRoot.rotation = Quaternion.LookRotation(
                     visualRoot.position - targetCamera.transform.position,
                     targetCamera.transform.up);
             }
+        }
+
+        private void SetWorldScale(float uniformScale)
+        {
+            Transform parent = visualRoot.parent;
+            if (parent == null)
+            {
+                visualRoot.localScale = Vector3.one * uniformScale;
+                return;
+            }
+
+            Vector3 parentScale = parent.lossyScale;
+            visualRoot.localScale = new Vector3(
+                SafeDivide(uniformScale, parentScale.x),
+                SafeDivide(uniformScale, parentScale.y),
+                SafeDivide(uniformScale, parentScale.z));
+        }
+
+        private static float SafeDivide(float value, float divisor)
+        {
+            return Mathf.Abs(divisor) > Mathf.Epsilon ? value / divisor : value;
+        }
+
+        private void CacheOreColliders()
+        {
+            oreColliders = ore != null ? ore.GetComponentsInChildren<Collider>(true) : null;
+        }
+
+        private Vector3 GetWorldAnchor()
+        {
+            if (oreColliders == null || oreColliders.Length == 0)
+            {
+                CacheOreColliders();
+            }
+
+            bool hasBounds = false;
+            Bounds combinedBounds = default;
+            if (oreColliders != null)
+            {
+                foreach (Collider candidate in oreColliders)
+                {
+                    if (candidate == null || !candidate.enabled || candidate.isTrigger ||
+                        (visualRoot != null && candidate.transform.IsChildOf(visualRoot)))
+                    {
+                        continue;
+                    }
+
+                    if (!hasBounds)
+                    {
+                        combinedBounds = candidate.bounds;
+                        hasBounds = true;
+                    }
+                    else
+                    {
+                        combinedBounds.Encapsulate(candidate.bounds);
+                    }
+                }
+            }
+
+            return hasBounds
+                ? new Vector3(combinedBounds.center.x, combinedBounds.max.y, combinedBounds.center.z)
+                : ore.transform.position;
         }
 
         private void OnDisable()

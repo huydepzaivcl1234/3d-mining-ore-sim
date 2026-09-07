@@ -1,0 +1,58 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5a5169af41056ce673962c822974ce9c, type: 3}
+  m_Name: MiningUiData
+  m_EditorClassIdentifier: 
+  referenceResolution: {x: 1920, y: 1080}
+  matchWidthOrHeight: 0.5
+  canvasSortingOrder: 100
+  shopPanelPosition: {x: 24, y: -24}
+  shopPanelSize: {x: 330, y: 260}
+  shopTextSize: {x: 294, y: 32}
+  moneyTextPosition: {x: 18, y: -16}
+  npcCountTextPosition: {x: 18, y: -52}
+  buyButtonPosition: {x: 18, y: -88}
+  buyButtonSize: {x: 294, y: 54}
+  statusTextPosition: {x: 18, y: -151}
+  moneyFontSize: 26
+  npcCountFontSize: 21
+  buyButtonFontSize: 22
+  statusFontSize: 17
+  shopPanelColor: {r: 0.035, g: 0.045, b: 0.06, a: 0.94}
+  shopTextColor: {r: 1, g: 1, b: 1, a: 1}
+  statusTextColor: {r: 1, g: 0.82, b: 0.28, a: 1}
+  buyButtonColor: {r: 0.95, g: 0.57, b: 0.1, a: 1}
+  buyButtonTextColor: {r: 0.08, g: 0.06, b: 0.03, a: 1}
+  panelSize: {x: 720, y: 560}
+  headerSize: {x: 720, y: 82}
+  cardSize: {x: 620, y: 92}
+  firstCardPosition: {x: 50, y: -116}
+  cardSpacing: 108
+  closeButtonSize: {x: 58, y: 58}
+  closeButtonPosition: {x: 678, y: -12}
+  backButtonSize: {x: 180, y: 54}
+  backButtonPosition: {x: 270, y: -486}
+  openButtonSize: {x: 294, y: 46}
+  openButtonPosition: {x: 18, y: -194}
+  outlineThickness: 4
+  titleFontSize: 32
+  cardFontSize: 20
+  navigationFontSize: 20
+  cardTextMargin: {x: 22, y: 0, z: 18, w: 0}
+  panelColor: {r: 0.93, g: 0.96, b: 0.98, a: 1}
+  headerColor: {r: 0.2, g: 0.65, b: 0.94, a: 1}
+  outlineColor: {r: 0.025, g: 0.055, b: 0.09, a: 1}
+  cardColor: {r: 1, g: 1, b: 1, a: 1}
+  cardTextColor: {r: 0.04, g: 0.055, b: 0.075, a: 1}
+  closeButtonColor: {r: 0.96, g: 0.08, b: 0.34, a: 1}
+  navigationButtonColor: {r: 0.14, g: 0.72, b: 0.52, a: 1}
+  titleTextColor: {r: 1, g: 1, b: 1, a: 1}

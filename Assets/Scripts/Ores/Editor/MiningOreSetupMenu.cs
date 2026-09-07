@@ -28,6 +28,8 @@ namespace MiningSimulator.Editor
         private const string SpawnDataPath = SpawnDataFolder + "/OreSpawnData.asset";
         private const string UpgradeDataFolder = "Assets/GameData/Upgrades";
         private const string UpgradeDataPath = UpgradeDataFolder + "/MiningUpgradeData.asset";
+        private const string UiDataFolder = "Assets/GameData/UI";
+        private const string UiDataPath = UiDataFolder + "/MiningUiData.asset";
         private const string DataFolder = "Assets/GameData/Ores";
         private const string PrefabFolder = "Assets/Prefabs/Ores";
         private const string NpcPrefabFolder = "Assets/Prefabs/NPC";
@@ -88,6 +90,7 @@ namespace MiningSimulator.Editor
             EnsureFolder(NpcDataFolder);
             EnsureFolder(SpawnDataFolder);
             EnsureFolder(UpgradeDataFolder);
+            EnsureFolder(UiDataFolder);
             EnsureFolder(PrefabFolder);
             EnsureFolder(NpcPrefabFolder);
             EnsureFolder(SystemPrefabFolder);
@@ -110,8 +113,9 @@ namespace MiningSimulator.Editor
             NpcData npcData = CreateOrUpdateNpcData();
             OreSpawnData spawnData = CreateOrUpdateSpawnData(dataAssets);
             MiningUpgradeData upgradeData = CreateOrUpdateUpgradeData();
+            MiningUiData uiData = CreateOrUpdateUiData();
             MiningNpc npcPrefab = CreateOrUpdateNpcPrefab(npcData);
-            CreateOrUpdateRuntimePrefab(npcPrefab, gameData, npcData, spawnData, upgradeData);
+            CreateOrUpdateRuntimePrefab(npcPrefab, gameData, npcData, spawnData, upgradeData, uiData);
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -316,6 +320,17 @@ namespace MiningSimulator.Editor
             return upgradeData;
         }
 
+        private static MiningUiData CreateOrUpdateUiData()
+        {
+            MiningUiData uiData = AssetDatabase.LoadAssetAtPath<MiningUiData>(UiDataPath);
+            if (uiData == null)
+            {
+                uiData = ScriptableObject.CreateInstance<MiningUiData>();
+                AssetDatabase.CreateAsset(uiData, UiDataPath);
+            }
+            return uiData;
+        }
+
         private static MiningNpc CreateOrUpdateNpcPrefab(NpcData npcData)
         {
             GameObject existing = AssetDatabase.LoadAssetAtPath<GameObject>(NpcPrefabPath);
@@ -340,30 +355,30 @@ namespace MiningSimulator.Editor
             try
             {
                 npcObject.name = "Mining NPC";
-                npcObject.transform.localScale = new Vector3(0.8f, 0.9f, 0.8f);
+                npcObject.transform.localScale = npcData.BodyScale;
                 MiningNpc miningNpc = npcObject.AddComponent<MiningNpc>();
                 ConfigureNpcPrefab(npcObject, miningNpc, npcData);
 
                 GameObject helmet = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 helmet.name = "Miner Helmet";
                 helmet.transform.SetParent(npcObject.transform, false);
-                helmet.transform.localPosition = new Vector3(0f, 0.86f, 0.08f);
-                helmet.transform.localScale = new Vector3(0.9f, 0.18f, 0.92f);
+                helmet.transform.localPosition = npcData.HelmetLocalPosition;
+                helmet.transform.localScale = npcData.HelmetLocalScale;
                 UnityEngine.Object.DestroyImmediate(helmet.GetComponent<Collider>());
 
                 GameObject pickaxeHandle = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 pickaxeHandle.name = "Pickaxe Handle";
                 pickaxeHandle.transform.SetParent(npcObject.transform, false);
-                pickaxeHandle.transform.localPosition = new Vector3(0.65f, 0f, 0f);
-                pickaxeHandle.transform.localRotation = Quaternion.Euler(0f, 0f, -25f);
-                pickaxeHandle.transform.localScale = new Vector3(0.08f, 0.85f, 0.08f);
+                pickaxeHandle.transform.localPosition = npcData.ToolLocalPosition;
+                pickaxeHandle.transform.localRotation = Quaternion.Euler(npcData.ToolLocalEulerAngles);
+                pickaxeHandle.transform.localScale = npcData.ToolLocalScale;
                 UnityEngine.Object.DestroyImmediate(pickaxeHandle.GetComponent<Collider>());
 
                 GameObject pickaxeHead = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 pickaxeHead.name = "Pickaxe Head";
                 pickaxeHead.transform.SetParent(pickaxeHandle.transform, false);
-                pickaxeHead.transform.localPosition = new Vector3(0f, 0.55f, 0f);
-                pickaxeHead.transform.localScale = new Vector3(3.8f, 0.18f, 0.65f);
+                pickaxeHead.transform.localPosition = npcData.ToolHeadLocalPosition;
+                pickaxeHead.transform.localScale = npcData.ToolHeadLocalScale;
                 UnityEngine.Object.DestroyImmediate(pickaxeHead.GetComponent<Collider>());
                 miningNpc.ConfigureTool(pickaxeHandle.transform);
 
@@ -396,7 +411,7 @@ namespace MiningSimulator.Editor
         }
 
         private static void CreateOrUpdateRuntimePrefab(MiningNpc npcPrefab, MiningGameData gameData,
-            NpcData npcData, OreSpawnData spawnData, MiningUpgradeData upgradeData)
+            NpcData npcData, OreSpawnData spawnData, MiningUpgradeData upgradeData, MiningUiData uiData)
         {
             GameObject existing = AssetDatabase.LoadAssetAtPath<GameObject>(RuntimePrefabPath);
             bool isNew = existing == null;
@@ -448,10 +463,10 @@ namespace MiningSimulator.Editor
                 SetReferenceIfMissing(hudSerialized.FindProperty("wallet"), wallet);
                 SetReferenceIfMissing(hudSerialized.FindProperty("npcShop"), shop);
                 SetReferenceIfMissing(hudSerialized.FindProperty("gameData"), gameData);
-                CreateEditableHudIfMissing(runtime, hudSerialized);
+                CreateEditableHudIfMissing(runtime, hudSerialized, uiData);
                 hudSerialized.ApplyModifiedPropertiesWithoutUndo();
 
-                ConfigureUpgradePanel(runtime, upgradePanel, upgradeSystem, wallet, upgradeData);
+                ConfigureUpgradePanel(runtime, upgradePanel, upgradeSystem, wallet, upgradeData, uiData);
 
                 var cameraSerialized = new SerializedObject(orbitCamera);
                 SetReferenceIfMissing(cameraSerialized.FindProperty("gameData"), gameData);
@@ -472,7 +487,8 @@ namespace MiningSimulator.Editor
             }
         }
 
-        private static void CreateEditableHudIfMissing(GameObject runtime, SerializedObject hudSerialized)
+        private static void CreateEditableHudIfMissing(GameObject runtime, SerializedObject hudSerialized,
+            MiningUiData uiData)
         {
             Transform existingCanvas = runtime.transform.Find(HudCanvasName);
             if (existingCanvas != null)
@@ -488,27 +504,32 @@ namespace MiningSimulator.Editor
 
             Canvas canvas = canvasObject.GetComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 100;
+            canvas.sortingOrder = uiData.CanvasSortingOrder;
 
             CanvasScaler scaler = canvasObject.GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1920f, 1080f);
-            scaler.matchWidthOrHeight = 0.5f;
+            scaler.referenceResolution = uiData.ReferenceResolution;
+            scaler.matchWidthOrHeight = uiData.MatchWidthOrHeight;
 
             GameObject panel = CreateUiObject("NPC Shop", canvasObject.transform, typeof(Image));
             RectTransform panelRect = panel.GetComponent<RectTransform>();
             panelRect.anchorMin = new Vector2(0f, 1f);
             panelRect.anchorMax = new Vector2(0f, 1f);
             panelRect.pivot = new Vector2(0f, 1f);
-            panelRect.anchoredPosition = new Vector2(24f, -24f);
-            panelRect.sizeDelta = new Vector2(330f, 190f);
-            panel.GetComponent<Image>().color = new Color(0.035f, 0.045f, 0.06f, 0.94f);
+            panelRect.anchoredPosition = uiData.ShopPanelPosition;
+            panelRect.sizeDelta = uiData.ShopPanelSize;
+            panel.GetComponent<Image>().color = uiData.ShopPanelColor;
 
-            TextMeshProUGUI moneyText = CreateText(panel.transform, "Money", new Vector2(18f, -16f), 26);
-            TextMeshProUGUI npcCountText = CreateText(panel.transform, "NPC Count", new Vector2(18f, -52f), 21);
-            Button buyButton = CreateButton(panel.transform, new Vector2(18f, -88f), out TextMeshProUGUI buyLabel);
-            TextMeshProUGUI statusText = CreateText(panel.transform, "Status", new Vector2(18f, -151f), 17);
-            statusText.color = new Color(1f, 0.82f, 0.28f);
+            TextMeshProUGUI moneyText = CreateText(panel.transform, "Money", uiData.MoneyTextPosition,
+                Mathf.RoundToInt(uiData.MoneyFontSize), uiData.ShopTextSize, uiData.ShopTextColor);
+            TextMeshProUGUI npcCountText = CreateText(panel.transform, "NPC Count", uiData.NpcCountTextPosition,
+                Mathf.RoundToInt(uiData.NpcCountFontSize), uiData.ShopTextSize, uiData.ShopTextColor);
+            Button buyButton = CreateButton(panel.transform, "Buy Mining NPC", uiData.BuyButtonPosition,
+                uiData.BuyButtonSize, Mathf.RoundToInt(uiData.BuyButtonFontSize), out TextMeshProUGUI buyLabel);
+            StyleButton(buyButton.transform, uiData.BuyButtonColor, uiData.BuyButtonTextColor,
+                uiData.OutlineColor, uiData.OutlineThickness);
+            TextMeshProUGUI statusText = CreateText(panel.transform, "Status", uiData.StatusTextPosition,
+                Mathf.RoundToInt(uiData.StatusFontSize), uiData.ShopTextSize, uiData.StatusTextColor);
             statusText.text = "Chuột phải: xoay • WASD: di chuyển";
 
             hudSerialized.FindProperty("moneyText").objectReferenceValue = moneyText;
@@ -519,64 +540,104 @@ namespace MiningSimulator.Editor
         }
 
         private static void ConfigureUpgradePanel(GameObject runtime, MiningUpgradePanel panelController,
-            MiningUpgradeSystem upgradeSystem, PlayerWallet wallet, MiningUpgradeData upgradeData)
+            MiningUpgradeSystem upgradeSystem, PlayerWallet wallet, MiningUpgradeData upgradeData,
+            MiningUiData uiData)
         {
             Transform canvas = runtime.transform.Find(HudCanvasName);
             Transform shopPanel = canvas?.Find("NPC Shop");
-            if (canvas == null || shopPanel == null)
+            if (canvas == null || shopPanel == null || uiData == null)
             {
                 return;
             }
 
-            RectTransform shopRect = shopPanel.GetComponent<RectTransform>();
-            if (shopRect != null && shopRect.sizeDelta.y < 260f)
+            CanvasScaler scaler = canvas.GetComponent<CanvasScaler>();
+            if (scaler != null)
             {
-                shopRect.sizeDelta = new Vector2(shopRect.sizeDelta.x, 260f);
+                scaler.referenceResolution = uiData.ReferenceResolution;
+                scaler.matchWidthOrHeight = uiData.MatchWidthOrHeight;
+            }
+
+            RectTransform shopRect = shopPanel.GetComponent<RectTransform>();
+            float requiredShopHeight = Mathf.Abs(uiData.OpenButtonPosition.y) + uiData.OpenButtonSize.y +
+                                       uiData.OutlineThickness;
+            if (shopRect != null && shopRect.sizeDelta.y < requiredShopHeight)
+            {
+                shopRect.sizeDelta = new Vector2(shopRect.sizeDelta.x, requiredShopHeight);
             }
 
             Transform openButtonTransform = shopPanel.Find("Open Upgrades");
             if (openButtonTransform == null)
             {
-                Button openButton = CreateButton(shopPanel, "Open Upgrades", new Vector2(18f, -194f),
-                    new Vector2(294f, 46f), 20, out TextMeshProUGUI openLabel);
+                Button openButton = CreateButton(shopPanel, "Open Upgrades", uiData.OpenButtonPosition,
+                    uiData.OpenButtonSize, Mathf.RoundToInt(uiData.NavigationFontSize), out TextMeshProUGUI openLabel);
                 openLabel.text = "NÂNG CẤP";
                 openButtonTransform = openButton.transform;
             }
+            StyleButton(openButtonTransform, uiData.NavigationButtonColor, uiData.TitleTextColor,
+                uiData.OutlineColor, uiData.OutlineThickness);
 
             Transform upgradePanelTransform = canvas.Find("Upgrade Panel");
             if (upgradePanelTransform == null)
             {
                 GameObject upgradePanel = CreateUiObject("Upgrade Panel", canvas, typeof(Image));
-                RectTransform panelRect = upgradePanel.GetComponent<RectTransform>();
-                panelRect.anchorMin = new Vector2(0.5f, 0.5f);
-                panelRect.anchorMax = new Vector2(0.5f, 0.5f);
-                panelRect.pivot = new Vector2(0.5f, 0.5f);
-                panelRect.anchoredPosition = Vector2.zero;
-                panelRect.sizeDelta = new Vector2(620f, 500f);
-                upgradePanel.GetComponent<Image>().color = new Color(0.035f, 0.045f, 0.06f, 0.97f);
-
-                TextMeshProUGUI title = CreateText(upgradePanel.transform, "Title",
-                    new Vector2(34f, -24f), 30);
-                title.rectTransform.sizeDelta = new Vector2(552f, 48f);
-                title.text = "NÂNG CẤP";
-                title.alignment = TextAlignmentOptions.Center;
-
-                CreateButton(upgradePanel.transform, "Money Reward Upgrade", new Vector2(50f, -92f),
-                    new Vector2(520f, 88f), 20, out TextMeshProUGUI moneyLabel);
-                CreateButton(upgradePanel.transform, "Rare Ore Upgrade", new Vector2(50f, -196f),
-                    new Vector2(520f, 88f), 20, out TextMeshProUGUI rareLabel);
-                CreateButton(upgradePanel.transform, "Ore Damage Upgrade", new Vector2(50f, -300f),
-                    new Vector2(520f, 88f), 20, out TextMeshProUGUI damageLabel);
-                moneyLabel.text = GetUpgradePreview(upgradeData.MoneyReward);
-                rareLabel.text = GetUpgradePreview(upgradeData.RareOreSpawn);
-                damageLabel.text = GetUpgradePreview(upgradeData.OreDamage);
-
-                CreateButton(upgradePanel.transform, "Back", new Vector2(235f, -414f),
-                    new Vector2(150f, 52f), 20, out TextMeshProUGUI backLabel);
-                backLabel.text = "QUAY LẠI";
                 upgradePanelTransform = upgradePanel.transform;
-                upgradePanel.SetActive(false);
             }
+
+            RectTransform panelRect = upgradePanelTransform.GetComponent<RectTransform>();
+            panelRect.anchorMin = new Vector2(0.5f, 0.5f);
+            panelRect.anchorMax = new Vector2(0.5f, 0.5f);
+            panelRect.pivot = new Vector2(0.5f, 0.5f);
+            panelRect.anchoredPosition = Vector2.zero;
+            panelRect.sizeDelta = uiData.PanelSize;
+            Image panelImage = upgradePanelTransform.GetComponent<Image>() ??
+                               upgradePanelTransform.gameObject.AddComponent<Image>();
+            panelImage.color = uiData.PanelColor;
+            ApplyOutline(upgradePanelTransform.gameObject, uiData.OutlineColor, uiData.OutlineThickness);
+
+            Transform header = EnsureUiObject(upgradePanelTransform, "Header", typeof(Image));
+            RectTransform headerRect = header.GetComponent<RectTransform>();
+            headerRect.anchorMin = new Vector2(0f, 1f);
+            headerRect.anchorMax = new Vector2(0f, 1f);
+            headerRect.pivot = new Vector2(0f, 1f);
+            headerRect.anchoredPosition = Vector2.zero;
+            headerRect.sizeDelta = uiData.HeaderSize;
+            header.GetComponent<Image>().color = uiData.HeaderColor;
+            ApplyOutline(header.gameObject, uiData.OutlineColor, uiData.OutlineThickness);
+
+            Transform oldTitle = upgradePanelTransform.Find("Title");
+            if (oldTitle != null)
+            {
+                oldTitle.SetParent(header, false);
+            }
+            TextMeshProUGUI title = EnsureText(header, "Title");
+            StretchRect(title.rectTransform);
+            title.text = "NÂNG CẤP";
+            title.fontSize = uiData.TitleFontSize;
+            title.color = uiData.TitleTextColor;
+            title.alignment = TextAlignmentOptions.Center;
+
+            Button closeButton = EnsureStyledButton(upgradePanelTransform, "Close", uiData.CloseButtonPosition,
+                uiData.CloseButtonSize, uiData.CloseButtonColor, uiData.TitleTextColor, uiData);
+            Image closeImage = closeButton.GetComponent<Image>();
+            closeImage.sprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Knob.psd");
+            closeImage.type = Image.Type.Simple;
+            TextMeshProUGUI closeLabel = closeButton.GetComponentInChildren<TextMeshProUGUI>(true);
+            closeLabel.text = "X";
+            closeLabel.fontSize = uiData.NavigationFontSize;
+
+            EnsureUpgradeCard(upgradePanelTransform, "Money Reward Upgrade", 0,
+                GetUpgradePreview(upgradeData.MoneyReward), uiData);
+            EnsureUpgradeCard(upgradePanelTransform, "Rare Ore Upgrade", 1,
+                GetUpgradePreview(upgradeData.RareOreSpawn), uiData);
+            EnsureUpgradeCard(upgradePanelTransform, "Ore Damage Upgrade", 2,
+                GetUpgradePreview(upgradeData.OreDamage), uiData);
+
+            Button backButton = EnsureStyledButton(upgradePanelTransform, "Back", uiData.BackButtonPosition,
+                uiData.BackButtonSize, uiData.NavigationButtonColor, uiData.TitleTextColor, uiData);
+            TextMeshProUGUI backLabel = backButton.GetComponentInChildren<TextMeshProUGUI>(true);
+            backLabel.text = "QUAY LẠI";
+            backLabel.fontSize = uiData.NavigationFontSize;
+            upgradePanelTransform.gameObject.SetActive(false);
 
             var serialized = new SerializedObject(panelController);
             SetReferenceIfMissing(serialized.FindProperty("upgradeSystem"), upgradeSystem);
@@ -585,6 +646,7 @@ namespace MiningSimulator.Editor
             SetReferenceIfMissing(serialized.FindProperty("upgradePanel"), upgradePanelTransform.gameObject);
             WireUpgradeButton(serialized, "openButton", null, openButtonTransform);
             WireUpgradeButton(serialized, "backButton", null, upgradePanelTransform.Find("Back"));
+            WireUpgradeButton(serialized, "closeButton", null, upgradePanelTransform.Find("Close"));
             WireUpgradeButton(serialized, "moneyRewardButton", "moneyRewardLabel",
                 upgradePanelTransform.Find("Money Reward Upgrade"));
             WireUpgradeButton(serialized, "rareOreSpawnButton", "rareOreSpawnLabel",
@@ -592,6 +654,100 @@ namespace MiningSimulator.Editor
             WireUpgradeButton(serialized, "oreDamageButton", "oreDamageLabel",
                 upgradePanelTransform.Find("Ore Damage Upgrade"));
             serialized.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static Button EnsureUpgradeCard(Transform parent, string name, int index,
+            string preview, MiningUiData uiData)
+        {
+            Vector2 position = uiData.FirstCardPosition + Vector2.down * uiData.CardSpacing * index;
+            Button button = EnsureStyledButton(parent, name, position, uiData.CardSize, uiData.CardColor,
+                uiData.CardTextColor, uiData);
+            TextMeshProUGUI label = button.GetComponentInChildren<TextMeshProUGUI>(true);
+            label.text = preview;
+            label.alignment = TextAlignmentOptions.Left;
+            label.margin = uiData.CardTextMargin;
+            return button;
+        }
+
+        private static Button EnsureStyledButton(Transform parent, string name, Vector2 position,
+            Vector2 size, Color background, Color textColor, MiningUiData uiData)
+        {
+            Transform transform = EnsureUiObject(parent, name, typeof(Image), typeof(Button));
+            RectTransform rect = transform.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0f, 1f);
+            rect.anchorMax = new Vector2(0f, 1f);
+            rect.pivot = new Vector2(0f, 1f);
+            rect.anchoredPosition = position;
+            rect.sizeDelta = size;
+            transform.GetComponent<Image>().color = background;
+            ApplyOutline(transform.gameObject, uiData.OutlineColor, uiData.OutlineThickness);
+
+            TextMeshProUGUI label = EnsureText(transform, "Label");
+            StretchRect(label.rectTransform);
+            label.fontSize = uiData.CardFontSize;
+            label.color = textColor;
+            label.alignment = TextAlignmentOptions.Center;
+            return transform.GetComponent<Button>();
+        }
+
+        private static Transform EnsureUiObject(Transform parent, string name, params Type[] components)
+        {
+            Transform result = parent.Find(name);
+            if (result == null)
+            {
+                result = CreateUiObject(name, parent).transform;
+            }
+            foreach (Type type in components)
+            {
+                if (result.GetComponent(type) == null)
+                {
+                    result.gameObject.AddComponent(type);
+                }
+            }
+            return result;
+        }
+
+        private static TextMeshProUGUI EnsureText(Transform parent, string name)
+        {
+            Transform textTransform = EnsureUiObject(parent, name, typeof(TextMeshProUGUI));
+            return textTransform.GetComponent<TextMeshProUGUI>();
+        }
+
+        private static void StretchRect(RectTransform rect)
+        {
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = Vector2.zero;
+            rect.sizeDelta = Vector2.zero;
+        }
+
+        private static void ApplyOutline(GameObject target, Color color, float thickness)
+        {
+            Outline outline = target.GetComponent<Outline>() ?? target.AddComponent<Outline>();
+            outline.effectColor = color;
+            outline.effectDistance = new Vector2(thickness, -thickness);
+            outline.useGraphicAlpha = true;
+        }
+
+        private static void StyleButton(Transform buttonTransform, Color background, Color textColor,
+            Color outlineColor, float outlineThickness)
+        {
+            if (buttonTransform == null)
+            {
+                return;
+            }
+            Image image = buttonTransform.GetComponent<Image>();
+            if (image != null)
+            {
+                image.color = background;
+            }
+            TextMeshProUGUI label = buttonTransform.GetComponentInChildren<TextMeshProUGUI>(true);
+            if (label != null)
+            {
+                label.color = textColor;
+            }
+            ApplyOutline(buttonTransform.gameObject, outlineColor, outlineThickness);
         }
 
         private static string GetUpgradePreview(MiningUpgradeDefinition definition)
@@ -634,24 +790,25 @@ namespace MiningSimulator.Editor
 
         private static TextMeshProUGUI CreateText(Transform parent, string name, Vector2 position, int size)
         {
+            return CreateText(parent, name, position, size, Vector2.zero, Color.white);
+        }
+
+        private static TextMeshProUGUI CreateText(Transform parent, string name, Vector2 position, int size,
+            Vector2 rectSize, Color color)
+        {
             GameObject textObject = CreateUiObject(name, parent, typeof(TextMeshProUGUI));
             RectTransform rect = textObject.GetComponent<RectTransform>();
             rect.anchorMin = new Vector2(0f, 1f);
             rect.anchorMax = new Vector2(0f, 1f);
             rect.pivot = new Vector2(0f, 1f);
             rect.anchoredPosition = position;
-            rect.sizeDelta = new Vector2(294f, 32f);
+            rect.sizeDelta = rectSize;
 
             TextMeshProUGUI text = textObject.GetComponent<TextMeshProUGUI>();
             text.fontSize = size;
-            text.color = Color.white;
+            text.color = color;
             text.alignment = TextAlignmentOptions.Left;
             return text;
-        }
-
-        private static Button CreateButton(Transform parent, Vector2 position, out TextMeshProUGUI label)
-        {
-            return CreateButton(parent, "Buy Mining NPC", position, new Vector2(294f, 54f), 22, out label);
         }
 
         private static Button CreateButton(Transform parent, string name, Vector2 position,
@@ -665,7 +822,7 @@ namespace MiningSimulator.Editor
             rect.anchoredPosition = position;
             rect.sizeDelta = size;
 
-            buttonObject.GetComponent<Image>().color = new Color(0.95f, 0.57f, 0.1f);
+            buttonObject.GetComponent<Image>().color = Color.white;
             Button button = buttonObject.GetComponent<Button>();
             label = CreateText(buttonObject.transform, "Label", Vector2.zero, fontSize);
             RectTransform labelRect = label.rectTransform;
@@ -763,9 +920,9 @@ namespace MiningSimulator.Editor
             }
 
             barObject.name = "Ore Health Bar";
-            barObject.transform.localPosition = new Vector3(0f, 1.75f, 0f);
+            barObject.transform.localPosition = Vector3.zero;
             barObject.transform.localRotation = Quaternion.identity;
-            barObject.transform.localScale = Vector3.one * 0.65f;
+            barObject.transform.localScale = Vector3.one * ore.Data.HealthBarScale;
             MicroBar bar = barObject.GetComponent<MicroBar>();
             OreHealthBar binding = barObject.AddComponent<OreHealthBar>();
             binding.Configure(ore, bar, barObject.transform);

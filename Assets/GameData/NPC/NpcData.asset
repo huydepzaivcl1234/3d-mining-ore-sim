@@ -32,3 +32,11 @@ MonoBehaviour:
   toolSwingSpeed: 12
   toolSwingAngle: 42
   toolReturnSpeed: 14
+  bodyScale: {x: 0.8, y: 0.9, z: 0.8}
+  helmetLocalPosition: {x: 0, y: 0.86, z: 0.08}
+  helmetLocalScale: {x: 0.9, y: 0.18, z: 0.92}
+  toolLocalPosition: {x: 0.65, y: 0, z: 0}
+  toolLocalEulerAngles: {x: 0, y: 0, z: -25}
+  toolLocalScale: {x: 0.08, y: 0.85, z: 0.08}
+  toolHeadLocalPosition: {x: 0, y: 0.55, z: 0}
+  toolHeadLocalScale: {x: 3.8, y: 0.18, z: 0.65}

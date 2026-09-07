@@ -32,6 +32,16 @@ namespace MiningSimulator.Ores
         [Min(0f), SerializeField] private float toolSwingAngle = 42f;
         [Min(0f), SerializeField] private float toolReturnSpeed = 14f;
 
+        [Header("Generated Prefab Presentation")]
+        [SerializeField] private Vector3 bodyScale = new(0.8f, 0.9f, 0.8f);
+        [SerializeField] private Vector3 helmetLocalPosition = new(0f, 0.86f, 0.08f);
+        [SerializeField] private Vector3 helmetLocalScale = new(0.9f, 0.18f, 0.92f);
+        [SerializeField] private Vector3 toolLocalPosition = new(0.65f, 0f, 0f);
+        [SerializeField] private Vector3 toolLocalEulerAngles = new(0f, 0f, -25f);
+        [SerializeField] private Vector3 toolLocalScale = new(0.08f, 0.85f, 0.08f);
+        [SerializeField] private Vector3 toolHeadLocalPosition = new(0f, 0.55f, 0f);
+        [SerializeField] private Vector3 toolHeadLocalScale = new(3.8f, 0.18f, 0.65f);
+
         public int PurchaseCost => purchaseCost;
         public float SpawnSpread => spawnSpread;
         public float SpawnHeightOffset => spawnHeightOffset;
@@ -50,6 +60,14 @@ namespace MiningSimulator.Ores
         public float ToolSwingSpeed => toolSwingSpeed;
         public float ToolSwingAngle => toolSwingAngle;
         public float ToolReturnSpeed => toolReturnSpeed;
+        public Vector3 BodyScale => bodyScale;
+        public Vector3 HelmetLocalPosition => helmetLocalPosition;
+        public Vector3 HelmetLocalScale => helmetLocalScale;
+        public Vector3 ToolLocalPosition => toolLocalPosition;
+        public Vector3 ToolLocalEulerAngles => toolLocalEulerAngles;
+        public Vector3 ToolLocalScale => toolLocalScale;
+        public Vector3 ToolHeadLocalPosition => toolHeadLocalPosition;
+        public Vector3 ToolHeadLocalScale => toolHeadLocalScale;
 
         private void OnValidate()
         {

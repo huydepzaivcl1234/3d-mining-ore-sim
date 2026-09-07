@@ -46,6 +46,9 @@ namespace MiningSimulator.Ores
         [Min(0.1f), SerializeField] private float groundRayStartHeight = 20f;
         [Min(0.1f), SerializeField] private float groundRayDistance = 50f;
 
+        [Header("Scene Editing")]
+        [SerializeField] private Color spawnAreaGizmoColor = new(0.95f, 0.65f, 0.12f, 0.65f);
+
         public IReadOnlyList<OreSpawnEntry> OreSpawnTable => oreSpawnTable;
         public bool SpawnOnEnable => spawnOnEnable;
         public int InitialSpawnCount => initialSpawnCount;
@@ -63,6 +66,7 @@ namespace MiningSimulator.Ores
         public LayerMask GroundLayers => groundLayers;
         public float GroundRayStartHeight => groundRayStartHeight;
         public float GroundRayDistance => groundRayDistance;
+        public Color SpawnAreaGizmoColor => spawnAreaGizmoColor;
 
         private void OnValidate()
         {

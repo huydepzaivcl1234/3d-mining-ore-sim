@@ -14,6 +14,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private GameObject upgradePanel;
         [SerializeField] private Button openButton;
         [SerializeField] private Button backButton;
+        [SerializeField] private Button closeButton;
         [SerializeField] private Button moneyRewardButton;
         [SerializeField] private Button rareOreSpawnButton;
         [SerializeField] private Button oreDamageButton;
@@ -58,6 +59,7 @@ namespace MiningSimulator.Ores
         {
             openButton?.onClick.AddListener(OpenPanel);
             backButton?.onClick.AddListener(ClosePanel);
+            closeButton?.onClick.AddListener(ClosePanel);
             moneyRewardButton?.onClick.AddListener(BuyMoneyReward);
             rareOreSpawnButton?.onClick.AddListener(BuyRareOreSpawn);
             oreDamageButton?.onClick.AddListener(BuyOreDamage);
@@ -67,6 +69,7 @@ namespace MiningSimulator.Ores
         {
             openButton?.onClick.RemoveListener(OpenPanel);
             backButton?.onClick.RemoveListener(ClosePanel);
+            closeButton?.onClick.RemoveListener(ClosePanel);
             moneyRewardButton?.onClick.RemoveListener(BuyMoneyReward);
             rareOreSpawnButton?.onClick.RemoveListener(BuyRareOreSpawn);
             oreDamageButton?.onClick.RemoveListener(BuyOreDamage);

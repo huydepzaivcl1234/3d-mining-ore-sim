@@ -40,7 +40,11 @@ namespace MiningSimulator.Ores
         [Header("Presentation")]
         [SerializeField] private bool rareOre;
         [SerializeField] private Vector3 spawnRotationOffset;
-        [Min(0f), SerializeField] private float spawnHeightOffset;
+        [Tooltip("Extra world-space height applied after the collider is placed above the ground.")]
+        [SerializeField] private float spawnHeightOffset;
+        [Tooltip("World-space offset from the top-center of the ore collider bounds.")]
+        [SerializeField] private Vector3 healthBarWorldOffset = new(0f, 0.25f, 0f);
+        [Min(0.01f), SerializeField] private float healthBarScale = 0.65f;
         [SerializeField] private GameObject prefab;
         [SerializeField] private Color mapColor = Color.gray;
 
@@ -59,6 +63,8 @@ namespace MiningSimulator.Ores
         public bool RareOre => rareOre;
         public Vector3 SpawnRotationOffset => spawnRotationOffset;
         public float SpawnHeightOffset => spawnHeightOffset;
+        public Vector3 HealthBarWorldOffset => healthBarWorldOffset;
+        public float HealthBarScale => healthBarScale;
         public GameObject Prefab => prefab;
         public Color MapColor => mapColor;
 
@@ -72,7 +78,7 @@ namespace MiningSimulator.Ores
             destroyDelay = Mathf.Max(0f, destroyDelay);
             maximumMiningNpcs = Mathf.Max(1, maximumMiningNpcs);
             npcStandDistance = Mathf.Max(0.1f, npcStandDistance);
-            spawnHeightOffset = Mathf.Max(0f, spawnHeightOffset);
+            healthBarScale = Mathf.Max(0.01f, healthBarScale);
         }
     }
 }

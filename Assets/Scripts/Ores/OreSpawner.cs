@@ -291,7 +291,7 @@ namespace MiningSimulator.Ores
                 return;
             }
 
-            Gizmos.color = new Color(0.95f, 0.65f, 0.12f, 0.65f);
+            Gizmos.color = spawnData.SpawnAreaGizmoColor;
             Matrix4x4 previous = Gizmos.matrix;
             Gizmos.matrix = transform.localToWorldMatrix;
             Gizmos.DrawWireCube(spawnData.AreaCenter, spawnData.AreaSize);
