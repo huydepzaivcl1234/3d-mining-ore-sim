@@ -31,6 +31,7 @@ namespace MiningSimulator.Ores
         private Vector3 lastProgressPosition;
         private bool hasMoveTarget;
         private bool isMining;
+        private bool useFallbackMiningPosition;
 
         public void ConfigureTool(Transform targetToolPivot)
         {
@@ -87,9 +88,9 @@ namespace MiningSimulator.Ores
                 ReleaseTarget();
             }
 
-            if (Time.time >= nextTargetRefreshTime)
+            if (targetOre == null && Time.time >= nextTargetRefreshTime)
             {
-                ReevaluateTarget();
+                TryAcquireTarget(body != null ? body.position : transform.position);
                 nextTargetRefreshTime = Time.time + npcData.TargetRefreshInterval;
             }
 
@@ -106,10 +107,14 @@ namespace MiningSimulator.Ores
             oreOffset.y = 0f;
             desiredFacingDirection = oreOffset;
 
+            bool isWithinMiningRange = targetOre.SqrDistanceToSurface(currentPosition) <=
+                                       npcData.MiningRange * npcData.MiningRange;
+
             float movementThreshold = isMining
                 ? npcData.ResumeMovingDistance
                 : npcData.MiningPositionTolerance;
-            if (standOffset.sqrMagnitude > movementThreshold * movementThreshold)
+            if (!useFallbackMiningPosition &&
+                standOffset.sqrMagnitude > movementThreshold * movementThreshold)
             {
                 isMining = false;
                 desiredMoveTarget = standPosition;
@@ -119,10 +124,13 @@ namespace MiningSimulator.Ores
             }
 
             ResetProgressTracking();
-            if (targetOre.SqrDistanceToSurface(currentPosition) >
-                npcData.MiningRange * npcData.MiningRange)
+            if (!isWithinMiningRange)
             {
+                useFallbackMiningPosition = false;
                 isMining = false;
+                desiredMoveTarget = standPosition;
+                hasMoveTarget = true;
+                TrackMovementProgress(currentPosition);
                 return;
             }
 
@@ -164,7 +172,8 @@ namespace MiningSimulator.Ores
             if (TryGetBlockingOre(movementDirection, probeDistance, out Ore blockingOre,
                 out Vector3 blockingPoint))
             {
-                if (Time.time >= nextTargetSwitchTime && CanMine(blockingOre) &&
+                if (Time.time >= nextTargetSwitchTime && blockingOre != ignoredOre &&
+                    CanMine(blockingOre) && IsBlockingOreCloser(blockingOre, currentPosition) &&
                     TrySwitchTarget(blockingOre))
                 {
                     ApplyHorizontalVelocity(Vector3.zero, npcData.BrakingAcceleration);
@@ -208,38 +217,6 @@ namespace MiningSimulator.Ores
                 toolPivot.localRotation, targetRotation, npcData.ToolReturnSpeed * Time.deltaTime);
         }
 
-        private void ReevaluateTarget()
-        {
-            Vector3 currentPosition = body != null ? body.position : transform.position;
-            if (targetOre == null)
-            {
-                TryAcquireTarget(currentPosition);
-                return;
-            }
-
-            if (Time.time < nextTargetSwitchTime)
-            {
-                return;
-            }
-
-            Ore temporarilyIgnoredOre = Time.time < ignoredOreUntil ? ignoredOre : null;
-            if (!oreSpawner.TryReserveClosestOre(this, currentPosition, npcData.MiningPower,
-                targetOre, temporarilyIgnoredOre, out Ore closerOre, out int closerSlot))
-            {
-                return;
-            }
-
-            float currentDistance = Mathf.Sqrt(targetOre.SqrDistanceToSurface(currentPosition));
-            float closerDistance = Mathf.Sqrt(closerOre.SqrDistanceToSurface(currentPosition));
-            if (closerDistance + npcData.TargetSwitchDistanceAdvantage >= currentDistance)
-            {
-                closerOre.ReleaseMiner(this);
-                return;
-            }
-
-            SetTarget(closerOre, closerSlot);
-        }
-
         private void TryAcquireTarget(Vector3 currentPosition)
         {
             Ore excludedOre = Time.time < ignoredOreUntil ? ignoredOre : null;
@@ -274,9 +251,12 @@ namespace MiningSimulator.Ores
             if (previousOre != null && previousOre != ore)
             {
                 previousOre.ReleaseMiner(this);
+                ignoredOre = previousOre;
+                ignoredOreUntil = Time.time + npcData.IgnoredTargetDuration;
             }
 
             isMining = false;
+            useFallbackMiningPosition = false;
             nextTargetSwitchTime = Time.time + npcData.TargetSwitchCooldown;
             ResetProgressTracking();
         }
@@ -310,6 +290,7 @@ namespace MiningSimulator.Ores
             reservedSlot = -1;
             hasMoveTarget = false;
             isMining = false;
+            useFallbackMiningPosition = false;
         }
 
         private void TrackMovementProgress(Vector3 currentPosition)
@@ -328,11 +309,33 @@ namespace MiningSimulator.Ores
                 return;
             }
 
+            if (targetOre != null && targetOre.SqrDistanceToSurface(currentPosition) <=
+                npcData.MiningRange * npcData.MiningRange)
+            {
+                useFallbackMiningPosition = true;
+                hasMoveTarget = false;
+                isMining = true;
+                ResetProgressTracking();
+                return;
+            }
+
             ignoredOre = targetOre;
             ignoredOreUntil = Time.time + npcData.IgnoredTargetDuration;
             ReleaseTarget();
             nextTargetRefreshTime = 0f;
             ResetProgressTracking();
+        }
+
+        private bool IsBlockingOreCloser(Ore blockingOre, Vector3 currentPosition)
+        {
+            if (blockingOre == null || targetOre == null)
+            {
+                return false;
+            }
+
+            float blockingDistance = Mathf.Sqrt(blockingOre.SqrDistanceToSurface(currentPosition));
+            float targetDistance = Mathf.Sqrt(targetOre.SqrDistanceToSurface(currentPosition));
+            return blockingDistance + npcData.TargetSwitchDistanceAdvantage < targetDistance;
         }
 
         private void ResetProgressTracking()

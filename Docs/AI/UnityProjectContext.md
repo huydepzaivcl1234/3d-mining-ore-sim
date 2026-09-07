@@ -68,7 +68,9 @@
 - NPC miners reserve limited slots around compatible ores and use Rigidbody/CapsuleCollider collision.
 - NPC movement and rotation are owned by `FixedUpdate`. Velocity acceleration/braking, collider-safe
   mining slots, arrival tolerance, local NPC separation, ore obstacle steering, stuck recovery,
-  and cooldown-limited nearest-compatible target switching are configured in `NpcData`.
+  committed targets, and cooldown-limited blocking-ore switching are configured in `NpcData`.
+  A reserved NPC that is physically blocked but already within mining range mines from its current
+  position instead of idling indefinitely.
 - Rarity is explicit (`Common`, `Uncommon`, `Rare`, `Epic`, `Legendary`). Zero-weight Rare+
   ores unlock progressively through the rare-spawn upgrade using rarity rules in `OreSpawnData`.
 - Upgrade data also controls ore-spawn speed and NPC movement speed stacks, costs, and per-stack percentages.
