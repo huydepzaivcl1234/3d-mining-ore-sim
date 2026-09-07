@@ -21,7 +21,7 @@ MonoBehaviour:
   clickDamage: 5
   baseSellValue: 35
   destroyDelay: 0
-  maximumMiningNpcs: 3
+  maximumMiningNpcs: 5
   npcStandDistance: 1.4
   rareOre: 0
   rarity: 2
