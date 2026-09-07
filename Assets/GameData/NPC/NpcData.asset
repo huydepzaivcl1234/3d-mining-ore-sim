@@ -20,8 +20,6 @@ MonoBehaviour:
   turnSpeed: 720
   miningRange: 1.8
   stoppingDistance: 0.12
-  miningPositionTolerance: 0.3
-  resumeMovingDistance: 0.45
   movementAcceleration: 18
   brakingAcceleration: 28
   targetSwitchDistanceAdvantage: 0.25

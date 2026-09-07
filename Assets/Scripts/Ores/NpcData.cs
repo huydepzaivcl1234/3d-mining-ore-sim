@@ -17,8 +17,6 @@ namespace MiningSimulator.Ores
         [Min(0f), SerializeField] private float turnSpeed = 720f;
         [Min(0.1f), SerializeField] private float miningRange = 1.8f;
         [Min(0.01f), SerializeField] private float stoppingDistance = 0.12f;
-        [Min(0.01f), SerializeField] private float miningPositionTolerance = 0.3f;
-        [Min(0.01f), SerializeField] private float resumeMovingDistance = 0.45f;
         [Min(0.1f), SerializeField] private float movementAcceleration = 18f;
         [Min(0.1f), SerializeField] private float brakingAcceleration = 28f;
         [Min(0f), SerializeField] private float targetSwitchDistanceAdvantage = 0.25f;
@@ -68,8 +66,6 @@ namespace MiningSimulator.Ores
         public float TurnSpeed => turnSpeed;
         public float MiningRange => miningRange;
         public float StoppingDistance => stoppingDistance;
-        public float MiningPositionTolerance => miningPositionTolerance;
-        public float ResumeMovingDistance => resumeMovingDistance;
         public float MovementAcceleration => movementAcceleration;
         public float BrakingAcceleration => brakingAcceleration;
         public float TargetSwitchDistanceAdvantage => targetSwitchDistanceAdvantage;
@@ -112,8 +108,6 @@ namespace MiningSimulator.Ores
             turnSpeed = Mathf.Max(0f, turnSpeed);
             miningRange = Mathf.Max(0.1f, miningRange);
             stoppingDistance = Mathf.Max(0.01f, stoppingDistance);
-            miningPositionTolerance = Mathf.Max(stoppingDistance, miningPositionTolerance);
-            resumeMovingDistance = Mathf.Max(miningPositionTolerance, resumeMovingDistance);
             movementAcceleration = Mathf.Max(0.1f, movementAcceleration);
             brakingAcceleration = Mathf.Max(0.1f, brakingAcceleration);
             targetSwitchDistanceAdvantage = Mathf.Max(0f, targetSwitchDistanceAdvantage);

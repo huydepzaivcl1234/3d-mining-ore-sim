@@ -31,7 +31,6 @@ namespace MiningSimulator.Ores
         private Vector3 lastProgressPosition;
         private bool hasMoveTarget;
         private bool isMining;
-        private bool useFallbackMiningPosition;
 
         public void ConfigureTool(Transform targetToolPivot)
         {
@@ -101,8 +100,6 @@ namespace MiningSimulator.Ores
 
             Vector3 currentPosition = body != null ? body.position : transform.position;
             Vector3 standPosition = GetReservedStandPosition();
-            Vector3 standOffset = standPosition - currentPosition;
-            standOffset.y = 0f;
             Vector3 oreOffset = targetOre.transform.position - currentPosition;
             oreOffset.y = 0f;
             desiredFacingDirection = oreOffset;
@@ -110,11 +107,7 @@ namespace MiningSimulator.Ores
             bool isWithinMiningRange = targetOre.SqrDistanceToSurface(currentPosition) <=
                                        npcData.MiningRange * npcData.MiningRange;
 
-            float movementThreshold = isMining
-                ? npcData.ResumeMovingDistance
-                : npcData.MiningPositionTolerance;
-            if (!useFallbackMiningPosition &&
-                standOffset.sqrMagnitude > movementThreshold * movementThreshold)
+            if (!isWithinMiningRange)
             {
                 isMining = false;
                 desiredMoveTarget = standPosition;
@@ -124,16 +117,6 @@ namespace MiningSimulator.Ores
             }
 
             ResetProgressTracking();
-            if (!isWithinMiningRange)
-            {
-                useFallbackMiningPosition = false;
-                isMining = false;
-                desiredMoveTarget = standPosition;
-                hasMoveTarget = true;
-                TrackMovementProgress(currentPosition);
-                return;
-            }
-
             isMining = true;
             if (Time.time < nextHitTime)
             {
@@ -256,7 +239,7 @@ namespace MiningSimulator.Ores
             }
 
             isMining = false;
-            useFallbackMiningPosition = false;
+            nextHitTime = 0f;
             nextTargetSwitchTime = Time.time + npcData.TargetSwitchCooldown;
             ResetProgressTracking();
         }
@@ -290,7 +273,6 @@ namespace MiningSimulator.Ores
             reservedSlot = -1;
             hasMoveTarget = false;
             isMining = false;
-            useFallbackMiningPosition = false;
         }
 
         private void TrackMovementProgress(Vector3 currentPosition)
@@ -306,16 +288,6 @@ namespace MiningSimulator.Ores
 
             if (Time.time - lastProgressTime < npcData.StuckTimeout)
             {
-                return;
-            }
-
-            if (targetOre != null && targetOre.SqrDistanceToSurface(currentPosition) <=
-                npcData.MiningRange * npcData.MiningRange)
-            {
-                useFallbackMiningPosition = true;
-                hasMoveTarget = false;
-                isMining = true;
-                ResetProgressTracking();
                 return;
             }
 
