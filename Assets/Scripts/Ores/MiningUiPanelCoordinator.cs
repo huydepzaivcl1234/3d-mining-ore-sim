@@ -131,7 +131,7 @@ namespace MiningSimulator.Ores
         private void AnimateBasePanels(bool visible)
         {
             AnimateBasePanel(shopPanel, shopHome, Vector2.left, visible);
-            AnimateBasePanel(rebirthHud, rebirthHome, Vector2.right, visible);
+            AnimateBasePanel(rebirthHud, rebirthHome, Vector2.up, visible);
             AnimateBasePanel(audioMenuButton, audioMenuHome, Vector2.right, visible);
         }
 
@@ -152,7 +152,7 @@ namespace MiningSimulator.Ores
         private void SetBasePanelsImmediately(bool visible)
         {
             SetBasePanelImmediately(shopPanel, shopHome, Vector2.left, visible);
-            SetBasePanelImmediately(rebirthHud, rebirthHome, Vector2.right, visible);
+            SetBasePanelImmediately(rebirthHud, rebirthHome, Vector2.up, visible);
             SetBasePanelImmediately(audioMenuButton, audioMenuHome, Vector2.right, visible);
         }
 
