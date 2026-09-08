@@ -20,6 +20,7 @@ namespace MiningSimulator.Ores
         private bool destroyOnDeplete = true;
         private float damageRemainder;
         private Collider[] miningColliders;
+        private MiningHitPunch hitPunch;
         private readonly Dictionary<MiningNpc, int> reservedMiners = new();
 
         public OreData Data => data;
@@ -189,12 +190,14 @@ namespace MiningSimulator.Ores
         private void Awake()
         {
             miningColliders = GetComponentsInChildren<Collider>();
+            ConfigureHitPunch();
             ResetDurability();
         }
 
         public void SetData(OreData oreData)
         {
             data = oreData;
+            ConfigureHitPunch();
             ResetDurability();
         }
 
@@ -206,6 +209,7 @@ namespace MiningSimulator.Ores
             upgradeSystem = targetUpgradeSystem;
             destroyOnDeplete = shouldDestroyOnDeplete;
             miningColliders = GetComponentsInChildren<Collider>();
+            ConfigureHitPunch();
             ResetDurability();
         }
 
@@ -234,6 +238,7 @@ namespace MiningSimulator.Ores
             int appliedDamage = Mathf.Max(1, Mathf.FloorToInt(upgradedDamage));
             damageRemainder = upgradedDamage - appliedDamage;
             currentDurability = Mathf.Max(0, currentDurability - appliedDamage);
+            hitPunch?.Play();
             DurabilityChanged?.Invoke(currentDurability, MaxDurability);
             if (currentDurability == 0)
             {
@@ -256,6 +261,7 @@ namespace MiningSimulator.Ores
             }
 
             currentDurability = Mathf.Max(0, currentDurability - Mathf.Max(1, miningPower));
+            hitPunch?.Play();
             if (currentDurability == 0)
             {
                 moneyEarned = data.BaseSellValue;
@@ -297,6 +303,20 @@ namespace MiningSimulator.Ores
         private void OnDisable()
         {
             reservedMiners.Clear();
+            hitPunch?.ResetImmediately();
+        }
+
+        private void ConfigureHitPunch()
+        {
+            if (data == null)
+            {
+                return;
+            }
+
+            hitPunch ??= GetComponent<MiningHitPunch>();
+            hitPunch ??= gameObject.AddComponent<MiningHitPunch>();
+            hitPunch.Configure(transform, data.HitPunchScale, data.HitPunchLift,
+                data.HitPunchDuration);
         }
 
         private void RemoveMissingReservations()

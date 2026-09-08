@@ -10,7 +10,9 @@ namespace MiningSimulator.Ores
         OreDamage = 2,
         OreSpawnSpeed = 3,
         NpcMoveSpeed = 4,
-        NpcCapacity = 5
+        NpcCapacity = 5,
+        LuckyBlockReward = 6,
+        LuckyBlockDropChance = 7
     }
 
     [Serializable]
@@ -83,12 +85,24 @@ namespace MiningSimulator.Ores
         [SerializeField] private MiningUpgradeDefinition npcCapacity =
             new("Tăng giới hạn thợ mỏ", 1f, 25, 50, 25);
 
+        [Header("Lucky Block Reward")]
+        [SerializeField] private MiningUpgradeDefinition luckyBlockReward =
+            new("Tăng tiền Lucky Block", 1f);
+
+        [Header("Lucky Block Drop Chance")]
+        [SerializeField] private MiningUpgradeDefinition luckyBlockDropChance =
+            new("Tăng tỉ lệ Lucky Block", 1f);
+
         public MiningUpgradeDefinition MoneyReward => moneyReward;
         public MiningUpgradeDefinition RareOreSpawn => rareOreSpawn;
         public MiningUpgradeDefinition OreDamage => oreDamage;
         public MiningUpgradeDefinition OreSpawnSpeed => oreSpawnSpeed;
         public MiningUpgradeDefinition NpcMoveSpeed => npcMoveSpeed;
         public MiningUpgradeDefinition NpcCapacity => npcCapacity;
+        public MiningUpgradeDefinition LuckyBlockReward => luckyBlockReward ??=
+            new MiningUpgradeDefinition("Tăng tiền Lucky Block", 1f);
+        public MiningUpgradeDefinition LuckyBlockDropChance => luckyBlockDropChance ??=
+            new MiningUpgradeDefinition("Tăng tỉ lệ Lucky Block", 1f);
 
         public MiningUpgradeDefinition GetDefinition(MiningUpgradeType type)
         {
@@ -100,6 +114,8 @@ namespace MiningSimulator.Ores
                 MiningUpgradeType.OreSpawnSpeed => oreSpawnSpeed,
                 MiningUpgradeType.NpcMoveSpeed => npcMoveSpeed,
                 MiningUpgradeType.NpcCapacity => npcCapacity,
+                MiningUpgradeType.LuckyBlockReward => LuckyBlockReward,
+                MiningUpgradeType.LuckyBlockDropChance => LuckyBlockDropChance,
                 _ => moneyReward
             };
         }
@@ -112,6 +128,8 @@ namespace MiningSimulator.Ores
             oreSpawnSpeed?.Validate();
             npcMoveSpeed?.Validate();
             npcCapacity?.Validate();
+            LuckyBlockReward.Validate();
+            LuckyBlockDropChance.Validate();
         }
     }
 }

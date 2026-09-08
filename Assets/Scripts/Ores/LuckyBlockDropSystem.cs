@@ -12,6 +12,7 @@ namespace MiningSimulator.Ores
         [Header("References")]
         [SerializeField] private LuckyBlockData data;
         [SerializeField] private PlayerWallet wallet;
+        [SerializeField] private MiningUpgradeSystem upgradeSystem;
         [SerializeField] private OreSpawnData oreSpawnData;
         [SerializeField] private Transform spawnAreaOrigin;
         [SerializeField] private Transform droppedBlockParent;
@@ -29,6 +30,15 @@ namespace MiningSimulator.Ores
 
         public int ActiveCount => activeBlocks.Count;
         public int PooledCount => pooledBlocks.Count;
+
+        private void Awake()
+        {
+            if (upgradeSystem == null)
+            {
+                upgradeSystem = FindFirstObjectByType<MiningUpgradeSystem>(
+                    FindObjectsInactive.Include);
+            }
+        }
 
         public bool TryReserveClosestBlock(MiningNpc miner, Vector3 origin, int miningPower,
             LuckyBlock excludedBlock, out LuckyBlock reservedBlock, out int slotIndex)
@@ -110,7 +120,11 @@ namespace MiningSimulator.Ores
             while (enabled)
             {
                 yield return new WaitForSeconds(data.DropCheckIntervalSeconds);
-                float chance = data.DropChancePerCheckPercent;
+                float chanceMultiplier = upgradeSystem != null
+                    ? upgradeSystem.GetMultiplier(MiningUpgradeType.LuckyBlockDropChance)
+                    : 1f;
+                float chance = Mathf.Clamp(data.DropChancePerCheckPercent * chanceMultiplier,
+                    0f, 100f);
                 if (activeBlocks.Count >= data.MaximumActiveBlocks || chance <= 0f ||
                     (chance < 100f && Random.value >= chance * 0.01f))
                 {
@@ -160,7 +174,7 @@ namespace MiningSimulator.Ores
             float minimumSpin = Mathf.Min(data.FallingSpinRange.x, data.FallingSpinRange.y);
             float maximumSpin = Mathf.Max(data.FallingSpinRange.x, data.FallingSpinRange.y);
             block.Initialize(variant, data, wallet, block.transform.GetChild(0),
-                Random.Range(minimumSpin, maximumSpin));
+                Random.Range(minimumSpin, maximumSpin), upgradeSystem);
             Subscribe(block);
             activeBlocks.Add(block);
             return true;

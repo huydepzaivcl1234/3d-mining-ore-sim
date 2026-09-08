@@ -79,6 +79,7 @@ namespace MiningSimulator.Ores
 
         [Header("Feedback")]
         [Range(0f, 0.5f), SerializeField] private float hitPunchScale = 0.10f;
+        [Min(0f), SerializeField] private float hitPunchLift = 0.12f;
         [Min(0.01f), SerializeField] private float hitPunchDuration = 0.16f;
 
         [Header("Health Bar")]
@@ -107,6 +108,7 @@ namespace MiningSimulator.Ores
         public float MaximumLifetimeSeconds => maximumLifetimeSeconds;
         public float RecycleBelowWorldY => recycleBelowWorldY;
         public float HitPunchScale => hitPunchScale;
+        public float HitPunchLift => hitPunchLift;
         public float HitPunchDuration => hitPunchDuration;
         public Vector3 HealthBarWorldOffset => healthBarWorldOffset;
         public float HealthBarScale => healthBarScale;
@@ -127,6 +129,7 @@ namespace MiningSimulator.Ores
             angularDamping = Mathf.Max(0f, angularDamping);
             maximumLifetimeSeconds = Mathf.Max(1f, maximumLifetimeSeconds);
             hitPunchScale = Mathf.Clamp(hitPunchScale, 0f, 0.5f);
+            hitPunchLift = Mathf.Max(0f, hitPunchLift);
             hitPunchDuration = Mathf.Max(0.01f, hitPunchDuration);
             healthBarScale = Mathf.Max(0.01f, healthBarScale);
             maximumPooledBlocks = Mathf.Max(0, maximumPooledBlocks);

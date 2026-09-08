@@ -63,12 +63,16 @@ namespace MiningSimulator.Ores
         [SerializeField] private Sprite oreSpawnSpeedIconSprite;
         [SerializeField] private Sprite npcMoveSpeedIconSprite;
         [SerializeField] private Sprite npcCapacityIconSprite;
+        [SerializeField] private Sprite luckyBlockRewardIconSprite;
+        [SerializeField] private Sprite luckyBlockDropChanceIconSprite;
         [SerializeField] private string moneyRewardIconFallback = "$";
         [SerializeField] private string rareOreIconFallback = "R";
         [SerializeField] private string oreDamageIconFallback = "!";
         [SerializeField] private string oreSpawnSpeedIconFallback = "S";
         [SerializeField] private string npcMoveSpeedIconFallback = ">>";
         [SerializeField] private string npcCapacityIconFallback = "+1";
+        [SerializeField] private string luckyBlockRewardIconFallback = "L$";
+        [SerializeField] private string luckyBlockDropChanceIconFallback = "L%";
 
         [Header("Smooth Button Animation")]
         [SerializeField] private bool smoothButtonAnimationEnabled = true;
@@ -135,6 +139,10 @@ namespace MiningSimulator.Ores
         [SerializeField] private Vector2 closeButtonPosition = new(678f, -12f);
         [SerializeField] private Vector2 backButtonSize = new(180f, 54f);
         [SerializeField] private Vector2 backButtonPosition = new(270f, -706f);
+        [Tooltip("Minimum panel height used when all Lucky Block upgrade cards are present.")]
+        [Min(1f), SerializeField] private float expandedUpgradePanelMinimumHeight = 960f;
+        [Tooltip("Back button Y position used when all Lucky Block upgrade cards are present.")]
+        [SerializeField] private float expandedUpgradeBackButtonY = -878f;
         [SerializeField] private Vector2 openButtonSize = new(294f, 46f);
         [SerializeField] private Vector2 openButtonPosition = new(18f, -266f);
         [Min(0f), SerializeField] private float outlineThickness = 4f;
@@ -239,12 +247,18 @@ namespace MiningSimulator.Ores
         public Sprite OreSpawnSpeedIconSprite => oreSpawnSpeedIconSprite;
         public Sprite NpcMoveSpeedIconSprite => npcMoveSpeedIconSprite;
         public Sprite NpcCapacityIconSprite => npcCapacityIconSprite;
+        public Sprite LuckyBlockRewardIconSprite => luckyBlockRewardIconSprite;
+        public Sprite LuckyBlockDropChanceIconSprite => luckyBlockDropChanceIconSprite;
         public string MoneyRewardIconFallback => moneyRewardIconFallback;
         public string RareOreIconFallback => rareOreIconFallback;
         public string OreDamageIconFallback => oreDamageIconFallback;
         public string OreSpawnSpeedIconFallback => oreSpawnSpeedIconFallback;
         public string NpcMoveSpeedIconFallback => npcMoveSpeedIconFallback;
         public string NpcCapacityIconFallback => npcCapacityIconFallback;
+        public string LuckyBlockRewardIconFallback => string.IsNullOrWhiteSpace(
+            luckyBlockRewardIconFallback) ? "L$" : luckyBlockRewardIconFallback;
+        public string LuckyBlockDropChanceIconFallback => string.IsNullOrWhiteSpace(
+            luckyBlockDropChanceIconFallback) ? "L%" : luckyBlockDropChanceIconFallback;
         public bool SmoothButtonAnimationEnabled => smoothButtonAnimationEnabled;
         public float ButtonHoverScale => buttonHoverScale;
         public float ButtonHoverPunchScale => buttonHoverPunchScale;
@@ -299,6 +313,11 @@ namespace MiningSimulator.Ores
         public Vector2 CloseButtonPosition => closeButtonPosition;
         public Vector2 BackButtonSize => backButtonSize;
         public Vector2 BackButtonPosition => backButtonPosition;
+        public float ExpandedUpgradePanelMinimumHeight => Mathf.Max(panelSize.y,
+            expandedUpgradePanelMinimumHeight > 0f ? expandedUpgradePanelMinimumHeight : 960f);
+        public float ExpandedUpgradeBackButtonY => expandedUpgradeBackButtonY < 0f
+            ? expandedUpgradeBackButtonY
+            : -878f;
         public Vector2 OpenButtonSize => openButtonSize;
         public Vector2 OpenButtonPosition => openButtonPosition;
         public float OutlineThickness => outlineThickness;
@@ -349,6 +368,8 @@ namespace MiningSimulator.Ores
             referenceResolution.y = Mathf.Max(1f, referenceResolution.y);
             panelSize.x = Mathf.Max(1f, panelSize.x);
             panelSize.y = Mathf.Max(1f, panelSize.y);
+            expandedUpgradePanelMinimumHeight = Mathf.Max(panelSize.y,
+                expandedUpgradePanelMinimumHeight);
             headerSize.x = Mathf.Max(1f, headerSize.x);
             headerSize.y = Mathf.Max(1f, headerSize.y);
             cardSize.x = Mathf.Max(1f, cardSize.x);

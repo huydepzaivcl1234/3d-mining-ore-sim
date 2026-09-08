@@ -15,16 +15,15 @@ namespace MiningSimulator.Ores
         private LuckyBlockVariantData variant;
         private LuckyBlockData settings;
         private PlayerWallet wallet;
+        private MiningUpgradeSystem upgradeSystem;
         private Rigidbody body;
         private Transform visualRoot;
-        private Vector3 baseVisualScale = Vector3.one;
         private Vector3 authoredVisualLocalPosition;
         private Quaternion authoredVisualLocalRotation = Quaternion.identity;
         private Vector3 authoredVisualLocalScale = Vector3.one;
         private bool hasAuthoredVisualTransform;
         private float lifetime;
-        private float punchElapsed;
-        private bool punchPlaying;
+        private MiningHitPunch hitPunch;
         private bool resolved;
         private bool hasLanded;
         private readonly Dictionary<MiningNpc, int> reservedMiners = new();
@@ -148,7 +147,6 @@ namespace MiningSimulator.Ores
             authoredVisualLocalPosition = visualRoot.localPosition;
             authoredVisualLocalRotation = visualRoot.localRotation;
             authoredVisualLocalScale = visualRoot.localScale;
-            baseVisualScale = authoredVisualLocalScale;
             hasAuthoredVisualTransform = true;
         }
 
@@ -162,15 +160,16 @@ namespace MiningSimulator.Ores
             visualRoot.SetLocalPositionAndRotation(authoredVisualLocalPosition,
                 authoredVisualLocalRotation);
             visualRoot.localScale = authoredVisualLocalScale;
-            baseVisualScale = authoredVisualLocalScale;
         }
 
         public void Initialize(LuckyBlockVariantData targetVariant, LuckyBlockData targetSettings,
-            PlayerWallet targetWallet, Transform targetVisualRoot, float spinDegreesPerSecond)
+            PlayerWallet targetWallet, Transform targetVisualRoot, float spinDegreesPerSecond,
+            MiningUpgradeSystem targetUpgradeSystem = null)
         {
             variant = targetVariant;
             settings = targetSettings;
             wallet = targetWallet;
+            upgradeSystem = targetUpgradeSystem;
             if (visualRoot != targetVisualRoot || !hasAuthoredVisualTransform)
             {
                 ConfigureVisualRoot(targetVisualRoot);
@@ -179,15 +178,15 @@ namespace MiningSimulator.Ores
             currentDurability = Mathf.Max(1, variant.Durability);
             resolved = false;
             lifetime = 0f;
-            punchElapsed = 0f;
-            punchPlaying = false;
             hasLanded = false;
             reservedMiners.Clear();
             body ??= GetComponent<Rigidbody>();
             if (visualRoot != null)
             {
-                baseVisualScale = visualRoot.localScale;
-                visualRoot.localScale = baseVisualScale;
+                hitPunch ??= GetComponent<MiningHitPunch>();
+                hitPunch ??= gameObject.AddComponent<MiningHitPunch>();
+                hitPunch.Configure(visualRoot, settings.HitPunchScale, settings.HitPunchLift,
+                    settings.HitPunchDuration);
             }
 
             body.mass = settings.Mass;
@@ -222,17 +221,18 @@ namespace MiningSimulator.Ores
             }
 
             currentDurability = Mathf.Max(0, currentDurability - damage);
+            hitPunch?.Play();
             DurabilityChanged?.Invoke(currentDurability, MaximumDurability);
             if (currentDurability > 0)
             {
-                punchElapsed = 0f;
-                punchPlaying = true;
                 Damaged?.Invoke(this);
                 return true;
             }
 
             resolved = true;
-            int reward = Mathf.Max(0, variant.MoneyReward);
+            int reward = upgradeSystem != null
+                ? upgradeSystem.CalculateLuckyBlockReward(variant.MoneyReward)
+                : Mathf.Max(0, variant.MoneyReward);
             wallet?.AddMoney(reward);
             RewardGranted?.Invoke(this, reward);
             Broken?.Invoke(this);
@@ -264,34 +264,12 @@ namespace MiningSimulator.Ores
                 return;
             }
 
-            UpdateHitPunch();
-        }
-
-        private void UpdateHitPunch()
-        {
-            if (!punchPlaying || visualRoot == null)
-            {
-                return;
-            }
-
-            punchElapsed += Time.deltaTime;
-            float progress = Mathf.Clamp01(punchElapsed / settings.HitPunchDuration);
-            float punch = Mathf.Sin(progress * Mathf.PI) * settings.HitPunchScale;
-            visualRoot.localScale = baseVisualScale * (1f + punch);
-            if (progress >= 1f)
-            {
-                visualRoot.localScale = baseVisualScale;
-                punchPlaying = false;
-            }
         }
 
         private void OnDisable()
         {
             reservedMiners.Clear();
-            if (visualRoot != null)
-            {
-                visualRoot.localScale = baseVisualScale;
-            }
+            hitPunch?.ResetImmediately();
 
             if (body != null)
             {

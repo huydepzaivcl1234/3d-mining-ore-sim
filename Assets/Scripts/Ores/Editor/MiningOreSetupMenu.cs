@@ -938,7 +938,10 @@ namespace MiningSimulator.Editor
             panelRect.anchorMax = new Vector2(0.5f, 0.5f);
             panelRect.pivot = new Vector2(0.5f, 0.5f);
             panelRect.anchoredPosition = Vector2.zero;
-            panelRect.sizeDelta = uiData.PanelSize;
+            Vector2 upgradePanelSize = uiData.PanelSize;
+            upgradePanelSize.y = Mathf.Max(upgradePanelSize.y,
+                uiData.ExpandedUpgradePanelMinimumHeight);
+            panelRect.sizeDelta = upgradePanelSize;
             Image panelImage = upgradePanelTransform.GetComponent<Image>() ??
                                upgradePanelTransform.gameObject.AddComponent<Image>();
             panelImage.color = uiData.PanelColor;
@@ -993,8 +996,18 @@ namespace MiningSimulator.Editor
             EnsureUpgradeCard(upgradePanelTransform, "NPC Capacity Upgrade", 5,
                 GetCapacityUpgradePreview(upgradeData.NpcCapacity), uiData.NpcCapacityIconSprite,
                 uiData.NpcCapacityIconFallback, uiData);
+            EnsureUpgradeCard(upgradePanelTransform, "Lucky Block Reward Upgrade", 6,
+                GetUpgradePreview(upgradeData.LuckyBlockReward),
+                uiData.LuckyBlockRewardIconSprite, uiData.LuckyBlockRewardIconFallback, uiData);
+            EnsureUpgradeCard(upgradePanelTransform, "Lucky Block Drop Chance Upgrade", 7,
+                GetUpgradePreview(upgradeData.LuckyBlockDropChance),
+                uiData.LuckyBlockDropChanceIconSprite,
+                uiData.LuckyBlockDropChanceIconFallback, uiData);
 
-            Button backButton = EnsureStyledButton(upgradePanelTransform, "Back", uiData.BackButtonPosition,
+            Vector2 backButtonPosition = uiData.BackButtonPosition;
+            backButtonPosition.y = Mathf.Min(backButtonPosition.y,
+                uiData.ExpandedUpgradeBackButtonY);
+            Button backButton = EnsureStyledButton(upgradePanelTransform, "Back", backButtonPosition,
                 uiData.BackButtonSize, uiData.NavigationButtonColor, uiData.TitleTextColor, uiData);
             TextMeshProUGUI backLabel = backButton.GetComponentInChildren<TextMeshProUGUI>(true);
             backLabel.text = "QUAY LẠI";
@@ -1026,6 +1039,11 @@ namespace MiningSimulator.Editor
                 upgradePanelTransform.Find("NPC Move Speed Upgrade"));
             WireUpgradeButton(serialized, "npcCapacityButton", "npcCapacityLabel",
                 upgradePanelTransform.Find("NPC Capacity Upgrade"));
+            WireUpgradeButton(serialized, "luckyBlockRewardButton", "luckyBlockRewardLabel",
+                upgradePanelTransform.Find("Lucky Block Reward Upgrade"));
+            WireUpgradeButton(serialized, "luckyBlockDropChanceButton",
+                "luckyBlockDropChanceLabel",
+                upgradePanelTransform.Find("Lucky Block Drop Chance Upgrade"));
             serialized.ApplyModifiedPropertiesWithoutUndo();
         }
 
@@ -1414,7 +1432,9 @@ namespace MiningSimulator.Editor
 
         private static void StyleUpgradeCardIcon(Transform icon, Sprite iconSprite, MiningUiData uiData)
         {
-            if (icon == null || iconSprite == null)
+            Image existingSprite = icon?.Find("Sprite")?.GetComponent<Image>();
+            if (icon == null || (iconSprite == null &&
+                (existingSprite == null || existingSprite.sprite == null)))
             {
                 return;
             }
@@ -1464,10 +1484,17 @@ namespace MiningSimulator.Editor
             spriteRect.offsetMin = Vector2.one * uiData.HudIconPadding;
             spriteRect.offsetMax = Vector2.one * -uiData.HudIconPadding;
             Image spriteImage = spriteTransform.GetComponent<Image>();
-            spriteImage.sprite = iconSprite;
+            // A sprite assigned directly in the editable Scene UI belongs to the designer.
+            // A setup refresh may replace it with a configured GameData sprite, but a null
+            // GameData slot must never erase the existing icon.
+            if (iconSprite != null || spriteImage.sprite == null)
+            {
+                spriteImage.sprite = iconSprite;
+            }
             spriteImage.color = uiData.IconSymbolColor;
             spriteImage.preserveAspect = true;
-            spriteImage.enabled = iconSprite != null;
+            bool hasSprite = spriteImage.sprite != null;
+            spriteImage.enabled = hasSprite;
             spriteImage.raycastTarget = false;
 
             TextMeshProUGUI symbol = EnsureText(icon, "Symbol");
@@ -1476,7 +1503,7 @@ namespace MiningSimulator.Editor
             symbol.fontSize = uiData.HudIconFontSize;
             symbol.color = uiData.IconSymbolColor;
             symbol.alignment = TextAlignmentOptions.Center;
-            symbol.enabled = iconSprite == null;
+            symbol.enabled = !hasSprite;
             symbol.raycastTarget = false;
         }
 

@@ -23,12 +23,16 @@ namespace MiningSimulator.Ores
         [SerializeField] private Button oreSpawnSpeedButton;
         [SerializeField] private Button npcMoveSpeedButton;
         [SerializeField] private Button npcCapacityButton;
+        [SerializeField] private Button luckyBlockRewardButton;
+        [SerializeField] private Button luckyBlockDropChanceButton;
         [SerializeField] private TextMeshProUGUI moneyRewardLabel;
         [SerializeField] private TextMeshProUGUI rareOreSpawnLabel;
         [SerializeField] private TextMeshProUGUI oreDamageLabel;
         [SerializeField] private TextMeshProUGUI oreSpawnSpeedLabel;
         [SerializeField] private TextMeshProUGUI npcMoveSpeedLabel;
         [SerializeField] private TextMeshProUGUI npcCapacityLabel;
+        [SerializeField] private TextMeshProUGUI luckyBlockRewardLabel;
+        [SerializeField] private TextMeshProUGUI luckyBlockDropChanceLabel;
         [SerializeField] private bool openOnPlay;
 
         [Header("Editable Text")]
@@ -94,6 +98,8 @@ namespace MiningSimulator.Ores
             oreSpawnSpeedButton?.onClick.AddListener(BuyOreSpawnSpeed);
             npcMoveSpeedButton?.onClick.AddListener(BuyNpcMoveSpeed);
             npcCapacityButton?.onClick.AddListener(BuyNpcCapacity);
+            luckyBlockRewardButton?.onClick.AddListener(BuyLuckyBlockReward);
+            luckyBlockDropChanceButton?.onClick.AddListener(BuyLuckyBlockDropChance);
         }
 
         private void RemoveListeners()
@@ -107,6 +113,8 @@ namespace MiningSimulator.Ores
             oreSpawnSpeedButton?.onClick.RemoveListener(BuyOreSpawnSpeed);
             npcMoveSpeedButton?.onClick.RemoveListener(BuyNpcMoveSpeed);
             npcCapacityButton?.onClick.RemoveListener(BuyNpcCapacity);
+            luckyBlockRewardButton?.onClick.RemoveListener(BuyLuckyBlockReward);
+            luckyBlockDropChanceButton?.onClick.RemoveListener(BuyLuckyBlockDropChance);
         }
 
         private void OpenPanel()
@@ -148,6 +156,8 @@ namespace MiningSimulator.Ores
         private void BuyOreSpawnSpeed() => Buy(MiningUpgradeType.OreSpawnSpeed);
         private void BuyNpcMoveSpeed() => Buy(MiningUpgradeType.NpcMoveSpeed);
         private void BuyNpcCapacity() => Buy(MiningUpgradeType.NpcCapacity);
+        private void BuyLuckyBlockReward() => Buy(MiningUpgradeType.LuckyBlockReward);
+        private void BuyLuckyBlockDropChance() => Buy(MiningUpgradeType.LuckyBlockDropChance);
 
         private void Buy(MiningUpgradeType type)
         {
@@ -165,6 +175,10 @@ namespace MiningSimulator.Ores
             RefreshUpgrade(MiningUpgradeType.OreSpawnSpeed, oreSpawnSpeedButton, oreSpawnSpeedLabel);
             RefreshUpgrade(MiningUpgradeType.NpcMoveSpeed, npcMoveSpeedButton, npcMoveSpeedLabel);
             RefreshCapacityUpgrade();
+            RefreshUpgrade(MiningUpgradeType.LuckyBlockReward, luckyBlockRewardButton,
+                luckyBlockRewardLabel);
+            RefreshUpgrade(MiningUpgradeType.LuckyBlockDropChance, luckyBlockDropChanceButton,
+                luckyBlockDropChanceLabel);
         }
 
         private void RefreshCapacityUpgrade()

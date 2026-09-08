@@ -119,6 +119,8 @@ namespace MiningSimulator.Editor
         {
             OreSpawner spawner = Object.FindFirstObjectByType<OreSpawner>(FindObjectsInactive.Include);
             PlayerWallet wallet = Object.FindFirstObjectByType<PlayerWallet>(FindObjectsInactive.Include);
+            MiningUpgradeSystem upgradeSystem = Object.FindFirstObjectByType<MiningUpgradeSystem>(
+                FindObjectsInactive.Include);
             if (spawner == null || wallet == null)
             {
                 Debug.LogError("Lucky Block setup requires the existing OreSpawner and PlayerWallet in the active scene.");
@@ -141,6 +143,7 @@ namespace MiningSimulator.Editor
             var serialized = new SerializedObject(system);
             SetReference(serialized, "data", data);
             SetReference(serialized, "wallet", wallet);
+            SetReferenceIfMissing(serialized, "upgradeSystem", upgradeSystem);
             SetReference(serialized, "oreSpawnData", spawner.SpawnData);
             SetReference(serialized, "spawnAreaOrigin", spawner.transform);
             SetReferenceIfMissing(serialized, "droppedBlockParent", system.transform);

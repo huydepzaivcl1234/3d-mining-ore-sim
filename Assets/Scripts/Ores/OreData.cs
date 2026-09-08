@@ -60,6 +60,10 @@ namespace MiningSimulator.Ores
         [Tooltip("World-space offset from the top-center of the ore collider bounds.")]
         [SerializeField] private Vector3 healthBarWorldOffset = new(0f, 0.25f, 0f);
         [Min(0.01f), SerializeField] private float healthBarScale = 0.65f;
+        [Header("Hit Feedback")]
+        [Range(0f, 0.5f), SerializeField] private float hitPunchScale = 0.08f;
+        [Min(0f), SerializeField] private float hitPunchLift = 0.12f;
+        [Min(0.01f), SerializeField] private float hitPunchDuration = 0.16f;
         [SerializeField] private GameObject prefab;
         [SerializeField] private Color mapColor = Color.gray;
 
@@ -81,6 +85,9 @@ namespace MiningSimulator.Ores
         public float SpawnHeightOffset => spawnHeightOffset;
         public Vector3 HealthBarWorldOffset => healthBarWorldOffset;
         public float HealthBarScale => healthBarScale;
+        public float HitPunchScale => hitPunchScale;
+        public float HitPunchLift => hitPunchLift;
+        public float HitPunchDuration => hitPunchDuration;
         public GameObject Prefab => prefab;
         public Color MapColor => mapColor;
 
@@ -95,6 +102,9 @@ namespace MiningSimulator.Ores
             maximumMiningNpcs = Mathf.Max(1, maximumMiningNpcs);
             npcStandDistance = Mathf.Max(0.1f, npcStandDistance);
             healthBarScale = Mathf.Max(0.01f, healthBarScale);
+            hitPunchScale = Mathf.Clamp(hitPunchScale, 0f, 0.5f);
+            hitPunchLift = Mathf.Max(0f, hitPunchLift);
+            hitPunchDuration = Mathf.Max(0.01f, hitPunchDuration);
         }
     }
 }

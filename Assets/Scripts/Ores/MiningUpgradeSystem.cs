@@ -16,8 +16,11 @@ namespace MiningSimulator.Ores
         [SerializeField, Min(0)] private int oreSpawnSpeedStacks;
         [SerializeField, Min(0)] private int npcMoveSpeedStacks;
         [SerializeField, Min(0)] private int npcCapacityStacks;
+        [SerializeField, Min(0)] private int luckyBlockRewardStacks;
+        [SerializeField, Min(0)] private int luckyBlockDropChanceStacks;
 
         private float rewardRemainder;
+        private float luckyBlockRewardRemainder;
         private float permanentMoneyMultiplier = 1f;
 
         public MiningUpgradeData UpgradeData => upgradeData;
@@ -35,6 +38,8 @@ namespace MiningSimulator.Ores
                 MiningUpgradeType.OreSpawnSpeed => oreSpawnSpeedStacks,
                 MiningUpgradeType.NpcMoveSpeed => npcMoveSpeedStacks,
                 MiningUpgradeType.NpcCapacity => npcCapacityStacks,
+                MiningUpgradeType.LuckyBlockReward => luckyBlockRewardStacks,
+                MiningUpgradeType.LuckyBlockDropChance => luckyBlockDropChanceStacks,
                 _ => 0
             };
         }
@@ -88,6 +93,12 @@ namespace MiningSimulator.Ores
                 case MiningUpgradeType.NpcCapacity:
                     npcCapacityStacks++;
                     break;
+                case MiningUpgradeType.LuckyBlockReward:
+                    luckyBlockRewardStacks++;
+                    break;
+                case MiningUpgradeType.LuckyBlockDropChance:
+                    luckyBlockDropChanceStacks++;
+                    break;
             }
 
             UpgradesChanged?.Invoke();
@@ -120,6 +131,20 @@ namespace MiningSimulator.Ores
             return wholeReward;
         }
 
+        public int CalculateLuckyBlockReward(int baseReward)
+        {
+            if (baseReward <= 0)
+            {
+                return 0;
+            }
+
+            float upgradedReward = baseReward * GetMultiplier(MiningUpgradeType.LuckyBlockReward) *
+                                   permanentMoneyMultiplier + luckyBlockRewardRemainder;
+            int wholeReward = Mathf.FloorToInt(upgradedReward);
+            luckyBlockRewardRemainder = upgradedReward - wholeReward;
+            return wholeReward;
+        }
+
         public void SetPermanentMoneyMultiplier(float multiplier)
         {
             permanentMoneyMultiplier = Mathf.Max(1f, multiplier);
@@ -133,7 +158,10 @@ namespace MiningSimulator.Ores
             oreSpawnSpeedStacks = 0;
             npcMoveSpeedStacks = 0;
             npcCapacityStacks = 0;
+            luckyBlockRewardStacks = 0;
+            luckyBlockDropChanceStacks = 0;
             rewardRemainder = 0f;
+            luckyBlockRewardRemainder = 0f;
             UpgradesChanged?.Invoke();
         }
 
@@ -153,6 +181,10 @@ namespace MiningSimulator.Ores
                 upgradeData.NpcMoveSpeed.MaximumStacks);
             npcCapacityStacks = Mathf.Clamp(npcCapacityStacks, 0,
                 upgradeData.NpcCapacity.MaximumStacks);
+            luckyBlockRewardStacks = Mathf.Clamp(luckyBlockRewardStacks, 0,
+                upgradeData.LuckyBlockReward.MaximumStacks);
+            luckyBlockDropChanceStacks = Mathf.Clamp(luckyBlockDropChanceStacks, 0,
+                upgradeData.LuckyBlockDropChance.MaximumStacks);
         }
     }
 }
