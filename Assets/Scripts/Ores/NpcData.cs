@@ -44,6 +44,14 @@ namespace MiningSimulator.Ores
         [Min(0.05f), SerializeField] private float obstacleProbeRadius = 0.32f;
         [Min(0.1f), SerializeField] private float obstacleProbeDistance = 1.25f;
         [Min(0f), SerializeField] private float obstacleAvoidanceStrength = 1.35f;
+        [Tooltip("Distance used to check whether a possible route around several ores is clear.")]
+        [Min(0.1f), SerializeField] private float detourProbeDistance = 2.8f;
+        [Tooltip("Base angle used to test side, wide-side, and reverse detour directions.")]
+        [Range(15f, 85f), SerializeField] private float detourAngle = 55f;
+        [Tooltip("Minimum clear distance before a side direction is accepted. If none is clear, the NPC reverses.")]
+        [Min(0.05f), SerializeField] private float detourMinimumClearance = 0.85f;
+        [Tooltip("Keeps a chosen route stable long enough to move around the obstacle without left-right jitter.")]
+        [Min(0.05f), SerializeField] private float detourDirectionHoldTime = 0.65f;
         [Min(0.1f), SerializeField] private float npcSeparationRadius = 1.05f;
         [Min(0f), SerializeField] private float npcSeparationStrength = 1.2f;
         [Min(0.1f), SerializeField] private float npcSeparationResponsiveness = 8f;
@@ -95,6 +103,10 @@ namespace MiningSimulator.Ores
         public float ObstacleProbeRadius => obstacleProbeRadius;
         public float ObstacleProbeDistance => obstacleProbeDistance;
         public float ObstacleAvoidanceStrength => obstacleAvoidanceStrength;
+        public float DetourProbeDistance => detourProbeDistance;
+        public float DetourAngle => detourAngle;
+        public float DetourMinimumClearance => detourMinimumClearance;
+        public float DetourDirectionHoldTime => detourDirectionHoldTime;
         public float NpcSeparationRadius => npcSeparationRadius;
         public float NpcSeparationStrength => npcSeparationStrength;
         public float NpcSeparationResponsiveness => npcSeparationResponsiveness;
@@ -141,6 +153,11 @@ namespace MiningSimulator.Ores
             obstacleProbeRadius = Mathf.Max(0.05f, obstacleProbeRadius);
             obstacleProbeDistance = Mathf.Max(0.1f, obstacleProbeDistance);
             obstacleAvoidanceStrength = Mathf.Max(0f, obstacleAvoidanceStrength);
+            detourProbeDistance = Mathf.Max(obstacleProbeDistance, detourProbeDistance);
+            detourAngle = Mathf.Clamp(detourAngle, 15f, 85f);
+            detourMinimumClearance = Mathf.Clamp(detourMinimumClearance, 0.05f,
+                detourProbeDistance);
+            detourDirectionHoldTime = Mathf.Max(0.05f, detourDirectionHoldTime);
             npcSeparationRadius = Mathf.Max(colliderRadius * 2f, npcSeparationRadius);
             npcSeparationStrength = Mathf.Max(0f, npcSeparationStrength);
             npcSeparationResponsiveness = Mathf.Max(0.1f, npcSeparationResponsiveness);

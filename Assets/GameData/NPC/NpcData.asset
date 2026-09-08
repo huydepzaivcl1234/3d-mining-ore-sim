@@ -43,6 +43,10 @@ MonoBehaviour:
   obstacleProbeRadius: 0.32
   obstacleProbeDistance: 1.25
   obstacleAvoidanceStrength: 1.35
+  detourProbeDistance: 2.8
+  detourAngle: 55
+  detourMinimumClearance: 0.85
+  detourDirectionHoldTime: 0.65
   npcSeparationRadius: 1.05
   npcSeparationStrength: 1.2
   npcSeparationResponsiveness: 8

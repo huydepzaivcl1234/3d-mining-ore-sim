@@ -15,7 +15,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private NpcData npcData;
         [SerializeField] private Transform toolPivot;
 
-        private readonly RaycastHit[] obstacleHits = new RaycastHit[16];
+        private readonly RaycastHit[] obstacleHits = new RaycastHit[32];
         private readonly Collider[] separationHits = new Collider[24];
         private Ore targetOre;
         private Ore ignoredOre;
@@ -27,12 +27,14 @@ namespace MiningSimulator.Ores
         private float ignoredOreUntil;
         private float lastProgressTime;
         private float avoidanceSide = 1f;
+        private float detourDirectionUntil;
         private int reservedSlot = -1;
         private Quaternion toolRestRotation;
         private Vector3 desiredMoveTarget;
         private Vector3 desiredFacingDirection;
         private Vector3 lastProgressPosition;
         private Vector3 smoothedSeparation;
+        private Vector3 detourDirection;
         private bool hasMoveTarget;
         private bool isMining;
         private CapsuleCollider capsule;
@@ -78,6 +80,8 @@ namespace MiningSimulator.Ores
             hasMoveTarget = false;
             desiredFacingDirection = Vector3.zero;
             smoothedSeparation = Vector3.zero;
+            detourDirection = Vector3.zero;
+            detourDirectionUntil = 0f;
             StopHorizontalMovement();
         }
 
@@ -185,12 +189,20 @@ namespace MiningSimulator.Ores
                     return;
                 }
 
-                movementDirection = CalculateObstacleAvoidance(
+                movementDirection = ResolveBlockedPath(
                     movementDirection, currentPosition, blockingOre, blockingPoint);
             }
             else
             {
                 avoidanceOre = null;
+                if (Time.time < detourDirectionUntil && detourDirection.sqrMagnitude > Mathf.Epsilon)
+                {
+                    movementDirection = detourDirection;
+                }
+                else
+                {
+                    ClearDetour();
+                }
             }
 
             Vector3 separation = CalculateNpcSeparation(currentPosition);
@@ -266,6 +278,7 @@ namespace MiningSimulator.Ores
             isMining = false;
             nextHitTime = 0f;
             nextTargetSwitchTime = Time.time + npcData.TargetSwitchCooldown;
+            ClearDetour();
             ResetProgressTracking();
         }
 
@@ -339,6 +352,7 @@ namespace MiningSimulator.Ores
             reservedSlot = -1;
             hasMoveTarget = false;
             isMining = false;
+            ClearDetour();
         }
 
         private void TrackMovementProgress(Vector3 currentPosition)
@@ -428,6 +442,95 @@ namespace MiningSimulator.Ores
             }
 
             return (forward + side * avoidanceSide * npcData.ObstacleAvoidanceStrength).normalized;
+        }
+
+        private Vector3 ResolveBlockedPath(Vector3 forward, Vector3 currentPosition,
+            Ore blockingOre, Vector3 blockingPoint)
+        {
+            if (Time.time < detourDirectionUntil && detourDirection.sqrMagnitude > Mathf.Epsilon &&
+                GetOreClearance(detourDirection, npcData.DetourProbeDistance) >=
+                npcData.DetourMinimumClearance * 0.5f)
+            {
+                return detourDirection;
+            }
+
+            Vector3 normalAvoidance = CalculateObstacleAvoidance(
+                forward, currentPosition, blockingOre, blockingPoint);
+            Vector3 bestDirection = normalAvoidance;
+            float bestClearance = GetOreClearance(normalAvoidance, npcData.DetourProbeDistance);
+
+            // Prefer the previously selected side when two directions have similar clearance.
+            float signedAngle = npcData.DetourAngle * avoidanceSide;
+            EvaluateDetourCandidate(forward, signedAngle, ref bestDirection, ref bestClearance);
+            EvaluateDetourCandidate(forward, -signedAngle, ref bestDirection, ref bestClearance);
+            EvaluateDetourCandidate(forward, signedAngle * 2f, ref bestDirection, ref bestClearance);
+            EvaluateDetourCandidate(forward, -signedAngle * 2f, ref bestDirection, ref bestClearance);
+            EvaluateDetourCandidate(forward, signedAngle * 3f, ref bestDirection, ref bestClearance);
+            EvaluateDetourCandidate(forward, -signedAngle * 3f, ref bestDirection, ref bestClearance);
+
+            if (bestClearance < npcData.DetourMinimumClearance)
+            {
+                // A closed pair or cluster needs space before another route can be evaluated.
+                Vector3 reverseDirection = -forward;
+                float reverseClearance = GetOreClearance(
+                    reverseDirection, npcData.DetourProbeDistance);
+                if (reverseClearance >= npcData.DetourMinimumClearance * 0.5f)
+                {
+                    bestDirection = reverseDirection;
+                }
+            }
+
+            detourDirection = bestDirection.normalized;
+            detourDirectionUntil = Time.time + npcData.DetourDirectionHoldTime;
+            ResetProgressTracking();
+            return detourDirection;
+        }
+
+        private void EvaluateDetourCandidate(Vector3 forward, float angle,
+            ref Vector3 bestDirection, ref float bestClearance)
+        {
+            Vector3 candidate = Quaternion.AngleAxis(angle, Vector3.up) * forward;
+            candidate.y = 0f;
+            candidate.Normalize();
+            float clearance = GetOreClearance(candidate, npcData.DetourProbeDistance);
+            if (clearance > bestClearance + 0.01f)
+            {
+                bestDirection = candidate;
+                bestClearance = clearance;
+            }
+        }
+
+        private float GetOreClearance(Vector3 direction, float distance)
+        {
+            if (direction.sqrMagnitude <= Mathf.Epsilon)
+            {
+                return 0f;
+            }
+
+            Vector3 origin = body.position + Vector3.up * npcData.ColliderRadius;
+            int hitCount = Physics.SphereCastNonAlloc(origin, npcData.ObstacleProbeRadius,
+                direction.normalized, obstacleHits, distance, npcData.CollisionLayers,
+                QueryTriggerInteraction.Ignore);
+            float nearestDistance = distance;
+            for (int index = 0; index < hitCount; index++)
+            {
+                RaycastHit hit = obstacleHits[index];
+                Ore ore = hit.collider != null ? hit.collider.GetComponentInParent<Ore>() : null;
+                if (ore == null || ore == targetOre)
+                {
+                    continue;
+                }
+
+                nearestDistance = Mathf.Min(nearestDistance, hit.distance);
+            }
+
+            return nearestDistance;
+        }
+
+        private void ClearDetour()
+        {
+            detourDirection = Vector3.zero;
+            detourDirectionUntil = 0f;
         }
 
         private Vector3 CalculateNpcSeparation(Vector3 currentPosition)

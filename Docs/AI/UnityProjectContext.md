@@ -71,6 +71,8 @@
 - NPC movement and rotation are owned by `FixedUpdate`. Velocity acceleration/braking, collider-safe
   mining slots, smoothed local NPC separation, ore sight SphereCast, obstacle steering, stuck recovery,
   committed targets, and cooldown-limited blocking-ore switching are configured in `NpcData`.
+  Multi-direction clearance probes keep a stable detour around clustered ores; when every sampled
+  side route is blocked, the miner reverses to create space before evaluating another route.
   A reserved NPC starts mining immediately when it enters the configured mining range; reaching an
   exact stand-slot coordinate or waiting for stuck recovery is not required.
 - NPC colliders still interact with ores and the environment, while optional NPC-to-NPC physical
