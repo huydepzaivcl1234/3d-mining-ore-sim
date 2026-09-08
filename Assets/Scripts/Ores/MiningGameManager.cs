@@ -12,6 +12,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private NpcShop npcShop;
         [SerializeField] private MiningUpgradeSystem upgradeSystem;
         [SerializeField] private MiningRebirthSystem rebirthSystem;
+        [SerializeField] private MiningDrillStation drillStation;
 
         [Header("Presentation Systems")]
         [SerializeField] private MiningHud hud;
@@ -31,6 +32,7 @@ namespace MiningSimulator.Ores
         public NpcShop NpcShop => npcShop;
         public MiningUpgradeSystem UpgradeSystem => upgradeSystem;
         public MiningRebirthSystem RebirthSystem => rebirthSystem;
+        public MiningDrillStation DrillStation => drillStation;
         public MiningHud Hud => hud;
         public MiningUpgradePanel UpgradePanel => upgradePanel;
         public MiningRebirthPanel RebirthPanel => rebirthPanel;
