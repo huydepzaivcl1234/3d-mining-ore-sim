@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d859909622396a747a6c00395cd02515, type: 3}
+  m_Name: Dark Stone
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.OreData
+  kind: 7
+  displayName: Dark Stone
+  description: A shadow stone that can appear only during the night.
+  tier: 8
+  miningPowerRequired: 45
+  durability: 300
+  clickDamage: 8
+  baseSellValue: 220
+  destroyDelay: 0
+  maximumMiningNpcs: 5
+  npcStandDistance: 1.75
+  rareOre: 0
+  rarity: 2
+  spawnRotationOffset: {x: 0, y: 0, z: 0}
+  spawnHeightOffset: 0
+  healthBarWorldOffset: {x: 0, y: 0.35, z: 0}
+  healthBarScale: 0.65
+  prefab: {fileID: 4888310733400738421, guid: 913ef9c66eaca9d47bef6cbcea4df72b, type: 3}
+  mapColor: {r: 0.46, g: 0.08, b: 0.95, a: 1}

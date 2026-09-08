@@ -667,7 +667,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: a38bd72588fca9e4294d3715e98e0c02, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1097,6 +1097,7 @@ MonoBehaviour:
   upgradeSystem: {fileID: 1144114548}
   uiData: {fileID: 11400000, guid: 0fc641ac29720e2837d73e6212818c58, type: 2}
   rewardPopupPrefab: {fileID: 595523728496385370, guid: 60732089bc3d5a74cac36ef83399977d, type: 3}
+  dayNightSystem: {fileID: 1889411264}
 --- !u!114 &1828941535
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1125,6 +1126,52 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 996078877246501140}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1889411263
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1889411265}
+  - component: {fileID: 1889411264}
+  m_Layer: 0
+  m_Name: Day Night System
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1889411264
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1889411263}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a93a3a4fb5874fbc845a5b5dbb4a7010, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.DayNightSystem
+  data: {fileID: 11400000, guid: ec5bd0b5e6ac9ae48ad0132289643558, type: 2}
+  sun: {fileID: 410087040}
+--- !u!4 &1889411265
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1889411263}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!225 &2035237000
 CanvasGroup:
@@ -12072,3 +12119,4 @@ SceneRoots:
   - {fileID: 543382462}
   - {fileID: 996078877246501140}
   - {fileID: 1719808841}
+  - {fileID: 1889411265}
