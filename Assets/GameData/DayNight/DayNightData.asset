@@ -40,11 +40,19 @@ MonoBehaviour:
   darkStone: {fileID: 11400000, guid: 00d2f60055fd85843869890c15e2ff21, type: 2}
   darkStoneChancePerSpawnPercent: 5
   lightStoneAuraColor: {r: 1, g: 0.82, b: 0.25, a: 1}
-  darkStoneAuraColor: {r: 0.46, g: 0.08, b: 0.95, a: 1}
+  darkStoneAuraColor: {r: 0.012, g: 0.018, b: 0.026, a: 0.9}
   auraLightIntensity: 2.4
   auraLightRange: 4.5
   auraPulseSpeed: 2
   auraPulseAmount: 0.12
+  lightHaloOuterColor: {r: 1, g: 0.62, b: 0.12, a: 0.55}
+  lightHaloScale: 1.55
+  lightHaloOpacity: 0.42
+  darkAuraOuterColor: {r: 0.035, g: 0.055, b: 0.065, a: 0.72}
+  darkAuraScale: 1.48
+  darkAuraOpacity: 0.58
+  darkAuraFlowSpeed: 0.32
+  darkAuraRotationDegreesPerSecond: 7
   auraParticlesPerSecond: 7
   auraParticleLifetime: 1.4
   auraParticleSize: 0.12

@@ -101,6 +101,11 @@ Packages/packages-lock.json linguist-generated
 # can be shipped through the GitHub API without leaving unresolved LFS pointers.
 Assets/Ores/Models/light_stone.obj -filter -diff -merge text eol=lf
 Assets/Ores/Models/dark_stone.obj  -filter -diff -merge text eol=lf
+Assets/Ores/Models/light_stone.fbx -filter -diff -merge binary
+Assets/Ores/Models/dark_stone.fbx  -filter -diff -merge binary
+ArtSource/Blender/light_stone.blend -filter -diff -merge binary
+ArtSource/Blender/dark_stone.blend -filter -diff -merge binary
+ArtSource/Blender/day_night_ores.blend -filter -diff -merge binary
 
 # Audio
 *.aif                   lfs

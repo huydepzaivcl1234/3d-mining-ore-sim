@@ -60,15 +60,15 @@ namespace MiningSimulator.Editor
             OreKind.LightStone, "Light Stone",
             "A radiant stone that can appear only during the day.",
             7, 35, 220, 7, 140,
-            new Color(0.42f, 0.44f, 0.46f), new Color(1f, 0.82f, 0.22f),
-            "light_stone.obj", SpecialOreTheme.Light);
+            new Color(0.34f, 0.31f, 0.25f), new Color(1f, 0.62f, 0.08f),
+            "light_stone.fbx", SpecialOreTheme.Light);
 
         private static readonly SpecialOreSpec DarkStone = new(
             OreKind.DarkStone, "Dark Stone",
             "A shadow stone that can appear only during the night.",
             8, 45, 300, 8, 220,
-            new Color(0.055f, 0.045f, 0.075f), new Color(0.46f, 0.08f, 0.95f),
-            "dark_stone.obj", SpecialOreTheme.Dark);
+            new Color(0.025f, 0.03f, 0.038f), new Color(0.025f, 0.075f, 0.09f),
+            "dark_stone.fbx", SpecialOreTheme.Dark);
 
         [MenuItem("Mining Simulator/Setup/Create Day Night System And Ores")]
         public static void CreateDayNightSystemAndOres()
@@ -93,6 +93,23 @@ namespace MiningSimulator.Editor
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             Debug.Log("Day/night system and both timed ores are ready. Existing UI and icons were not changed.");
+        }
+
+        [MenuItem("Mining Simulator/Setup/Rebuild Day Night Ore Visuals")]
+        public static void RebuildDayNightOreVisuals()
+        {
+            EnsureFolder(PrefabFolder);
+            EnsureFolder(MaterialFolder);
+            DayNightData dayNightData = GetOrCreateDayNightData();
+            OreData lightData = GetOrCreateOreData(LightStone);
+            OreData darkData = GetOrCreateOreData(DarkStone);
+            GameObject lightPrefab = RebuildOrePrefab(LightStone, lightData, dayNightData);
+            GameObject darkPrefab = RebuildOrePrefab(DarkStone, darkData, dayNightData);
+            SetReference(lightData, "prefab", lightPrefab);
+            SetReference(darkData, "prefab", darkPrefab);
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+            Debug.Log("Light/Dark Stone models and shader auras rebuilt. UI, icons and gameplay balance were untouched.");
         }
 
         private static DayNightData GetOrCreateDayNightData()
@@ -148,6 +165,20 @@ namespace MiningSimulator.Editor
                 return existing;
             }
 
+            return BuildOrePrefab(spec, oreData, dayNightData, prefabPath);
+        }
+
+        private static GameObject RebuildOrePrefab(
+            SpecialOreSpec spec, OreData oreData, DayNightData dayNightData)
+        {
+            return BuildOrePrefab(spec, oreData, dayNightData,
+                $"{PrefabFolder}/{spec.Name}.prefab");
+        }
+
+        private static GameObject BuildOrePrefab(
+            SpecialOreSpec spec, OreData oreData, DayNightData dayNightData, string prefabPath)
+        {
+
             string modelPath = $"{ModelFolder}/{spec.ModelFile}";
             GameObject model = AssetDatabase.LoadAssetAtPath<GameObject>(modelPath);
             if (model == null)
@@ -164,6 +195,8 @@ namespace MiningSimulator.Editor
 
             try
             {
+                PrefabUtility.UnpackPrefabInstance(instance,
+                    PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
                 instance.name = spec.Name;
                 Ore ore = instance.AddComponent<Ore>();
                 ore.SetData(oreData);
@@ -185,13 +218,14 @@ namespace MiningSimulator.Editor
             Material glow = GetOrCreateMaterial(spec.Name + " Glow", spec.AuraColor, spec.AuraColor * 2.5f);
             foreach (Renderer renderer in root.GetComponentsInChildren<Renderer>(true))
             {
-                bool isGlow = renderer.name.IndexOf("Shard", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                              renderer.name.IndexOf("Core", StringComparison.OrdinalIgnoreCase) >= 0;
-                Material selected = isGlow ? glow : body;
                 Material[] materials = renderer.sharedMaterials;
                 for (int i = 0; i < materials.Length; i++)
                 {
-                    materials[i] = selected;
+                    string materialName = materials[i] != null ? materials[i].name : string.Empty;
+                    bool isGlow = renderer.name.IndexOf("Shard", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                  renderer.name.IndexOf("Core", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                  materialName.IndexOf("Core", StringComparison.OrdinalIgnoreCase) >= 0;
+                    materials[i] = isGlow ? glow : body;
                 }
                 renderer.sharedMaterials = materials;
             }
@@ -201,13 +235,17 @@ namespace MiningSimulator.Editor
         {
             string path = $"{MaterialFolder}/{name}.mat";
             Material material = AssetDatabase.LoadAssetAtPath<Material>(path);
-            if (material != null)
+            Shader shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+            if (material == null)
             {
-                return material;
+                material = new Material(shader) { name = name };
+                AssetDatabase.CreateAsset(material, path);
+            }
+            else if (material.shader != shader)
+            {
+                material.shader = shader;
             }
 
-            Shader shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
-            material = new Material(shader) { name = name };
             if (material.HasProperty("_BaseColor")) material.SetColor("_BaseColor", baseColor);
             if (material.HasProperty("_Color")) material.SetColor("_Color", baseColor);
             if (emission.maxColorComponent > 0f)
@@ -215,7 +253,7 @@ namespace MiningSimulator.Editor
                 material.EnableKeyword("_EMISSION");
                 if (material.HasProperty("_EmissionColor")) material.SetColor("_EmissionColor", emission);
             }
-            AssetDatabase.CreateAsset(material, path);
+            EditorUtility.SetDirty(material);
             return material;
         }
 
@@ -244,22 +282,42 @@ namespace MiningSimulator.Editor
             GameObject auraObject = new("Special Aura");
             auraObject.transform.SetParent(root.transform, false);
 
-            Light auraLight = auraObject.AddComponent<Light>();
-            auraLight.type = LightType.Point;
-            auraLight.shadows = LightShadows.None;
-
-            GameObject particlesObject = new("Aura Particles", typeof(ParticleSystem));
-            particlesObject.transform.SetParent(auraObject.transform, false);
-            ParticleSystem particles = particlesObject.GetComponent<ParticleSystem>();
-            ParticleSystem.MainModule main = particles.main;
-            main.loop = true;
-            main.playOnAwake = true;
-            main.simulationSpace = ParticleSystemSimulationSpace.Local;
-            main.startSpeed = new ParticleSystem.MinMaxCurve(0.08f, 0.28f);
-            main.maxParticles = 32;
-            ParticleSystem.ShapeModule shape = particles.shape;
-            shape.shapeType = ParticleSystemShapeType.Sphere;
-            shape.radius = 1.15f;
+            Light auraLight = null;
+            var auraRenderers = new System.Collections.Generic.List<Renderer>();
+            if (spec.Theme == SpecialOreTheme.Light)
+            {
+                auraLight = auraObject.AddComponent<Light>();
+                auraLight.type = LightType.Point;
+                auraLight.shadows = LightShadows.None;
+                auraLight.transform.localPosition = new Vector3(0f, 0.85f, 0f);
+                float haloScale = dayNightData.LightHaloScale;
+                Material haloMaterial = GetOrCreateAuraMaterial(
+                    "Light Stone Halo", "Mining Simulator/Light Stone Halo",
+                    dayNightData.LightStoneAuraColor, dayNightData.LightHaloOuterColor,
+                    dayNightData.LightHaloOpacity, 0f);
+                auraRenderers.Add(CreateAuraShell(auraObject.transform, "Warm Halo Inner",
+                    new Vector3(1.65f, 1.38f, 1.65f) * haloScale, haloMaterial));
+                auraRenderers.Add(CreateAuraShell(auraObject.transform, "Warm Halo Outer",
+                    new Vector3(2.10f, 1.70f, 2.10f) * haloScale, haloMaterial));
+            }
+            else
+            {
+                Material shadowMaterial = GetOrCreateAuraMaterial(
+                    "Dark Stone Shadow Aura", "Mining Simulator/Dark Stone Aura",
+                    dayNightData.DarkStoneAuraColor, dayNightData.DarkAuraOuterColor,
+                    dayNightData.DarkAuraOpacity, dayNightData.DarkAuraFlowSpeed);
+                float shadowScale = dayNightData.DarkAuraScale;
+                auraRenderers.Add(CreateAuraShell(auraObject.transform, "Shadow Mist Low",
+                    new Vector3(2.10f, 0.98f, 2.10f) * shadowScale, shadowMaterial));
+                Renderer middle = CreateAuraShell(auraObject.transform, "Shadow Mist Middle",
+                    new Vector3(1.86f, 1.42f, 1.86f) * shadowScale, shadowMaterial);
+                middle.transform.localRotation = Quaternion.Euler(0f, 37f, 0f);
+                auraRenderers.Add(middle);
+                Renderer high = CreateAuraShell(auraObject.transform, "Shadow Mist High",
+                    new Vector3(1.55f, 1.86f, 1.55f) * shadowScale, shadowMaterial);
+                high.transform.localRotation = Quaternion.Euler(0f, -29f, 0f);
+                auraRenderers.Add(high);
+            }
 
             SpecialOreAura aura = root.AddComponent<SpecialOreAura>();
             var serialized = new SerializedObject(aura);
@@ -267,8 +325,60 @@ namespace MiningSimulator.Editor
             serialized.FindProperty("theme").enumValueIndex = (int)spec.Theme;
             serialized.FindProperty("auraRoot").objectReferenceValue = auraObject.transform;
             serialized.FindProperty("auraLight").objectReferenceValue = auraLight;
-            serialized.FindProperty("auraParticles").objectReferenceValue = particles;
+            serialized.FindProperty("auraParticles").objectReferenceValue = null;
+            SerializedProperty renderersProperty = serialized.FindProperty("auraRenderers");
+            renderersProperty.arraySize = auraRenderers.Count;
+            for (int i = 0; i < auraRenderers.Count; i++)
+            {
+                renderersProperty.GetArrayElementAtIndex(i).objectReferenceValue = auraRenderers[i];
+            }
             serialized.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static Renderer CreateAuraShell(
+            Transform parent, string name, Vector3 scale, Material material)
+        {
+            GameObject shell = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            shell.name = name;
+            shell.transform.SetParent(parent, false);
+            shell.transform.localPosition = new Vector3(0f, 0.9f, 0f);
+            shell.transform.localScale = scale;
+            UnityEngine.Object.DestroyImmediate(shell.GetComponent<Collider>());
+            Renderer renderer = shell.GetComponent<Renderer>();
+            renderer.sharedMaterial = material;
+            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            renderer.receiveShadows = false;
+            return renderer;
+        }
+
+        private static Material GetOrCreateAuraMaterial(
+            string name, string shaderName, Color innerColor, Color outerColor,
+            float opacity, float flowSpeed)
+        {
+            string path = $"{MaterialFolder}/{name}.mat";
+            Shader shader = Shader.Find(shaderName);
+            if (shader == null)
+            {
+                throw new InvalidOperationException($"Missing shader: {shaderName}");
+            }
+
+            Material material = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (material == null)
+            {
+                material = new Material(shader) { name = name };
+                AssetDatabase.CreateAsset(material, path);
+            }
+            else
+            {
+                material.shader = shader;
+            }
+
+            material.SetColor("_AuraColor", innerColor);
+            material.SetColor("_OuterColor", outerColor);
+            material.SetFloat("_Opacity", opacity);
+            if (material.HasProperty("_FlowSpeed")) material.SetFloat("_FlowSpeed", flowSpeed);
+            EditorUtility.SetDirty(material);
+            return material;
         }
 
         private static void AddHealthBar(GameObject root, Ore ore)
@@ -352,6 +462,24 @@ namespace MiningSimulator.Editor
             var serialized = new SerializedObject(target);
             SerializedProperty property = serialized.FindProperty(propertyName);
             if (property != null && property.objectReferenceValue == null)
+            {
+                property.objectReferenceValue = value;
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+                EditorUtility.SetDirty(target);
+            }
+        }
+
+        private static void SetReference(
+            UnityEngine.Object target, string propertyName, UnityEngine.Object value)
+        {
+            if (target == null || value == null)
+            {
+                return;
+            }
+
+            var serialized = new SerializedObject(target);
+            SerializedProperty property = serialized.FindProperty(propertyName);
+            if (property != null && property.objectReferenceValue != value)
             {
                 property.objectReferenceValue = value;
                 serialized.ApplyModifiedPropertiesWithoutUndo();

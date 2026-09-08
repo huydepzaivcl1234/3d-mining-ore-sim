@@ -51,16 +51,29 @@ namespace MiningSimulator.Ores
         [SerializeField] private OreData darkStone;
         [Range(0f, 100f), SerializeField] private float darkStoneChancePerSpawnPercent = 5f;
 
-        [Header("Special Ore Aura")]
+        [Header("Special Ore Aura - Shared")]
         [SerializeField] private Color lightStoneAuraColor = new(1f, 0.82f, 0.25f, 1f);
-        [SerializeField] private Color darkStoneAuraColor = new(0.46f, 0.08f, 0.95f, 1f);
+        [SerializeField] private Color darkStoneAuraColor = new(0.012f, 0.018f, 0.026f, 0.9f);
         [Min(0f), SerializeField] private float auraLightIntensity = 2.4f;
         [Min(0f), SerializeField] private float auraLightRange = 4.5f;
         [Min(0f), SerializeField] private float auraPulseSpeed = 2f;
         [Range(0f, 0.5f), SerializeField] private float auraPulseAmount = 0.12f;
-        [Min(0f), SerializeField] private float auraParticlesPerSecond = 7f;
-        [Min(0.01f), SerializeField] private float auraParticleLifetime = 1.4f;
-        [Min(0.01f), SerializeField] private float auraParticleSize = 0.12f;
+
+        [Header("Light Stone Halo")]
+        [SerializeField] private Color lightHaloOuterColor = new(1f, 0.62f, 0.12f, 0.55f);
+        [Min(0.1f), SerializeField] private float lightHaloScale = 1.55f;
+        [Range(0f, 1f), SerializeField] private float lightHaloOpacity = 0.42f;
+
+        [Header("Dark Stone Shadow Aura")]
+        [SerializeField] private Color darkAuraOuterColor = new(0.035f, 0.055f, 0.065f, 0.72f);
+        [Min(0.1f), SerializeField] private float darkAuraScale = 1.48f;
+        [Range(0f, 1f), SerializeField] private float darkAuraOpacity = 0.58f;
+        [Min(0f), SerializeField] private float darkAuraFlowSpeed = 0.32f;
+        [Min(0f), SerializeField] private float darkAuraRotationDegreesPerSecond = 7f;
+
+        [HideInInspector, Min(0f), SerializeField] private float auraParticlesPerSecond = 7f;
+        [HideInInspector, Min(0.01f), SerializeField] private float auraParticleLifetime = 1.4f;
+        [HideInInspector, Min(0.01f), SerializeField] private float auraParticleSize = 0.12f;
 
         public bool CycleEnabled => cycleEnabled;
         public MiningTimePeriod StartingPeriod => startingPeriod;
@@ -95,6 +108,14 @@ namespace MiningSimulator.Ores
         public float AuraLightRange => auraLightRange;
         public float AuraPulseSpeed => auraPulseSpeed;
         public float AuraPulseAmount => auraPulseAmount;
+        public Color LightHaloOuterColor => lightHaloOuterColor;
+        public float LightHaloScale => lightHaloScale;
+        public float LightHaloOpacity => lightHaloOpacity;
+        public Color DarkAuraOuterColor => darkAuraOuterColor;
+        public float DarkAuraScale => darkAuraScale;
+        public float DarkAuraOpacity => darkAuraOpacity;
+        public float DarkAuraFlowSpeed => darkAuraFlowSpeed;
+        public float DarkAuraRotationDegreesPerSecond => darkAuraRotationDegreesPerSecond;
         public float AuraParticlesPerSecond => auraParticlesPerSecond;
         public float AuraParticleLifetime => auraParticleLifetime;
         public float AuraParticleSize => auraParticleSize;
@@ -116,6 +137,10 @@ namespace MiningSimulator.Ores
             auraLightIntensity = Mathf.Max(0f, auraLightIntensity);
             auraLightRange = Mathf.Max(0f, auraLightRange);
             auraPulseSpeed = Mathf.Max(0f, auraPulseSpeed);
+            lightHaloScale = Mathf.Max(0.1f, lightHaloScale);
+            darkAuraScale = Mathf.Max(0.1f, darkAuraScale);
+            darkAuraFlowSpeed = Mathf.Max(0f, darkAuraFlowSpeed);
+            darkAuraRotationDegreesPerSecond = Mathf.Max(0f, darkAuraRotationDegreesPerSecond);
             auraParticlesPerSecond = Mathf.Max(0f, auraParticlesPerSecond);
             auraParticleLifetime = Mathf.Max(0.01f, auraParticleLifetime);
             auraParticleSize = Mathf.Max(0.01f, auraParticleSize);
