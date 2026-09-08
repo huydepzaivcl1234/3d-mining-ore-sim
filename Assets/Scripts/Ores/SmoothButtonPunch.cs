@@ -56,24 +56,60 @@ namespace MiningSimulator.Ores
             }
         }
 
+        public void SetTarget(RectTransform configuredTarget)
+        {
+            target = configuredTarget != null
+                ? configuredTarget
+                : GetComponent<RectTransform>();
+        }
+
         private void Awake()
         {
-            target ??= GetComponent<RectTransform>();
+            if (!ResolveReferences())
+            {
+                enabled = false;
+                return;
+            }
+
             CenterPivotPreservingPosition(target);
-            button = GetComponent<Button>();
             restingScale = target.localScale;
             initialized = true;
         }
 
         private void OnEnable()
         {
-            target ??= GetComponent<RectTransform>();
-            button ??= GetComponent<Button>();
+            if (!ResolveReferences())
+            {
+                return;
+            }
+
             if (!initialized)
             {
                 restingScale = target.localScale;
                 initialized = true;
             }
+        }
+
+        private void Reset()
+        {
+            target = GetComponent<RectTransform>();
+            button = GetComponent<Button>();
+        }
+
+        private bool ResolveReferences()
+        {
+            // Unity's missing serialized references can be fake-null objects, so ??= is unsafe here.
+            if (target == null)
+            {
+                target = GetComponent<RectTransform>();
+            }
+
+            if (button == null)
+            {
+                button = GetComponent<Button>();
+            }
+
+            return target != null;
         }
 
         private void OnDisable()

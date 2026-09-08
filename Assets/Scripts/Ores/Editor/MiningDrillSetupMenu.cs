@@ -134,6 +134,7 @@ namespace MiningSimulator.Editor
             buttonObject.GetComponent<Image>().color = color;
             Button button = buttonObject.GetComponent<Button>();
             button.targetGraphic = buttonObject.GetComponent<Image>();
+            buttonObject.GetComponent<SmoothButtonPunch>().SetTarget(rect);
             label = CreateText(rect, "Label", name, Vector2.zero, size, 20f);
             return button;
         }
