@@ -17,6 +17,7 @@ namespace MiningSimulator.Ores
         [SerializeField, Min(0)] private int currentDurability;
 
         private bool rewardGranted;
+        private bool destroyOnDeplete = true;
         private float damageRemainder;
         private Collider[] miningColliders;
         private readonly Dictionary<MiningNpc, int> reservedMiners = new();
@@ -198,11 +199,12 @@ namespace MiningSimulator.Ores
         }
 
         public void Initialize(OreData oreData, PlayerWallet playerWallet,
-            MiningUpgradeSystem targetUpgradeSystem)
+            MiningUpgradeSystem targetUpgradeSystem, bool shouldDestroyOnDeplete = true)
         {
             data = oreData;
             wallet = playerWallet;
             upgradeSystem = targetUpgradeSystem;
+            destroyOnDeplete = shouldDestroyOnDeplete;
             miningColliders = GetComponentsInChildren<Collider>();
             ResetDurability();
         }
@@ -286,7 +288,10 @@ namespace MiningSimulator.Ores
             wallet?.AddMoney(reward);
             RewardGranted?.Invoke(this, reward);
             Depleted?.Invoke(this);
-            Destroy(gameObject, data.DestroyDelay);
+            if (destroyOnDeplete)
+            {
+                Destroy(gameObject, data.DestroyDelay);
+            }
         }
 
         private void OnDisable()

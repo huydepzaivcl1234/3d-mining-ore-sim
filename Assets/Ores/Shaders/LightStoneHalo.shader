@@ -11,7 +11,9 @@ Shader "Mining Simulator/Light Stone Halo"
     {
         Tags { "RenderType"="Transparent" "Queue"="Transparent" "RenderPipeline"="UniversalPipeline" }
         Blend SrcAlpha One
-        Cull Front
+        // Never render the inside of the halo. This prevents a nearby camera
+        // from seeing a full-screen transparent sphere.
+        Cull Back
         ZWrite Off
         ZTest LEqual
 

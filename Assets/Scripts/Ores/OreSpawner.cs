@@ -18,10 +18,15 @@ namespace MiningSimulator.Ores
         [SerializeField] private DayNightSystem dayNightSystem;
 
         private readonly HashSet<Ore> activeOres = new();
+        private readonly Dictionary<OreData, Queue<Ore>> orePools = new();
+        private readonly Dictionary<Ore, OreData> poolOwnedOres = new();
+        private readonly HashSet<Ore> inactivePooledOres = new();
+        private readonly HashSet<Ore> pendingPoolReturns = new();
         private Coroutine spawnRoutine;
         private bool initialSpawnCompleted;
 
         public int ActiveCount => activeOres.Count;
+        public int PooledCount => inactivePooledOres.Count;
         public MiningUpgradeSystem UpgradeSystem => upgradeSystem;
         public event System.Action<Ore> OreDamaged;
         public event System.Action<Ore, int> OreRewardGranted;
@@ -118,6 +123,16 @@ namespace MiningSimulator.Ores
                 spawnRoutine = null;
             }
 
+            if (pendingPoolReturns.Count > 0)
+            {
+                var pending = new List<Ore>(pendingPoolReturns);
+                pendingPoolReturns.Clear();
+                foreach (Ore ore in pending)
+                {
+                    ReturnOreToPool(ore);
+                }
+            }
+
             foreach (Ore ore in activeOres)
             {
                 if (ore != null)
@@ -152,28 +167,102 @@ namespace MiningSimulator.Ores
             Quaternion rotation = Quaternion.Euler(0f, randomY, 0f) *
                                   Quaternion.Euler(data.SpawnRotationOffset);
             Transform parent = spawnedOreParent != null ? spawnedOreParent : transform;
-            GameObject instance = Instantiate(data.Prefab, position, rotation, parent);
+            Ore ore = TakeOreFromPool(data, parent);
+            if (ore == null)
+            {
+                GameObject created = Instantiate(data.Prefab, parent);
+                ore = created.GetComponent<Ore>();
+                if (ore == null)
+                {
+                    Debug.LogError($"Ore prefab '{data.Prefab.name}' has no Ore component.", data.Prefab);
+                    Destroy(created);
+                    return false;
+                }
+
+                created.SetActive(false);
+                poolOwnedOres[ore] = data;
+            }
+
+            GameObject instance = ore.gameObject;
+            instance.transform.SetPositionAndRotation(position, rotation);
             float scale = UnityEngine.Random.Range(
                 Mathf.Max(0.01f, Mathf.Min(spawnData.UniformScaleRange.x, spawnData.UniformScaleRange.y)),
                 Mathf.Max(0.01f, Mathf.Max(spawnData.UniformScaleRange.x, spawnData.UniformScaleRange.y)));
-            instance.transform.localScale *= scale;
-
+            instance.transform.localScale = data.Prefab.transform.localScale * scale;
+            ore.Initialize(data, wallet, upgradeSystem, false);
+            instance.SetActive(true);
             KeepAboveSurface(instance, position.y + data.SpawnHeightOffset);
-
-            Ore ore = instance.GetComponent<Ore>();
-            if (ore == null)
-            {
-                Debug.LogError($"Ore prefab '{data.Prefab.name}' has no Ore component.", data.Prefab);
-                Destroy(instance);
-                return false;
-            }
-
-            ore.Initialize(data, wallet, upgradeSystem);
             ore.Depleted += HandleOreDepleted;
             ore.Damaged += HandleOreDamaged;
             ore.RewardGranted += HandleRewardGranted;
             activeOres.Add(ore);
             return true;
+        }
+
+        private Ore TakeOreFromPool(OreData data, Transform parent)
+        {
+            if (!orePools.TryGetValue(data, out Queue<Ore> pool))
+            {
+                return null;
+            }
+
+            while (pool.Count > 0)
+            {
+                Ore ore = pool.Dequeue();
+                if (ore == null)
+                {
+                    continue;
+                }
+
+                inactivePooledOres.Remove(ore);
+                ore.transform.SetParent(parent, false);
+                return ore;
+            }
+
+            return null;
+        }
+
+        private void ReturnOreToPool(Ore ore)
+        {
+            if (ore == null || !poolOwnedOres.TryGetValue(ore, out OreData data) || data == null)
+            {
+                return;
+            }
+
+            if (!inactivePooledOres.Add(ore))
+            {
+                return;
+            }
+
+            int maximumPooledOres = spawnData != null ? spawnData.MaximumPooledOres : 0;
+            if (inactivePooledOres.Count > maximumPooledOres)
+            {
+                inactivePooledOres.Remove(ore);
+                poolOwnedOres.Remove(ore);
+                Destroy(ore.gameObject);
+                return;
+            }
+
+            ore.gameObject.SetActive(false);
+            Transform parent = spawnedOreParent != null ? spawnedOreParent : transform;
+            ore.transform.SetParent(parent, false);
+            if (!orePools.TryGetValue(data, out Queue<Ore> pool))
+            {
+                pool = new Queue<Ore>();
+                orePools.Add(data, pool);
+            }
+            pool.Enqueue(ore);
+        }
+
+        private IEnumerator ReturnOreToPoolAfterDelay(Ore ore, float delay)
+        {
+            yield return new WaitForSeconds(delay);
+            if (!pendingPoolReturns.Remove(ore))
+            {
+                yield break;
+            }
+
+            ReturnOreToPool(ore);
         }
 
         private IEnumerator SpawnLoop()
@@ -192,7 +281,8 @@ namespace MiningSimulator.Ores
         {
             if (dayNightSystem != null &&
                 dayNightSystem.TryChooseSpecialOre(UnityEngine.Random.value * 100f,
-                    out OreData specialOre) && specialOre != null && specialOre.Prefab != null)
+                    out OreData specialOre) && specialOre != null && specialOre.Prefab != null &&
+                CanSpawnSpecialOre(specialOre))
             {
                 return specialOre;
             }
@@ -232,6 +322,25 @@ namespace MiningSimulator.Ores
             }
 
             return null;
+        }
+
+        private bool CanSpawnSpecialOre(OreData specialOre)
+        {
+            int maximum = dayNightSystem.GetMaximumActiveSpecialOres(specialOre.Kind);
+            if (maximum <= 0)
+            {
+                return false;
+            }
+
+            int activeCount = 0;
+            foreach (Ore ore in activeOres)
+            {
+                if (ore != null && ore.Data != null && ore.Data.Kind == specialOre.Kind)
+                {
+                    activeCount++;
+                }
+            }
+            return activeCount < maximum;
         }
 
         private float GetEffectiveWeight(OreSpawnEntry entry)
@@ -329,6 +438,21 @@ namespace MiningSimulator.Ores
             ore.Damaged -= HandleOreDamaged;
             ore.RewardGranted -= HandleRewardGranted;
             activeOres.Remove(ore);
+            if (!poolOwnedOres.ContainsKey(ore))
+            {
+                return;
+            }
+
+            float delay = ore.Data != null ? ore.Data.DestroyDelay : 0f;
+            if (delay > 0f && isActiveAndEnabled)
+            {
+                pendingPoolReturns.Add(ore);
+                StartCoroutine(ReturnOreToPoolAfterDelay(ore, delay));
+            }
+            else
+            {
+                ReturnOreToPool(ore);
+            }
         }
 
         private void HandleOreDamaged(Ore ore)
@@ -361,6 +485,11 @@ namespace MiningSimulator.Ores
             Ore[] existing = parent.GetComponentsInChildren<Ore>(true);
             foreach (Ore ore in existing)
             {
+                if (!ore.gameObject.activeInHierarchy)
+                {
+                    continue;
+                }
+
                 ore.ConfigureRuntime(wallet, upgradeSystem);
                 ore.Depleted -= HandleOreDepleted;
                 ore.Depleted += HandleOreDepleted;

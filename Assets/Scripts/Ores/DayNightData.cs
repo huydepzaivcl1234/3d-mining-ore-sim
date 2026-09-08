@@ -46,10 +46,12 @@ namespace MiningSimulator.Ores
         [Header("Day Special Ore")]
         [SerializeField] private OreData lightStone;
         [Range(0f, 100f), SerializeField] private float lightStoneChancePerSpawnPercent = 5f;
+        [Min(0), SerializeField] private int maximumActiveLightStones = 2;
 
         [Header("Night Special Ore")]
         [SerializeField] private OreData darkStone;
         [Range(0f, 100f), SerializeField] private float darkStoneChancePerSpawnPercent = 5f;
+        [Min(0), SerializeField] private int maximumActiveDarkStones = 2;
 
         [Header("Special Ore Aura - Shared")]
         [SerializeField] private Color lightStoneAuraColor = new(1f, 0.82f, 0.25f, 1f);
@@ -100,8 +102,10 @@ namespace MiningSimulator.Ores
         public float NightFogDensity => nightFogDensity;
         public OreData LightStone => lightStone;
         public float LightStoneChancePerSpawnPercent => lightStoneChancePerSpawnPercent;
+        public int MaximumActiveLightStones => maximumActiveLightStones;
         public OreData DarkStone => darkStone;
         public float DarkStoneChancePerSpawnPercent => darkStoneChancePerSpawnPercent;
+        public int MaximumActiveDarkStones => maximumActiveDarkStones;
         public Color LightStoneAuraColor => lightStoneAuraColor;
         public Color DarkStoneAuraColor => darkStoneAuraColor;
         public float AuraLightIntensity => auraLightIntensity;
@@ -128,6 +132,8 @@ namespace MiningSimulator.Ores
                 Mathf.Min(dayDurationSeconds, nightDurationSeconds));
             lightStoneChancePerSpawnPercent = Mathf.Clamp(lightStoneChancePerSpawnPercent, 0f, 100f);
             darkStoneChancePerSpawnPercent = Mathf.Clamp(darkStoneChancePerSpawnPercent, 0f, 100f);
+            maximumActiveLightStones = Mathf.Max(0, maximumActiveLightStones);
+            maximumActiveDarkStones = Mathf.Max(0, maximumActiveDarkStones);
             daySunIntensity = Mathf.Max(0f, daySunIntensity);
             nightSunIntensity = Mathf.Max(0f, nightSunIntensity);
             daySkyExposure = Mathf.Max(0f, daySkyExposure);

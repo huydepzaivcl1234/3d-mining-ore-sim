@@ -12,7 +12,8 @@ Shader "Mining Simulator/Dark Stone Aura"
     {
         Tags { "RenderType"="Transparent" "Queue"="Transparent+5" "RenderPipeline"="UniversalPipeline" }
         Blend SrcAlpha OneMinusSrcAlpha
-        Cull Off
+        // Back-face culling keeps the effect local even if the camera enters it.
+        Cull Back
         ZWrite Off
         ZTest LEqual
 

@@ -39,6 +39,11 @@ namespace MiningSimulator.Ores
             {
                 ore.DurabilityChanged -= HandleDurabilityChanged;
                 ore.DurabilityChanged += HandleDurabilityChanged;
+                InitializeBarIfNeeded();
+                if (initialized)
+                {
+                    HandleDurabilityChanged(ore.CurrentDurability, ore.MaxDurability);
+                }
             }
         }
 

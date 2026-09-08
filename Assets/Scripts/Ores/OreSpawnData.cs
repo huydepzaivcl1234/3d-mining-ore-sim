@@ -45,6 +45,8 @@ namespace MiningSimulator.Ores
         [SerializeField] private bool spawnOnEnable = true;
         [Min(0), SerializeField] private int initialSpawnCount = 8;
         [Min(0), SerializeField] private int maximumAliveOres = 12;
+        [Tooltip("Maximum inactive ore instances retained for reuse across all ore types. Set to 0 to disable caching.")]
+        [Min(0), SerializeField] private int maximumPooledOres = 12;
         [Min(0.05f), SerializeField] private float secondsPerSpawn = 2f;
 
         [Header("Spawn Area")]
@@ -73,6 +75,7 @@ namespace MiningSimulator.Ores
         public bool SpawnOnEnable => spawnOnEnable;
         public int InitialSpawnCount => initialSpawnCount;
         public int MaximumAliveOres => maximumAliveOres;
+        public int MaximumPooledOres => maximumPooledOres;
         public float SecondsPerSpawn => secondsPerSpawn;
         public Vector3 AreaCenter => areaCenter;
         public Vector3 AreaSize => areaSize;
@@ -104,6 +107,7 @@ namespace MiningSimulator.Ores
         {
             initialSpawnCount = Mathf.Max(0, initialSpawnCount);
             maximumAliveOres = Mathf.Max(0, maximumAliveOres);
+            maximumPooledOres = Mathf.Max(0, maximumPooledOres);
             secondsPerSpawn = Mathf.Max(0.05f, secondsPerSpawn);
             areaSize = new Vector3(Mathf.Abs(areaSize.x), Mathf.Abs(areaSize.y), Mathf.Abs(areaSize.z));
             surfaceClearance = Mathf.Max(0f, surfaceClearance);

@@ -18,6 +18,22 @@ namespace MiningSimulator.Ores
         private Material runtimeSkybox;
 
         public MiningTimePeriod CurrentPeriod => currentPeriod;
+
+        public int GetMaximumActiveSpecialOres(OreKind kind)
+        {
+            if (data == null)
+            {
+                return 0;
+            }
+
+            return kind switch
+            {
+                OreKind.LightStone => data.MaximumActiveLightStones,
+                OreKind.DarkStone => data.MaximumActiveDarkStones,
+                _ => 0
+            };
+        }
+
         public float CurrentPeriodProgress
         {
             get

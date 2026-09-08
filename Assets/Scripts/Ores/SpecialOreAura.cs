@@ -131,6 +131,9 @@ namespace MiningSimulator.Ores
             float opacity = theme == SpecialOreTheme.Light
                 ? data.LightHaloOpacity
                 : data.DarkAuraOpacity;
+            // The Inspector value represents the complete aura. Split it between
+            // transparent layers so several shells do not multiply into a black screen.
+            float perLayerOpacity = opacity / Mathf.Max(1, auraRenderers.Length);
             for (int i = 0; i < auraRenderers.Length; i++)
             {
                 Renderer target = auraRenderers[i];
@@ -144,7 +147,7 @@ namespace MiningSimulator.Ores
                 propertyBlock.SetFloat(FlowSpeedId, flowSpeed);
                 propertyBlock.SetColor(AuraColorId, auraColor);
                 propertyBlock.SetColor(OuterColorId, outerColor);
-                propertyBlock.SetFloat(OpacityId, opacity);
+                propertyBlock.SetFloat(OpacityId, perLayerOpacity);
                 target.SetPropertyBlock(propertyBlock);
             }
         }
