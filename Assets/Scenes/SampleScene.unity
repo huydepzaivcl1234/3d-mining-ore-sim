@@ -119,6 +119,23 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &161782833 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4137185510252289969, guid: 3c7e9dc37484d9142b7d383f38802b89, type: 3}
+  m_PrefabInstance: {fileID: 784633056}
+  m_PrefabAsset: {fileID: 0}
+--- !u!225 &161782838
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 161782833}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0
@@ -256,6 +273,23 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
+--- !u!1 &391745045 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5922543328800698444, guid: 3c7e9dc37484d9142b7d383f38802b89, type: 3}
+  m_PrefabInstance: {fileID: 784633056}
+  m_PrefabAsset: {fileID: 0}
+--- !u!225 &391745053
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 391745045}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
@@ -383,6 +417,40 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
+--- !u!1 &425104558 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7193271882592940265, guid: 3c7e9dc37484d9142b7d383f38802b89, type: 3}
+  m_PrefabInstance: {fileID: 784633056}
+  m_PrefabAsset: {fileID: 0}
+--- !u!225 &425104563
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 425104558}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
+--- !u!1 &469026070 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1391591871680898114, guid: 3c7e9dc37484d9142b7d383f38802b89, type: 3}
+  m_PrefabInstance: {fileID: 784633056}
+  m_PrefabAsset: {fileID: 0}
+--- !u!225 &469026075
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 469026070}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &543382458
 GameObject:
   m_ObjectHideFlags: 0
@@ -496,6 +564,23 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &685182101 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5573752944518137338, guid: 3c7e9dc37484d9142b7d383f38802b89, type: 3}
+  m_PrefabInstance: {fileID: 784633056}
+  m_PrefabAsset: {fileID: 0}
+--- !u!225 &685182106
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 685182101}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1001 &784633056
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1219,7 +1304,28 @@ PrefabInstance:
     - {fileID: 5172288795951486771, guid: 3c7e9dc37484d9142b7d383f38802b89, type: 3}
     - {fileID: 3935481242023627790, guid: 3c7e9dc37484d9142b7d383f38802b89, type: 3}
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 2565732122295331608, guid: 3c7e9dc37484d9142b7d383f38802b89, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1458038455}
+    - targetCorrespondingSourceObject: {fileID: 7193271882592940265, guid: 3c7e9dc37484d9142b7d383f38802b89, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 425104563}
+    - targetCorrespondingSourceObject: {fileID: 5573752944518137338, guid: 3c7e9dc37484d9142b7d383f38802b89, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 685182106}
+    - targetCorrespondingSourceObject: {fileID: 4855374907193333630, guid: 3c7e9dc37484d9142b7d383f38802b89, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2035237000}
+    - targetCorrespondingSourceObject: {fileID: 1391591871680898114, guid: 3c7e9dc37484d9142b7d383f38802b89, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 469026075}
+    - targetCorrespondingSourceObject: {fileID: 5922543328800698444, guid: 3c7e9dc37484d9142b7d383f38802b89, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 391745053}
+    - targetCorrespondingSourceObject: {fileID: 4137185510252289969, guid: 3c7e9dc37484d9142b7d383f38802b89, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 161782838}
   m_SourcePrefab: {fileID: 100100000, guid: 3c7e9dc37484d9142b7d383f38802b89, type: 3}
 --- !u!1 &832575517
 GameObject:
@@ -1270,6 +1376,23 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1458038439 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2565732122295331608, guid: 3c7e9dc37484d9142b7d383f38802b89, type: 3}
+  m_PrefabInstance: {fileID: 784633056}
+  m_PrefabAsset: {fileID: 0}
+--- !u!225 &1458038455
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1458038439}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &1719808838
 GameObject:
   m_ObjectHideFlags: 0
@@ -1349,6 +1472,23 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &2035236995 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4855374907193333630, guid: 3c7e9dc37484d9142b7d383f38802b89, type: 3}
+  m_PrefabInstance: {fileID: 784633056}
+  m_PrefabAsset: {fileID: 0}
+--- !u!225 &2035237000
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2035236995}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
