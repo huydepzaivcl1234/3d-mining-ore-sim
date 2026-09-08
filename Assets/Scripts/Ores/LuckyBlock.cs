@@ -17,6 +17,10 @@ namespace MiningSimulator.Ores
         private Rigidbody body;
         private Transform visualRoot;
         private Vector3 baseVisualScale = Vector3.one;
+        private Vector3 authoredVisualLocalPosition;
+        private Quaternion authoredVisualLocalRotation = Quaternion.identity;
+        private Vector3 authoredVisualLocalScale = Vector3.one;
+        private bool hasAuthoredVisualTransform;
         private float lifetime;
         private float punchElapsed;
         private bool punchPlaying;
@@ -33,13 +37,45 @@ namespace MiningSimulator.Ores
         public event Action<LuckyBlock> Broken;
         public event Action<LuckyBlock> Expired;
 
+        public void ConfigureVisualRoot(Transform targetVisualRoot)
+        {
+            visualRoot = targetVisualRoot;
+            if (visualRoot == null)
+            {
+                hasAuthoredVisualTransform = false;
+                return;
+            }
+
+            authoredVisualLocalPosition = visualRoot.localPosition;
+            authoredVisualLocalRotation = visualRoot.localRotation;
+            authoredVisualLocalScale = visualRoot.localScale;
+            baseVisualScale = authoredVisualLocalScale;
+            hasAuthoredVisualTransform = true;
+        }
+
+        public void RestoreAuthoredVisualTransform()
+        {
+            if (!hasAuthoredVisualTransform || visualRoot == null)
+            {
+                return;
+            }
+
+            visualRoot.SetLocalPositionAndRotation(authoredVisualLocalPosition,
+                authoredVisualLocalRotation);
+            visualRoot.localScale = authoredVisualLocalScale;
+            baseVisualScale = authoredVisualLocalScale;
+        }
+
         public void Initialize(LuckyBlockVariantData targetVariant, LuckyBlockData targetSettings,
             PlayerWallet targetWallet, Transform targetVisualRoot, float spinDegreesPerSecond)
         {
             variant = targetVariant;
             settings = targetSettings;
             wallet = targetWallet;
-            visualRoot = targetVisualRoot;
+            if (visualRoot != targetVisualRoot || !hasAuthoredVisualTransform)
+            {
+                ConfigureVisualRoot(targetVisualRoot);
+            }
             type = variant.Type;
             currentDurability = Mathf.Max(1, variant.Durability);
             resolved = false;

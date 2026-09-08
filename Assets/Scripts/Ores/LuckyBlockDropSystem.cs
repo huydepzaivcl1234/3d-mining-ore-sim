@@ -117,6 +117,7 @@ namespace MiningSimulator.Ores
                 landingPosition + Vector3.up * data.DropHeight,
                 Quaternion.identity);
             block.transform.localScale = Vector3.one;
+            block.RestoreAuthoredVisualTransform();
             NormalizeVisualAndCollider(block, worldSize);
             block.transform.rotation = Quaternion.Euler(0f,
                 Random.Range(minimumAngle, maximumAngle), 0f);
@@ -236,6 +237,7 @@ namespace MiningSimulator.Ores
             body.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
             body.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
             LuckyBlock block = root.AddComponent<LuckyBlock>();
+            block.ConfigureVisualRoot(visual.transform);
             AddHealthBar(root, block);
             return block;
         }
@@ -287,8 +289,9 @@ namespace MiningSimulator.Ores
 
             if (TryGetLocalRendererBounds(root, renderers, out localBounds))
             {
-                targetCollider.center = localBounds.center;
-                targetCollider.size = localBounds.size;
+                Vector3 colliderSize = localBounds.size;
+                targetCollider.center = new Vector3(0f, colliderSize.y * 0.5f, 0f);
+                targetCollider.size = colliderSize;
             }
         }
 
