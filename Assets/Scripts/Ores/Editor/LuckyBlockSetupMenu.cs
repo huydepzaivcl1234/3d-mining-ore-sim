@@ -18,6 +18,8 @@ namespace MiningSimulator.Editor
         private const string RainbowModelPath = "Assets/Ores/Models/rainbow_lucky_block.fbx";
         private const string UiDataPath = "Assets/GameData/UI/MiningUiData.asset";
         private const string RewardPopupPath = "Assets/Prefabs/UI/OreRewardPopup.prefab";
+        private const string HealthBarPrefabPath =
+            "Assets/Microlight/MicroBar/Prefabs/SimpleBars/Sprite_SimpleMicroBarSRP.prefab";
 
         [MenuItem("Mining Simulator/Setup/Create or Update Lucky Blocks")]
         public static void CreateOrUpdateLuckyBlocks()
@@ -147,6 +149,8 @@ namespace MiningSimulator.Editor
             GameObject popupObject = AssetDatabase.LoadAssetAtPath<GameObject>(RewardPopupPath);
             SetReferenceIfMissing(serialized, "rewardPopupPrefab",
                 popupObject != null ? popupObject.GetComponent<OreRewardPopup>() : null);
+            SetReferenceIfMissing(serialized, "healthBarPrefab",
+                AssetDatabase.LoadAssetAtPath<GameObject>(HealthBarPrefabPath));
             serialized.ApplyModifiedProperties();
             EditorUtility.SetDirty(system);
             EditorSceneManager.MarkSceneDirty(system.gameObject.scene);

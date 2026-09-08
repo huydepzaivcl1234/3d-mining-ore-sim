@@ -25,8 +25,10 @@ namespace MiningSimulator.Ores
         public LuckyBlockType Type => type;
         public int CurrentDurability => currentDurability;
         public int MaximumDurability => variant != null ? variant.Durability : 0;
+        public LuckyBlockData Settings => settings;
         public bool IsResolved => resolved;
         public event Action<LuckyBlock> Damaged;
+        public event Action<int, int> DurabilityChanged;
         public event Action<LuckyBlock, int> RewardGranted;
         public event Action<LuckyBlock> Broken;
         public event Action<LuckyBlock> Expired;
@@ -59,6 +61,7 @@ namespace MiningSimulator.Ores
             body.isKinematic = false;
             body.useGravity = true;
             body.WakeUp();
+            DurabilityChanged?.Invoke(currentDurability, MaximumDurability);
         }
 
         public bool MineOnce()
@@ -74,6 +77,7 @@ namespace MiningSimulator.Ores
             }
 
             currentDurability = Mathf.Max(0, currentDurability - damage);
+            DurabilityChanged?.Invoke(currentDurability, MaximumDurability);
             if (currentDurability > 0)
             {
                 punchElapsed = 0f;

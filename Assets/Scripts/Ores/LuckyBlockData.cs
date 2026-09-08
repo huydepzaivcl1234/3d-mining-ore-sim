@@ -53,6 +53,7 @@ namespace MiningSimulator.Ores
         [Min(1), SerializeField] private int positionAttemptsPerDrop = 16;
 
         [Header("Drop Placement")]
+        [Tooltip("Uniform multiplier for the authored Blender size. A value of 1 keeps the original size.")]
         [Min(0.1f), SerializeField] private float blockSize = 1f;
         [Min(0f), SerializeField] private float dropHeight = 12f;
         [Min(0f), SerializeField] private float placementClearance = 0.35f;
@@ -70,6 +71,10 @@ namespace MiningSimulator.Ores
         [Header("Feedback")]
         [Range(0f, 0.5f), SerializeField] private float hitPunchScale = 0.10f;
         [Min(0.01f), SerializeField] private float hitPunchDuration = 0.16f;
+
+        [Header("Health Bar")]
+        [SerializeField] private Vector3 healthBarWorldOffset = new(0f, 0.25f, 0f);
+        [Min(0.01f), SerializeField] private float healthBarScale = 0.65f;
 
         [Header("Pooling")]
         [Min(0), SerializeField] private int maximumPooledBlocks = 6;
@@ -94,6 +99,8 @@ namespace MiningSimulator.Ores
         public float RecycleBelowWorldY => recycleBelowWorldY;
         public float HitPunchScale => hitPunchScale;
         public float HitPunchDuration => hitPunchDuration;
+        public Vector3 HealthBarWorldOffset => healthBarWorldOffset;
+        public float HealthBarScale => healthBarScale;
         public int MaximumPooledBlocks => maximumPooledBlocks;
         public IReadOnlyList<LuckyBlockVariantData> Variants => variants;
 
@@ -112,6 +119,7 @@ namespace MiningSimulator.Ores
             maximumLifetimeSeconds = Mathf.Max(1f, maximumLifetimeSeconds);
             hitPunchScale = Mathf.Clamp(hitPunchScale, 0f, 0.5f);
             hitPunchDuration = Mathf.Max(0.01f, hitPunchDuration);
+            healthBarScale = Mathf.Max(0.01f, healthBarScale);
             maximumPooledBlocks = Mathf.Max(0, maximumPooledBlocks);
             if (variants == null)
             {

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Microlight.MicroBar;
 using UnityEngine;
 
 namespace MiningSimulator.Ores
@@ -16,6 +17,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private Transform droppedBlockParent;
         [SerializeField] private MiningUiData uiData;
         [SerializeField] private OreRewardPopup rewardPopupPrefab;
+        [SerializeField] private GameObject healthBarPrefab;
 
         private readonly HashSet<LuckyBlock> activeBlocks = new();
         private readonly Dictionary<LuckyBlockType, Queue<LuckyBlock>> pools = new();
@@ -23,12 +25,26 @@ namespace MiningSimulator.Ores
         private readonly Collider[] overlapResults = new Collider[64];
         private Coroutine dropRoutine;
 
+        private const float AuthoredModelWorldSize = 2.1507f;
+
         public int ActiveCount => activeBlocks.Count;
         public int PooledCount => pooledBlocks.Count;
 
         private void OnEnable()
         {
-            if (data != null && oreSpawnData != null && spawnAreaOrigin != null)
+            EnsureDropRoutine();
+        }
+
+        private void Start()
+        {
+            // Setup tools can assign references after OnEnable has already run.
+            EnsureDropRoutine();
+        }
+
+        private void EnsureDropRoutine()
+        {
+            if (dropRoutine == null && data != null && oreSpawnData != null &&
+                spawnAreaOrigin != null)
             {
                 dropRoutine = StartCoroutine(DropLoop());
             }
@@ -93,13 +109,17 @@ namespace MiningSimulator.Ores
                 return false;
             }
 
-            float size = data.BlockSize * variant.SizeMultiplier;
+            float sizeMultiplier = data.BlockSize * variant.SizeMultiplier;
+            float worldSize = AuthoredModelWorldSize * sizeMultiplier;
             float minimumAngle = Mathf.Min(data.RandomYRotationMinimum, data.RandomYRotationMaximum);
             float maximumAngle = Mathf.Max(data.RandomYRotationMinimum, data.RandomYRotationMaximum);
             block.transform.SetPositionAndRotation(
                 landingPosition + Vector3.up * data.DropHeight,
-                Quaternion.Euler(0f, Random.Range(minimumAngle, maximumAngle), 0f));
-            block.transform.localScale = Vector3.one * size;
+                Quaternion.identity);
+            block.transform.localScale = Vector3.one;
+            NormalizeVisualAndCollider(block, worldSize);
+            block.transform.rotation = Quaternion.Euler(0f,
+                Random.Range(minimumAngle, maximumAngle), 0f);
             block.gameObject.SetActive(true);
             float minimumSpin = Mathf.Min(data.FallingSpinRange.x, data.FallingSpinRange.y);
             float maximumSpin = Mathf.Max(data.FallingSpinRange.x, data.FallingSpinRange.y);
@@ -148,7 +168,7 @@ namespace MiningSimulator.Ores
             out Vector3 landingPosition)
         {
             Vector3 areaSize = oreSpawnData.AreaSize;
-            float worldSize = data.BlockSize * variant.SizeMultiplier * 2.16f;
+            float worldSize = data.BlockSize * variant.SizeMultiplier * AuthoredModelWorldSize;
             float checkRadius = worldSize * 0.5f + data.PlacementClearance;
             for (int attempt = 0; attempt < data.PositionAttemptsPerDrop; attempt++)
             {
@@ -206,42 +226,114 @@ namespace MiningSimulator.Ores
         {
             GameObject root = new(variant.DisplayName);
             root.transform.SetParent(droppedBlockParent != null ? droppedBlockParent : transform, false);
+            root.SetActive(false);
             GameObject visual = Instantiate(variant.Model, root.transform);
             visual.name = "Model";
-            visual.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
-            visual.transform.localScale = Vector3.one;
 
             BoxCollider targetCollider = root.AddComponent<BoxCollider>();
-            FitColliderToVisual(root.transform, visual, targetCollider);
             Rigidbody body = root.AddComponent<Rigidbody>();
             body.interpolation = RigidbodyInterpolation.Interpolate;
             body.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
             body.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
             LuckyBlock block = root.AddComponent<LuckyBlock>();
-            root.SetActive(false);
+            AddHealthBar(root, block);
             return block;
         }
 
-        private static void FitColliderToVisual(Transform root, GameObject visual,
-            BoxCollider targetCollider)
+        private void AddHealthBar(GameObject root, LuckyBlock block)
         {
-            Renderer[] renderers = visual.GetComponentsInChildren<Renderer>(true);
-            if (renderers.Length == 0)
+            if (healthBarPrefab == null)
             {
-                targetCollider.center = new Vector3(0f, 1f, 0f);
-                targetCollider.size = new Vector3(2f, 2f, 2f);
                 return;
             }
 
-            Bounds bounds = renderers[0].bounds;
-            for (int i = 1; i < renderers.Length; i++)
+            GameObject barObject = Instantiate(healthBarPrefab, root.transform);
+            barObject.name = "Lucky Block Health Bar";
+            MicroBar bar = barObject.GetComponent<MicroBar>();
+            LuckyBlockHealthBar binding = barObject.AddComponent<LuckyBlockHealthBar>();
+            binding.Configure(block, bar, barObject.transform);
+        }
+
+        private static void NormalizeVisualAndCollider(LuckyBlock block, float targetWorldSize)
+        {
+            Transform root = block.transform;
+            Transform visual = root.childCount > 0 ? root.GetChild(0) : null;
+            BoxCollider targetCollider = block.GetComponent<BoxCollider>();
+            if (visual == null || targetCollider == null)
             {
-                bounds.Encapsulate(renderers[i].bounds);
+                return;
             }
 
-            targetCollider.center = root.InverseTransformPoint(bounds.center);
-            Vector3 size = root.InverseTransformVector(bounds.size);
-            targetCollider.size = new Vector3(Mathf.Abs(size.x), Mathf.Abs(size.y), Mathf.Abs(size.z));
+            Renderer[] renderers = visual.GetComponentsInChildren<Renderer>(true);
+            if (!TryGetLocalRendererBounds(root, renderers, out Bounds localBounds))
+            {
+                targetCollider.center = new Vector3(0f, targetWorldSize * 0.5f, 0f);
+                targetCollider.size = Vector3.one * targetWorldSize;
+                return;
+            }
+
+            float currentSize = Mathf.Max(localBounds.size.x,
+                Mathf.Max(localBounds.size.y, localBounds.size.z));
+            if (currentSize > Mathf.Epsilon)
+            {
+                visual.localScale *= targetWorldSize / currentSize;
+            }
+
+            if (TryGetLocalRendererBounds(root, renderers, out localBounds))
+            {
+                visual.localPosition += new Vector3(-localBounds.center.x, -localBounds.min.y,
+                    -localBounds.center.z);
+            }
+
+            if (TryGetLocalRendererBounds(root, renderers, out localBounds))
+            {
+                targetCollider.center = localBounds.center;
+                targetCollider.size = localBounds.size;
+            }
+        }
+
+        private static bool TryGetLocalRendererBounds(Transform root, Renderer[] renderers,
+            out Bounds localBounds)
+        {
+            bool hasBounds = false;
+            localBounds = default;
+            foreach (Renderer renderer in renderers)
+            {
+                if (renderer == null)
+                {
+                    continue;
+                }
+
+                Bounds rendererBounds = renderer.localBounds;
+                Vector3 minimum = rendererBounds.min;
+                Vector3 maximum = rendererBounds.max;
+                for (int x = 0; x <= 1; x++)
+                {
+                    for (int y = 0; y <= 1; y++)
+                    {
+                        for (int z = 0; z <= 1; z++)
+                        {
+                            Vector3 rendererCorner = new(
+                                x == 0 ? minimum.x : maximum.x,
+                                y == 0 ? minimum.y : maximum.y,
+                                z == 0 ? minimum.z : maximum.z);
+                            Vector3 localCorner = root.InverseTransformPoint(
+                                renderer.transform.TransformPoint(rendererCorner));
+                            if (!hasBounds)
+                            {
+                                localBounds = new Bounds(localCorner, Vector3.zero);
+                                hasBounds = true;
+                            }
+                            else
+                            {
+                                localBounds.Encapsulate(localCorner);
+                            }
+                        }
+                    }
+                }
+            }
+
+            return hasBounds;
         }
 
         private LuckyBlock TakeFromPool(LuckyBlockVariantData variant)
