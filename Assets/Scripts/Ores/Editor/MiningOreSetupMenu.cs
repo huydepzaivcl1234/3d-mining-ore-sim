@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Microlight.MicroBar;
 using MiningSimulator.Ores;
@@ -162,14 +163,13 @@ namespace MiningSimulator.Editor
             }
         }
 
-        [MenuItem("Mining Simulator/Setup/Convert MiningRuntime To Scene GameManager")]
+        [MenuItem("Mining Simulator/Setup/Organize Scene GameManager")]
         public static void ConvertRuntimeToSceneGameManager()
         {
             Scene scene = SceneManager.GetActiveScene();
             foreach (GameObject root in scene.GetRootGameObjects())
             {
-                if (root.GetComponentInChildren<MiningGameManager>(true) == null &&
-                    root.GetComponentInChildren<OreSpawner>(true) == null)
+                if (root.GetComponentInChildren<OreSpawner>(true) == null)
                 {
                     continue;
                 }
@@ -181,7 +181,7 @@ namespace MiningSimulator.Editor
                 }
 
                 Selection.activeGameObject = root;
-                Debug.Log("Runtime systems are now owned by the Scene GameManager object. The runtime prefab link is no longer used by this scene.", root);
+                Debug.Log("Scene GameManager is independent and its systems are organized into clear child objects.", root);
                 return;
             }
 
@@ -614,8 +614,6 @@ namespace MiningSimulator.Editor
                 MiningUiPanelCoordinator panelCoordinator =
                     runtime.GetComponent<MiningUiPanelCoordinator>() ??
                     runtime.AddComponent<MiningUiPanelCoordinator>();
-                MiningGameManager gameManager = runtime.GetComponent<MiningGameManager>() ??
-                                                runtime.AddComponent<MiningGameManager>();
                 MiningOrbitCamera orbitCamera = runtime.GetComponent<MiningOrbitCamera>() ??
                                                 runtime.AddComponent<MiningOrbitCamera>();
 
@@ -713,27 +711,11 @@ namespace MiningSimulator.Editor
                 audioSerialized.FindProperty("sfxSource").objectReferenceValue = sfxSource;
                 audioSerialized.ApplyModifiedPropertiesWithoutUndo();
 
-                var gameManagerSerialized = new SerializedObject(gameManager);
-                SetReferenceIfMissing(gameManagerSerialized.FindProperty("wallet"), wallet);
-                SetReferenceIfMissing(gameManagerSerialized.FindProperty("oreSpawner"), spawner);
-                SetReferenceIfMissing(gameManagerSerialized.FindProperty("npcShop"), shop);
-                SetReferenceIfMissing(gameManagerSerialized.FindProperty("upgradeSystem"), upgradeSystem);
-                SetReferenceIfMissing(gameManagerSerialized.FindProperty("rebirthSystem"), rebirthSystem);
-                SetReferenceIfMissing(gameManagerSerialized.FindProperty("hud"), hud);
-                SetReferenceIfMissing(gameManagerSerialized.FindProperty("upgradePanel"), upgradePanel);
-                SetReferenceIfMissing(gameManagerSerialized.FindProperty("rebirthPanel"), rebirthPanel);
-                SetReferenceIfMissing(gameManagerSerialized.FindProperty("audioManager"), audioManager);
-                SetReferenceIfMissing(gameManagerSerialized.FindProperty("audioSettingsPanel"),
-                    audioSettingsPanel);
-                SetReferenceIfMissing(gameManagerSerialized.FindProperty("panelCoordinator"),
-                    panelCoordinator);
-                SetReferenceIfMissing(gameManagerSerialized.FindProperty("orbitCamera"), orbitCamera);
-                gameManagerSerialized.ApplyModifiedPropertiesWithoutUndo();
-
                 var cameraSerialized = new SerializedObject(orbitCamera);
                 SetReferenceIfMissing(cameraSerialized.FindProperty("gameData"), gameData);
                 cameraSerialized.ApplyModifiedPropertiesWithoutUndo();
 
+                GameObjectUtility.RemoveMonoBehavioursWithMissingScript(runtime);
                 PrefabUtility.SaveAsPrefabAsset(runtime, RuntimePrefabPath);
             }
             finally
@@ -1892,7 +1874,122 @@ namespace MiningSimulator.Editor
                 changed = true;
             }
 
+            changed |= OrganizeSceneManagers(root, registerUndo);
+
             return changed;
+        }
+
+        private static bool OrganizeSceneManagers(GameObject root, bool registerUndo)
+        {
+            var layout = new Dictionary<Type, string>
+            {
+                { typeof(OreSpawner), "Ore System" },
+                { typeof(OreClickInput), "Ore System" },
+                { typeof(NpcShop), "NPC System" },
+                { typeof(MiningUpgradeSystem), "Upgrade System" },
+                { typeof(MiningRebirthSystem), "Rebirth System" },
+                { typeof(MiningAudioManager), "Audio System" },
+                { typeof(MiningHud), "UI Systems" },
+                { typeof(MiningUpgradePanel), "UI Systems" },
+                { typeof(MiningRebirthPanel), "UI Systems" },
+                { typeof(MiningAudioSettingsPanel), "UI Systems" },
+                { typeof(MiningUiPanelCoordinator), "UI Systems" },
+                { typeof(MiningOrbitCamera), "Camera System" }
+            };
+
+            var replacements = new Dictionary<UnityEngine.Object, UnityEngine.Object>();
+            var oldComponents = new List<Component>();
+            bool changed = false;
+
+            foreach (Component component in root.GetComponents<Component>())
+            {
+                if (component == null || component is Transform || component is PlayerWallet ||
+                    !layout.TryGetValue(component.GetType(), out string groupName))
+                {
+                    continue;
+                }
+
+                Transform group = root.transform.Find(groupName);
+                if (group == null)
+                {
+                    GameObject groupObject = new(groupName);
+                    groupObject.transform.SetParent(root.transform, false);
+                    if (registerUndo)
+                    {
+                        Undo.RegisterCreatedObjectUndo(groupObject, $"Create {groupName}");
+                    }
+                    group = groupObject.transform;
+                }
+
+                Component replacement = registerUndo
+                    ? Undo.AddComponent(group.gameObject, component.GetType())
+                    : group.gameObject.AddComponent(component.GetType());
+                EditorUtility.CopySerialized(component, replacement);
+                replacements.Add(component, replacement);
+                oldComponents.Add(component);
+                changed = true;
+            }
+
+            if (!changed)
+            {
+                return false;
+            }
+
+            RemapSceneReferences(root.gameObject.scene, replacements);
+            foreach (Component oldComponent in oldComponents)
+            {
+                if (registerUndo)
+                {
+                    Undo.DestroyObjectImmediate(oldComponent);
+                }
+                else
+                {
+                    UnityEngine.Object.DestroyImmediate(oldComponent);
+                }
+            }
+
+            GameObjectUtility.RemoveMonoBehavioursWithMissingScript(root);
+            EditorUtility.SetDirty(root);
+            return true;
+        }
+
+        private static void RemapSceneReferences(Scene scene,
+            IReadOnlyDictionary<UnityEngine.Object, UnityEngine.Object> replacements)
+        {
+            foreach (GameObject sceneRoot in scene.GetRootGameObjects())
+            {
+                foreach (Component component in sceneRoot.GetComponentsInChildren<Component>(true))
+                {
+                    if (component == null)
+                    {
+                        continue;
+                    }
+
+                    SerializedObject serialized = new(component);
+                    SerializedProperty property = serialized.GetIterator();
+                    bool enterChildren = true;
+                    bool modified = false;
+                    while (property.NextVisible(enterChildren))
+                    {
+                        enterChildren = false;
+                        if (property.propertyType != SerializedPropertyType.ObjectReference ||
+                            property.objectReferenceValue == null ||
+                            !replacements.TryGetValue(property.objectReferenceValue, out UnityEngine.Object replacement))
+                        {
+                            continue;
+                        }
+
+                        property.objectReferenceValue = replacement;
+                        modified = true;
+                    }
+
+                    if (modified)
+                    {
+                        serialized.ApplyModifiedPropertiesWithoutUndo();
+                        EditorUtility.SetDirty(component);
+                    }
+                }
+            }
         }
 
         private static void EnsureCollider(GameObject root)

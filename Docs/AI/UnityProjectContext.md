@@ -86,8 +86,12 @@
 - The five upgrade cards use dedicated transparent sprites from `Assets/UI/Icons/Upgrades`.
   All authored HUD buttons use interruptible, unscaled-time hover punch and click bounce feedback;
   scale and duration values live in `MiningUiData`.
-- `MiningGameManager` is a serialized composition root that exposes the existing mining systems without
-  replacing their ownership or introducing a global singleton.
+- `PlayerWallet.currentMoney` is the single authoritative money value. It is editable in the Inspector
+  during Play Mode and publishes `MoneyChanged` immediately so the HUD and all consumers stay synchronized.
+- The Scene `GameManager` keeps only the wallet at its root. Ore, NPC, upgrade, rebirth, audio, UI, and
+  camera behaviours are organized on named child objects instead of stacking every component together.
+- The obsolete automatic drill runtime, data, prefab, controller, UI panel, and editor setup code were removed.
+  The user's source FBX remains untouched for a future drill implementation.
 - `MiningAudioManager` owns one looping music source and one shared SFX source. It reacts to ore hits,
   ore breaks, NPC purchases, upgrade purchases, panel navigation, and rebirth. It repairs missing
   AudioSource references at runtime. All clips and playback values live in

@@ -12,7 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8f1402b73084f33b8415df7ae65c944, type: 3}
   m_Name: MiningGameData
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningGameData
-  startingMoney: 500
   clickableLayers:
     serializedVersion: 2
     m_Bits: 4294967295

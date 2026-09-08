@@ -564,17 +564,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &651039846 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 7092744264640197771, guid: 1d6f2c17ecf331b4c8d50175191016ac, type: 3}
-  m_PrefabInstance: {fileID: 712197912}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b51f4d8d572b4e41b31ff7da0a3dd9fb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningDrillStation
 --- !u!1 &685182101 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 5573752944518137338, guid: 3c7e9dc37484d9142b7d383f38802b89, type: 3}
@@ -592,131 +581,6 @@ CanvasGroup:
   m_Interactable: 1
   m_BlocksRaycasts: 1
   m_IgnoreParentGroups: 0
---- !u!1001 &712197912
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 173288671357208267, guid: 1d6f2c17ecf331b4c8d50175191016ac, type: 3}
-      propertyPath: m_Name
-      value: MiningDrillStation
-      objectReference: {fileID: 0}
-    - target: {fileID: 1458479890442765653, guid: 1d6f2c17ecf331b4c8d50175191016ac, type: 3}
-      propertyPath: m_fontColor32.rgba
-      value: 4280884244
-      objectReference: {fileID: 0}
-    - target: {fileID: 1458479890442765653, guid: 1d6f2c17ecf331b4c8d50175191016ac, type: 3}
-      propertyPath: m_TextStyleHashCode
-      value: -1183493901
-      objectReference: {fileID: 0}
-    - target: {fileID: 1666887403076837889, guid: 1d6f2c17ecf331b4c8d50175191016ac, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1666887403076837889, guid: 1d6f2c17ecf331b4c8d50175191016ac, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 1666887403076837889, guid: 1d6f2c17ecf331b4c8d50175191016ac, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 180
-      objectReference: {fileID: 0}
-    - target: {fileID: 2862527538948820397, guid: 1d6f2c17ecf331b4c8d50175191016ac, type: 3}
-      propertyPath: m_fontColor32.rgba
-      value: 4280884244
-      objectReference: {fileID: 0}
-    - target: {fileID: 2862527538948820397, guid: 1d6f2c17ecf331b4c8d50175191016ac, type: 3}
-      propertyPath: m_TextStyleHashCode
-      value: -1183493901
-      objectReference: {fileID: 0}
-    - target: {fileID: 3149275955579252125, guid: 1d6f2c17ecf331b4c8d50175191016ac, type: 3}
-      propertyPath: m_fontColor32.rgba
-      value: 4280884244
-      objectReference: {fileID: 0}
-    - target: {fileID: 3149275955579252125, guid: 1d6f2c17ecf331b4c8d50175191016ac, type: 3}
-      propertyPath: m_TextStyleHashCode
-      value: -1183493901
-      objectReference: {fileID: 0}
-    - target: {fileID: 3931148489721525260, guid: 1d6f2c17ecf331b4c8d50175191016ac, type: 3}
-      propertyPath: m_fontColor32.rgba
-      value: 4280884244
-      objectReference: {fileID: 0}
-    - target: {fileID: 3931148489721525260, guid: 1d6f2c17ecf331b4c8d50175191016ac, type: 3}
-      propertyPath: m_TextStyleHashCode
-      value: -1183493901
-      objectReference: {fileID: 0}
-    - target: {fileID: 4473426412083424339, guid: 1d6f2c17ecf331b4c8d50175191016ac, type: 3}
-      propertyPath: m_fontColor32.rgba
-      value: 4280884244
-      objectReference: {fileID: 0}
-    - target: {fileID: 4473426412083424339, guid: 1d6f2c17ecf331b4c8d50175191016ac, type: 3}
-      propertyPath: m_TextStyleHashCode
-      value: -1183493901
-      objectReference: {fileID: 0}
-    - target: {fileID: 7092744264640197771, guid: 1d6f2c17ecf331b4c8d50175191016ac, type: 3}
-      propertyPath: previewWorkingModelInEditMode
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 7700014818811095279, guid: 1d6f2c17ecf331b4c8d50175191016ac, type: 3}
-      propertyPath: m_fontColor32.rgba
-      value: 4280884244
-      objectReference: {fileID: 0}
-    - target: {fileID: 7700014818811095279, guid: 1d6f2c17ecf331b4c8d50175191016ac, type: 3}
-      propertyPath: m_TextStyleHashCode
-      value: -1183493901
-      objectReference: {fileID: 0}
-    - target: {fileID: 7977328854114426978, guid: 1d6f2c17ecf331b4c8d50175191016ac, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 11.575673
-      objectReference: {fileID: 0}
-    - target: {fileID: 7977328854114426978, guid: 1d6f2c17ecf331b4c8d50175191016ac, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: -0.00000026347743
-      objectReference: {fileID: 0}
-    - target: {fileID: 7977328854114426978, guid: 1d6f2c17ecf331b4c8d50175191016ac, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 7.5944533
-      objectReference: {fileID: 0}
-    - target: {fileID: 7977328854114426978, guid: 1d6f2c17ecf331b4c8d50175191016ac, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: -1
-      objectReference: {fileID: 0}
-    - target: {fileID: 7977328854114426978, guid: 1d6f2c17ecf331b4c8d50175191016ac, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7977328854114426978, guid: 1d6f2c17ecf331b4c8d50175191016ac, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7977328854114426978, guid: 1d6f2c17ecf331b4c8d50175191016ac, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7977328854114426978, guid: 1d6f2c17ecf331b4c8d50175191016ac, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 360
-      objectReference: {fileID: 0}
-    - target: {fileID: 7977328854114426978, guid: 1d6f2c17ecf331b4c8d50175191016ac, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7977328854114426978, guid: 1d6f2c17ecf331b4c8d50175191016ac, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8089653775902714033, guid: 1d6f2c17ecf331b4c8d50175191016ac, type: 3}
-      propertyPath: m_AdditionalShaderChannelsFlag
-      value: 25
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 1d6f2c17ecf331b4c8d50175191016ac, type: 3}
 --- !u!1001 &784633056
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1249,10 +1113,6 @@ PrefabInstance:
       propertyPath: m_ConstrainProportionsScale
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 7367900162213501200, guid: 3c7e9dc37484d9142b7d383f38802b89, type: 3}
-      propertyPath: drillStation
-      value: 
-      objectReference: {fileID: 651039846}
     - target: {fileID: 7401172325617498390, guid: 3c7e9dc37484d9142b7d383f38802b89, type: 3}
       propertyPath: m_fontColor32.rgba
       value: 4282896895
@@ -1425,7 +1285,8 @@ PrefabInstance:
       propertyPath: m_ConstrainProportionsScale
       value: 1
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 7367900162213501200, guid: 3c7e9dc37484d9142b7d383f38802b89, type: 3}
     m_RemovedGameObjects:
     - {fileID: 7933756822275356471, guid: 3c7e9dc37484d9142b7d383f38802b89, type: 3}
     - {fileID: 3877112163733577496, guid: 3c7e9dc37484d9142b7d383f38802b89, type: 3}
@@ -1643,4 +1504,3 @@ SceneRoots:
   - {fileID: 543382462}
   - {fileID: 784633056}
   - {fileID: 1719808841}
-  - {fileID: 712197912}

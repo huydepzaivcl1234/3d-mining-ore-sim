@@ -39,13 +39,6 @@ namespace MiningSimulator.Ores
                 return;
             }
 
-            MiningDrillStation drill = hit.collider.GetComponentInParent<MiningDrillStation>();
-            if (drill != null)
-            {
-                drill.Interact();
-                return;
-            }
-
             Ore ore = hit.collider.GetComponentInParent<Ore>();
             ore?.MineOnce();
         }
