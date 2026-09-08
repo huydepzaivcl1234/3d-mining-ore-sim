@@ -22,7 +22,7 @@ MonoBehaviour:
   npcPurchasedSfx: {fileID: 8300000, guid: c062f16ffb3abca46b7717172158c05e, type: 3}
   upgradePurchasedSfx: {fileID: 8300000, guid: c062f16ffb3abca46b7717172158c05e, type: 3}
   rebirthSfx: {fileID: 0}
-  buttonClickSfx: {fileID: 0}
+  buttonClickSfx: {fileID: 8300000, guid: c827175ac1520f24193f96c9f3a3f753, type: 3}
   panelOpenSfx: {fileID: 0}
   panelCloseSfx: {fileID: 0}
   sfxVolume: 0.8

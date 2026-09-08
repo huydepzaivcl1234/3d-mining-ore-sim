@@ -3826,7 +3826,6 @@ GameObject:
   - component: {fileID: 8801503712155055006}
   - component: {fileID: 8763811069879228364}
   - component: {fileID: 1740591884523500440}
-  - component: {fileID: 7367900162213501200}
   - component: {fileID: 2324561397310624886}
   - component: {fileID: 8840111787548688324}
   - component: {fileID: 7794858288780390671}
@@ -3867,7 +3866,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b684b75a86fb4654fbe50f4aad7c0ce1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.PlayerWallet
-  gameData: {fileID: 11400000, guid: fa0fc8680dcb4e63a9939950274281de, type: 2}
   currentMoney: 0
 --- !u!114 &7999392227225844688
 MonoBehaviour:
@@ -3887,6 +3885,7 @@ MonoBehaviour:
   upgradeSystem: {fileID: 8801503712155055006}
   uiData: {fileID: 11400000, guid: 0fc641ac29720e2837d73e6212818c58, type: 2}
   rewardPopupPrefab: {fileID: 595523728496385370, guid: 60732089bc3d5a74cac36ef83399977d, type: 3}
+  dayNightSystem: {fileID: 0}
 --- !u!114 &8225797318797681101
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4038,30 +4037,6 @@ MonoBehaviour:
   audioSettingsPanel: {fileID: 7794858288780390671}
   musicSource: {fileID: 5305833074054256447}
   sfxSource: {fileID: 540886640895760224}
---- !u!114 &7367900162213501200
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2565732122295331608}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3badf9b37ddb4508aa5a51e444d55620, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningGameManager
-  wallet: {fileID: 5319940144110336854}
-  oreSpawner: {fileID: 7999392227225844688}
-  npcShop: {fileID: 5806623442641212862}
-  upgradeSystem: {fileID: 8801503712155055006}
-  rebirthSystem: {fileID: 2324561397310624886}
-  hud: {fileID: 5370041993921817231}
-  upgradePanel: {fileID: 8763811069879228364}
-  rebirthPanel: {fileID: 8840111787548688324}
-  audioManager: {fileID: 1740591884523500440}
-  audioSettingsPanel: {fileID: 7794858288780390671}
-  panelCoordinator: {fileID: 3120030093326673056}
-  orbitCamera: {fileID: 2190442768477424192}
 --- !u!114 &2324561397310624886
 MonoBehaviour:
   m_ObjectHideFlags: 0

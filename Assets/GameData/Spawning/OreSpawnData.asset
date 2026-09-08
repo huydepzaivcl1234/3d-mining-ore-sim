@@ -49,6 +49,7 @@ MonoBehaviour:
   spawnOnEnable: 1
   initialSpawnCount: 8
   maximumAliveOres: 12
+  maximumPooledOres: 12
   secondsPerSpawn: 2
   areaCenter: {x: 0, y: 0, z: 0}
   areaSize: {x: 16, y: 0, z: 16}
