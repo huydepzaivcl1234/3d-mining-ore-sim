@@ -131,5 +131,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 591b083f72aa4dbea3b23cbe5b1e2523, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.LuckyBlock
-  type: 0
+  type: 1
   currentDurability: 0

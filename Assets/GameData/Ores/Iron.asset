@@ -29,5 +29,8 @@ MonoBehaviour:
   spawnHeightOffset: -0.5
   healthBarWorldOffset: {x: 0, y: 0.25, z: 0}
   healthBarScale: 0.65
+  hitPunchScale: 0.08
+  hitPunchLift: 0.12
+  hitPunchDuration: 0.16
   prefab: {fileID: 7470786444139727848, guid: 4d5ac31473de7da42a7fd2b3e54721d1, type: 3}
   mapColor: {r: 0.55, g: 0.6, b: 0.66, a: 1}
