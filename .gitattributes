@@ -106,6 +106,13 @@ Assets/Ores/Models/dark_stone.fbx  -filter -diff -merge binary
 ArtSource/Blender/light_stone.blend -filter -diff -merge binary
 ArtSource/Blender/dark_stone.blend -filter -diff -merge binary
 ArtSource/Blender/day_night_ores.blend -filter -diff -merge binary
+Assets/Ores/Models/gold_lucky_block.fbx -filter -diff -merge binary
+Assets/Ores/Models/diamond_lucky_block.fbx -filter -diff -merge binary
+Assets/Ores/Models/rainbow_lucky_block.fbx -filter -diff -merge binary
+ArtSource/Blender/LuckyBlocks/gold_lucky_block.blend -filter -diff -merge binary
+ArtSource/Blender/LuckyBlocks/diamond_lucky_block.blend -filter -diff -merge binary
+ArtSource/Blender/LuckyBlocks/rainbow_lucky_block.blend -filter -diff -merge binary
+ArtSource/Blender/LuckyBlocks/lucky_blocks.blend -filter -diff -merge binary
 
 # Audio
 *.aif                   lfs

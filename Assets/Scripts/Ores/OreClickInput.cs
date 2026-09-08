@@ -39,6 +39,13 @@ namespace MiningSimulator.Ores
                 return;
             }
 
+            LuckyBlock luckyBlock = hit.collider.GetComponentInParent<LuckyBlock>();
+            if (luckyBlock != null)
+            {
+                luckyBlock.MineOnce();
+                return;
+            }
+
             Ore ore = hit.collider.GetComponentInParent<Ore>();
             ore?.MineOnce();
         }

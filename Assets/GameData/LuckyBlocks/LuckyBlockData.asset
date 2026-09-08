@@ -1,0 +1,57 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b07d1d001c714e41a5ebcff93781899d, type: 3}
+  m_Name: LuckyBlockData
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.LuckyBlockData
+  dropCheckIntervalSeconds: 1
+  dropChancePerCheckPercent: 2
+  maximumActiveBlocks: 2
+  positionAttemptsPerDrop: 16
+  blockSize: 1
+  dropHeight: 12
+  placementClearance: 0.35
+  randomYRotationMinimum: 0
+  randomYRotationMaximum: 360
+  mass: 2
+  linearDamping: 0.08
+  angularDamping: 0.25
+  fallingSpinRange: {x: 35, y: 95}
+  maximumLifetimeSeconds: 45
+  recycleBelowWorldY: -25
+  hitPunchScale: 0.1
+  hitPunchDuration: 0.16
+  maximumPooledBlocks: 6
+  variants:
+  - type: 0
+    displayName: Gold Lucky Block
+    model: {fileID: 100100000, guid: 1b425ab1c6714c74a958ec5769345a7e, type: 3}
+    selectionWeight: 70
+    durability: 10
+    clickDamage: 1
+    moneyReward: 100
+    sizeMultiplier: 1
+  - type: 1
+    displayName: Diamond Lucky Block
+    model: {fileID: 100100000, guid: 40651a7698c34ab6a312606abdfca84e, type: 3}
+    selectionWeight: 25
+    durability: 20
+    clickDamage: 2
+    moneyReward: 500
+    sizeMultiplier: 1
+  - type: 2
+    displayName: Rainbow Lucky Block
+    model: {fileID: 100100000, guid: 7054a05c92a24d79b54e59c77d9f35af, type: 3}
+    selectionWeight: 5
+    durability: 35
+    clickDamage: 3
+    moneyReward: 1500
+    sizeMultiplier: 1

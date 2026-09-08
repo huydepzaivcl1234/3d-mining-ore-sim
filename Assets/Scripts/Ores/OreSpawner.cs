@@ -27,6 +27,7 @@ namespace MiningSimulator.Ores
 
         public int ActiveCount => activeOres.Count;
         public int PooledCount => inactivePooledOres.Count;
+        public OreSpawnData SpawnData => spawnData;
         public MiningUpgradeSystem UpgradeSystem => upgradeSystem;
         public event System.Action<Ore> OreDamaged;
         public event System.Action<Ore, int> OreRewardGranted;
