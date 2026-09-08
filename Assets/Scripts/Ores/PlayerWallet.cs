@@ -43,6 +43,18 @@ namespace MiningSimulator.Ores
             return true;
         }
 
+        public void SetMoney(int amount)
+        {
+            int safeAmount = Mathf.Max(0, amount);
+            if (currentMoney == safeAmount)
+            {
+                return;
+            }
+
+            currentMoney = safeAmount;
+            MoneyChanged?.Invoke(currentMoney);
+        }
+
         public void ResetMoney()
         {
             if (currentMoney == 0)
@@ -50,8 +62,7 @@ namespace MiningSimulator.Ores
                 return;
             }
 
-            currentMoney = 0;
-            MoneyChanged?.Invoke(currentMoney);
+            SetMoney(0);
         }
     }
 }

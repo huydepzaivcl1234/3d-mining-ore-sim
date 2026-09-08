@@ -22,6 +22,10 @@ namespace MiningSimulator.Ores
         [SerializeField] private MiningUiPanelCoordinator panelCoordinator;
         [SerializeField] private MiningOrbitCamera orbitCamera;
 
+        [Header("Play Mode Money Testing")]
+        [Tooltip("Editable test amount used by the MiningGameManager Inspector buttons.")]
+        [Min(0), SerializeField] private int testMoneyAmount = 10000;
+
         public PlayerWallet Wallet => wallet;
         public OreSpawner OreSpawner => oreSpawner;
         public NpcShop NpcShop => npcShop;
@@ -34,11 +38,32 @@ namespace MiningSimulator.Ores
         public MiningAudioSettingsPanel AudioSettingsPanel => audioSettingsPanel;
         public MiningUiPanelCoordinator PanelCoordinator => panelCoordinator;
         public MiningOrbitCamera OrbitCamera => orbitCamera;
+        public int TestMoneyAmount => testMoneyAmount;
 
         public bool IsConfigured => wallet != null && oreSpawner != null && npcShop != null &&
                                     upgradeSystem != null && rebirthSystem != null && hud != null &&
                                     upgradePanel != null && rebirthPanel != null &&
                                     audioManager != null && audioSettingsPanel != null &&
                                     panelCoordinator != null && orbitCamera != null;
+
+        public void SetTestMoney()
+        {
+            wallet?.SetMoney(testMoneyAmount);
+        }
+
+        public void AddTestMoney()
+        {
+            wallet?.AddMoney(testMoneyAmount);
+        }
+
+        public void ResetTestMoney()
+        {
+            wallet?.ResetMoney();
+        }
+
+        private void OnValidate()
+        {
+            testMoneyAmount = Mathf.Max(0, testMoneyAmount);
+        }
     }
 }

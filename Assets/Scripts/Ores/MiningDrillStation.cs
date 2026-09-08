@@ -30,7 +30,7 @@ namespace MiningSimulator.Ores
         [Header("Runtime State")]
         [SerializeField, Range(0, MiningDrillData.LevelCount)] private int currentLevel;
 
-        private readonly MaterialPropertyBlock materialProperties = new();
+        private MaterialPropertyBlock materialProperties;
         private float productionTimer;
         private bool affordable;
 
@@ -57,6 +57,7 @@ namespace MiningSimulator.Ores
 
         private void Awake()
         {
+            materialProperties = new MaterialPropertyBlock();
             ResolveSystems();
             currentLevel = Mathf.Clamp(currentLevel, 0, MiningDrillData.LevelCount);
             drillPanel?.Bind(this);
