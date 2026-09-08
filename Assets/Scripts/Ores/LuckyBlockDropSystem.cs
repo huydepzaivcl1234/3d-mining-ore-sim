@@ -117,6 +117,7 @@ namespace MiningSimulator.Ores
                 landingPosition + Vector3.up * data.DropHeight,
                 Quaternion.identity);
             block.transform.localScale = Vector3.one;
+            DisableNestedVisualPhysics(block.transform);
             block.RestoreAuthoredVisualTransform();
             NormalizeVisualAndCollider(block, worldSize);
             block.transform.rotation = Quaternion.Euler(0f,
@@ -230,6 +231,7 @@ namespace MiningSimulator.Ores
             root.SetActive(false);
             GameObject visual = Instantiate(variant.Model, root.transform);
             visual.name = "Model";
+            DisableNestedVisualPhysics(root.transform);
 
             BoxCollider targetCollider = root.AddComponent<BoxCollider>();
             Rigidbody body = root.AddComponent<Rigidbody>();
@@ -240,6 +242,40 @@ namespace MiningSimulator.Ores
             block.ConfigureVisualRoot(visual.transform);
             AddHealthBar(root, block);
             return block;
+        }
+
+        private static void DisableNestedVisualPhysics(Transform root)
+        {
+            if (root == null || root.childCount == 0)
+            {
+                return;
+            }
+
+            Transform visual = root.GetChild(0);
+            Collider[] nestedColliders = visual.GetComponentsInChildren<Collider>(true);
+            foreach (Collider nestedCollider in nestedColliders)
+            {
+                if (nestedCollider == null)
+                {
+                    continue;
+                }
+
+                nestedCollider.enabled = false;
+                Object.Destroy(nestedCollider);
+            }
+
+            Rigidbody[] nestedBodies = visual.GetComponentsInChildren<Rigidbody>(true);
+            foreach (Rigidbody nestedBody in nestedBodies)
+            {
+                if (nestedBody == null)
+                {
+                    continue;
+                }
+
+                nestedBody.detectCollisions = false;
+                nestedBody.isKinematic = true;
+                Object.Destroy(nestedBody);
+            }
         }
 
         private void AddHealthBar(GameObject root, LuckyBlock block)
