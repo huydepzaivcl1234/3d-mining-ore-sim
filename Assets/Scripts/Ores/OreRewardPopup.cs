@@ -24,7 +24,8 @@ namespace MiningSimulator.Ores
             startPosition = worldPosition + uiData.RewardPopupWorldOffset;
             transform.SetPositionAndRotation(startPosition, Quaternion.identity);
             transform.localScale = Vector3.one * uiData.RewardPopupWorldScale;
-            label.text = string.Format(uiData.RewardPopupFormat, amount);
+            label.text = string.Format(uiData.RewardPopupFormat,
+                MiningMoneyFormatter.Format(amount));
             label.fontSize = uiData.RewardPopupFontSize;
             label.color = uiData.RewardPopupColor;
             label.outlineColor = uiData.RewardPopupOutlineColor;

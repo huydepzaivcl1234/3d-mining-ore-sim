@@ -183,7 +183,8 @@ namespace MiningSimulator.Ores
             {
                 npcCapacityLabel.text = string.Format(maximum ? capacityMaximumFormat : capacityFormat,
                     definition.DisplayName, definition.ValuePerStack, stacks,
-                    definition.MaximumStacks, upgradeSystem.GetCost(MiningUpgradeType.NpcCapacity));
+                    definition.MaximumStacks, MiningMoneyFormatter.Format(
+                        upgradeSystem.GetCost(MiningUpgradeType.NpcCapacity)));
             }
             if (npcCapacityButton != null)
             {
@@ -207,7 +208,8 @@ namespace MiningSimulator.Ores
             {
                 label.text = string.Format(maximum ? maximumFormat : upgradeFormat,
                     definition.DisplayName, definition.PercentPerStack, stacks,
-                    definition.MaximumStacks, upgradeSystem.GetCost(type));
+                    definition.MaximumStacks, MiningMoneyFormatter.Format(
+                        upgradeSystem.GetCost(type)));
             }
             if (button != null)
             {

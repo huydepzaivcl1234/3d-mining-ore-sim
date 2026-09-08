@@ -135,7 +135,8 @@ namespace MiningSimulator.Ores
         {
             if (moneyText != null)
             {
-                moneyText.text = string.Format(moneyFormat, displayedMoney);
+                moneyText.text = string.Format(moneyFormat,
+                    MiningMoneyFormatter.Format(displayedMoney));
             }
         }
 
@@ -151,7 +152,8 @@ namespace MiningSimulator.Ores
             if (buyButtonLabel != null)
             {
                 int cost = npcShop != null ? npcShop.NpcCost : 0;
-                buyButtonLabel.text = string.Format(buyButtonFormat, cost);
+                buyButtonLabel.text = string.Format(buyButtonFormat,
+                    MiningMoneyFormatter.Format(cost));
             }
 
             if (buyButton != null)

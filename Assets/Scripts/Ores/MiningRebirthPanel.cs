@@ -136,7 +136,9 @@ namespace MiningSimulator.Ores
 
             if (progressLabel != null)
             {
-                progressLabel.text = string.Format(progressFormat, money, requirement);
+                progressLabel.text = string.Format(progressFormat,
+                    MiningMoneyFormatter.Format(money),
+                    MiningMoneyFormatter.Format(requirement));
             }
             if (boostLabel != null)
             {

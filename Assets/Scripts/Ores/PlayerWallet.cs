@@ -26,7 +26,8 @@ namespace MiningSimulator.Ores
                 return;
             }
 
-            currentMoney += amount;
+            long updatedMoney = (long)currentMoney + amount;
+            currentMoney = (int)Math.Min(int.MaxValue, updatedMoney);
             MoneyChanged?.Invoke(currentMoney);
         }
 

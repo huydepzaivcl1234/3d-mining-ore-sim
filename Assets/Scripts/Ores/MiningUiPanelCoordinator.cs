@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace MiningSimulator.Ores
@@ -24,6 +25,7 @@ namespace MiningSimulator.Ores
         private Vector2 audioSettingsHome;
         private RectTransform activeModal;
         private bool initialized;
+        private readonly Dictionary<RectTransform, Vector2> additionalPanelHomes = new();
 
         private float TransitionDuration => uiData != null ? uiData.PanelTransitionDuration : 0.28f;
         private float SlideExtraDistance => uiData != null ? uiData.PanelSlideExtraDistance : 80f;
@@ -60,6 +62,7 @@ namespace MiningSimulator.Ores
             }
 
             EnsureInitialized();
+            CacheAdditionalPanelHome(panel);
             StopAllCoroutines();
             if (activeModal != null && activeModal != panel)
             {
@@ -196,7 +199,20 @@ namespace MiningSimulator.Ores
             if (panel == upgradePanel) return upgradeHome;
             if (panel == rebirthPanel) return rebirthPanelHome;
             if (panel == audioSettingsPanel) return audioSettingsHome;
+            if (panel != null && additionalPanelHomes.TryGetValue(panel, out Vector2 home))
+                return home;
             return GetPosition(panel);
+        }
+
+        private void CacheAdditionalPanelHome(RectTransform panel)
+        {
+            if (panel == null || panel == upgradePanel || panel == rebirthPanel ||
+                panel == audioSettingsPanel || additionalPanelHomes.ContainsKey(panel))
+            {
+                return;
+            }
+
+            additionalPanelHomes.Add(panel, panel.anchoredPosition);
         }
 
         private static Vector2 GetPosition(RectTransform panel)
