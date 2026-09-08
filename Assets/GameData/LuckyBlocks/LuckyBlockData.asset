@@ -13,11 +13,11 @@ MonoBehaviour:
   m_Name: LuckyBlockData
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.LuckyBlockData
   dropCheckIntervalSeconds: 1
-  dropChancePerCheckPercent: 2
+  dropChancePerCheckPercent: 100
   maximumActiveBlocks: 2
   positionAttemptsPerDrop: 16
-  blockSize: 1
-  dropHeight: 12
+  blockSize: 0.5
+  dropHeight: 10
   placementClearance: 0.35
   randomYRotationMinimum: 0
   randomYRotationMaximum: 360
@@ -29,29 +29,31 @@ MonoBehaviour:
   recycleBelowWorldY: -25
   hitPunchScale: 0.1
   hitPunchDuration: 0.16
+  healthBarWorldOffset: {x: 0, y: 0.25, z: 0}
+  healthBarScale: 0.65
   maximumPooledBlocks: 6
   variants:
   - type: 0
     displayName: Gold Lucky Block
-    model: {fileID: 100100000, guid: 1b425ab1c6714c74a958ec5769345a7e, type: 3}
+    model: {fileID: 8618107355624472436, guid: 76b6f2ddb67bc194d97117aedb0a2c12, type: 3}
     selectionWeight: 70
     durability: 10
     clickDamage: 1
     moneyReward: 100
-    sizeMultiplier: 1
+    sizeMultiplier: 60
   - type: 1
     displayName: Diamond Lucky Block
-    model: {fileID: 100100000, guid: 40651a7698c34ab6a312606abdfca84e, type: 3}
+    model: {fileID: 7434537489489529207, guid: 5867ca1d958fe4248a5ccbc4260f6b2e, type: 3}
     selectionWeight: 25
     durability: 20
-    clickDamage: 2
+    clickDamage: 1
     moneyReward: 500
     sizeMultiplier: 1
   - type: 2
     displayName: Rainbow Lucky Block
-    model: {fileID: 100100000, guid: 7054a05c92a24d79b54e59c77d9f35af, type: 3}
+    model: {fileID: 7888907797540685395, guid: b66fed56c8d470b4ba5a58a6d87404c4, type: 3}
     selectionWeight: 5
     durability: 35
-    clickDamage: 3
+    clickDamage: 1
     moneyReward: 1500
     sizeMultiplier: 1
