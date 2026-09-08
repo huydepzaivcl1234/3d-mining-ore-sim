@@ -9,7 +9,9 @@ namespace MiningSimulator.Ores
         Copper = 2,
         Iron = 3,
         Gold = 4,
-        Diamond = 5
+        Diamond = 5,
+        LightStone = 6,
+        DarkStone = 7
     }
 
     public enum OreRarity

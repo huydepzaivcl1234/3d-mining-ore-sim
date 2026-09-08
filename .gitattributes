@@ -97,6 +97,11 @@ Packages/packages-lock.json linguist-generated
 *.stl                   lfs
 *.ztl                   lfs
 
+# These two small procedural source models are stored directly so editor setup
+# can be shipped through the GitHub API without leaving unresolved LFS pointers.
+Assets/Ores/Models/light_stone.obj -filter -diff -merge text eol=lf
+Assets/Ores/Models/dark_stone.obj  -filter -diff -merge text eol=lf
+
 # Audio
 *.aif                   lfs
 *.aiff                  lfs

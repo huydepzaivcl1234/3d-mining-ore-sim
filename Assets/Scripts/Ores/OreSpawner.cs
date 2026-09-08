@@ -15,6 +15,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private MiningUpgradeSystem upgradeSystem;
         [SerializeField] private MiningUiData uiData;
         [SerializeField] private OreRewardPopup rewardPopupPrefab;
+        [SerializeField] private DayNightSystem dayNightSystem;
 
         private readonly HashSet<Ore> activeOres = new();
         private Coroutine spawnRoutine;
@@ -189,6 +190,13 @@ namespace MiningSimulator.Ores
 
         private OreData ChooseOre()
         {
+            if (dayNightSystem != null &&
+                dayNightSystem.TryChooseSpecialOre(UnityEngine.Random.value * 100f,
+                    out OreData specialOre) && specialOre != null && specialOre.Prefab != null)
+            {
+                return specialOre;
+            }
+
             float totalWeight = 0f;
             foreach (OreSpawnEntry entry in spawnData.OreSpawnTable)
             {

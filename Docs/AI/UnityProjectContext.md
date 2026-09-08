@@ -103,6 +103,10 @@
 - `MiningRebirthPanel` presents an editable red/white confirmation modal and an event-driven HUD with
   a green UI MicroBar. Rebirth layout, typography, colors, and smooth button animation live in
   `MiningUiData.asset`.
+- `DayNightSystem` is an independent Scene object. `DayNightData` owns cycle duration, transition,
+  sun/ambient/fog presentation, day-only Light Stone chance, night-only Dark Stone chance, and aura
+  tuning. `OreSpawner` checks the period-specific percentage before falling back to the unchanged
+  normal rarity table. Existing timed ores remain in the world after the period changes.
 - No general save system exists yet; only rebirth count has dedicated persistence.
 
 ## Coding Conventions
