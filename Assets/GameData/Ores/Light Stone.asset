@@ -15,16 +15,16 @@ MonoBehaviour:
   kind: 6
   displayName: Light Stone
   description: A radiant stone that can appear only during the day.
-  tier: 7
-  miningPowerRequired: 35
+  tier: 8
+  miningPowerRequired: 50
   durability: 220
   clickDamage: 7
-  baseSellValue: 140
+  baseSellValue: 500
   destroyDelay: 0
   maximumMiningNpcs: 5
   npcStandDistance: 1.75
   rareOre: 0
-  rarity: 2
+  rarity: 3
   spawnRotationOffset: {x: 0, y: 0, z: 0}
   spawnHeightOffset: 0
   healthBarWorldOffset: {x: 0, y: 0.35, z: 0}

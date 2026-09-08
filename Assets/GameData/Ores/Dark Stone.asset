@@ -16,15 +16,15 @@ MonoBehaviour:
   displayName: Dark Stone
   description: A shadow stone that can appear only during the night.
   tier: 8
-  miningPowerRequired: 45
-  durability: 300
+  miningPowerRequired: 50
+  durability: 1000
   clickDamage: 8
-  baseSellValue: 220
+  baseSellValue: 500
   destroyDelay: 0
   maximumMiningNpcs: 5
   npcStandDistance: 1.75
   rareOre: 0
-  rarity: 2
+  rarity: 3
   spawnRotationOffset: {x: 0, y: 0, z: 0}
   spawnHeightOffset: 0
   healthBarWorldOffset: {x: 0, y: 0.35, z: 0}
