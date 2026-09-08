@@ -1,6 +1,10 @@
+using System;
+using System.Linq;
 using TMPro;
 using MiningSimulator.Ores;
 using UnityEditor;
+using UnityEditor.Animations;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -12,6 +16,90 @@ namespace MiningSimulator.Editor
         private const string DrillFolder = "Assets/Prefabs/Drill";
         private const string DrillPrefabPath = DrillFolder + "/MiningDrillStation.prefab";
         private const string DrillDataPath = "Assets/GameData/Drill/MiningDrillData.asset";
+        private const string PushedDrillModelPath = "Assets/Prefabs/Untitled.fbx";
+        private const string WorkingControllerPath = DrillFolder + "/MiningDrillWorking.controller";
+        private const string BrokenModelName = "Broken Drill Model";
+        private const string WorkingModelName = "Working Drill Model";
+
+        [MenuItem("Mining Simulator/Drill/Install Pushed Model In Scene")]
+        private static void InstallPushedModelInScene()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                Debug.LogWarning("Exit Play Mode before installing the drill model in the Scene.");
+                return;
+            }
+
+            MiningDrillStation station = Selection.activeGameObject != null
+                ? Selection.activeGameObject.GetComponentInParent<MiningDrillStation>()
+                : null;
+            station ??= UnityEngine.Object.FindFirstObjectByType<MiningDrillStation>();
+            if (station == null)
+            {
+                Debug.LogError("No MiningDrillStation exists in the open Scene. Select the drill object and try again.");
+                return;
+            }
+
+            GameObject sourceModel = AssetDatabase.LoadAssetAtPath<GameObject>(PushedDrillModelPath);
+            if (sourceModel == null)
+            {
+                Debug.LogError($"Missing pushed drill model at {PushedDrillModelPath}.");
+                return;
+            }
+
+            AnimationClip workingClip = PrepareAndFindWorkingClip();
+            AnimatorController controller = workingClip != null
+                ? GetOrCreateWorkingController(workingClip)
+                : null;
+
+            Transform brokenRoot = GetOrCreateModelInstance(station.transform, sourceModel,
+                BrokenModelName, out bool createdBroken);
+            Transform workingRoot = GetOrCreateModelInstance(station.transform, sourceModel,
+                WorkingModelName, out bool createdWorking);
+
+            ConfigureVisualState(brokenRoot, showBrokenParts: true);
+            ConfigureVisualState(workingRoot, showBrokenParts: false);
+
+            Animator brokenAnimator = brokenRoot.GetComponent<Animator>();
+            if (brokenAnimator != null)
+            {
+                brokenAnimator.enabled = false;
+            }
+
+            Animator workingAnimator = workingRoot.GetComponent<Animator>();
+            if (workingAnimator == null)
+            {
+                workingAnimator = Undo.AddComponent<Animator>(workingRoot.gameObject);
+            }
+
+            workingAnimator.runtimeAnimatorController = controller;
+            workingAnimator.applyRootMotion = false;
+            workingAnimator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+
+            SerializedObject serializedStation = new(station);
+            serializedStation.FindProperty("brokenModelRoot").objectReferenceValue = brokenRoot;
+            serializedStation.FindProperty("modelRoot").objectReferenceValue = workingRoot;
+            // The imported animation owns Drill_Spin. Clear the old procedural placeholder
+            // so the two animation systems cannot rotate the drill head at the same time.
+            serializedStation.FindProperty("drillHead").objectReferenceValue = null;
+            serializedStation.FindProperty("previewWorkingModelInEditMode").boolValue = false;
+            serializedStation.ApplyModifiedProperties();
+
+            brokenRoot.gameObject.SetActive(true);
+            workingRoot.gameObject.SetActive(false);
+            EditorUtility.SetDirty(station);
+            EditorSceneManager.MarkSceneDirty(station.gameObject.scene);
+            Selection.activeGameObject = station.gameObject;
+
+            string creationSummary = createdBroken || createdWorking
+                ? "Created the Broken and Working Scene model objects."
+                : "Reused the existing Broken and Working Scene model objects.";
+            string animationSummary = workingClip != null
+                ? $"Working animation: {workingClip.name}."
+                : "No usable animation clip was found; model states were still connected.";
+            Debug.Log($"{creationSummary} {animationSummary} Save the Scene to keep the setup. " +
+                      "No drill prefab, UI, icon, or GameData asset was modified.", station);
+        }
 
         [MenuItem("Mining Simulator/Setup/Create Drill Station Prefab (Safe)")]
         private static void CreateDrillStationPrefab()
@@ -70,7 +158,7 @@ namespace MiningSimulator.Editor
             }
             finally
             {
-                Object.DestroyImmediate(root);
+                UnityEngine.Object.DestroyImmediate(root);
             }
         }
 
@@ -183,6 +271,126 @@ namespace MiningSimulator.Editor
             GameObject child = new(name);
             child.transform.SetParent(parent, false);
             return child.transform;
+        }
+
+        private static Transform GetOrCreateModelInstance(Transform stationRoot, GameObject sourceModel,
+            string objectName, out bool created)
+        {
+            Transform existing = stationRoot.Find(objectName);
+            if (existing != null)
+            {
+                created = false;
+                return existing;
+            }
+
+            GameObject instance = PrefabUtility.InstantiatePrefab(sourceModel, stationRoot) as GameObject;
+            if (instance == null)
+            {
+                throw new InvalidOperationException($"Could not instantiate {sourceModel.name} in the Scene.");
+            }
+
+            Undo.RegisterCreatedObjectUndo(instance, $"Create {objectName}");
+            instance.name = objectName;
+            instance.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
+            instance.transform.localScale = Vector3.one;
+            created = true;
+            return instance.transform;
+        }
+
+        private static void ConfigureVisualState(Transform root, bool showBrokenParts)
+        {
+            foreach (Renderer renderer in root.GetComponentsInChildren<Renderer>(true))
+            {
+                renderer.enabled = IsBrokenPart(renderer.transform, root) == showBrokenParts;
+            }
+
+            // Cameras and Blender scene lights are authoring helpers, not gameplay objects.
+            foreach (Camera modelCamera in root.GetComponentsInChildren<Camera>(true))
+            {
+                modelCamera.enabled = false;
+            }
+
+            foreach (Light modelLight in root.GetComponentsInChildren<Light>(true))
+            {
+                modelLight.enabled = false;
+            }
+        }
+
+        private static bool IsBrokenPart(Transform item, Transform root)
+        {
+            Transform current = item;
+            while (current != null && current != root)
+            {
+                string itemName = current.name;
+                if (itemName.EndsWith("_Broken", StringComparison.OrdinalIgnoreCase) ||
+                    itemName.StartsWith("Broken_", StringComparison.OrdinalIgnoreCase) ||
+                    itemName.StartsWith("Debris_", StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+
+                current = current.parent;
+            }
+
+            return false;
+        }
+
+        private static AnimationClip PrepareAndFindWorkingClip()
+        {
+            if (AssetImporter.GetAtPath(PushedDrillModelPath) is ModelImporter importer)
+            {
+                ModelImporterClipAnimation[] clips = importer.clipAnimations;
+                if (clips == null || clips.Length == 0)
+                {
+                    clips = importer.defaultClipAnimations;
+                }
+
+                bool changed = false;
+                foreach (ModelImporterClipAnimation clip in clips)
+                {
+                    if (!clip.loopTime || !clip.loopPose)
+                    {
+                        clip.loopTime = true;
+                        clip.loopPose = true;
+                        changed = true;
+                    }
+                }
+
+                if (changed || importer.clipAnimations.Length == 0)
+                {
+                    importer.clipAnimations = clips;
+                    importer.SaveAndReimport();
+                }
+            }
+
+            AnimationClip[] importedClips = AssetDatabase.LoadAllAssetsAtPath(PushedDrillModelPath)
+                .OfType<AnimationClip>()
+                .Where(clip => !clip.name.StartsWith("__preview__", StringComparison.OrdinalIgnoreCase))
+                .ToArray();
+
+            return importedClips.FirstOrDefault(clip =>
+                       clip.name.Equals("Drill_Spin|Drill_SpinAction", StringComparison.OrdinalIgnoreCase))
+                   ?? importedClips.FirstOrDefault(clip =>
+                       clip.name.Contains("Drill_SpinAction", StringComparison.OrdinalIgnoreCase) &&
+                       !clip.name.EndsWith(".001", StringComparison.OrdinalIgnoreCase))
+                   ?? importedClips.FirstOrDefault();
+        }
+
+        private static AnimatorController GetOrCreateWorkingController(AnimationClip workingClip)
+        {
+            AnimatorController existing = AssetDatabase.LoadAssetAtPath<AnimatorController>(WorkingControllerPath);
+            if (existing != null)
+            {
+                return existing;
+            }
+
+            EnsureFolder("Assets/Prefabs", "Drill");
+            AnimatorController controller = AnimatorController.CreateAnimatorControllerAtPathWithClip(
+                WorkingControllerPath, workingClip);
+            controller.name = "MiningDrillWorking";
+            EditorUtility.SetDirty(controller);
+            AssetDatabase.SaveAssets();
+            return controller;
         }
 
         private static void EnsureFolder(string parent, string child)
