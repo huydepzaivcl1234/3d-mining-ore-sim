@@ -156,8 +156,8 @@ namespace MiningSimulator.Ores
                 return;
             }
 
-            drillHead.Rotate(Vector3.up,
-                level.DrillRotationDegreesPerSecond * Time.deltaTime, Space.Self);
+            drillHead.Rotate(Vector3.right,
+                level.DrillRotationPerSecond * Time.deltaTime, Space.Self);
         }
 
         private void AnimateStatusLight()

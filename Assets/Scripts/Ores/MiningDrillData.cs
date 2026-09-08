@@ -22,7 +22,7 @@ namespace MiningSimulator.Ores
         public int UpgradeCost => upgradeCost;
         public int MoneyPerCycle => moneyPerCycle;
         public float SecondsPerCycle => secondsPerCycle;
-        public float DrillRotationDegreesPerSecond => drillRotationDegreesPerSecond;
+        public float DrillRotationPerSecond => drillRotationDegreesPerSecond;
 
         public void Validate()
         {
