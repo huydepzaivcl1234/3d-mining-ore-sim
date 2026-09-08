@@ -96,8 +96,44 @@ namespace MiningSimulator.Editor
 
             try
             {
-                foreach (GitCommand command in commands)
+                string currentBranch = string.Empty;
+                if (RequiresSafeBranch(commands))
                 {
+                    if (IsRebaseInProgress(root))
+                    {
+                        output = "Git đang rebase. Tool đã dừng để bảo vệ Scene, icon và asset của bạn.\n" +
+                                 "Đóng Unity, mở PowerShell tại project, chạy: git status\n" +
+                                 "Giải quyết conflict rồi chạy: git rebase --continue\n";
+                        return;
+                    }
+
+                    GitResult conflictResult = await Task.Run(() => Execute(root,
+                        new GitCommand("diff", "--name-only", "--diff-filter=U")));
+                    if (conflictResult.ExitCode != 0 ||
+                        !string.IsNullOrWhiteSpace(conflictResult.StandardOutput))
+                    {
+                        output = "Repository còn merge conflict. Tool sẽ không commit hoặc push.\n" +
+                                 conflictResult.StandardOutput + conflictResult.StandardError +
+                                 "\nChạy git status trong PowerShell để xem các file cần xử lý.\n";
+                        return;
+                    }
+
+                    GitResult branchResult = await Task.Run(() => Execute(root,
+                        new GitCommand("branch", "--show-current")));
+                    currentBranch = branchResult.StandardOutput.Trim();
+                    if (branchResult.ExitCode != 0 || string.IsNullOrWhiteSpace(currentBranch))
+                    {
+                        output = "Git đang ở detached HEAD nên tool đã dừng, không tạo commit hoặc push.\n" +
+                                 "Chạy git status trong PowerShell và hoàn tất rebase trước.\n";
+                        return;
+                    }
+                }
+
+                foreach (GitCommand requestedCommand in commands)
+                {
+                    GitCommand command = requestedCommand.IsPushPlaceholder
+                        ? CreateResolvedPushCommand(currentBranch)
+                        : requestedCommand;
                     GitResult result = await Task.Run(() => Execute(root, command));
                     output += result.DisplayText;
                     Repaint();
@@ -208,9 +244,36 @@ namespace MiningSimulator.Editor
 
         private static GitCommand CreatePushCommand()
         {
-            // This also fixes the common "current branch has no upstream branch" failure for
-            // newly created branches while remaining safe for branches that already track origin.
-            return new GitCommand("push", "--set-upstream", "origin", "HEAD");
+            // The concrete destination is resolved only after verifying that HEAD belongs to a
+            // real branch. This placeholder must never be passed directly to Git.
+            return new GitCommand("push-current-branch");
+        }
+
+        private static GitCommand CreateResolvedPushCommand(string branch)
+        {
+            return new GitCommand("push", "--set-upstream", "origin",
+                $"HEAD:refs/heads/{branch}");
+        }
+
+        private static bool RequiresSafeBranch(IReadOnlyList<GitCommand> commands)
+        {
+            foreach (GitCommand command in commands)
+            {
+                if (command.Name == "add" || command.Name == "commit" ||
+                    command.Name == "pull" || command.IsPushPlaceholder)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool IsRebaseInProgress(string root)
+        {
+            string gitDirectory = Path.Combine(root, ".git");
+            return Directory.Exists(Path.Combine(gitDirectory, "rebase-merge")) ||
+                   Directory.Exists(Path.Combine(gitDirectory, "rebase-apply"));
         }
 
         private static string BuildFailureHelp(GitCommand command, string combinedOutput)
@@ -233,6 +296,12 @@ namespace MiningSimulator.Editor
             {
                 return "\nThe remote branch has newer commits. Use Pull (fast-forward only), " +
                        "review the incoming changes, then push again.\n";
+            }
+
+            if (Contains(combinedOutput, "not a full refname") ||
+                Contains(combinedOutput, "detached HEAD"))
+            {
+                return "\nGit không ở một branch hợp lệ. Chạy git status và hoàn tất rebase trước khi push.\n";
             }
 
             if (Contains(combinedOutput, "not a git repository"))
@@ -258,6 +327,7 @@ namespace MiningSimulator.Editor
 
             public string Name { get; }
             public IReadOnlyList<string> Arguments { get; }
+            public bool IsPushPlaceholder => Name == "push-current-branch";
         }
 
         private readonly struct GitResult
