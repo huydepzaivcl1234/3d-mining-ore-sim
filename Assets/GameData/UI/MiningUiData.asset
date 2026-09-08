@@ -109,7 +109,7 @@ MonoBehaviour:
   rewardPopupDuration: 1.1
   rewardPopupRiseDistance: 1.2
   rewardPopupWorldScale: 0.18
-  rewardPopupFontSize: 5
+  rewardPopupFontSize: 50
   rewardPopupColor: {r: 1, g: 0.82, b: 0.16, a: 1}
   rewardPopupOutlineColor: {r: 0.08, g: 0.04, b: 0.01, a: 1}
   rewardPopupOutlineWidth: 0.2
