@@ -59,6 +59,9 @@ namespace MiningSimulator.Editor
             DrawConfigurationStatus((MiningGameManager)target);
 
             EditorGUILayout.Space(8f);
+            DrawWalletStartingMoney((MiningGameManager)target);
+
+            EditorGUILayout.Space(8f);
             EditorGUILayout.LabelField("Play Mode Money Testing", EditorStyles.boldLabel);
             EditorGUILayout.PropertyField(serializedObject.FindProperty("testMoneyAmount"),
                 new GUIContent("Test Money Amount"));
@@ -74,6 +77,37 @@ namespace MiningSimulator.Editor
             {
                 EditorGUILayout.PropertyField(property, new GUIContent(label));
             }
+        }
+
+        private static void DrawWalletStartingMoney(MiningGameManager manager)
+        {
+            EditorGUILayout.LabelField("Player Wallet", EditorStyles.boldLabel);
+            if (manager.Wallet == null)
+            {
+                EditorGUILayout.HelpBox("Wallet reference is missing.", MessageType.Warning);
+                return;
+            }
+
+            SerializedObject walletSerialized = new(manager.Wallet);
+            walletSerialized.Update();
+            SerializedProperty startingMoney = walletSerialized.FindProperty("startingMoney");
+            if (startingMoney == null)
+            {
+                EditorGUILayout.HelpBox("PlayerWallet Starting Money field was not found.", MessageType.Warning);
+                return;
+            }
+
+            EditorGUI.BeginChangeCheck();
+            EditorGUILayout.PropertyField(startingMoney, new GUIContent("Starting Money"));
+            if (EditorGUI.EndChangeCheck())
+            {
+                walletSerialized.ApplyModifiedProperties();
+                EditorUtility.SetDirty(manager.Wallet);
+            }
+
+            EditorGUILayout.HelpBox(
+                "Giá trị này sẽ được áp dụng khi bắt đầu Play Mode và HUD sẽ hiển thị đúng số tiền đó.",
+                MessageType.None);
         }
 
         private static void DrawConfigurationStatus(MiningGameManager manager)

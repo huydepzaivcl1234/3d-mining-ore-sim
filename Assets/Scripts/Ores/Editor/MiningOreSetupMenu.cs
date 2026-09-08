@@ -162,6 +162,32 @@ namespace MiningSimulator.Editor
             }
         }
 
+        [MenuItem("Mining Simulator/Setup/Convert MiningRuntime To Scene GameManager")]
+        public static void ConvertRuntimeToSceneGameManager()
+        {
+            Scene scene = SceneManager.GetActiveScene();
+            foreach (GameObject root in scene.GetRootGameObjects())
+            {
+                if (root.GetComponentInChildren<MiningGameManager>(true) == null &&
+                    root.GetComponentInChildren<OreSpawner>(true) == null)
+                {
+                    continue;
+                }
+
+                bool changed = ConvertRuntimeRootToSceneGameManager(root, registerUndo: true);
+                if (changed)
+                {
+                    EditorSceneManager.MarkSceneDirty(scene);
+                }
+
+                Selection.activeGameObject = root;
+                Debug.Log("Runtime systems are now owned by the Scene GameManager object. The runtime prefab link is no longer used by this scene.", root);
+                return;
+            }
+
+            Debug.LogWarning("No mining runtime systems were found in the active scene.");
+        }
+
         public static void SetupSampleSceneBatch()
         {
             CreateOrUpdateStarterOres();
@@ -615,10 +641,6 @@ namespace MiningSimulator.Editor
                 sfxSource.loop = false;
                 sfxSource.volume = 1f;
                 sfxSource.spatialBlend = 0f;
-
-                var walletSerialized = new SerializedObject(wallet);
-                SetReferenceIfMissing(walletSerialized.FindProperty("gameData"), gameData);
-                walletSerialized.ApplyModifiedPropertiesWithoutUndo();
 
                 var serialized = new SerializedObject(spawner);
                 SetReferenceIfMissing(serialized.FindProperty("wallet"), wallet);
@@ -1810,33 +1832,67 @@ namespace MiningSimulator.Editor
         {
             foreach (GameObject root in scene.GetRootGameObjects())
             {
-                if (root.GetComponentInChildren<OreSpawner>(true) != null)
+                if (root.GetComponentInChildren<OreSpawner>(true) == null)
                 {
-                    Debug.Log("MiningRuntime already exists in the active scene. No changes made.");
-                    return false;
+                    continue;
                 }
+
+                bool changed = ConvertRuntimeRootToSceneGameManager(root, registerUndo);
+                Debug.Log(changed
+                    ? "Converted the existing runtime into an independent Scene GameManager."
+                    : "Scene GameManager already exists. No changes made.", root);
+                return changed;
             }
 
             GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(RuntimePrefabPath);
             if (prefab == null)
             {
-                Debug.LogError($"Mining runtime prefab is missing at {RuntimePrefabPath}.");
+                Debug.LogError($"Mining system template is missing at {RuntimePrefabPath}.");
                 return false;
             }
 
             GameObject instance = PrefabUtility.InstantiatePrefab(prefab, scene) as GameObject;
             if (instance == null)
             {
-                Debug.LogError("Could not instantiate MiningRuntime in the active scene.");
+                Debug.LogError("Could not create the Scene GameManager.");
                 return false;
             }
 
             instance.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
             if (registerUndo)
             {
-                Undo.RegisterCreatedObjectUndo(instance, "Add Mining Runtime");
+                Undo.RegisterCreatedObjectUndo(instance, "Add Scene GameManager");
             }
+
+            ConvertRuntimeRootToSceneGameManager(instance, registerUndo);
             return true;
+        }
+
+        private static bool ConvertRuntimeRootToSceneGameManager(GameObject root, bool registerUndo)
+        {
+            bool changed = false;
+            GameObject prefabRoot = PrefabUtility.GetOutermostPrefabInstanceRoot(root);
+            if (prefabRoot != null)
+            {
+                PrefabUtility.UnpackPrefabInstance(prefabRoot, PrefabUnpackMode.Completely,
+                    registerUndo ? InteractionMode.UserAction : InteractionMode.AutomatedAction);
+                root = prefabRoot;
+                changed = true;
+            }
+
+            if (root.name != "GameManager")
+            {
+                if (registerUndo)
+                {
+                    Undo.RecordObject(root, "Rename Runtime To GameManager");
+                }
+
+                root.name = "GameManager";
+                EditorUtility.SetDirty(root);
+                changed = true;
+            }
+
+            return changed;
         }
 
         private static void EnsureCollider(GameObject root)
