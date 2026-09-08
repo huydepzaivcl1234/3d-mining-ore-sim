@@ -30,6 +30,40 @@ namespace MiningSimulator.Ores
         public int ActiveCount => activeBlocks.Count;
         public int PooledCount => pooledBlocks.Count;
 
+        public bool TryReserveClosestBlock(MiningNpc miner, Vector3 origin, int miningPower,
+            LuckyBlock excludedBlock, out LuckyBlock reservedBlock, out int slotIndex)
+        {
+            LuckyBlock closest = null;
+            float closestSqrDistance = float.PositiveInfinity;
+            foreach (LuckyBlock block in activeBlocks)
+            {
+                if (block == null || block == excludedBlock ||
+                    !block.CanAcceptMiner(miner, miningPower))
+                {
+                    continue;
+                }
+
+                float sqrDistance = block.SqrDistanceToSurface(origin);
+                if (sqrDistance >= closestSqrDistance)
+                {
+                    continue;
+                }
+
+                closest = block;
+                closestSqrDistance = sqrDistance;
+            }
+
+            if (closest != null && closest.TryReserveMiner(miner, miningPower, out slotIndex))
+            {
+                reservedBlock = closest;
+                return true;
+            }
+
+            reservedBlock = null;
+            slotIndex = -1;
+            return false;
+        }
+
         private void OnEnable()
         {
             EnsureDropRoutine();
@@ -261,7 +295,6 @@ namespace MiningSimulator.Ores
                 }
 
                 nestedCollider.enabled = false;
-                Object.Destroy(nestedCollider);
             }
 
             Rigidbody[] nestedBodies = visual.GetComponentsInChildren<Rigidbody>(true);
@@ -274,7 +307,6 @@ namespace MiningSimulator.Ores
 
                 nestedBody.detectCollisions = false;
                 nestedBody.isKinematic = true;
-                Object.Destroy(nestedBody);
             }
         }
 

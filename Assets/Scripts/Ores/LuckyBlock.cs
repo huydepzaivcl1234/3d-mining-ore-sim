@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace MiningSimulator.Ores
@@ -25,6 +26,8 @@ namespace MiningSimulator.Ores
         private float punchElapsed;
         private bool punchPlaying;
         private bool resolved;
+        private bool hasLanded;
+        private readonly Dictionary<MiningNpc, int> reservedMiners = new();
 
         public LuckyBlockType Type => type;
         public int CurrentDurability => currentDurability;
@@ -36,6 +39,102 @@ namespace MiningSimulator.Ores
         public event Action<LuckyBlock, int> RewardGranted;
         public event Action<LuckyBlock> Broken;
         public event Action<LuckyBlock> Expired;
+
+        public bool CanAcceptMiner(MiningNpc miner, int miningPower)
+        {
+            RemoveMissingReservations();
+            return miner != null && variant != null && hasLanded && !resolved &&
+                   isActiveAndEnabled &&
+                   miningPower >= variant.MiningPowerRequired &&
+                   (reservedMiners.ContainsKey(miner) ||
+                    reservedMiners.Count < variant.MaximumMiningNpcs);
+        }
+
+        public bool TryReserveMiner(MiningNpc miner, int miningPower, out int slotIndex)
+        {
+            slotIndex = -1;
+            if (!CanAcceptMiner(miner, miningPower))
+            {
+                return false;
+            }
+
+            if (reservedMiners.TryGetValue(miner, out slotIndex))
+            {
+                return true;
+            }
+
+            bool[] usedSlots = new bool[variant.MaximumMiningNpcs];
+            foreach (int usedSlot in reservedMiners.Values)
+            {
+                if (usedSlot >= 0 && usedSlot < usedSlots.Length)
+                {
+                    usedSlots[usedSlot] = true;
+                }
+            }
+
+            for (int index = 0; index < usedSlots.Length; index++)
+            {
+                if (usedSlots[index])
+                {
+                    continue;
+                }
+
+                reservedMiners.Add(miner, index);
+                slotIndex = index;
+                return true;
+            }
+
+            return false;
+        }
+
+        public void ReleaseMiner(MiningNpc miner)
+        {
+            if (miner != null)
+            {
+                reservedMiners.Remove(miner);
+            }
+        }
+
+        public Vector3 GetMiningStandPosition(int slotIndex, float minerRadius,
+            float spacingPadding)
+        {
+            int slotCount = variant != null ? Mathf.Max(1, variant.MaximumMiningNpcs) : 1;
+            float angle = 360f * Mathf.Clamp(slotIndex, 0, slotCount - 1) / slotCount;
+            Vector3 direction = Quaternion.Euler(0f, angle, 0f) * Vector3.forward;
+            Collider targetCollider = GetComponent<Collider>();
+            Bounds bounds = targetCollider != null ? targetCollider.bounds :
+                new Bounds(transform.position, Vector3.zero);
+            Vector3 standCenter = bounds.center;
+            standCenter.y = transform.position.y;
+            float directionalRadius = Mathf.Abs(direction.x) * bounds.extents.x +
+                                      Mathf.Abs(direction.z) * bounds.extents.z;
+            float safeRadius = directionalRadius + minerRadius + spacingPadding;
+            if (slotCount > 1)
+            {
+                float halfChordAngle = Mathf.PI / slotCount;
+                float slotSafeRadius = (minerRadius + spacingPadding * 0.5f) /
+                                       Mathf.Max(Mathf.Sin(halfChordAngle), 0.01f);
+                safeRadius = Mathf.Max(safeRadius, slotSafeRadius);
+            }
+
+            float configuredRadius = variant != null ? variant.NpcStandDistance : 0f;
+            return standCenter + direction * Mathf.Max(configuredRadius, safeRadius);
+        }
+
+        public float SqrDistanceToSurface(Vector3 worldPosition)
+        {
+            Collider targetCollider = GetComponent<Collider>();
+            if (targetCollider == null || !targetCollider.enabled || targetCollider.isTrigger)
+            {
+                Vector3 offset = transform.position - worldPosition;
+                offset.y = 0f;
+                return offset.sqrMagnitude;
+            }
+
+            Vector3 closestPoint = targetCollider.ClosestPoint(worldPosition);
+            closestPoint.y = worldPosition.y;
+            return (closestPoint - worldPosition).sqrMagnitude;
+        }
 
         public void ConfigureVisualRoot(Transform targetVisualRoot)
         {
@@ -82,6 +181,8 @@ namespace MiningSimulator.Ores
             lifetime = 0f;
             punchElapsed = 0f;
             punchPlaying = false;
+            hasLanded = false;
+            reservedMiners.Clear();
             body ??= GetComponent<Rigidbody>();
             if (visualRoot != null)
             {
@@ -98,6 +199,14 @@ namespace MiningSimulator.Ores
             body.useGravity = true;
             body.WakeUp();
             DurabilityChanged?.Invoke(currentDurability, MaximumDurability);
+        }
+
+        private void OnCollisionEnter(Collision collision)
+        {
+            if (!resolved && collision.collider != null)
+            {
+                hasLanded = true;
+            }
         }
 
         public bool MineOnce()
@@ -178,6 +287,7 @@ namespace MiningSimulator.Ores
 
         private void OnDisable()
         {
+            reservedMiners.Clear();
             if (visualRoot != null)
             {
                 visualRoot.localScale = baseVisualScale;
@@ -188,6 +298,31 @@ namespace MiningSimulator.Ores
                 body.linearVelocity = Vector3.zero;
                 body.angularVelocity = Vector3.zero;
                 body.Sleep();
+            }
+        }
+
+        private void RemoveMissingReservations()
+        {
+            List<MiningNpc> missing = null;
+            foreach (MiningNpc miner in reservedMiners.Keys)
+            {
+                if (miner != null)
+                {
+                    continue;
+                }
+
+                missing ??= new List<MiningNpc>();
+                missing.Add(miner);
+            }
+
+            if (missing == null)
+            {
+                return;
+            }
+
+            foreach (MiningNpc miner in missing)
+            {
+                reservedMiners.Remove(miner);
             }
         }
     }

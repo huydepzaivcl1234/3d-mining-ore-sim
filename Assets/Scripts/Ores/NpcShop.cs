@@ -13,6 +13,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private Transform spawnPoint;
         [SerializeField] private NpcData npcData;
         [SerializeField] private MiningUpgradeSystem upgradeSystem;
+        [SerializeField] private LuckyBlockDropSystem luckyBlockSystem;
 
         private int purchasedCount;
 
@@ -39,6 +40,11 @@ namespace MiningSimulator.Ores
                               oreSpawner != null && npcPrefab != null && purchasedCount < MaximumMiners;
         public event Action<int> NpcCountChanged;
         public event Action<MiningNpc> NpcPurchased;
+
+        private void Awake()
+        {
+            FindLuckyBlockSystemIfMissing();
+        }
 
         private void OnEnable()
         {
@@ -80,7 +86,8 @@ namespace MiningSimulator.Ores
             }
 
             npc.name = $"Mining NPC {purchasedCount + 1}";
-            npc.Initialize(oreSpawner, npcData);
+            FindLuckyBlockSystemIfMissing();
+            npc.Initialize(oreSpawner, npcData, luckyBlockSystem);
             purchasedCount++;
             NpcCountChanged?.Invoke(purchasedCount);
             NpcPurchased?.Invoke(npc);
@@ -120,6 +127,15 @@ namespace MiningSimulator.Ores
 
             position = fallback;
             return false;
+        }
+
+        private void FindLuckyBlockSystemIfMissing()
+        {
+            if (luckyBlockSystem == null)
+            {
+                luckyBlockSystem = FindFirstObjectByType<LuckyBlockDropSystem>(
+                    FindObjectsInactive.Include);
+            }
         }
     }
 }

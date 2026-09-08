@@ -22,6 +22,9 @@ namespace MiningSimulator.Ores
         [Min(1), SerializeField] private int clickDamage = 1;
         [Min(0), SerializeField] private int moneyReward = 100;
         [Min(0.1f), SerializeField] private float sizeMultiplier = 1f;
+        [Min(1), SerializeField] private int miningPowerRequired = 1;
+        [Min(1), SerializeField] private int maximumMiningNpcs = 1;
+        [Min(0f), SerializeField] private float npcStandDistance = 1.25f;
 
         public LuckyBlockType Type => type;
         public string DisplayName => displayName;
@@ -31,6 +34,9 @@ namespace MiningSimulator.Ores
         public int ClickDamage => clickDamage;
         public int MoneyReward => moneyReward;
         public float SizeMultiplier => sizeMultiplier;
+        public int MiningPowerRequired => Mathf.Max(1, miningPowerRequired);
+        public int MaximumMiningNpcs => Mathf.Max(1, maximumMiningNpcs);
+        public float NpcStandDistance => Mathf.Max(0f, npcStandDistance);
 
         internal void Validate()
         {
@@ -39,6 +45,9 @@ namespace MiningSimulator.Ores
             clickDamage = Mathf.Max(1, clickDamage);
             moneyReward = Mathf.Max(0, moneyReward);
             sizeMultiplier = Mathf.Max(0.1f, sizeMultiplier);
+            miningPowerRequired = Mathf.Max(1, miningPowerRequired);
+            maximumMiningNpcs = Mathf.Max(1, maximumMiningNpcs);
+            npcStandDistance = Mathf.Max(0f, npcStandDistance);
         }
     }
 

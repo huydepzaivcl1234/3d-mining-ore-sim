@@ -18,13 +18,17 @@ namespace MiningSimulator.Ores
         private readonly RaycastHit[] obstacleHits = new RaycastHit[32];
         private readonly Collider[] separationHits = new Collider[24];
         private Ore targetOre;
+        private LuckyBlock targetLuckyBlock;
         private Ore ignoredOre;
+        private LuckyBlock ignoredLuckyBlock;
         private Ore avoidanceOre;
+        private LuckyBlockDropSystem luckyBlockSystem;
         private Rigidbody body;
         private float nextHitTime;
         private float nextTargetRefreshTime;
         private float nextTargetSwitchTime;
         private float ignoredOreUntil;
+        private float ignoredLuckyBlockUntil;
         private float lastProgressTime;
         private float avoidanceSide = 1f;
         private float detourDirectionUntil;
@@ -46,9 +50,16 @@ namespace MiningSimulator.Ores
 
         public void Initialize(OreSpawner targetSpawner, NpcData targetNpcData)
         {
+            Initialize(targetSpawner, targetNpcData, null);
+        }
+
+        public void Initialize(OreSpawner targetSpawner, NpcData targetNpcData,
+            LuckyBlockDropSystem targetLuckyBlockSystem)
+        {
             ReleaseTarget();
             oreSpawner = targetSpawner;
             npcData = targetNpcData;
+            luckyBlockSystem = targetLuckyBlockSystem;
             nextTargetRefreshTime = 0f;
             ConfigurePhysics();
             RegisterNpcCollisionPairing();
@@ -100,12 +111,18 @@ namespace MiningSimulator.Ores
                 ignoredOre = null;
             }
 
+            if (ignoredLuckyBlock != null && Time.time >= ignoredLuckyBlockUntil)
+            {
+                ignoredLuckyBlock = null;
+            }
+
             if (!IsTargetValid())
             {
                 ReleaseTarget();
             }
 
-            if (targetOre == null && Time.time >= nextTargetRefreshTime)
+            if (targetOre == null && targetLuckyBlock == null &&
+                Time.time >= nextTargetRefreshTime)
             {
                 TryAcquireTarget(body != null ? body.position : transform.position);
                 nextTargetRefreshTime = Time.time + npcData.TargetRefreshInterval;
@@ -117,18 +134,18 @@ namespace MiningSimulator.Ores
             }
 
             Vector3 currentPosition = body != null ? body.position : transform.position;
-            if (targetOre.SqrDistanceToSurface(currentPosition) >
+            if (targetOre != null && targetOre.SqrDistanceToSurface(currentPosition) >
                 npcData.MiningRange * npcData.MiningRange)
             {
                 TryAdoptVisibleOre(currentPosition);
             }
 
             Vector3 standPosition = GetReservedStandPosition();
-            Vector3 oreOffset = targetOre.transform.position - currentPosition;
+            Vector3 oreOffset = GetTargetPosition() - currentPosition;
             oreOffset.y = 0f;
             desiredFacingDirection = oreOffset;
 
-            bool isWithinMiningRange = targetOre.SqrDistanceToSurface(currentPosition) <=
+            bool isWithinMiningRange = SqrDistanceToTargetSurface(currentPosition) <=
                                        npcData.MiningRange * npcData.MiningRange;
 
             if (!isWithinMiningRange)
@@ -148,7 +165,7 @@ namespace MiningSimulator.Ores
             }
 
             nextHitTime = Time.time + npcData.SecondsPerHit;
-            targetOre.ApplyDamage(npcData.DamagePerHit);
+            ApplyDamageToTarget();
             if (!IsTargetValid())
             {
                 ReleaseTarget();
@@ -240,10 +257,39 @@ namespace MiningSimulator.Ores
         private void TryAcquireTarget(Vector3 currentPosition)
         {
             Ore excludedOre = Time.time < ignoredOreUntil ? ignoredOre : null;
-            if (oreSpawner.TryReserveClosestOre(this, currentPosition, npcData.MiningPower,
-                excludedOre, out Ore ore, out int slotIndex))
+            LuckyBlock excludedBlock = Time.time < ignoredLuckyBlockUntil
+                ? ignoredLuckyBlock
+                : null;
+            bool foundOre = oreSpawner.TryReserveClosestOre(this, currentPosition,
+                npcData.MiningPower, excludedOre, out Ore ore, out int oreSlotIndex);
+            LuckyBlock block = null;
+            int blockSlotIndex = -1;
+            bool foundBlock = luckyBlockSystem != null &&
+                              luckyBlockSystem.TryReserveClosestBlock(this, currentPosition,
+                                  npcData.MiningPower, excludedBlock, out block,
+                                  out blockSlotIndex);
+
+            if (foundOre && foundBlock)
             {
-                SetTarget(ore, slotIndex);
+                if (block.SqrDistanceToSurface(currentPosition) <
+                    ore.SqrDistanceToSurface(currentPosition))
+                {
+                    ore.ReleaseMiner(this);
+                    SetTarget(block, blockSlotIndex);
+                }
+                else
+                {
+                    block.ReleaseMiner(this);
+                    SetTarget(ore, oreSlotIndex);
+                }
+            }
+            else if (foundBlock)
+            {
+                SetTarget(block, blockSlotIndex);
+            }
+            else if (foundOre)
+            {
+                SetTarget(ore, oreSlotIndex);
             }
         }
 
@@ -266,8 +312,11 @@ namespace MiningSimulator.Ores
         private void SetTarget(Ore ore, int slotIndex)
         {
             Ore previousOre = targetOre;
+            LuckyBlock previousBlock = targetLuckyBlock;
             targetOre = ore;
+            targetLuckyBlock = null;
             reservedSlot = slotIndex;
+            previousBlock?.ReleaseMiner(this);
             if (previousOre != null && previousOre != ore)
             {
                 previousOre.ReleaseMiner(this);
@@ -282,15 +331,47 @@ namespace MiningSimulator.Ores
             ResetProgressTracking();
         }
 
+        private void SetTarget(LuckyBlock block, int slotIndex)
+        {
+            Ore previousOre = targetOre;
+            LuckyBlock previousBlock = targetLuckyBlock;
+            targetOre = null;
+            targetLuckyBlock = block;
+            reservedSlot = slotIndex;
+            previousOre?.ReleaseMiner(this);
+            if (previousBlock != null && previousBlock != block)
+            {
+                previousBlock.ReleaseMiner(this);
+                ignoredLuckyBlock = previousBlock;
+                ignoredLuckyBlockUntil = Time.time + npcData.IgnoredTargetDuration;
+            }
+
+            isMining = false;
+            nextHitTime = 0f;
+            nextTargetSwitchTime = Time.time + npcData.TargetSwitchCooldown;
+            ClearDetour();
+            ResetProgressTracking();
+        }
+
         private Vector3 GetReservedStandPosition()
         {
-            return targetOre.GetMiningStandPosition(
-                reservedSlot, npcData.ColliderRadius, npcData.StandSlotSpacingPadding);
+            if (targetLuckyBlock != null)
+            {
+                return targetLuckyBlock.GetMiningStandPosition(
+                    reservedSlot, npcData.ColliderRadius, npcData.StandSlotSpacingPadding);
+            }
+
+            return targetOre != null
+                ? targetOre.GetMiningStandPosition(
+                    reservedSlot, npcData.ColliderRadius, npcData.StandSlotSpacingPadding)
+                : transform.position;
         }
 
         private bool IsTargetValid()
         {
-            return CanMine(targetOre);
+            return targetLuckyBlock != null
+                ? CanMine(targetLuckyBlock)
+                : CanMine(targetOre);
         }
 
         private bool CanMine(Ore ore)
@@ -300,8 +381,47 @@ namespace MiningSimulator.Ores
                    ore.Data.MiningPowerRequired <= npcData.MiningPower;
         }
 
+        private bool CanMine(LuckyBlock block)
+        {
+            return npcData != null && block != null && block.isActiveAndEnabled &&
+                   !block.IsResolved && block.CanAcceptMiner(this, npcData.MiningPower);
+        }
+
+        private Vector3 GetTargetPosition()
+        {
+            return targetLuckyBlock != null
+                ? targetLuckyBlock.transform.position
+                : targetOre != null ? targetOre.transform.position : transform.position;
+        }
+
+        private float SqrDistanceToTargetSurface(Vector3 currentPosition)
+        {
+            return targetLuckyBlock != null
+                ? targetLuckyBlock.SqrDistanceToSurface(currentPosition)
+                : targetOre != null
+                    ? targetOre.SqrDistanceToSurface(currentPosition)
+                    : float.PositiveInfinity;
+        }
+
+        private void ApplyDamageToTarget()
+        {
+            if (targetLuckyBlock != null)
+            {
+                targetLuckyBlock.ApplyDamage(npcData.DamagePerHit);
+            }
+            else
+            {
+                targetOre?.ApplyDamage(npcData.DamagePerHit);
+            }
+        }
+
         private void TryAdoptVisibleOre(Vector3 currentPosition)
         {
+            if (targetLuckyBlock != null)
+            {
+                return;
+            }
+
             Vector3 direction = targetOre != null
                 ? targetOre.transform.position - currentPosition
                 : transform.forward;
@@ -348,7 +468,13 @@ namespace MiningSimulator.Ores
                 targetOre.ReleaseMiner(this);
             }
 
+            if (targetLuckyBlock != null)
+            {
+                targetLuckyBlock.ReleaseMiner(this);
+            }
+
             targetOre = null;
+            targetLuckyBlock = null;
             reservedSlot = -1;
             hasMoveTarget = false;
             isMining = false;
@@ -371,8 +497,16 @@ namespace MiningSimulator.Ores
                 return;
             }
 
-            ignoredOre = targetOre;
-            ignoredOreUntil = Time.time + npcData.IgnoredTargetDuration;
+            if (targetLuckyBlock != null)
+            {
+                ignoredLuckyBlock = targetLuckyBlock;
+                ignoredLuckyBlockUntil = Time.time + npcData.IgnoredTargetDuration;
+            }
+            else
+            {
+                ignoredOre = targetOre;
+                ignoredOreUntil = Time.time + npcData.IgnoredTargetDuration;
+            }
             ReleaseTarget();
             nextTargetRefreshTime = 0f;
             ResetProgressTracking();
