@@ -6,9 +6,6 @@ namespace MiningSimulator.Ores
     [CreateAssetMenu(fileName = "MiningGameData", menuName = "Mining Simulator/Game Data/Shared")]
     public sealed class MiningGameData : ScriptableObject
     {
-        [Header("Economy")]
-        [Min(0), SerializeField] private int startingMoney = 100;
-
         [Header("Click Mining")]
         [SerializeField] private LayerMask clickableLayers = ~0;
         [Min(0.1f), SerializeField] private float clickMaximumDistance = 500f;
@@ -33,7 +30,6 @@ namespace MiningSimulator.Ores
         [Min(0.1f), SerializeField] private float cameraMinimumDistance = 4f;
         [Min(0.1f), SerializeField] private float cameraMaximumDistance = 45f;
 
-        public int StartingMoney => startingMoney;
         public LayerMask ClickableLayers => clickableLayers;
         public float ClickMaximumDistance => clickMaximumDistance;
         public float MoneyCountUnitsPerSecond => moneyCountUnitsPerSecond;
@@ -55,7 +51,6 @@ namespace MiningSimulator.Ores
 
         private void OnValidate()
         {
-            startingMoney = Mathf.Max(0, startingMoney);
             clickMaximumDistance = Mathf.Max(0.1f, clickMaximumDistance);
             moneyCountUnitsPerSecond = Mathf.Max(1f, moneyCountUnitsPerSecond);
             moneyCountMaximumDuration = Mathf.Max(0.05f, moneyCountMaximumDuration);
