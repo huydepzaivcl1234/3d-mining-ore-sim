@@ -19,13 +19,19 @@ namespace MiningSimulator.Ores
         [SerializeField] private MiningDrillData drillData;
         [SerializeField] private MiningDrillPanel drillPanel;
 
-        [Header("Blender Model References")]
-        [Tooltip("Assign the imported Blender/FBX model root here.")]
+        [Header("Replaceable Drill Models")]
+        [Tooltip("Scene model shown before the drill is purchased. Assign your broken drill model root here.")]
+        [SerializeField] private Transform brokenModelRoot;
+        [Tooltip("Scene model shown after the drill is purchased. Assign your working Blender/FBX model root here.")]
+        [InspectorName("Working Model Root")]
         [SerializeField] private Transform modelRoot;
-        [Tooltip("Assign the rotating drill-head transform from the Blender model here.")]
+        [Tooltip("Assign only the rotating head/bit from the working model.")]
         [SerializeField] private Transform drillHead;
+        [Tooltip("Optional renderers that should change color when the drill becomes affordable or active.")]
         [SerializeField] private Renderer[] tintRenderers = Array.Empty<Renderer>();
         [SerializeField] private Light statusLight;
+        [Tooltip("Edit Mode preview only. Off shows Broken Model; On shows Working Model. Gameplay ignores this value.")]
+        [SerializeField] private bool previewWorkingModelInEditMode;
 
         [Header("Runtime State")]
         [SerializeField, Range(0, MiningDrillData.LevelCount)] private int currentLevel;
@@ -59,7 +65,8 @@ namespace MiningSimulator.Ores
         {
             materialProperties = new MaterialPropertyBlock();
             ResolveSystems();
-            EnsureVisibleModel();
+            ValidateModelSlots();
+            RefreshModelVisibility();
             currentLevel = Mathf.Clamp(currentLevel, 0, MiningDrillData.LevelCount);
             drillPanel?.Bind(this);
             RefreshAffordability(true);
@@ -223,87 +230,74 @@ namespace MiningSimulator.Ores
                     : drillData.ActiveColor;
             }
 
+            RefreshModelVisibility();
             StateChanged?.Invoke();
         }
 
         private void OnValidate()
         {
             currentLevel = Mathf.Clamp(currentLevel, 0, MiningDrillData.LevelCount);
-            if (modelRoot == null && drillHead != null)
+            RefreshModelVisibility();
+        }
+
+        private void RefreshModelVisibility()
+        {
+            if (!ModelRootsAreIndependent())
             {
-                modelRoot = drillHead.root;
+                return;
+            }
+
+            bool showWorkingModel = Application.isPlaying
+                ? IsPurchased
+                : previewWorkingModelInEditMode;
+
+            if (brokenModelRoot != null)
+            {
+                // Keep the broken model visible if no working replacement has been assigned yet.
+                brokenModelRoot.gameObject.SetActive(!showWorkingModel || modelRoot == null);
+            }
+
+            if (modelRoot != null)
+            {
+                // Preserve old scenes: without a broken model assigned, the existing model stays visible.
+                modelRoot.gameObject.SetActive(showWorkingModel || brokenModelRoot == null);
             }
         }
 
-        private void EnsureVisibleModel()
+        private void ValidateModelSlots()
         {
-            if (modelRoot == null)
+            if (brokenModelRoot == null)
             {
-                GameObject mount = new("Generated Drill Model");
-                mount.transform.SetParent(transform, false);
-                modelRoot = mount.transform;
-            }
-
-            Renderer[] modelRenderers = modelRoot.GetComponentsInChildren<Renderer>(true);
-            if (modelRenderers.Length == 0)
-            {
-                CreateFallbackVisual();
-                modelRenderers = modelRoot.GetComponentsInChildren<Renderer>(true);
                 Debug.LogWarning(
-                    "MiningDrillStation had no model Renderer. A non-destructive low-poly fallback was created at runtime. " +
-                    "Add an imported Blender/FBX model under Blender Model Mount to replace it automatically.",
+                    "MiningDrillStation has no Broken Model assigned. Drag your damaged drill model root into Broken Model Root.",
                     this);
             }
 
-            if (tintRenderers == null || tintRenderers.Length == 0)
+            if (modelRoot == null)
             {
-                tintRenderers = modelRenderers;
+                Debug.LogWarning(
+                    "MiningDrillStation has no Working Model assigned. Drag your working drill model root into Model Root.",
+                    this);
+            }
+
+            if (!ModelRootsAreIndependent())
+            {
+                Debug.LogError(
+                    "Broken Model Root and Working Model Root must be separate sibling objects. Do not place one inside the other.",
+                    this);
             }
         }
 
-        private void CreateFallbackVisual()
+        private bool ModelRootsAreIndependent()
         {
-            CreatePrimitivePart(PrimitiveType.Cube, "Base", modelRoot,
-                new Vector3(0f, 0.2f, 0f), Vector3.zero, new Vector3(2.6f, 0.4f, 2f));
-            CreatePrimitivePart(PrimitiveType.Cube, "Column", modelRoot,
-                new Vector3(-0.75f, 1.55f, 0f), Vector3.zero, new Vector3(0.45f, 2.7f, 0.55f));
-            CreatePrimitivePart(PrimitiveType.Cube, "Top Arm", modelRoot,
-                new Vector3(0f, 2.75f, 0f), Vector3.zero, new Vector3(2f, 0.45f, 0.6f));
-            CreatePrimitivePart(PrimitiveType.Cube, "Control Housing", modelRoot,
-                new Vector3(0.7f, 1.1f, 0f), Vector3.zero, new Vector3(0.7f, 0.8f, 0.75f));
-
-            GameObject headPivot = new("Generated Drill Head");
-            headPivot.transform.SetParent(modelRoot, false);
-            headPivot.transform.localPosition = new Vector3(0.65f, 2.25f, 0f);
-            drillHead = headPivot.transform;
-
-            CreatePrimitivePart(PrimitiveType.Cylinder, "Chuck", drillHead,
-                Vector3.zero, Vector3.zero, new Vector3(0.4f, 0.35f, 0.4f));
-            CreatePrimitivePart(PrimitiveType.Cylinder, "Drill Shaft", drillHead,
-                new Vector3(0f, -0.62f, 0f), Vector3.zero, new Vector3(0.16f, 0.9f, 0.16f));
-            CreatePrimitivePart(PrimitiveType.Cube, "Rotation Marker", drillHead,
-                new Vector3(0.22f, -0.85f, 0f), new Vector3(0f, 0f, 35f),
-                new Vector3(0.35f, 0.12f, 0.12f));
-        }
-
-        private static Transform CreatePrimitivePart(PrimitiveType type, string partName,
-            Transform parent, Vector3 localPosition, Vector3 localEulerAngles, Vector3 localScale)
-        {
-            GameObject part = GameObject.CreatePrimitive(type);
-            part.name = partName;
-            part.transform.SetParent(parent, false);
-            part.transform.localPosition = localPosition;
-            part.transform.localEulerAngles = localEulerAngles;
-            part.transform.localScale = localScale;
-
-            Collider generatedCollider = part.GetComponent<Collider>();
-            if (generatedCollider != null)
+            if (brokenModelRoot == null || modelRoot == null)
             {
-                generatedCollider.enabled = false;
-                Destroy(generatedCollider);
+                return true;
             }
 
-            return part.transform;
+            return brokenModelRoot != modelRoot &&
+                   !brokenModelRoot.IsChildOf(modelRoot) &&
+                   !modelRoot.IsChildOf(brokenModelRoot);
         }
 
         private void ResolveSystems()
