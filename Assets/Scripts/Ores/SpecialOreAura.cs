@@ -21,6 +21,7 @@ namespace MiningSimulator.Ores
 
         private Vector3 baseScale = Vector3.one;
         private Quaternion baseRotation = Quaternion.identity;
+        private Vector3[] auraShapeRatios = System.Array.Empty<Vector3>();
         private float phaseOffset;
         private MaterialPropertyBlock propertyBlock;
         private static readonly int PulseId = Shader.PropertyToID("_Pulse");
@@ -40,6 +41,7 @@ namespace MiningSimulator.Ores
             baseRotation = auraRoot.localRotation;
             phaseOffset = Mathf.Abs(transform.position.x * 0.73f + transform.position.z * 0.41f);
             propertyBlock = new MaterialPropertyBlock();
+            CacheAuraShape();
             ApplySettings();
         }
 
@@ -87,6 +89,9 @@ namespace MiningSimulator.Ores
                 return;
             }
 
+            DisableLegacyParticleAura();
+            FitAuraToOreBounds();
+
             Color color = theme == SpecialOreTheme.Light
                 ? data.LightStoneAuraColor
                 : data.DarkStoneAuraColor;
@@ -97,14 +102,155 @@ namespace MiningSimulator.Ores
                 auraLight.range = data.AuraLightRange;
             }
 
-            if (auraParticles != null)
+            ApplyRendererPulse(0.5f);
+        }
+
+        private void DisableLegacyParticleAura()
+        {
+            if (auraRoot != null)
             {
-                auraParticles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-                ParticleSystem.EmissionModule emission = auraParticles.emission;
-                emission.enabled = false;
+                ParticleSystem[] particleSystems =
+                    auraRoot.GetComponentsInChildren<ParticleSystem>(true);
+                foreach (ParticleSystem particleSystem in particleSystems)
+                {
+                    DisableParticleSystem(particleSystem);
+                }
             }
 
-            ApplyRendererPulse(0.5f);
+            if (auraParticles != null &&
+                (auraRoot == null || !auraParticles.transform.IsChildOf(auraRoot)))
+            {
+                DisableParticleSystem(auraParticles);
+            }
+        }
+
+        private static void DisableParticleSystem(ParticleSystem particleSystem)
+        {
+            if (particleSystem == null)
+            {
+                return;
+            }
+
+            particleSystem.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            ParticleSystem.EmissionModule emission = particleSystem.emission;
+            emission.enabled = false;
+            ParticleSystemRenderer particleRenderer =
+                particleSystem.GetComponent<ParticleSystemRenderer>();
+            if (particleRenderer != null)
+            {
+                particleRenderer.enabled = false;
+            }
+        }
+
+        private void CacheAuraShape()
+        {
+            if (auraRenderers == null || auraRenderers.Length == 0)
+            {
+                auraShapeRatios = System.Array.Empty<Vector3>();
+                return;
+            }
+
+            Vector3 maximumScale = Vector3.zero;
+            for (int i = 0; i < auraRenderers.Length; i++)
+            {
+                Renderer target = auraRenderers[i];
+                if (target == null || target is ParticleSystemRenderer)
+                {
+                    continue;
+                }
+
+                Vector3 scale = Abs(target.transform.localScale);
+                maximumScale = Vector3.Max(maximumScale, scale);
+            }
+
+            auraShapeRatios = new Vector3[auraRenderers.Length];
+            for (int i = 0; i < auraRenderers.Length; i++)
+            {
+                Renderer target = auraRenderers[i];
+                if (target == null || target is ParticleSystemRenderer)
+                {
+                    continue;
+                }
+
+                Vector3 scale = Abs(target.transform.localScale);
+                auraShapeRatios[i] = new Vector3(
+                    SafeDivide(scale.x, maximumScale.x),
+                    SafeDivide(scale.y, maximumScale.y),
+                    SafeDivide(scale.z, maximumScale.z));
+            }
+        }
+
+        private void FitAuraToOreBounds()
+        {
+            if (auraRoot == null || auraRenderers == null || auraRenderers.Length == 0)
+            {
+                return;
+            }
+
+            if (auraShapeRatios == null || auraShapeRatios.Length != auraRenderers.Length)
+            {
+                CacheAuraShape();
+            }
+
+            Collider[] colliders = GetComponentsInChildren<Collider>(true);
+            bool hasBounds = false;
+            Bounds oreBounds = default;
+            foreach (Collider targetCollider in colliders)
+            {
+                if (targetCollider == null || !targetCollider.enabled || targetCollider.isTrigger ||
+                    targetCollider.transform.IsChildOf(auraRoot))
+                {
+                    continue;
+                }
+
+                if (!hasBounds)
+                {
+                    oreBounds = targetCollider.bounds;
+                    hasBounds = true;
+                }
+                else
+                {
+                    oreBounds.Encapsulate(targetCollider.bounds);
+                }
+            }
+
+            if (!hasBounds)
+            {
+                return;
+            }
+
+            float auraScale = theme == SpecialOreTheme.Light
+                ? data.LightHaloScale
+                : data.DarkAuraScale;
+            Vector3 targetWorldSize = oreBounds.size * Mathf.Max(0.1f, auraScale);
+            for (int i = 0; i < auraRenderers.Length; i++)
+            {
+                Renderer target = auraRenderers[i];
+                if (target == null || target is ParticleSystemRenderer)
+                {
+                    continue;
+                }
+
+                Transform rendererTransform = target.transform;
+                Transform parent = rendererTransform.parent;
+                Vector3 parentScale = parent != null ? Abs(parent.lossyScale) : Vector3.one;
+                Vector3 ratio = auraShapeRatios[i];
+                rendererTransform.position = oreBounds.center;
+                rendererTransform.localScale = new Vector3(
+                    SafeDivide(targetWorldSize.x * ratio.x, parentScale.x),
+                    SafeDivide(targetWorldSize.y * ratio.y, parentScale.y),
+                    SafeDivide(targetWorldSize.z * ratio.z, parentScale.z));
+            }
+        }
+
+        private static Vector3 Abs(Vector3 value)
+        {
+            return new Vector3(Mathf.Abs(value.x), Mathf.Abs(value.y), Mathf.Abs(value.z));
+        }
+
+        private static float SafeDivide(float value, float divisor)
+        {
+            return divisor > Mathf.Epsilon ? value / divisor : value;
         }
 
         private void ApplyRendererPulse(float pulse)
