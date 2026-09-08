@@ -7,16 +7,28 @@ namespace MiningSimulator.Ores
     [DisallowMultipleComponent]
     public sealed class PlayerWallet : MonoBehaviour
     {
-        [SerializeField] private MiningGameData gameData;
-        [SerializeField] private int currentMoney;
+        [Header("Starting Balance")]
+        [Tooltip("Money applied every time Play Mode starts.")]
+        [Min(0), SerializeField] private int startingMoney = 100;
 
+        [Header("Runtime Balance")]
+        [Tooltip("Current Play Mode balance. Change Starting Money to set the next game's initial balance.")]
+        [Min(0), SerializeField] private int currentMoney;
+
+        public int StartingMoney => startingMoney;
         public int CurrentMoney => currentMoney;
         public event Action<int> MoneyChanged;
 
         private void Awake()
         {
-            currentMoney = gameData != null ? gameData.StartingMoney : 0;
+            currentMoney = startingMoney;
             MoneyChanged?.Invoke(currentMoney);
+        }
+
+        private void OnValidate()
+        {
+            startingMoney = Mathf.Max(0, startingMoney);
+            currentMoney = Mathf.Max(0, currentMoney);
         }
 
         public void AddMoney(int amount)
