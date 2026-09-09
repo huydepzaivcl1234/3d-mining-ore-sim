@@ -98,6 +98,27 @@ namespace MiningSimulator.Ores
             return true;
         }
 
+        /// <summary>Removes every spawned miner and restores the shop count.</summary>
+        public void ResetAllNpcs()
+        {
+            MiningNpc[] npcs = FindObjectsByType<MiningNpc>(FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+            foreach (MiningNpc npc in npcs)
+            {
+                if (npc == null || !npc.gameObject.scene.IsValid())
+                {
+                    continue;
+                }
+
+                // OnDisable releases the reserved ore before the object is destroyed.
+                npc.gameObject.SetActive(false);
+                Destroy(npc.gameObject);
+            }
+
+            purchasedCount = 0;
+            NpcCountChanged?.Invoke(purchasedCount);
+        }
+
         private void HandleUpgradesChanged()
         {
             NpcCountChanged?.Invoke(purchasedCount);

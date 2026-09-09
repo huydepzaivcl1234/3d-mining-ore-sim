@@ -11,6 +11,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private MiningUpgradeSystem upgradeSystem;
         [SerializeField] private MiningRebirthData rebirthData;
         [SerializeField] private NpcProgressionSystem npcProgressionSystem;
+        [SerializeField] private NpcShop npcShop;
         private int completedRebirths;
 
         public int CompletedRebirths => completedRebirths;
@@ -34,6 +35,7 @@ namespace MiningSimulator.Ores
 
         private void Awake()
         {
+            FindResetTargetsIfMissing();
             LoadProgress();
             ApplyPermanentBoost();
         }
@@ -67,10 +69,30 @@ namespace MiningSimulator.Ores
             ApplyPermanentBoost();
             upgradeSystem?.ResetAllUpgrades();
             npcProgressionSystem?.ResetProgression();
+            npcShop?.ResetAllNpcs();
             wallet.ResetMoney();
             RebirthCompleted?.Invoke(completedRebirths);
             StateChanged?.Invoke();
             return true;
+        }
+
+        /// <summary>Clears all gameplay progression, including the saved Rebirth count.</summary>
+        public void ResetAllProgress()
+        {
+            FindResetTargetsIfMissing();
+            completedRebirths = 0;
+            if (rebirthData != null)
+            {
+                PlayerPrefs.DeleteKey(rebirthData.RebirthCountSaveKey);
+                PlayerPrefs.Save();
+            }
+
+            upgradeSystem?.ResetAllUpgrades();
+            npcProgressionSystem?.ResetProgression();
+            npcShop?.ResetAllNpcs();
+            wallet?.ResetMoney();
+            ApplyPermanentBoost();
+            StateChanged?.Invoke();
         }
 
         private void LoadProgress()
@@ -94,6 +116,19 @@ namespace MiningSimulator.Ores
         private void ApplyPermanentBoost()
         {
             upgradeSystem?.SetPermanentMoneyMultiplier(PermanentMoneyMultiplier);
+        }
+
+        private void FindResetTargetsIfMissing()
+        {
+            if (npcProgressionSystem == null)
+            {
+                npcProgressionSystem = FindFirstObjectByType<NpcProgressionSystem>(
+                    FindObjectsInactive.Include);
+            }
+            if (npcShop == null)
+            {
+                npcShop = FindFirstObjectByType<NpcShop>(FindObjectsInactive.Include);
+            }
         }
 
         private void HandleMoneyChanged(float money)

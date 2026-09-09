@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using Microlight.MicroBar;
 using TMPro;
 using UnityEngine;
@@ -10,6 +11,11 @@ namespace MiningSimulator.Ores
     [DisallowMultipleComponent]
     public sealed class MiningRebirthPanel : MonoBehaviour
     {
+        private const string LegacyWarning =
+            "CẢNH BÁO!\n\nBạn sắp Rebirth! Toàn bộ tiền và mọi nâng cấp hiện tại sẽ bị xóa.";
+        private const string CompleteWarning =
+            "CẢNH BÁO!\n\nRebirth sẽ xóa tiền, mọi nâng cấp, cấp thợ mỏ và toàn bộ NPC trên sân.";
+
         [SerializeField] private MiningRebirthSystem rebirthSystem;
         [SerializeField] private PlayerWallet wallet;
         [SerializeField] private GameObject confirmationPanel;
@@ -22,22 +28,32 @@ namespace MiningSimulator.Ores
         [SerializeField] private TextMeshProUGUI warningLabel;
         [SerializeField] private TextMeshProUGUI nextBoostLabel;
         [SerializeField] private MicroBar progressBar;
+        [SerializeField] private MiningUiData uiData;
+        [SerializeField] private Image rebirthFlashImage;
 
         [Header("Editable Text")]
         [SerializeField] private string progressFormat = "{0:N0} / {1:N0} TIỀN";
         [SerializeField] private string boostFormat = "REBIRTH {0}  •  x{1:0.00} TIỀN";
         [SerializeField] private string warningText =
-            "CẢNH BÁO!\n\nBạn sắp Rebirth! Toàn bộ tiền và mọi nâng cấp hiện tại sẽ bị xóa.";
+            "CẢNH BÁO!\n\nRebirth sẽ xóa tiền, mọi nâng cấp, cấp thợ mỏ và toàn bộ NPC trên sân.";
         [SerializeField] private string nextBoostFormat = "Boost vĩnh viễn sau Rebirth: x{0:0.00} tiền";
 
         private bool barInitialized;
         private int initializedRequirement;
+        private Coroutine rebirthSequence;
+        private bool isRebirthing;
 
         public event Action PanelOpened;
         public event Action PanelClosed;
 
         private void Awake()
         {
+            if (uiData == null && panelCoordinator != null)
+            {
+                uiData = panelCoordinator.UiData;
+            }
+            EnsureFlashImage();
+            SetFlashAlpha(0f, false);
             confirmationPanel?.SetActive(false);
         }
 
@@ -56,6 +72,13 @@ namespace MiningSimulator.Ores
 
         private void OnDisable()
         {
+            if (rebirthSequence != null)
+            {
+                StopCoroutine(rebirthSequence);
+                rebirthSequence = null;
+            }
+            isRebirthing = false;
+            SetFlashAlpha(0f, false);
             RemoveListeners();
             if (rebirthSystem != null)
             {
@@ -114,13 +137,129 @@ namespace MiningSimulator.Ores
 
         private void ConfirmRebirth()
         {
-            if (rebirthSystem != null && rebirthSystem.TryRebirth())
-            {
-                ClosePanel();
-            }
-            else
+            if (isRebirthing || rebirthSystem == null || !rebirthSystem.CanRebirth)
             {
                 Refresh();
+                return;
+            }
+
+            rebirthSequence = StartCoroutine(PlayRebirthSequence());
+        }
+
+        private IEnumerator PlayRebirthSequence()
+        {
+            isRebirthing = true;
+            if (confirmButton != null)
+            {
+                confirmButton.interactable = false;
+            }
+
+            ClosePanel();
+            EnsureFlashImage();
+            if (rebirthFlashImage != null)
+            {
+                rebirthFlashImage.transform.SetAsLastSibling();
+            }
+
+            Color flashColor = uiData != null
+                ? uiData.RebirthFlashColor
+                : new Color(1f, 1f, 1f, 1f);
+            yield return FadeFlash(0f, flashColor.a, uiData != null
+                ? uiData.RebirthFlashFadeInDuration
+                : 0.18f, flashColor);
+
+            float holdDuration = uiData != null ? uiData.RebirthFlashHoldDuration : 0.08f;
+            if (holdDuration > 0f)
+            {
+                yield return new WaitForSecondsRealtime(holdDuration);
+            }
+
+            // Reset only while the screen is fully covered by the flash.
+            rebirthSystem.TryRebirth();
+            yield return null;
+
+            yield return FadeFlash(flashColor.a, 0f, uiData != null
+                ? uiData.RebirthFlashFadeOutDuration
+                : 0.35f, flashColor);
+
+            SetFlashAlpha(0f, false);
+            isRebirthing = false;
+            rebirthSequence = null;
+            Refresh();
+        }
+
+        private IEnumerator FadeFlash(float from, float to, float duration, Color baseColor)
+        {
+            if (rebirthFlashImage == null)
+            {
+                yield break;
+            }
+
+            rebirthFlashImage.raycastTarget = true;
+            float safeDuration = Mathf.Max(0.01f, duration);
+            float elapsed = 0f;
+            while (elapsed < safeDuration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                SetFlashColor(baseColor, Mathf.Lerp(from, to,
+                    Mathf.Clamp01(elapsed / safeDuration)));
+                yield return null;
+            }
+            SetFlashColor(baseColor, to);
+        }
+
+        private void EnsureFlashImage()
+        {
+            if (rebirthFlashImage != null)
+            {
+                return;
+            }
+
+            Canvas canvas = confirmationPanel != null
+                ? confirmationPanel.GetComponentInParent<Canvas>()
+                : GetComponentInChildren<Canvas>(true);
+            if (canvas == null)
+            {
+                return;
+            }
+
+            Transform existing = canvas.transform.Find("Rebirth Flash");
+            if (existing == null)
+            {
+                GameObject flashObject = new("Rebirth Flash", typeof(RectTransform),
+                    typeof(CanvasRenderer), typeof(Image));
+                flashObject.transform.SetParent(canvas.transform, false);
+                RectTransform rect = flashObject.GetComponent<RectTransform>();
+                rect.anchorMin = Vector2.zero;
+                rect.anchorMax = Vector2.one;
+                rect.offsetMin = Vector2.zero;
+                rect.offsetMax = Vector2.zero;
+                existing = flashObject.transform;
+            }
+
+            rebirthFlashImage = existing.GetComponent<Image>();
+            if (rebirthFlashImage == null)
+            {
+                rebirthFlashImage = existing.gameObject.AddComponent<Image>();
+            }
+        }
+
+        private void SetFlashAlpha(float alpha, bool blocksInput)
+        {
+            Color color = uiData != null ? uiData.RebirthFlashColor : Color.white;
+            SetFlashColor(color, alpha);
+            if (rebirthFlashImage != null)
+            {
+                rebirthFlashImage.raycastTarget = blocksInput;
+            }
+        }
+
+        private void SetFlashColor(Color baseColor, float alpha)
+        {
+            if (rebirthFlashImage != null)
+            {
+                baseColor.a = Mathf.Clamp01(alpha);
+                rebirthFlashImage.color = baseColor;
             }
         }
 
@@ -148,7 +287,7 @@ namespace MiningSimulator.Ores
             }
             if (warningLabel != null)
             {
-                warningLabel.text = warningText;
+                warningLabel.text = warningText == LegacyWarning ? CompleteWarning : warningText;
             }
             if (nextBoostLabel != null)
             {
@@ -157,7 +296,8 @@ namespace MiningSimulator.Ores
             }
             if (confirmButton != null)
             {
-                confirmButton.interactable = rebirthSystem != null && rebirthSystem.CanRebirth;
+                confirmButton.interactable = !isRebirthing && rebirthSystem != null &&
+                                             rebirthSystem.CanRebirth;
             }
 
             RefreshProgressBar(money, requirement);

@@ -31,6 +31,8 @@ namespace MiningSimulator.Ores
         private bool initialized;
         private readonly Dictionary<RectTransform, Vector2> additionalPanelHomes = new();
 
+        public MiningUiData UiData => uiData;
+
         private float TransitionDuration => uiData != null ? uiData.PanelTransitionDuration : 0.28f;
         private float SlideExtraDistance => uiData != null ? uiData.PanelSlideExtraDistance : 80f;
         private Vector2 ShopSlideDirection => GetDirection(

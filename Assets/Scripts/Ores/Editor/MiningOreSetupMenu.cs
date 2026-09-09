@@ -877,7 +877,8 @@ namespace MiningSimulator.Editor
 
                 ConfigureUpgradePanel(runtime, upgradePanel, upgradeSystem, wallet, upgradeData, uiData);
                 ConfigureRebirthHud(runtime, rebirthPanel, rebirthSystem, wallet, uiData);
-                ConfigureAudioSettings(runtime, audioSettingsPanel, audioManager, uiData);
+                ConfigureAudioSettings(runtime, audioSettingsPanel, audioManager, rebirthSystem,
+                    uiData);
                 ConfigureUiPanelCoordinator(runtime, panelCoordinator, uiData);
                 ConfigureButtonSfx(runtime, audioManager);
 
@@ -885,6 +886,9 @@ namespace MiningSimulator.Editor
                 rebirthSerialized.FindProperty("wallet").objectReferenceValue = wallet;
                 rebirthSerialized.FindProperty("upgradeSystem").objectReferenceValue = upgradeSystem;
                 rebirthSerialized.FindProperty("rebirthData").objectReferenceValue = rebirthData;
+                SetReferenceIfMissing(rebirthSerialized.FindProperty("npcProgressionSystem"),
+                    npcProgressionSystem);
+                SetReferenceIfMissing(rebirthSerialized.FindProperty("npcShop"), shop);
                 rebirthSerialized.ApplyModifiedPropertiesWithoutUndo();
 
                 var audioSerialized = new SerializedObject(audioManager);
@@ -1434,7 +1438,7 @@ namespace MiningSimulator.Editor
 
         private static void ConfigureAudioSettings(GameObject runtime,
             MiningAudioSettingsPanel panelController, MiningAudioManager audioManager,
-            MiningUiData uiData)
+            MiningRebirthSystem rebirthSystem, MiningUiData uiData)
         {
             Transform canvas = runtime.transform.Find(HudCanvasName);
             if (canvas == null || uiData == null)
@@ -1466,7 +1470,7 @@ namespace MiningSimulator.Editor
             ApplyOutline(header.gameObject, uiData.OutlineColor, uiData.OutlineThickness);
             TextMeshProUGUI title = EnsureText(header, "Title");
             StretchRect(title.rectTransform);
-            title.text = "CÀI ĐẶT ÂM THANH";
+            title.text = "CÀI ĐẶT";
             title.fontSize = uiData.AudioTitleFontSize;
             title.color = uiData.TitleTextColor;
             title.alignment = TextAlignmentOptions.Center;
@@ -1485,6 +1489,26 @@ namespace MiningSimulator.Editor
             Slider sfxSlider = EnsureAudioSliderRow(panel, "SFX", 2, "SFX",
                 uiData, out TextMeshProUGUI sfxValue);
 
+            Transform existingResetData = panel.Find("Reset Data");
+            Button resetDataButton = existingResetData != null
+                ? existingResetData.GetComponent<Button>()
+                : null;
+            if (resetDataButton == null)
+            {
+                resetDataButton = EnsureStyledButton(panel, "Reset Data",
+                    uiData.ResetDataButtonPosition, uiData.ResetDataButtonSize,
+                    uiData.ResetDataButtonColor, uiData.TitleTextColor, uiData);
+            }
+            TextMeshProUGUI resetDataLabel =
+                resetDataButton.GetComponentInChildren<TextMeshProUGUI>(true);
+            if (resetDataLabel == null)
+            {
+                resetDataLabel = EnsureText(resetDataButton.transform, "Label");
+                StretchRect(resetDataLabel.rectTransform);
+            }
+            resetDataLabel.text = "RESET DỮ LIỆU";
+            resetDataLabel.fontSize = uiData.ResetDataFontSize;
+
             panel.gameObject.SetActive(true);
             var serialized = new SerializedObject(panelController);
             SetReferenceIfMissing(serialized.FindProperty("audioManager"), audioManager);
@@ -1500,6 +1524,10 @@ namespace MiningSimulator.Editor
             SetReferenceIfMissing(serialized.FindProperty("masterValueLabel"), masterValue);
             SetReferenceIfMissing(serialized.FindProperty("musicValueLabel"), musicValue);
             SetReferenceIfMissing(serialized.FindProperty("sfxValueLabel"), sfxValue);
+            SetReferenceIfMissing(serialized.FindProperty("uiData"), uiData);
+            SetReferenceIfMissing(serialized.FindProperty("rebirthSystem"), rebirthSystem);
+            SetReferenceIfMissing(serialized.FindProperty("resetDataButton"), resetDataButton);
+            SetReferenceIfMissing(serialized.FindProperty("resetDataLabel"), resetDataLabel);
             serialized.ApplyModifiedPropertiesWithoutUndo();
         }
 
@@ -1680,7 +1708,7 @@ namespace MiningSimulator.Editor
             TextMeshProUGUI warning = EnsureText(modal, "Warning");
             ConfigureTopLeftRect(warning.transform, uiData.RebirthWarningPosition,
                 uiData.RebirthWarningSize);
-            warning.text = "CẢNH BÁO!\n\nBạn sắp Rebirth! Toàn bộ tiền và mọi nâng cấp hiện tại sẽ bị xóa.";
+            warning.text = "CẢNH BÁO!\n\nRebirth sẽ xóa tiền, mọi nâng cấp, cấp thợ mỏ và toàn bộ NPC trên sân.";
             warning.fontSize = uiData.RebirthWarningFontSize;
             warning.color = uiData.CardTextColor;
             warning.alignment = TextAlignmentOptions.Center;
@@ -1711,6 +1739,15 @@ namespace MiningSimulator.Editor
             // Keep the modal selectable while editing. MiningRebirthPanel hides it in Awake.
             modal.gameObject.SetActive(true);
 
+            Transform flash = EnsureUiObject(canvas, "Rebirth Flash", typeof(Image));
+            StretchRect(flash.GetComponent<RectTransform>());
+            Image flashImage = flash.GetComponent<Image>();
+            Color flashColor = uiData.RebirthFlashColor;
+            flashColor.a = 0f;
+            flashImage.color = flashColor;
+            flashImage.raycastTarget = false;
+            flash.SetAsLastSibling();
+
             var serialized = new SerializedObject(panelController);
             serialized.FindProperty("rebirthSystem").objectReferenceValue = rebirthSystem;
             serialized.FindProperty("wallet").objectReferenceValue = wallet;
@@ -1725,6 +1762,8 @@ namespace MiningSimulator.Editor
             serialized.FindProperty("warningLabel").objectReferenceValue = warning;
             serialized.FindProperty("nextBoostLabel").objectReferenceValue = nextBoost;
             serialized.FindProperty("progressBar").objectReferenceValue = progressBar;
+            SetReferenceIfMissing(serialized.FindProperty("uiData"), uiData);
+            SetReferenceIfMissing(serialized.FindProperty("rebirthFlashImage"), flashImage);
             serialized.ApplyModifiedPropertiesWithoutUndo();
         }
 

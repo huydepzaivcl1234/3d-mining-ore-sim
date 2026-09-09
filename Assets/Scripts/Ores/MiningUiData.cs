@@ -130,6 +130,14 @@ namespace MiningSimulator.Ores
         [SerializeField] private Color audioSliderColor = new(0.14f, 0.72f, 0.52f, 1f);
         [SerializeField] private Color audioSliderBackgroundColor = new(0.15f, 0.18f, 0.22f, 1f);
 
+        [Header("Reset Data Button")]
+        [SerializeField] private Vector2 resetDataButtonPosition = new(130f, -354f);
+        [SerializeField] private Vector2 resetDataButtonSize = new(300f, 46f);
+        [Min(1f), SerializeField] private float resetDataFontSize = 19f;
+        [Min(0.1f), SerializeField] private float resetDataConfirmationDuration = 3f;
+        [SerializeField] private Color resetDataButtonColor = new(0.88f, 0.12f, 0.18f, 1f);
+        [SerializeField] private Color resetDataArmedColor = new(1f, 0.36f, 0.08f, 1f);
+
         [Header("Panel Slide Animation")]
         [Min(0.01f), SerializeField] private float panelTransitionDuration = 0.28f;
         [Min(0f), SerializeField] private float panelSlideExtraDistance = 80f;
@@ -232,6 +240,12 @@ namespace MiningSimulator.Ores
         [SerializeField] private Color rebirthProgressGhostColor = new(0.55f, 1f, 0.58f, 1f);
         [SerializeField] private Color rebirthConfirmColor = new(0.12f, 0.95f, 0.16f, 1f);
         [SerializeField] private Color rebirthCancelColor = new(1f, 0.12f, 0.18f, 1f);
+
+        [Header("Rebirth Screen Flash")]
+        [SerializeField] private Color rebirthFlashColor = Color.white;
+        [Min(0.01f), SerializeField] private float rebirthFlashFadeInDuration = 0.18f;
+        [Min(0f), SerializeField] private float rebirthFlashHoldDuration = 0.08f;
+        [Min(0.01f), SerializeField] private float rebirthFlashFadeOutDuration = 0.35f;
 
         public Vector2 ReferenceResolution => referenceResolution;
         public float MatchWidthOrHeight => matchWidthOrHeight;
@@ -346,6 +360,12 @@ namespace MiningSimulator.Ores
         public Color AudioHeaderColor => audioHeaderColor;
         public Color AudioSliderColor => audioSliderColor;
         public Color AudioSliderBackgroundColor => audioSliderBackgroundColor;
+        public Vector2 ResetDataButtonPosition => resetDataButtonPosition;
+        public Vector2 ResetDataButtonSize => resetDataButtonSize;
+        public float ResetDataFontSize => resetDataFontSize;
+        public float ResetDataConfirmationDuration => resetDataConfirmationDuration;
+        public Color ResetDataButtonColor => resetDataButtonColor;
+        public Color ResetDataArmedColor => resetDataArmedColor;
         public float PanelTransitionDuration => panelTransitionDuration;
         public float PanelSlideExtraDistance => panelSlideExtraDistance;
         public Vector2 ShopSlideDirection => shopSlideDirection;
@@ -430,6 +450,10 @@ namespace MiningSimulator.Ores
         public Color RebirthProgressGhostColor => rebirthProgressGhostColor;
         public Color RebirthConfirmColor => rebirthConfirmColor;
         public Color RebirthCancelColor => rebirthCancelColor;
+        public Color RebirthFlashColor => rebirthFlashColor;
+        public float RebirthFlashFadeInDuration => rebirthFlashFadeInDuration;
+        public float RebirthFlashHoldDuration => rebirthFlashHoldDuration;
+        public float RebirthFlashFadeOutDuration => rebirthFlashFadeOutDuration;
 
         private void OnValidate()
         {
@@ -496,6 +520,10 @@ namespace MiningSimulator.Ores
             audioCloseButtonSize.y = Mathf.Max(1f, audioCloseButtonSize.y);
             audioTitleFontSize = Mathf.Max(1f, audioTitleFontSize);
             audioLabelFontSize = Mathf.Max(1f, audioLabelFontSize);
+            resetDataButtonSize.x = Mathf.Max(1f, resetDataButtonSize.x);
+            resetDataButtonSize.y = Mathf.Max(1f, resetDataButtonSize.y);
+            resetDataFontSize = Mathf.Max(1f, resetDataFontSize);
+            resetDataConfirmationDuration = Mathf.Max(0.1f, resetDataConfirmationDuration);
             panelTransitionDuration = Mathf.Max(0.01f, panelTransitionDuration);
             panelSlideExtraDistance = Mathf.Max(0f, panelSlideExtraDistance);
             cardSpacing = Mathf.Max(0f, cardSpacing);
@@ -527,6 +555,9 @@ namespace MiningSimulator.Ores
             rebirthInfoFontSize = Mathf.Max(1f, rebirthInfoFontSize);
             rebirthWarningFontSize = Mathf.Max(1f, rebirthWarningFontSize);
             rebirthModalTextFontSize = Mathf.Max(1f, rebirthModalTextFontSize);
+            rebirthFlashFadeInDuration = Mathf.Max(0.01f, rebirthFlashFadeInDuration);
+            rebirthFlashHoldDuration = Mathf.Max(0f, rebirthFlashHoldDuration);
+            rebirthFlashFadeOutDuration = Mathf.Max(0.01f, rebirthFlashFadeOutDuration);
         }
     }
 }
