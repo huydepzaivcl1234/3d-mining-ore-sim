@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6af8fb44d650df570b1d289823007298, type: 3}
   m_Name: MiningItemDatabase
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningItemDatabase
-  oreDropChancePercent: 12
+  oreDropChancePercent: 100
   luckyBlockDropChancePercent: 35
   items:
   - {fileID: 11400000, guid: 6556e39ad099f9f4aafb234d4eec3f75, type: 2}

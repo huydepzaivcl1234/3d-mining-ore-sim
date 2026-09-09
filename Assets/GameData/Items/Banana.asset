@@ -21,7 +21,7 @@ MonoBehaviour:
   inventoryIcon: {fileID: 0}
   iconFallback: B
   fallbackColor: {r: 1, g: 0.82, b: 0.08, a: 1}
-  worldScale: 0.42
+  worldScale: 5
   modelLocalPosition: {x: 0, y: 0, z: 0}
   modelLocalEulerAngles: {x: 0, y: 0, z: 0}
   selectionChancePercent: 33.33
