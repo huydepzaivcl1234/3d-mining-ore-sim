@@ -13,6 +13,7 @@ namespace MiningSimulator.Ores
         private float spawnedAt;
         private float nextPickupAttempt;
         private int remainingBounces;
+        private bool hasLanded;
         private bool collected;
 
         public MiningItemData Item => item;
@@ -24,8 +25,9 @@ namespace MiningSimulator.Ores
             item = targetItem;
             settings = targetSettings;
             spawnedAt = Time.time;
-            nextPickupAttempt = spawnedAt + settings.AutoPickupDelay;
+            nextPickupAttempt = float.PositiveInfinity;
             remainingBounces = settings.BounceCount;
+            hasLanded = false;
 
             CreateVisual();
             SphereCollider itemCollider = gameObject.AddComponent<SphereCollider>();
@@ -80,8 +82,18 @@ namespace MiningSimulator.Ores
 
         private void OnCollisionEnter(Collision collision)
         {
-            if (body == null || settings == null || remainingBounces <= 0 ||
-                collision.contactCount == 0 || collision.GetContact(0).normal.y < 0.45f)
+            if (body == null || settings == null || collision.contactCount == 0 ||
+                collision.GetContact(0).normal.y < 0.45f)
+            {
+                return;
+            }
+
+            if (!hasLanded)
+            {
+                hasLanded = true;
+                nextPickupAttempt = Time.time + settings.AutoPickupDelay;
+            }
+            if (remainingBounces <= 0)
             {
                 return;
             }

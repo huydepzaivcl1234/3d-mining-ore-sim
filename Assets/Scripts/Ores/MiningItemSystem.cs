@@ -97,10 +97,7 @@ namespace MiningSimulator.Ores
 
         private void Awake()
         {
-            for (int index = 0; index < slots.Length; index++)
-            {
-                slots[index] = new RuntimeSlot();
-            }
+            EnsureRuntimeSlots();
             FindReferencesIfMissing();
             LoadInventory();
         }
@@ -150,6 +147,7 @@ namespace MiningSimulator.Ores
 
         public InventorySlotView GetSlot(int index)
         {
+            EnsureRuntimeSlots();
             if (index < 0 || index >= slots.Length)
             {
                 return new InventorySlotView(null, 0);
@@ -160,6 +158,7 @@ namespace MiningSimulator.Ores
 
         public bool TryAddItem(MiningItemData item, int amount = 1)
         {
+            EnsureRuntimeSlots();
             if (item == null || amount <= 0 || GetAvailableSpace(item) < amount)
             {
                 return false;
@@ -201,6 +200,7 @@ namespace MiningSimulator.Ores
 
         public bool TryUseSlot(int index)
         {
+            EnsureRuntimeSlots();
             if (index < 0 || index >= slots.Length)
             {
                 return false;
@@ -243,6 +243,7 @@ namespace MiningSimulator.Ores
 
         public void ResetAllData()
         {
+            EnsureRuntimeSlots();
             foreach (RuntimeSlot slot in slots)
             {
                 slot.item = null;
@@ -380,6 +381,7 @@ namespace MiningSimulator.Ores
 
         private void LoadInventory()
         {
+            EnsureRuntimeSlots();
             if (database == null || string.IsNullOrEmpty(database.InventorySaveKey) ||
                 !PlayerPrefs.HasKey(database.InventorySaveKey))
             {
@@ -417,6 +419,7 @@ namespace MiningSimulator.Ores
 
         private void SaveInventory()
         {
+            EnsureRuntimeSlots();
             if (database == null || string.IsNullOrEmpty(database.InventorySaveKey))
             {
                 return;
@@ -432,6 +435,14 @@ namespace MiningSimulator.Ores
             }
             PlayerPrefs.SetString(database.InventorySaveKey, JsonUtility.ToJson(save));
             PlayerPrefs.Save();
+        }
+
+        private void EnsureRuntimeSlots()
+        {
+            for (int index = 0; index < slots.Length; index++)
+            {
+                slots[index] ??= new RuntimeSlot();
+            }
         }
     }
 }
