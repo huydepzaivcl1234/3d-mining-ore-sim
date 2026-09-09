@@ -133,6 +133,16 @@ namespace MiningSimulator.Ores
         [Header("Panel Slide Animation")]
         [Min(0.01f), SerializeField] private float panelTransitionDuration = 0.28f;
         [Min(0f), SerializeField] private float panelSlideExtraDistance = 80f;
+        [Tooltip("Direction used when the NPC shop leaves the screen.")]
+        [SerializeField] private Vector2 shopSlideDirection = Vector2.left;
+        [Tooltip("Direction used when the Rebirth HUD leaves the screen.")]
+        [SerializeField] private Vector2 rebirthHudSlideDirection = Vector2.up;
+        [Tooltip("Direction used when the audio menu button leaves the screen.")]
+        [SerializeField] private Vector2 audioMenuSlideDirection = Vector2.right;
+        [Tooltip("Direction used when the NPC Progress HUD leaves the screen.")]
+        [SerializeField] private Vector2 npcProgressHudSlideDirection = Vector2.up;
+        [Tooltip("Direction used when a modal panel opens and closes.")]
+        [SerializeField] private Vector2 modalSlideDirection = Vector2.down;
 
         [Header("NPC Shop Style")]
         [SerializeField] private string shopTitle = "KHU ĐÀO QUẶNG";
@@ -338,6 +348,11 @@ namespace MiningSimulator.Ores
         public Color AudioSliderBackgroundColor => audioSliderBackgroundColor;
         public float PanelTransitionDuration => panelTransitionDuration;
         public float PanelSlideExtraDistance => panelSlideExtraDistance;
+        public Vector2 ShopSlideDirection => shopSlideDirection;
+        public Vector2 RebirthHudSlideDirection => rebirthHudSlideDirection;
+        public Vector2 AudioMenuSlideDirection => audioMenuSlideDirection;
+        public Vector2 NpcProgressHudSlideDirection => npcProgressHudSlideDirection;
+        public Vector2 ModalSlideDirection => modalSlideDirection;
         public string ShopTitle => shopTitle;
         public Vector2 ShopHeaderSize => shopHeaderSize;
         public float ShopTitleFontSize => shopTitleFontSize;

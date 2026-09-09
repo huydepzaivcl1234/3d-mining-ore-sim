@@ -124,6 +124,11 @@ MonoBehaviour:
   audioSliderBackgroundColor: {r: 0.15, g: 0.18, b: 0.22, a: 1}
   panelTransitionDuration: 0.28
   panelSlideExtraDistance: 100
+  shopSlideDirection: {x: -1, y: 0}
+  rebirthHudSlideDirection: {x: 0, y: 1}
+  audioMenuSlideDirection: {x: 1, y: 0}
+  npcProgressHudSlideDirection: {x: 0, y: 1}
+  modalSlideDirection: {x: 0, y: -1}
   shopTitle: "KHU \u0110\xC0O QU\u1EB6NG"
   shopHeaderSize: {x: 330, y: 54}
   shopTitleFontSize: 21

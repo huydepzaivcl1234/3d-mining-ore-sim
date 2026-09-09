@@ -33,6 +33,16 @@ namespace MiningSimulator.Ores
 
         private float TransitionDuration => uiData != null ? uiData.PanelTransitionDuration : 0.28f;
         private float SlideExtraDistance => uiData != null ? uiData.PanelSlideExtraDistance : 80f;
+        private Vector2 ShopSlideDirection => GetDirection(
+            uiData != null ? uiData.ShopSlideDirection : Vector2.left, Vector2.left);
+        private Vector2 RebirthHudSlideDirection => GetDirection(
+            uiData != null ? uiData.RebirthHudSlideDirection : Vector2.up, Vector2.up);
+        private Vector2 AudioMenuSlideDirection => GetDirection(
+            uiData != null ? uiData.AudioMenuSlideDirection : Vector2.right, Vector2.right);
+        private Vector2 NpcProgressHudSlideDirection => GetDirection(
+            uiData != null ? uiData.NpcProgressHudSlideDirection : Vector2.up, Vector2.up);
+        private Vector2 ModalSlideDirection => GetDirection(
+            uiData != null ? uiData.ModalSlideDirection : Vector2.down, Vector2.down);
 
         private void Awake()
         {
@@ -132,17 +142,16 @@ namespace MiningSimulator.Ores
             if (upgradePanel != null && upgradePanel.gameObject.activeSelf) return upgradePanel;
             if (rebirthPanel != null && rebirthPanel.gameObject.activeSelf) return rebirthPanel;
             if (audioSettingsPanel != null && audioSettingsPanel.gameObject.activeSelf)
-            if (npcProgressHud != null && npcProgressHud.gameObject.activeSelf) return npcProgressHud;
-         
+                return audioSettingsPanel;
             return null;
         }
 
         private void AnimateBasePanels(bool visible)
         {
-            AnimateBasePanel(shopPanel, shopHome, Vector2.left, visible);
-            AnimateBasePanel(rebirthHud, rebirthHome, Vector2.up, visible);
-            AnimateBasePanel(audioMenuButton, audioMenuHome, Vector2.right, visible);
-            AnimateBasePanel(npcProgressHud, npcProgressHome, Vector2.up, visible);
+            AnimateBasePanel(shopPanel, shopHome, ShopSlideDirection, visible);
+            AnimateBasePanel(rebirthHud, rebirthHome, RebirthHudSlideDirection, visible);
+            AnimateBasePanel(audioMenuButton, audioMenuHome, AudioMenuSlideDirection, visible);
+            AnimateBasePanel(npcProgressHud, npcProgressHome, NpcProgressHudSlideDirection, visible);
         }
 
         private void AnimateBasePanel(RectTransform panel, Vector2 home, Vector2 direction,
@@ -155,16 +164,19 @@ namespace MiningSimulator.Ores
 
             panel.gameObject.SetActive(true);
             SetInteraction(panel, visible);
-            Vector2 hidden = home + direction * (panel.rect.width + SlideExtraDistance);
+            float panelDistance = Mathf.Abs(direction.x) * panel.rect.width +
+                                  Mathf.Abs(direction.y) * panel.rect.height;
+            Vector2 hidden = home + direction * (panelDistance + SlideExtraDistance);
             StartCoroutine(AnimateRect(panel, visible ? home : hidden, TransitionDuration));
         }
 
         private void SetBasePanelsImmediately(bool visible)
         {
-            SetBasePanelImmediately(shopPanel, shopHome, Vector2.left, visible);
-            SetBasePanelImmediately(rebirthHud, rebirthHome, Vector2.up, visible);
-            SetBasePanelImmediately(audioMenuButton, audioMenuHome, Vector2.right, visible);
-            SetBasePanelImmediately(npcProgressHud, npcProgressHome, Vector2.up, visible);
+            SetBasePanelImmediately(shopPanel, shopHome, ShopSlideDirection, visible);
+            SetBasePanelImmediately(rebirthHud, rebirthHome, RebirthHudSlideDirection, visible);
+            SetBasePanelImmediately(audioMenuButton, audioMenuHome, AudioMenuSlideDirection, visible);
+            SetBasePanelImmediately(npcProgressHud, npcProgressHome,
+                NpcProgressHudSlideDirection, visible);
         }
 
         private void SetBasePanelImmediately(RectTransform panel, Vector2 home, Vector2 direction,
@@ -176,9 +188,11 @@ namespace MiningSimulator.Ores
             }
 
             panel.gameObject.SetActive(true);
+            float panelDistance = Mathf.Abs(direction.x) * panel.rect.width +
+                                  Mathf.Abs(direction.y) * panel.rect.height;
             panel.anchoredPosition = visible
                 ? home
-                : home + direction * (panel.rect.width + SlideExtraDistance);
+                : home + direction * (panelDistance + SlideExtraDistance);
             SetInteraction(panel, visible);
         }
 
@@ -196,10 +210,17 @@ namespace MiningSimulator.Ores
 
         private Vector2 GetModalHiddenPosition(RectTransform panel)
         {
-            RectTransform canvasRect = panel != null ? panel.GetComponentInParent<Canvas>()?.transform as RectTransform : null;
+            RectTransform canvasRect = panel != null
+                ? panel.GetComponentInParent<Canvas>()?.transform as RectTransform
+                : null;
+            float canvasWidth = canvasRect != null ? canvasRect.rect.width : 1920f;
             float canvasHeight = canvasRect != null ? canvasRect.rect.height : 1080f;
-            return GetHomePosition(panel) + Vector2.down *
-                   (canvasHeight * 0.5f + panel.rect.height * 0.5f + SlideExtraDistance);
+            float horizontalDistance = canvasWidth * 0.5f + panel.rect.width * 0.5f;
+            float verticalDistance = canvasHeight * 0.5f + panel.rect.height * 0.5f;
+            float distance = Mathf.Abs(ModalSlideDirection.x) * horizontalDistance +
+                             Mathf.Abs(ModalSlideDirection.y) * verticalDistance;
+            return GetHomePosition(panel) +
+                   ModalSlideDirection * (distance + SlideExtraDistance);
         }
 
         private Vector2 GetHomePosition(RectTransform panel)
@@ -227,6 +248,11 @@ namespace MiningSimulator.Ores
         private static Vector2 GetPosition(RectTransform panel)
         {
             return panel != null ? panel.anchoredPosition : Vector2.zero;
+        }
+
+        private static Vector2 GetDirection(Vector2 configured, Vector2 fallback)
+        {
+            return configured.sqrMagnitude > 0.0001f ? configured.normalized : fallback;
         }
 
         private static void SetInteraction(RectTransform panel, bool enabled)

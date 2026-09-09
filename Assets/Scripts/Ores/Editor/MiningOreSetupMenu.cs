@@ -553,6 +553,9 @@ namespace MiningSimulator.Editor
             MiningRebirthSystem rebirthSystem =
                 UnityEngine.Object.FindFirstObjectByType<MiningRebirthSystem>(
                     FindObjectsInactive.Include);
+            MiningUiPanelCoordinator panelCoordinator =
+                UnityEngine.Object.FindFirstObjectByType<MiningUiPanelCoordinator>(
+                    FindObjectsInactive.Include);
             PlayerWallet wallet = UnityEngine.Object.FindFirstObjectByType<PlayerWallet>(
                 FindObjectsInactive.Include);
             NpcData npcData = AssetDatabase.LoadAssetAtPath<NpcData>(NpcDataPath);
@@ -601,6 +604,11 @@ namespace MiningSimulator.Editor
 
             ConfigureNpcProgressionHud(sceneRoot, progression, shop, npcData, uiData);
             ConfigureUpgradePanel(sceneRoot, upgradePanel, upgradeSystem, wallet, upgradeData, uiData);
+            if (panelCoordinator != null)
+            {
+                ConfigureUiPanelCoordinator(sceneRoot, panelCoordinator, uiData);
+                EditorUtility.SetDirty(panelCoordinator);
+            }
             EditorUtility.SetDirty(progression);
             EditorUtility.SetDirty(shop);
             EditorUtility.SetDirty(upgradePanel);
@@ -1518,6 +1526,8 @@ namespace MiningSimulator.Editor
                 canvas.Find("Rebirth Confirmation")?.GetComponent<RectTransform>());
             SetReferenceIfMissing(serialized.FindProperty("audioSettingsPanel"),
                 canvas.Find("Audio Settings Panel")?.GetComponent<RectTransform>());
+            serialized.FindProperty("npcProgressHud").objectReferenceValue =
+                canvas.Find("NPC Progress HUD")?.GetComponent<RectTransform>();
             serialized.ApplyModifiedPropertiesWithoutUndo();
         }
 
