@@ -1226,38 +1226,87 @@ namespace MiningSimulator.Editor
                 return;
             }
 
+            Transform existingHud = canvas.Find("NPC Progress HUD");
+            bool createdHud = existingHud == null;
             Transform hud = EnsureUiObject(canvas, "NPC Progress HUD", typeof(Image),
                 typeof(NpcProgressionHud));
-            ConfigureTopLeftRect(hud, uiData.NpcProgressHudPosition, uiData.NpcProgressHudSize);
+            float headerHeight = uiData.RebirthHudHeaderSize.y;
+            Vector2 polishedHudSize = uiData.NpcProgressHudSize + Vector2.up * headerHeight;
+            RectTransform hudRect = hud.GetComponent<RectTransform>();
+            bool legacyLayout = !createdHud && hudRect != null &&
+                                (hudRect.sizeDelta - uiData.NpcProgressHudSize).sqrMagnitude < 0.01f;
+            if (createdHud)
+            {
+                ConfigureTopLeftRect(hud, uiData.NpcProgressHudPosition, polishedHudSize);
+            }
+            else if (legacyLayout)
+            {
+                // One-time visual migration: grow the old black HUD without moving the
+                // designer's Scene position. Future refreshes preserve manual sizing too.
+                hudRect.sizeDelta = polishedHudSize;
+            }
             Image hudImage = hud.GetComponent<Image>();
-            hudImage.color = uiData.NpcProgressPanelColor;
+            if (createdHud || legacyLayout)
+            {
+                hudImage.color = uiData.PanelColor;
+            }
             hudImage.raycastTarget = false;
-            ApplyOutline(hud.gameObject, uiData.OutlineColor, uiData.OutlineThickness);
+            if (createdHud || legacyLayout || hud.GetComponent<Outline>() == null)
+            {
+                ApplyOutline(hud.gameObject, uiData.OutlineColor, uiData.OutlineThickness);
+            }
+
+            Transform header = EnsureUiObject(hud, "Header", typeof(Image));
+            Vector2 headerSize = new(polishedHudSize.x, headerHeight);
+            ConfigureTopLeftRect(header, Vector2.zero, headerSize);
+            Image headerImage = header.GetComponent<Image>();
+            headerImage.color = uiData.HeaderColor;
+            headerImage.raycastTarget = false;
+            ApplyOutline(header.gameObject, uiData.OutlineColor, uiData.OutlineThickness);
+
+            EnsureHudIcon(header, "NPC Icon", uiData.NpcProgressHeaderIconPosition,
+                uiData.NpcProgressHeaderIconSize, uiData.NpcIconSprite,
+                uiData.NpcIconFallback, uiData.NpcIconColor, uiData);
+            TextMeshProUGUI titleLabel = EnsureText(header, "Title");
+            StretchRect(titleLabel.rectTransform);
+            titleLabel.margin = uiData.NpcProgressTitleMargin;
+            titleLabel.text = "TIẾN TRÌNH THỢ MỎ";
+            titleLabel.fontSize = uiData.NpcProgressTitleFontSize;
+            titleLabel.fontStyle = FontStyles.Bold;
+            titleLabel.color = uiData.TitleTextColor;
+            titleLabel.alignment = TextAlignmentOptions.Center;
+            titleLabel.raycastTarget = false;
 
             TextMeshProUGUI levelLabel = EnsureText(hud, "Level");
-            ConfigureTopLeftRect(levelLabel.transform, uiData.NpcProgressTextPosition,
+            Vector2 levelPosition = uiData.NpcProgressTextPosition + Vector2.down * headerHeight;
+            ConfigureTopLeftRect(levelLabel.transform, levelPosition,
                 uiData.NpcProgressTextSize);
             levelLabel.text = "CẤP THỢ MỎ: 1";
             levelLabel.fontSize = uiData.NpcProgressTitleFontSize;
-            levelLabel.color = uiData.ShopTextColor;
+            levelLabel.fontStyle = FontStyles.Bold;
+            levelLabel.color = uiData.CardTextColor;
             levelLabel.alignment = TextAlignmentOptions.Left;
             levelLabel.raycastTarget = false;
 
             TextMeshProUGUI powerLabel = EnsureText(hud, "Power");
-            ConfigureTopLeftRect(powerLabel.transform, uiData.NpcPowerTextPosition,
+            Vector2 powerPosition = uiData.NpcPowerTextPosition + Vector2.down * headerHeight;
+            ConfigureTopLeftRect(powerLabel.transform, powerPosition,
                 uiData.NpcPowerTextSize);
             powerLabel.text = "NPC: 0  •  POWER: 1  •  TỔNG DMG: 0";
             powerLabel.fontSize = uiData.NpcProgressInfoFontSize;
-            powerLabel.color = uiData.ShopTextColor;
+            powerLabel.color = uiData.CardTextColor;
             powerLabel.alignment = TextAlignmentOptions.Left;
             powerLabel.raycastTarget = false;
 
             Transform bar = EnsureUiObject(hud, "Experience Bar", typeof(Image));
-            ConfigureTopLeftRect(bar, uiData.NpcExperienceBarPosition,
+            Vector2 barPosition = uiData.NpcExperienceBarPosition + Vector2.down * headerHeight;
+            ConfigureTopLeftRect(bar, barPosition,
                 uiData.NpcExperienceBarSize);
             Image barBackground = bar.GetComponent<Image>();
             barBackground.color = uiData.NpcExperienceBarBackgroundColor;
             barBackground.raycastTarget = false;
+            ApplyOutline(bar.gameObject, uiData.OutlineColor,
+                Mathf.Max(1f, uiData.OutlineThickness * 0.5f));
 
             Transform fillTransform = EnsureUiObject(bar, "Fill", typeof(Image));
             StretchRect(fillTransform.GetComponent<RectTransform>());
@@ -1271,11 +1320,14 @@ namespace MiningSimulator.Editor
             fill.raycastTarget = false;
 
             TextMeshProUGUI experienceLabel = EnsureText(hud, "Experience");
-            ConfigureTopLeftRect(experienceLabel.transform, uiData.NpcExperienceTextPosition,
+            Vector2 experiencePosition = uiData.NpcExperienceTextPosition +
+                                         Vector2.down * headerHeight;
+            ConfigureTopLeftRect(experienceLabel.transform, experiencePosition,
                 uiData.NpcExperienceTextSize);
             experienceLabel.text = "0 / 10 XP";
             experienceLabel.fontSize = uiData.NpcProgressInfoFontSize;
-            experienceLabel.color = uiData.ShopTextColor;
+            experienceLabel.fontStyle = FontStyles.Bold;
+            experienceLabel.color = uiData.CardTextColor;
             experienceLabel.alignment = TextAlignmentOptions.Center;
             experienceLabel.raycastTarget = false;
 
@@ -1731,9 +1783,8 @@ namespace MiningSimulator.Editor
             spriteRect.offsetMax = Vector2.one * -uiData.HudIconPadding;
             Image spriteImage = spriteTransform.GetComponent<Image>();
             // A sprite assigned directly in the editable Scene UI belongs to the designer.
-            // A setup refresh may replace it with a configured GameData sprite, but a null
-            // GameData slot must never erase the existing icon.
-            if (iconSprite != null || spriteImage.sprite == null)
+            // Setup/Refresh is only allowed to fill an empty slot, never replace that sprite.
+            if (spriteImage.sprite == null)
             {
                 spriteImage.sprite = iconSprite;
             }

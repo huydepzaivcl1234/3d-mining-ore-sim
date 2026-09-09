@@ -79,6 +79,9 @@ namespace MiningSimulator.Ores
         [Header("NPC Progress HUD")]
         [SerializeField] private Vector2 npcProgressHudPosition = new(370f, -24f);
         [SerializeField] private Vector2 npcProgressHudSize = new(380f, 170f);
+        [SerializeField] private Vector2 npcProgressHeaderIconPosition = new(10f, -4f);
+        [SerializeField] private Vector2 npcProgressHeaderIconSize = new(42f, 42f);
+        [SerializeField] private Vector4 npcProgressTitleMargin = new(58f, 0f, 14f, 0f);
         [SerializeField] private Vector2 npcProgressTextPosition = new(18f, -14f);
         [SerializeField] private Vector2 npcProgressTextSize = new(344f, 30f);
         [SerializeField] private Vector2 npcPowerTextPosition = new(18f, -50f);
@@ -287,6 +290,9 @@ namespace MiningSimulator.Ores
             npcExperienceIconFallback) ? "XP" : npcExperienceIconFallback;
         public Vector2 NpcProgressHudPosition => npcProgressHudPosition;
         public Vector2 NpcProgressHudSize => npcProgressHudSize;
+        public Vector2 NpcProgressHeaderIconPosition => npcProgressHeaderIconPosition;
+        public Vector2 NpcProgressHeaderIconSize => npcProgressHeaderIconSize;
+        public Vector4 NpcProgressTitleMargin => npcProgressTitleMargin;
         public Vector2 NpcProgressTextPosition => npcProgressTextPosition;
         public Vector2 NpcProgressTextSize => npcProgressTextSize;
         public Vector2 NpcPowerTextPosition => npcPowerTextPosition;
@@ -434,6 +440,8 @@ namespace MiningSimulator.Ores
             upgradeCardIconPadding = Mathf.Max(0f, upgradeCardIconPadding);
             npcProgressHudSize.x = Mathf.Max(1f, npcProgressHudSize.x);
             npcProgressHudSize.y = Mathf.Max(1f, npcProgressHudSize.y);
+            npcProgressHeaderIconSize.x = Mathf.Max(1f, npcProgressHeaderIconSize.x);
+            npcProgressHeaderIconSize.y = Mathf.Max(1f, npcProgressHeaderIconSize.y);
             npcProgressTextSize.x = Mathf.Max(1f, npcProgressTextSize.x);
             npcProgressTextSize.y = Mathf.Max(1f, npcProgressTextSize.y);
             npcPowerTextSize.x = Mathf.Max(1f, npcPowerTextSize.x);
