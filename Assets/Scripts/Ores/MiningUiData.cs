@@ -93,7 +93,7 @@ namespace MiningSimulator.Ores
         [Min(1f), SerializeField] private float npcProgressTitleFontSize = 21f;
         [Min(1f), SerializeField] private float npcProgressInfoFontSize = 17f;
         [Min(0.01f), SerializeField] private float npcExperienceBarAnimationSpeed = 2.5f;
-        [SerializeField] private Color npcProgressPanelColor = new(0.035f, 0.045f, 0.06f, 0.94f);
+        [SerializeField] private Color npcProgressPanelColor = new(0.93f, 0.96f, 0.98f, 0.98f);
         [SerializeField] private Color npcExperienceBarColor = new(0.12f, 0.9f, 0.22f, 1f);
         [SerializeField] private Color npcExperienceBarBackgroundColor = new(0.18f, 0.22f, 0.24f, 1f);
 

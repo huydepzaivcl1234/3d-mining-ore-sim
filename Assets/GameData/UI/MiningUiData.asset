@@ -87,7 +87,7 @@ MonoBehaviour:
   npcProgressTitleFontSize: 21
   npcProgressInfoFontSize: 17
   npcExperienceBarAnimationSpeed: 2.5
-  npcProgressPanelColor: {r: 0.035, g: 0.045, b: 0.06, a: 0.94}
+  npcProgressPanelColor: {r: 0.93, g: 0.96, b: 0.98, a: 0.98}
   npcExperienceBarColor: {r: 0.12, g: 0.9, b: 0.22, a: 1}
   npcExperienceBarBackgroundColor: {r: 0.18, g: 0.22, b: 0.24, a: 1}
   smoothButtonAnimationEnabled: 1

@@ -1,3 +1,4 @@
+using Microlight.MicroBar;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -15,7 +16,8 @@ namespace MiningSimulator.Ores
         [SerializeField] private TextMeshProUGUI levelLabel;
         [SerializeField] private TextMeshProUGUI powerLabel;
         [SerializeField] private TextMeshProUGUI experienceLabel;
-        [SerializeField] private Image experienceFill;
+        [SerializeField] private MicroBar experienceBar;
+        [SerializeField, HideInInspector] private Image experienceFill;
 
         [Header("Editable Text")]
         [SerializeField] private string levelFormat = "CẤP THỢ MỎ: {0}";
@@ -24,6 +26,8 @@ namespace MiningSimulator.Ores
 
         private float displayedProgress;
         private float targetProgress;
+        private bool barInitialized;
+        private int initializedRequirement = 1;
 
         private void OnEnable()
         {
@@ -60,10 +64,7 @@ namespace MiningSimulator.Ores
             float speed = uiData != null ? uiData.NpcExperienceBarAnimationSpeed : 2.5f;
             displayedProgress = Mathf.MoveTowards(displayedProgress, targetProgress,
                 speed * Time.unscaledDeltaTime);
-            if (experienceFill != null)
-            {
-                experienceFill.fillAmount = displayedProgress;
-            }
+            RefreshExperienceBar();
         }
 
         public void Refresh()
@@ -93,6 +94,7 @@ namespace MiningSimulator.Ores
                 experienceLabel.text = string.Format(experienceFormat, experience, required);
             }
 
+            ConfigureExperienceBar(required);
             targetProgress = progressionSystem != null ? progressionSystem.Progress01 : 0f;
         }
 
@@ -100,6 +102,44 @@ namespace MiningSimulator.Ores
         {
             Refresh();
             displayedProgress = targetProgress;
+            RefreshExperienceBar();
+        }
+
+        private void ConfigureExperienceBar(int required)
+        {
+            if (experienceBar == null)
+            {
+                return;
+            }
+
+            int safeRequirement = Mathf.Max(1, required);
+            if (!barInitialized)
+            {
+                experienceBar.Initialize(safeRequirement);
+                barInitialized = true;
+            }
+            else if (initializedRequirement != safeRequirement)
+            {
+                experienceBar.SetNewMaxHP(safeRequirement, true);
+            }
+
+            initializedRequirement = safeRequirement;
+        }
+
+        private void RefreshExperienceBar()
+        {
+            if (experienceBar != null)
+            {
+                if (!barInitialized)
+                {
+                    ConfigureExperienceBar(initializedRequirement);
+                }
+
+                experienceBar.UpdateBar(displayedProgress * initializedRequirement);
+                return;
+            }
+
+            // Preserve old Scene HUDs until the editor refresh command migrates them to MicroBar.
             if (experienceFill != null)
             {
                 experienceFill.fillAmount = displayedProgress;

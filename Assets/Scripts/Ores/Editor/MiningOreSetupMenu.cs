@@ -1275,7 +1275,7 @@ namespace MiningSimulator.Editor
             Image hudImage = hud.GetComponent<Image>();
             if (createdHud || legacyLayout)
             {
-                hudImage.color = uiData.PanelColor;
+                hudImage.color = uiData.NpcProgressPanelColor;
             }
             hudImage.raycastTarget = false;
             if (createdHud || legacyLayout || hud.GetComponent<Outline>() == null)
@@ -1325,36 +1325,16 @@ namespace MiningSimulator.Editor
             powerLabel.alignment = TextAlignmentOptions.Left;
             powerLabel.raycastTarget = false;
 
-            Transform bar = EnsureUiObject(hud, "Experience Bar", typeof(Image));
+            MicroBar experienceBar = EnsureNpcExperienceProgressBar(hud, uiData);
             Vector2 barPosition = uiData.NpcExperienceBarPosition + Vector2.down * headerHeight;
-            ConfigureTopLeftRect(bar, barPosition,
-                uiData.NpcExperienceBarSize);
-            Image barBackground = bar.GetComponent<Image>();
-            barBackground.color = uiData.NpcExperienceBarBackgroundColor;
-            barBackground.raycastTarget = false;
-            ApplyOutline(bar.gameObject, uiData.OutlineColor,
-                Mathf.Max(1f, uiData.OutlineThickness * 0.5f));
-
-            Transform fillTransform = EnsureUiObject(bar, "Fill", typeof(Image));
-            StretchRect(fillTransform.GetComponent<RectTransform>());
-            Image fill = fillTransform.GetComponent<Image>();
-            fill.sprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UISprite.psd");
-            fill.type = Image.Type.Filled;
-            fill.fillMethod = Image.FillMethod.Horizontal;
-            fill.fillOrigin = 0;
-            fill.fillAmount = 0f;
-            fill.color = uiData.NpcExperienceBarColor;
-            fill.raycastTarget = false;
 
             TextMeshProUGUI experienceLabel = EnsureText(hud, "Experience");
-            Vector2 experiencePosition = uiData.NpcExperienceTextPosition +
-                                         Vector2.down * headerHeight;
-            ConfigureTopLeftRect(experienceLabel.transform, experiencePosition,
-                uiData.NpcExperienceTextSize);
+            ConfigureTopLeftRect(experienceLabel.transform, barPosition,
+                uiData.NpcExperienceBarSize);
             experienceLabel.text = "0 / 10 XP";
             experienceLabel.fontSize = uiData.NpcProgressInfoFontSize;
             experienceLabel.fontStyle = FontStyles.Bold;
-            experienceLabel.color = uiData.CardTextColor;
+            experienceLabel.color = uiData.TitleTextColor;
             experienceLabel.alignment = TextAlignmentOptions.Center;
             experienceLabel.raycastTarget = false;
 
@@ -1367,9 +1347,64 @@ namespace MiningSimulator.Editor
             SetReferenceIfMissing(serialized.FindProperty("levelLabel"), levelLabel);
             SetReferenceIfMissing(serialized.FindProperty("powerLabel"), powerLabel);
             SetReferenceIfMissing(serialized.FindProperty("experienceLabel"), experienceLabel);
-            SetReferenceIfMissing(serialized.FindProperty("experienceFill"), fill);
+            serialized.FindProperty("experienceBar").objectReferenceValue = experienceBar;
             serialized.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(controller);
+        }
+
+        private static MicroBar EnsureNpcExperienceProgressBar(Transform parent,
+            MiningUiData uiData)
+        {
+            Transform existing = parent.Find("Experience Bar");
+            if (existing != null && existing.GetComponent<MicroBar>() == null)
+            {
+                // One-time migration from the old square Image.fillAmount bar.
+                UnityEngine.Object.DestroyImmediate(existing.gameObject);
+                existing = null;
+            }
+
+            if (existing == null)
+            {
+                GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(UiMicroBarPrefabPath);
+                if (prefab == null)
+                {
+                    Debug.LogError($"MicroBar UI prefab is missing at {UiMicroBarPrefabPath}.");
+                    return null;
+                }
+
+                GameObject instance = PrefabUtility.InstantiatePrefab(prefab, parent) as GameObject;
+                if (instance == null)
+                {
+                    Debug.LogError("Could not create the NPC experience MicroBar.");
+                    return null;
+                }
+
+                instance.name = "Experience Bar";
+                existing = instance.transform;
+            }
+
+            float headerHeight = uiData.RebirthHudHeaderSize.y;
+            Vector2 position = uiData.NpcExperienceBarPosition + Vector2.down * headerHeight;
+            ConfigureTopLeftRect(existing, position, uiData.NpcExperienceBarSize);
+
+            MicroBar bar = existing.GetComponent<MicroBar>();
+            if (bar == null)
+            {
+                Debug.LogError("NPC Experience Bar has no MicroBar component.", existing);
+                return null;
+            }
+
+            var serialized = new SerializedObject(bar);
+            SerializedProperty simpleBar = serialized.FindProperty("simpleBar");
+            simpleBar.FindPropertyRelative("_adaptiveColor").boolValue = false;
+            simpleBar.FindPropertyRelative("_barPrimaryColor").colorValue =
+                uiData.NpcExperienceBarColor;
+            simpleBar.FindPropertyRelative("_ghostBarDamageColor").colorValue =
+                uiData.RebirthProgressGhostColor;
+            simpleBar.FindPropertyRelative("_ghostBarHealColor").colorValue =
+                uiData.RebirthProgressGhostColor;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            return bar;
         }
 
         private static Button EnsureUpgradeCard(Transform parent, string name, int index,
