@@ -12,12 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7d697d1ce92e7572c4046ac7b833d40b, type: 3}
   m_Name: Green Apple
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningItemData
-  itemId: green_apple
-  displayName: "T\xE1o xanh"
+  itemId: Grape
+  displayName: Nho
   description: "T\u0103ng t\u1ED1c ch\u1EA1y c\u1EE7a NPC trong m\u1ED9t kho\u1EA3ng
     th\u1EDDi gian."
   rarity: 0
-  worldModel: {fileID: 7090000081690452566, guid: 6045245ef8a56ca42bdd4950f9b45e3c, type: 3}
+  worldModel: {fileID: 113239210557073384, guid: 8b3831cc532b4d444a5b4b1b4e5fff66, type: 3}
   inventoryIcon: {fileID: 0}
   iconFallback: G
   fallbackColor: {r: 0.26, g: 0.82, b: 0.18, a: 1}
