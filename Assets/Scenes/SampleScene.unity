@@ -6203,6 +6203,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningEffectToast
   itemSystem: {fileID: 1388648154}
+  uiData: {fileID: 0}
   toastRoot: {fileID: 573600082}
   effectLabel: {fileID: 519501956}
 --- !u!1 &453467933
@@ -7609,8 +7610,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: -629.3, y: -418.4}
-  m_SizeDelta: {x: 620, y: 120}
+  m_AnchoredPosition: {x: -738.2107, y: -418.4}
+  m_SizeDelta: {x: 402.1786, y: 119.1217}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &573600084
 MonoBehaviour:

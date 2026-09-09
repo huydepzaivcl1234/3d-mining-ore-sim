@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6af8fb44d650df570b1d289823007298, type: 3}
   m_Name: MiningItemDatabase
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningItemDatabase
-  oreDropChancePercent: 100
-  luckyBlockDropChancePercent: 35
+  oreDropChancePercent: 1
+  luckyBlockDropChancePercent: 15
   items:
   - {fileID: 11400000, guid: 6556e39ad099f9f4aafb234d4eec3f75, type: 2}
   - {fileID: 11400000, guid: d4439c8d4fb6e8c4cb8932645ca7aa8b, type: 2}
@@ -28,6 +28,6 @@ MonoBehaviour:
   colliderRadius: 0.3
   bounceCount: 2
   bounceVelocity: 1.8
-  autoPickupDelay: 1.6
+  autoPickupDelay: 2
   maximumWorldLifetime: 30
   inventorySaveKey: MiningSimulator.Inventory.v1
