@@ -40,6 +40,20 @@ namespace MiningSimulator.Editor
         private const string NpcPrefabFolder = "Assets/Prefabs/NPC";
         private const string SystemPrefabFolder = "Assets/Prefabs/Systems";
         private const string UiPrefabFolder = "Assets/Prefabs/UI";
+        private const string MoneyHudIconPath =
+            UiPrefabFolder + "/Đồng xu vàng biểu tượng khai khoáng.png";
+        private const string NpcHudIconPath =
+            UiPrefabFolder + "/Thợ mỏ đội mũ vàng cầm cuốc.png";
+        private const string MoneyRewardIconPath =
+            UiPrefabFolder + "/UpgradeMoneyReward.png";
+        private const string RareOreIconPath =
+            UiPrefabFolder + "/UpgradeRareOre.png";
+        private const string OreDamageIconPath =
+            UiPrefabFolder + "/UpgradeOreDamage.png";
+        private const string OreSpawnSpeedIconPath =
+            UiPrefabFolder + "/UpgradeOreSpawnSpeed.png";
+        private const string NpcMoveSpeedIconPath =
+            UiPrefabFolder + "/UpgradeNpcMoveSpeed.png";
         private const string LuckyBlockRewardIconPath =
             UiPrefabFolder + "/UpgradeLuckyBlockReward.png";
         private const string LuckyBlockDropChanceIconPath =
@@ -138,6 +152,7 @@ namespace MiningSimulator.Editor
             OreSpawnData spawnData = CreateOrUpdateSpawnData(dataAssets);
             MiningUpgradeData upgradeData = CreateOrUpdateUpgradeData();
             MiningUiData uiData = CreateOrUpdateUiData();
+            AssignDefaultUiIconsIfMissing(uiData);
             MiningAudioData audioData = CreateOrUpdateAudioData();
             MiningRebirthData rebirthData = CreateOrUpdateRebirthData();
             OreRewardPopup rewardPopupPrefab = CreateOrUpdateRewardPopupPrefab(uiData);
@@ -475,7 +490,7 @@ namespace MiningSimulator.Editor
                 return;
             }
 
-            AssignLuckyBlockUpgradeIconsIfMissing(uiData);
+            AssignDefaultUiIconsIfMissing(uiData);
             GameObject sceneRoot = panel.transform.root.gameObject;
             Undo.RecordObject(panel, "Refresh Lucky Block Upgrade UI");
             ConfigureUpgradePanel(sceneRoot, panel, upgradeSystem, wallet, upgradeData, uiData);
@@ -487,13 +502,36 @@ namespace MiningSimulator.Editor
                 panel);
         }
 
-        private static void AssignLuckyBlockUpgradeIconsIfMissing(MiningUiData uiData)
+        private static void AssignDefaultUiIconsIfMissing(MiningUiData uiData)
         {
+            if (uiData == null)
+            {
+                return;
+            }
+
             var serialized = new SerializedObject(uiData);
+            Sprite moneyHudIcon = AssetDatabase.LoadAssetAtPath<Sprite>(MoneyHudIconPath);
+            Sprite npcHudIcon = AssetDatabase.LoadAssetAtPath<Sprite>(NpcHudIconPath);
+            SetReferenceIfMissing(serialized.FindProperty("moneyIconSprite"), moneyHudIcon);
+            SetReferenceIfMissing(serialized.FindProperty("npcIconSprite"), npcHudIcon);
+            SetReferenceIfMissing(serialized.FindProperty("buyNpcIconSprite"), npcHudIcon);
+            SetReferenceIfMissing(serialized.FindProperty("moneyRewardIconSprite"),
+                AssetDatabase.LoadAssetAtPath<Sprite>(MoneyRewardIconPath));
+            SetReferenceIfMissing(serialized.FindProperty("rareOreIconSprite"),
+                AssetDatabase.LoadAssetAtPath<Sprite>(RareOreIconPath));
+            SetReferenceIfMissing(serialized.FindProperty("oreDamageIconSprite"),
+                AssetDatabase.LoadAssetAtPath<Sprite>(OreDamageIconPath));
+            SetReferenceIfMissing(serialized.FindProperty("oreSpawnSpeedIconSprite"),
+                AssetDatabase.LoadAssetAtPath<Sprite>(OreSpawnSpeedIconPath));
+            SetReferenceIfMissing(serialized.FindProperty("npcMoveSpeedIconSprite"),
+                AssetDatabase.LoadAssetAtPath<Sprite>(NpcMoveSpeedIconPath));
+            SetReferenceIfMissing(serialized.FindProperty("npcCapacityIconSprite"), npcHudIcon);
             SetReferenceIfMissing(serialized.FindProperty("luckyBlockRewardIconSprite"),
                 AssetDatabase.LoadAssetAtPath<Sprite>(LuckyBlockRewardIconPath));
             SetReferenceIfMissing(serialized.FindProperty("luckyBlockDropChanceIconSprite"),
                 AssetDatabase.LoadAssetAtPath<Sprite>(LuckyBlockDropChanceIconPath));
+            SetReferenceIfMissing(serialized.FindProperty("npcExperienceIconSprite"),
+                AssetDatabase.LoadAssetAtPath<Sprite>(NpcExperienceIconPath));
             if (serialized.ApplyModifiedPropertiesWithoutUndo())
             {
                 EditorUtility.SetDirty(uiData);
@@ -535,7 +573,7 @@ namespace MiningSimulator.Editor
                 return;
             }
 
-            AssignNpcExperienceIconIfMissing(uiData);
+            AssignDefaultUiIconsIfMissing(uiData);
             GameObject sceneRoot = shop.transform.root.gameObject;
             NpcProgressionSystem progression = shop.GetComponent<NpcProgressionSystem>();
             if (progression == null)
@@ -571,17 +609,6 @@ namespace MiningSimulator.Editor
             Selection.activeTransform = sceneRoot.transform.Find(HudCanvasName + "/NPC Progress HUD");
             Debug.Log("NPC level, power, smooth XP HUD and XP upgrade were refreshed in the active Scene.",
                 progression);
-        }
-
-        private static void AssignNpcExperienceIconIfMissing(MiningUiData uiData)
-        {
-            var serialized = new SerializedObject(uiData);
-            SetReferenceIfMissing(serialized.FindProperty("npcExperienceIconSprite"),
-                AssetDatabase.LoadAssetAtPath<Sprite>(NpcExperienceIconPath));
-            if (serialized.ApplyModifiedPropertiesWithoutUndo())
-            {
-                EditorUtility.SetDirty(uiData);
-            }
         }
 
         private static MiningAudioData CreateOrUpdateAudioData()
@@ -1770,11 +1797,12 @@ namespace MiningSimulator.Editor
             Transform icon = EnsureUiObject(parent, name, typeof(Image));
             ConfigureTopLeftRect(icon, position, size);
             Image background = icon.GetComponent<Image>();
-            background.sprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Knob.psd");
-            background.type = Image.Type.Simple;
-            background.color = backgroundColor;
-            background.raycastTarget = false;
-            ApplyOutline(icon.gameObject, uiData.OutlineColor, uiData.OutlineThickness);
+            Sprite knobSprite =
+                AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Knob.psd");
+            Sprite directlyAssignedDesignerSprite =
+                background.sprite != null && background.sprite != knobSprite
+                    ? background.sprite
+                    : null;
 
             Transform spriteTransform = EnsureUiObject(icon, "Sprite", typeof(Image));
             RectTransform spriteRect = spriteTransform.GetComponent<RectTransform>();
@@ -1782,12 +1810,22 @@ namespace MiningSimulator.Editor
             spriteRect.offsetMin = Vector2.one * uiData.HudIconPadding;
             spriteRect.offsetMax = Vector2.one * -uiData.HudIconPadding;
             Image spriteImage = spriteTransform.GetComponent<Image>();
-            // A sprite assigned directly in the editable Scene UI belongs to the designer.
-            // Setup/Refresh is only allowed to fill an empty slot, never replace that sprite.
-            if (spriteImage.sprite == null)
+            // Older Scene UI stored the designer icon on the parent Image. Migrate it before
+            // restoring the circular background so Refresh can never erase a custom icon.
+            if (directlyAssignedDesignerSprite != null)
+            {
+                spriteImage.sprite = directlyAssignedDesignerSprite;
+            }
+            else if (spriteImage.sprite == null)
             {
                 spriteImage.sprite = iconSprite;
             }
+
+            background.sprite = knobSprite;
+            background.type = Image.Type.Simple;
+            background.color = backgroundColor;
+            background.raycastTarget = false;
+            ApplyOutline(icon.gameObject, uiData.OutlineColor, uiData.OutlineThickness);
             spriteImage.color = uiData.IconSymbolColor;
             spriteImage.preserveAspect = true;
             bool hasSprite = spriteImage.sprite != null;
