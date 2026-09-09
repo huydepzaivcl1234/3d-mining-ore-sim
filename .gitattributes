@@ -155,6 +155,10 @@ ArtSource/Blender/LuckyBlocks/lucky_blocks.blend -filter -diff -merge binary
 # Small generated UI icons stay as regular Git blobs so editor tooling can update them directly.
 Assets/UI/Icons/Upgrades/*.png -filter -diff -merge binary
 
+# Small generated consumable icons stay as regular Git blobs so clones and pulls
+# do not depend on separately uploaded LFS objects.
+Assets/Ores/Icons/*.png -filter -diff -merge binary
+
 # Compressed Archive
 *.7z                    lfs
 *.bz2                   lfs
