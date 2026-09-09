@@ -1241,6 +1241,7 @@ namespace MiningSimulator.Editor
             levelLabel.fontSize = uiData.NpcProgressTitleFontSize;
             levelLabel.color = uiData.ShopTextColor;
             levelLabel.alignment = TextAlignmentOptions.Left;
+            levelLabel.raycastTarget = false;
 
             TextMeshProUGUI powerLabel = EnsureText(hud, "Power");
             ConfigureTopLeftRect(powerLabel.transform, uiData.NpcPowerTextPosition,
@@ -1249,6 +1250,7 @@ namespace MiningSimulator.Editor
             powerLabel.fontSize = uiData.NpcProgressInfoFontSize;
             powerLabel.color = uiData.ShopTextColor;
             powerLabel.alignment = TextAlignmentOptions.Left;
+            powerLabel.raycastTarget = false;
 
             Transform bar = EnsureUiObject(hud, "Experience Bar", typeof(Image));
             ConfigureTopLeftRect(bar, uiData.NpcExperienceBarPosition,
@@ -1275,6 +1277,7 @@ namespace MiningSimulator.Editor
             experienceLabel.fontSize = uiData.NpcProgressInfoFontSize;
             experienceLabel.color = uiData.ShopTextColor;
             experienceLabel.alignment = TextAlignmentOptions.Center;
+            experienceLabel.raycastTarget = false;
 
             NpcProgressionHud controller = hud.GetComponent<NpcProgressionHud>();
             var serialized = new SerializedObject(controller);
