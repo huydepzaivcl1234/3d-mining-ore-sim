@@ -30,6 +30,10 @@ MonoBehaviour:
   damagePerHit: 2
   secondsPerHit: 0.65
   targetRefreshInterval: 0.35
+  maximumLevel: 100
+  startingExperienceRequirement: 100
+  experienceRequirementGrowth: 1.2
+  miningPowerPerLevel: 1
   oreSightProbeRadius: 0.35
   oreSightDistance: 2.2
   oreSightOriginHeight: 0.7
