@@ -563,12 +563,16 @@ MonoBehaviour:
   oreSpawnSpeedButton: {fileID: 6498942256371260419}
   npcMoveSpeedButton: {fileID: 4582209783507832758}
   npcCapacityButton: {fileID: 86965173494224598}
+  luckyBlockRewardButton: {fileID: 0}
+  luckyBlockDropChanceButton: {fileID: 0}
   moneyRewardLabel: {fileID: 4400723615870957829}
   rareOreSpawnLabel: {fileID: 4835139048595177769}
   oreDamageLabel: {fileID: 4400959318169497278}
   oreSpawnSpeedLabel: {fileID: 4220415255932999174}
   npcMoveSpeedLabel: {fileID: 1307525441511134208}
   npcCapacityLabel: {fileID: 329779814821824471}
+  luckyBlockRewardLabel: {fileID: 0}
+  luckyBlockDropChanceLabel: {fileID: 0}
   openOnPlay: 0
   upgradeFormat: "{0}\n+{1:0.##}%  [{2}/{3}]  -  {4} ti\u1EC1n"
   maximumFormat: "{0}\n+{1:0.##}%  [{2}/{3}]  -  T\u1ED0I \u0110A"
@@ -749,6 +753,7 @@ MonoBehaviour:
   spawnPoint: {fileID: 0}
   npcData: {fileID: 11400000, guid: c48d624e49324697a2ff1f170be6b3c0, type: 2}
   upgradeSystem: {fileID: 1144114548}
+  luckyBlockSystem: {fileID: 0}
 --- !u!4 &655586587
 Transform:
   m_ObjectHideFlags: 0
@@ -776,6 +781,59 @@ CanvasGroup:
   m_Interactable: 1
   m_BlocksRaycasts: 1
   m_IgnoreParentGroups: 0
+--- !u!1 &725887962
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 725887963}
+  - component: {fileID: 725887964}
+  m_Layer: 0
+  m_Name: Lucky Block System
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &725887963
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 725887962}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 996078877246501140}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &725887964
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 725887962}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d192ddef38a8442bb63065143cbd2241, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.LuckyBlockDropSystem
+  data: {fileID: 11400000, guid: 17d1a28af2eb46ff8405575f649542bc, type: 2}
+  wallet: {fileID: 5319940143687006134}
+  upgradeSystem: {fileID: 0}
+  oreSpawnData: {fileID: 11400000, guid: b6c0c4c0580f44a69bf14fb54e455f1b, type: 2}
+  spawnAreaOrigin: {fileID: 1828941536}
+  droppedBlockParent: {fileID: 725887963}
+  uiData: {fileID: 11400000, guid: 0fc641ac29720e2837d73e6212818c58, type: 2}
+  rewardPopupPrefab: {fileID: 595523728496385370, guid: 60732089bc3d5a74cac36ef83399977d, type: 3}
+  healthBarPrefab: {fileID: 4657497537876699430, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0
@@ -909,6 +967,8 @@ MonoBehaviour:
   oreSpawnSpeedStacks: 0
   npcMoveSpeedStacks: 0
   npcCapacityStacks: 0
+  luckyBlockRewardStacks: 0
+  luckyBlockDropChanceStacks: 0
 --- !u!4 &1144114549
 Transform:
   m_ObjectHideFlags: 0
@@ -2839,6 +2899,7 @@ Transform:
   - {fileID: 1144114549}
   - {fileID: 2127211621}
   - {fileID: 1044407941}
+  - {fileID: 725887963}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1059251392434722040
