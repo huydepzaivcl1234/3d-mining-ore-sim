@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7d697d1ce92e7572c4046ac7b833d40b, type: 3}
-  m_Name: Green Apple
+  m_Name: Grape
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningItemData
   itemId: Grape
   displayName: Nho
@@ -18,7 +18,7 @@ MonoBehaviour:
     th\u1EDDi gian."
   rarity: 0
   worldModel: {fileID: 113239210557073384, guid: 8b3831cc532b4d444a5b4b1b4e5fff66, type: 3}
-  inventoryIcon: {fileID: 0}
+  inventoryIcon: {fileID: 21300000, guid: d37bf89ecc3967faa5e72f980158a324, type: 3}
   iconFallback: G
   fallbackColor: {r: 0.26, g: 0.82, b: 0.18, a: 1}
   worldScale: 5
