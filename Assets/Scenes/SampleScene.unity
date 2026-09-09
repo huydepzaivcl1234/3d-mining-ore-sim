@@ -1162,6 +1162,26 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8611201056070623234, guid: 629a06bd1f8ec6446927e8fc9134b1cb, type: 3}
+      propertyPath: simpleBar._healAnim
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8611201056070623234, guid: 629a06bd1f8ec6446927e8fc9134b1cb, type: 3}
+      propertyPath: simpleBar._damageAnim
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8611201056070623234, guid: 629a06bd1f8ec6446927e8fc9134b1cb, type: 3}
+      propertyPath: simpleBar._healAnimDelay
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8611201056070623234, guid: 629a06bd1f8ec6446927e8fc9134b1cb, type: 3}
+      propertyPath: simpleBar._damageAnimDelay
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8611201056070623234, guid: 629a06bd1f8ec6446927e8fc9134b1cb, type: 3}
+      propertyPath: simpleBar._healAnimDuration
+      value: 0.01
+      objectReference: {fileID: 0}
+    - target: {fileID: 8611201056070623234, guid: 629a06bd1f8ec6446927e8fc9134b1cb, type: 3}
       propertyPath: simpleBar._barPrimaryColor.b
       value: 0.22
       objectReference: {fileID: 0}
@@ -1174,6 +1194,10 @@ PrefabInstance:
       value: 0.12
       objectReference: {fileID: 0}
     - target: {fileID: 8611201056070623234, guid: 629a06bd1f8ec6446927e8fc9134b1cb, type: 3}
+      propertyPath: simpleBar._damageAnimDuration
+      value: 0.01
+      objectReference: {fileID: 0}
+    - target: {fileID: 8611201056070623234, guid: 629a06bd1f8ec6446927e8fc9134b1cb, type: 3}
       propertyPath: simpleBar._ghostBarHealColor.b
       value: 0.58
       objectReference: {fileID: 0}
@@ -1183,15 +1207,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8611201056070623234, guid: 629a06bd1f8ec6446927e8fc9134b1cb, type: 3}
       propertyPath: simpleBar._ghostBarDamageColor.b
-      value: 0.58
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8611201056070623234, guid: 629a06bd1f8ec6446927e8fc9134b1cb, type: 3}
       propertyPath: simpleBar._ghostBarDamageColor.g
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8611201056070623234, guid: 629a06bd1f8ec6446927e8fc9134b1cb, type: 3}
       propertyPath: simpleBar._ghostBarDamageColor.r
-      value: 0.55
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

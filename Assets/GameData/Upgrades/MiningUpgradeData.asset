@@ -20,25 +20,25 @@ MonoBehaviour:
     costIncreasePerPurchase: 50
   rareOreSpawn:
     displayName: "T\u0103ng t\u1EC9 l\u1EC7 qu\u1EB7ng hi\u1EBFm"
-    percentPerStack: 0.5
+    percentPerStack: 2
     maximumStacks: 100
     startingCost: 25
     costIncreasePerPurchase: 100
   oreDamage:
     displayName: "T\u0103ng s\xE1t th\u01B0\u01A1ng l\xEAn qu\u1EB7ng"
-    percentPerStack: 1
+    percentPerStack: 25
     maximumStacks: 100
     startingCost: 25
     costIncreasePerPurchase: 30
   oreSpawnSpeed:
     displayName: "T\u0103ng t\u1ED1c \u0111\u1ED9 spawn qu\u1EB7ng"
-    percentPerStack: 1
+    percentPerStack: 5
     maximumStacks: 100
     startingCost: 25
     costIncreasePerPurchase: 10
   npcMoveSpeed:
     displayName: "T\u0103ng t\u1ED1c \u0111\u1ED9 di chuy\u1EC3n NPC"
-    percentPerStack: 1
+    percentPerStack: 5
     maximumStacks: 100
     startingCost: 25
     costIncreasePerPurchase: 10
@@ -50,13 +50,19 @@ MonoBehaviour:
     costIncreasePerPurchase: 2000
   luckyBlockReward:
     displayName: "T\u0103ng ti\u1EC1n Lucky Block"
-    percentPerStack: 1
+    percentPerStack: 25
     maximumStacks: 100
     startingCost: 25
     costIncreasePerPurchase: 10
   luckyBlockDropChance:
     displayName: "T\u0103ng t\u1EC9 l\u1EC7 Lucky Block"
-    percentPerStack: 1
+    percentPerStack: 5
+    maximumStacks: 100
+    startingCost: 25
+    costIncreasePerPurchase: 10
+  npcExperience:
+    displayName: "T\u0103ng kinh nghi\u1EC7m NPC"
+    percentPerStack: 25
     maximumStacks: 100
     startingCost: 25
     costIncreasePerPurchase: 10
