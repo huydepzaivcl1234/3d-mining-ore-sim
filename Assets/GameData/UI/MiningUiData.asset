@@ -62,12 +62,16 @@ MonoBehaviour:
   oreSpawnSpeedIconSprite: {fileID: 0}
   npcMoveSpeedIconSprite: {fileID: 0}
   npcCapacityIconSprite: {fileID: 0}
+  luckyBlockRewardIconSprite: {fileID: 21300000, guid: 646e8b94a79b4c0491703aa4a7f4eff3, type: 3}
+  luckyBlockDropChanceIconSprite: {fileID: 21300000, guid: e1507aa5451b4cd3b50808c42bdf9e41, type: 3}
   moneyRewardIconFallback: $
   rareOreIconFallback: R
   oreDamageIconFallback: '!'
   oreSpawnSpeedIconFallback: S
   npcMoveSpeedIconFallback: '>>'
   npcCapacityIconFallback: +1
+  luckyBlockRewardIconFallback: L$
+  luckyBlockDropChanceIconFallback: L%
   smoothButtonAnimationEnabled: 1
   buttonHoverScale: 1.035
   buttonHoverPunchScale: 1.075
@@ -122,6 +126,8 @@ MonoBehaviour:
   closeButtonPosition: {x: 678, y: -12}
   backButtonSize: {x: 180, y: 54}
   backButtonPosition: {x: 270, y: -706}
+  expandedUpgradePanelMinimumHeight: 960
+  expandedUpgradeBackButtonY: -878
   openButtonSize: {x: 294, y: 46}
   openButtonPosition: {x: 18, y: -266}
   outlineThickness: 4
