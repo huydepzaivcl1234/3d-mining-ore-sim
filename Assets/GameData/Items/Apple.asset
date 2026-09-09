@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d697d1ce92e7572c4046ac7b833d40b, type: 3}
+  m_Name: Apple
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningItemData
+  itemId: apple
+  displayName: "T\xE1o"
+  description: "T\u0103ng s\xE1t th\u01B0\u01A1ng do NPC g\xE2y ra trong m\u1ED9t
+    kho\u1EA3ng th\u1EDDi gian."
+  rarity: 0
+  worldModel: {fileID: 7090000081690452566, guid: 06fb90faaf9d6e84dbf735b921683aee, type: 3}
+  inventoryIcon: {fileID: 0}
+  iconFallback: A
+  fallbackColor: {r: 0.92, g: 0.12, b: 0.1, a: 1}
+  worldScale: 0.42
+  modelLocalPosition: {x: 0, y: 0, z: 0}
+  modelLocalEulerAngles: {x: 0, y: 0, z: 0}
+  selectionChancePercent: 33.34
+  maximumStack: 64
+  effectType: 0
+  effectPercent: 25
+  effectDurationSeconds: 30

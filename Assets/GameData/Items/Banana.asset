@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d697d1ce92e7572c4046ac7b833d40b, type: 3}
+  m_Name: Banana
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningItemData
+  itemId: banana
+  displayName: "Chu\u1ED1i"
+  description: "T\u0103ng s\u1ED1 v\xE0ng nh\u1EADn \u0111\u01B0\u1EE3c t\u1EEB Ore
+    v\xE0 Lucky Block trong m\u1ED9t kho\u1EA3ng th\u1EDDi gian."
+  rarity: 0
+  worldModel: {fileID: 5882146166323527522, guid: a964a0024cdd6d34b8d346175b871735, type: 3}
+  inventoryIcon: {fileID: 0}
+  iconFallback: B
+  fallbackColor: {r: 1, g: 0.82, b: 0.08, a: 1}
+  worldScale: 0.42
+  modelLocalPosition: {x: 0, y: 0, z: 0}
+  modelLocalEulerAngles: {x: 0, y: 0, z: 0}
+  selectionChancePercent: 33.33
+  maximumStack: 64
+  effectType: 1
+  effectPercent: 25
+  effectDurationSeconds: 30

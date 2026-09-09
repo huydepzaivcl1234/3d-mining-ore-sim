@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6af8fb44d650df570b1d289823007298, type: 3}
+  m_Name: MiningItemDatabase
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningItemDatabase
+  oreDropChancePercent: 12
+  luckyBlockDropChancePercent: 35
+  items:
+  - {fileID: 11400000, guid: 6556e39ad099f9f4aafb234d4eec3f75, type: 2}
+  - {fileID: 11400000, guid: d4439c8d4fb6e8c4cb8932645ca7aa8b, type: 2}
+  - {fileID: 11400000, guid: c1a7e2ced9de9bf42b9f38b6cf7528e1, type: 2}
+  spawnHeight: 0.65
+  horizontalImpulseRange: {x: 0.5, y: 1.25}
+  upwardImpulseRange: {x: 2.2, y: 3.2}
+  angularSpeedRange: {x: 80, y: 180}
+  mass: 0.35
+  linearDamping: 0.15
+  angularDamping: 0.4
+  colliderRadius: 0.3
+  bounceCount: 2
+  bounceVelocity: 1.8
+  autoPickupDelay: 1.6
+  maximumWorldLifetime: 30
+  inventorySaveKey: MiningSimulator.Inventory.v1

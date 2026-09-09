@@ -36,10 +36,10 @@ MonoBehaviour:
   dayFogDensity: 0.002
   nightFogDensity: 0.012
   lightStone: {fileID: 11400000, guid: 60b3200fc7d6b3149bc117a7a0eda15b, type: 2}
-  lightStoneChancePerSpawnPercent: 3
+  lightStoneChancePerSpawnPercent: 1
   maximumActiveLightStones: 2
   darkStone: {fileID: 11400000, guid: 00d2f60055fd85843869890c15e2ff21, type: 2}
-  darkStoneChancePerSpawnPercent: 3
+  darkStoneChancePerSpawnPercent: 1
   maximumActiveDarkStones: 2
   lightStoneAuraColor: {r: 1, g: 0.82, b: 0.25, a: 1}
   darkStoneAuraColor: {r: 0.012, g: 0.018, b: 0.026, a: 0.9}

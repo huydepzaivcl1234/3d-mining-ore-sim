@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: LuckyBlockData
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.LuckyBlockData
   dropCheckIntervalSeconds: 1
-  dropChancePerCheckPercent: 0.5
+  dropChancePerCheckPercent: 15
   maximumActiveBlocks: 2
   positionAttemptsPerDrop: 16
   blockSize: 0.5
@@ -37,10 +37,10 @@ MonoBehaviour:
   - type: 0
     displayName: Gold Lucky Block
     model: {fileID: 8618107355624472436, guid: 76b6f2ddb67bc194d97117aedb0a2c12, type: 3}
-    selectionChancePercent: 55.8495
-    durability: 10
+    selectionChancePercent: 90
+    durability: 100
     clickDamage: 1
-    moneyReward: 100
+    moneyReward: 250
     sizeMultiplier: 60
     miningPowerRequired: 7
     maximumMiningNpcs: 3
@@ -48,10 +48,10 @@ MonoBehaviour:
   - type: 1
     displayName: Diamond Lucky Block
     model: {fileID: 7434537489489529207, guid: 5867ca1d958fe4248a5ccbc4260f6b2e, type: 3}
-    selectionChancePercent: 44.0917
+    selectionChancePercent: 9
     durability: 20
     clickDamage: 1
-    moneyReward: 500
+    moneyReward: 1000
     sizeMultiplier: 1
     miningPowerRequired: 15
     maximumMiningNpcs: 3
@@ -59,10 +59,10 @@ MonoBehaviour:
   - type: 2
     displayName: Rainbow Lucky Block
     model: {fileID: 7888907797540685395, guid: b66fed56c8d470b4ba5a58a6d87404c4, type: 3}
-    selectionChancePercent: 0.0588
+    selectionChancePercent: 0.5
     durability: 35
     clickDamage: 1
-    moneyReward: 1500
+    moneyReward: 3500
     sizeMultiplier: 1
     miningPowerRequired: 30
     maximumMiningNpcs: 3

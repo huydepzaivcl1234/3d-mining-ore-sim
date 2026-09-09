@@ -32,7 +32,7 @@ MonoBehaviour:
     costIncreasePerPurchase: 30
   oreSpawnSpeed:
     displayName: "T\u0103ng t\u1ED1c \u0111\u1ED9 spawn qu\u1EB7ng"
-    percentPerStack: 5
+    percentPerStack: 15
     maximumStacks: 100
     startingCost: 25
     costIncreasePerPurchase: 10
@@ -45,9 +45,9 @@ MonoBehaviour:
   npcCapacity:
     displayName: "T\u0103ng gi\u1EDBi h\u1EA1n th\u1EE3 m\u1ECF"
     percentPerStack: 1
-    maximumStacks: 5
-    startingCost: 500
-    costIncreasePerPurchase: 2000
+    maximumStacks: 4
+    startingCost: 700
+    costIncreasePerPurchase: 1500
   luckyBlockReward:
     displayName: "T\u0103ng ti\u1EC1n Lucky Block"
     percentPerStack: 25

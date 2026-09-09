@@ -16,11 +16,11 @@ MonoBehaviour:
   displayName: Diamond
   description: Epic crystal ore requiring powerful miners.
   tier: 6
-  miningPowerRequired: 5000
+  miningPowerRequired: 50
   durability: 1000
   clickDamage: 1
-  baseSellValue: 75
-  experienceReward: 1
+  baseSellValue: 5000
+  experienceReward: 100
   destroyDelay: 0
   maximumMiningNpcs: 5
   npcStandDistance: 1.4
