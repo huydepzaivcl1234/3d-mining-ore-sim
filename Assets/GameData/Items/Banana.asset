@@ -18,7 +18,7 @@ MonoBehaviour:
     v\xE0 Lucky Block trong m\u1ED9t kho\u1EA3ng th\u1EDDi gian."
   rarity: 0
   worldModel: {fileID: 5882146166323527522, guid: a964a0024cdd6d34b8d346175b871735, type: 3}
-  inventoryIcon: {fileID: 0}
+  inventoryIcon: {fileID: 21300000, guid: c26ae78dbb2856e994d61e87f0479213, type: 3}
   iconFallback: B
   fallbackColor: {r: 1, g: 0.82, b: 0.08, a: 1}
   worldScale: 5

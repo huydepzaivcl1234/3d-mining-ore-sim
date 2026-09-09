@@ -159,6 +159,12 @@ namespace MiningSimulator.Ores
         [SerializeField] private Vector2 effectToastSize = new(620f, 120f);
         [Min(1f), SerializeField] private float effectToastFontSize = 19f;
         [SerializeField] private Color effectToastColor = new(0.08f, 0.10f, 0.14f, 0.94f);
+        [SerializeField] private Vector2 effectToastSlotSize = new(78f, 78f);
+        [Min(0f), SerializeField] private float effectToastSlotSpacing = 10f;
+        [Min(0f), SerializeField] private float effectToastIconPadding = 7f;
+        [Min(1f), SerializeField] private float effectToastTimerFontSize = 16f;
+        [Min(1f), SerializeField] private float effectToastPercentFontSize = 13f;
+        [SerializeField] private Color effectToastSlotColor = new(0.10f, 0.11f, 0.13f, 0.96f);
 
         [Header("Panel Slide Animation")]
         [Min(0.01f), SerializeField] private float panelTransitionDuration = 0.28f;
@@ -408,6 +414,12 @@ namespace MiningSimulator.Ores
         public Vector2 EffectToastSize => effectToastSize;
         public float EffectToastFontSize => effectToastFontSize;
         public Color EffectToastColor => effectToastColor;
+        public Vector2 EffectToastSlotSize => effectToastSlotSize;
+        public float EffectToastSlotSpacing => effectToastSlotSpacing;
+        public float EffectToastIconPadding => effectToastIconPadding;
+        public float EffectToastTimerFontSize => effectToastTimerFontSize;
+        public float EffectToastPercentFontSize => effectToastPercentFontSize;
+        public Color EffectToastSlotColor => effectToastSlotColor;
         public float PanelTransitionDuration => panelTransitionDuration;
         public float PanelSlideExtraDistance => panelSlideExtraDistance;
         public Vector2 ShopSlideDirection => shopSlideDirection;
@@ -584,6 +596,12 @@ namespace MiningSimulator.Ores
             effectToastSize.x = Mathf.Max(1f, effectToastSize.x);
             effectToastSize.y = Mathf.Max(1f, effectToastSize.y);
             effectToastFontSize = Mathf.Max(1f, effectToastFontSize);
+            effectToastSlotSize.x = Mathf.Max(1f, effectToastSlotSize.x);
+            effectToastSlotSize.y = Mathf.Max(1f, effectToastSlotSize.y);
+            effectToastSlotSpacing = Mathf.Max(0f, effectToastSlotSpacing);
+            effectToastIconPadding = Mathf.Max(0f, effectToastIconPadding);
+            effectToastTimerFontSize = Mathf.Max(1f, effectToastTimerFontSize);
+            effectToastPercentFontSize = Mathf.Max(1f, effectToastPercentFontSize);
             panelTransitionDuration = Mathf.Max(0.01f, panelTransitionDuration);
             panelSlideExtraDistance = Mathf.Max(0f, panelSlideExtraDistance);
             cardSpacing = Mathf.Max(0f, cardSpacing);

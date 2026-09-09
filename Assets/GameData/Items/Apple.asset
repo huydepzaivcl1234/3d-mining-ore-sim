@@ -18,7 +18,7 @@ MonoBehaviour:
     kho\u1EA3ng th\u1EDDi gian."
   rarity: 0
   worldModel: {fileID: 7090000081690452566, guid: 06fb90faaf9d6e84dbf735b921683aee, type: 3}
-  inventoryIcon: {fileID: 0}
+  inventoryIcon: {fileID: 21300000, guid: b15fd69cba1745d883c50d76ef368102, type: 3}
   iconFallback: A
   fallbackColor: {r: 0.92, g: 0.12, b: 0.1, a: 1}
   worldScale: 5

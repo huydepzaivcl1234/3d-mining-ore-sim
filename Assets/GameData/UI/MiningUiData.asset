@@ -146,6 +146,12 @@ MonoBehaviour:
   effectToastSize: {x: 620, y: 120}
   effectToastFontSize: 19
   effectToastColor: {r: 0.08, g: 0.1, b: 0.14, a: 0.94}
+  effectToastSlotSize: {x: 78, y: 78}
+  effectToastSlotSpacing: 10
+  effectToastIconPadding: 7
+  effectToastTimerFontSize: 16
+  effectToastPercentFontSize: 13
+  effectToastSlotColor: {r: 0.1, g: 0.11, b: 0.13, a: 0.96}
   panelTransitionDuration: 0.28
   panelSlideExtraDistance: 100
   shopSlideDirection: {x: -1, y: 0}

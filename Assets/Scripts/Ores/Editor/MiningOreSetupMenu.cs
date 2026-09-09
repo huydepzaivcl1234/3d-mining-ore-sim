@@ -40,6 +40,8 @@ namespace MiningSimulator.Editor
         private const string AppleItemPath = ItemDataFolder + "/Apple.asset";
         private const string BananaItemPath = ItemDataFolder + "/Banana.asset";
         private const string GreenAppleItemPath = ItemDataFolder + "/Green Apple.asset";
+        private const string AppleItemIconPath = "Assets/Ores/Icons/AppleIcon.png";
+        private const string BananaItemIconPath = "Assets/Ores/Icons/BananaIcon.png";
         private const string DataFolder = "Assets/GameData/Ores";
         private const string PrefabFolder = "Assets/Prefabs/Ores";
         private const string NpcPrefabFolder = "Assets/Prefabs/NPC";
@@ -762,6 +764,8 @@ namespace MiningSimulator.Editor
             MiningItemData greenApple = CreateOrUpdateItem(GreenAppleItemPath, "green_apple",
                 "Táo xanh", "Tăng tốc chạy của NPC trong một khoảng thời gian.",
                 MiningItemEffectType.NpcMoveSpeed, "G", new Color(0.26f, 0.82f, 0.18f), 33.33f);
+            AssignItemIconIfMissing(apple, AppleItemIconPath);
+            AssignItemIconIfMissing(banana, BananaItemIconPath);
 
             MiningItemDatabase database =
                 AssetDatabase.LoadAssetAtPath<MiningItemDatabase>(ItemDatabasePath);
@@ -824,6 +828,23 @@ namespace MiningSimulator.Editor
             serialized.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(item);
             return item;
+        }
+
+        private static void AssignItemIconIfMissing(MiningItemData item, string iconPath)
+        {
+            if (item == null || item.InventoryIcon != null)
+            {
+                return;
+            }
+            Sprite icon = AssetDatabase.LoadAssetAtPath<Sprite>(iconPath);
+            if (icon == null)
+            {
+                return;
+            }
+            var serialized = new SerializedObject(item);
+            SetReferenceIfMissing(serialized.FindProperty("inventoryIcon"), icon);
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(item);
         }
 
         private static OreRewardPopup CreateOrUpdateRewardPopupPrefab(MiningUiData uiData)
@@ -1950,6 +1971,7 @@ namespace MiningSimulator.Editor
             toast.gameObject.SetActive(true);
             var toastSerialized = new SerializedObject(toastController);
             SetReferenceIfMissing(toastSerialized.FindProperty("itemSystem"), itemSystem);
+            SetReferenceIfMissing(toastSerialized.FindProperty("uiData"), uiData);
             SetReferenceIfMissing(toastSerialized.FindProperty("toastRoot"), toast.gameObject);
             SetReferenceIfMissing(toastSerialized.FindProperty("effectLabel"), toastLabel);
             toastSerialized.ApplyModifiedPropertiesWithoutUndo();

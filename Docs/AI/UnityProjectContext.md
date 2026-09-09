@@ -131,7 +131,10 @@
   every `MiningItemData` supports a designer-assigned model and icon with safe fallbacks.
 - The starter Common items are Apple (NPC damage), Banana (money reward), and Green Apple
   (NPC movement speed). Effects are timed, repeat use extends the timer, and the active-effect
-  toast displays live remaining time. Each slot stacks up to 64. Normal Rebirth preserves
+  toast creates compact icon slots with buff percentage and live remaining time for every active
+  item. Generated Apple, Banana, and Grape UI sprites live in `Assets/Ores/Icons`; Apple and Banana
+  are assigned to their current item assets, while Grape is available for a future item. Each
+  inventory slot stacks up to 64. Normal Rebirth preserves
   inventory; the Settings data reset clears inventory, active effects, and world drops.
 
 ## Coding Conventions
