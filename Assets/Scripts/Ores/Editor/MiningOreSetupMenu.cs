@@ -787,6 +787,9 @@ namespace MiningSimulator.Editor
                 OreSpawner spawner = runtime.GetComponent<OreSpawner>() ?? runtime.AddComponent<OreSpawner>();
                 OreClickInput clickInput = runtime.GetComponent<OreClickInput>() ?? runtime.AddComponent<OreClickInput>();
                 NpcShop shop = runtime.GetComponent<NpcShop>() ?? runtime.AddComponent<NpcShop>();
+                NpcProgressionSystem npcProgressionSystem =
+                    runtime.GetComponent<NpcProgressionSystem>() ??
+                    runtime.AddComponent<NpcProgressionSystem>();
                 MiningHud hud = runtime.GetComponent<MiningHud>() ?? runtime.AddComponent<MiningHud>();
                 MiningUpgradeSystem upgradeSystem = runtime.GetComponent<MiningUpgradeSystem>() ??
                                                     runtime.AddComponent<MiningUpgradeSystem>();
@@ -852,8 +855,17 @@ namespace MiningSimulator.Editor
                 SetReferenceIfMissing(shopSerialized.FindProperty("oreSpawner"), spawner);
                 SetReferenceIfMissing(shopSerialized.FindProperty("npcPrefab"), npcPrefab);
                 SetReferenceIfMissing(shopSerialized.FindProperty("npcData"), npcData);
+                SetReferenceIfMissing(shopSerialized.FindProperty("progressionSystem"),
+                    npcProgressionSystem);
                 SetReferenceIfMissing(shopSerialized.FindProperty("upgradeSystem"), upgradeSystem);
                 shopSerialized.ApplyModifiedPropertiesWithoutUndo();
+
+                var progressionSerialized = new SerializedObject(npcProgressionSystem);
+                SetReferenceIfMissing(progressionSerialized.FindProperty("oreSpawner"), spawner);
+                SetReferenceIfMissing(progressionSerialized.FindProperty("upgradeSystem"),
+                    upgradeSystem);
+                SetReferenceIfMissing(progressionSerialized.FindProperty("npcData"), npcData);
+                progressionSerialized.ApplyModifiedPropertiesWithoutUndo();
 
                 var hudSerialized = new SerializedObject(hud);
                 SetReferenceIfMissing(hudSerialized.FindProperty("wallet"), wallet);
