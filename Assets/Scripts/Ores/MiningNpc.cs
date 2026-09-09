@@ -243,9 +243,11 @@ namespace MiningSimulator.Ores
             movementDirection = (movementDirection +
                 smoothedSeparation * npcData.NpcSeparationStrength).normalized;
 
-            float speedMultiplier = oreSpawner != null && oreSpawner.UpgradeSystem != null
-                ? oreSpawner.UpgradeSystem.GetMultiplier(MiningUpgradeType.NpcMoveSpeed)
-                : 1f;
+            float speedMultiplier = progressionSystem != null
+                ? progressionSystem.CurrentMoveSpeedMultiplier
+                : oreSpawner != null && oreSpawner.UpgradeSystem != null
+                    ? oreSpawner.UpgradeSystem.GetMultiplier(MiningUpgradeType.NpcMoveSpeed)
+                    : 1f;
             Vector3 desiredVelocity = movementDirection * (npcData.MoveSpeed * speedMultiplier);
             ApplyHorizontalVelocity(desiredVelocity, npcData.MovementAcceleration);
             RotateTowards(movementDirection);
@@ -422,11 +424,17 @@ namespace MiningSimulator.Ores
         {
             if (targetLuckyBlock != null)
             {
-                targetLuckyBlock.ApplyDamage(npcData.DamagePerHit);
+                float damage = progressionSystem != null
+                    ? progressionSystem.CurrentDamagePerHit
+                    : npcData.DamagePerHit;
+                targetLuckyBlock.ApplyNpcDamage(damage);
             }
             else
             {
-                targetOre?.ApplyDamage(npcData.DamagePerHit);
+                float damage = progressionSystem != null
+                    ? progressionSystem.CurrentDamagePerHit
+                    : npcData.DamagePerHit;
+                targetOre?.ApplyNpcDamage(damage);
             }
         }
 

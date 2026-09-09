@@ -123,7 +123,16 @@
   sun/ambient/fog presentation, day-only Light Stone chance, night-only Dark Stone chance, and aura
   tuning. `OreSpawner` checks the period-specific percentage before falling back to the unchanged
   normal rarity table. Existing timed ores remain in the world after the period changes.
-- No general save system exists yet; only rebirth count has dedicated persistence.
+- No unified save system exists yet; Rebirth count and inventory use separate versioned
+  PlayerPrefs keys.
+- `MiningItemSystem` listens to Ore and Lucky Block reward events, rolls the configured
+  source chance and normalized item selection table, and spawns a short-lived Rigidbody
+  world drop with a light bounce. Drops enter a saved 32-slot inventory automatically;
+  every `MiningItemData` supports a designer-assigned model and icon with safe fallbacks.
+- The starter Common items are Apple (NPC damage), Banana (money reward), and Green Apple
+  (NPC movement speed). Effects are timed, repeat use extends the timer, and the active-effect
+  toast displays live remaining time. Each slot stacks up to 64. Normal Rebirth preserves
+  inventory; the Settings data reset clears inventory, active effects, and world drops.
 
 ## Coding Conventions
 

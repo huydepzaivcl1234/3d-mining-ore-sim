@@ -138,6 +138,28 @@ namespace MiningSimulator.Ores
         [SerializeField] private Color resetDataButtonColor = new(0.88f, 0.12f, 0.18f, 1f);
         [SerializeField] private Color resetDataArmedColor = new(1f, 0.36f, 0.08f, 1f);
 
+        [Header("Inventory Layout")]
+        [SerializeField] private Vector2 inventoryMenuButtonPosition = new(-24f, -278f);
+        [SerializeField] private Vector2 inventoryMenuButtonSize = new(180f, 48f);
+        [SerializeField] private Vector2 inventoryPanelSize = new(930f, 590f);
+        [SerializeField] private Vector2 inventoryHeaderSize = new(930f, 72f);
+        [SerializeField] private Vector2 inventoryCloseButtonPosition = new(872f, -8f);
+        [SerializeField] private Vector2 inventoryCloseButtonSize = new(48f, 48f);
+        [SerializeField] private Vector2 inventoryFirstSlotPosition = new(35f, -94f);
+        [SerializeField] private Vector2 inventorySlotSize = new(96f, 104f);
+        [SerializeField] private Vector2 inventorySlotSpacing = new(114f, 116f);
+        [Min(1f), SerializeField] private float inventoryItemFontSize = 15f;
+        [Min(1f), SerializeField] private float inventoryCountFontSize = 17f;
+        [SerializeField] private Color inventoryPanelColor = new(0.93f, 0.96f, 0.98f, 1f);
+        [SerializeField] private Color inventoryHeaderColor = new(0.48f, 0.24f, 0.75f, 1f);
+        [SerializeField] private Color inventorySlotColor = new(0.12f, 0.15f, 0.20f, 1f);
+
+        [Header("Active Effect Toast")]
+        [SerializeField] private Vector2 effectToastPosition = new(0f, -190f);
+        [SerializeField] private Vector2 effectToastSize = new(620f, 120f);
+        [Min(1f), SerializeField] private float effectToastFontSize = 19f;
+        [SerializeField] private Color effectToastColor = new(0.08f, 0.10f, 0.14f, 0.94f);
+
         [Header("Panel Slide Animation")]
         [Min(0.01f), SerializeField] private float panelTransitionDuration = 0.28f;
         [Min(0f), SerializeField] private float panelSlideExtraDistance = 80f;
@@ -147,6 +169,8 @@ namespace MiningSimulator.Ores
         [SerializeField] private Vector2 rebirthHudSlideDirection = Vector2.up;
         [Tooltip("Direction used when the audio menu button leaves the screen.")]
         [SerializeField] private Vector2 audioMenuSlideDirection = Vector2.right;
+        [Tooltip("Direction used when the inventory menu button leaves the screen.")]
+        [SerializeField] private Vector2 inventoryMenuSlideDirection = Vector2.right;
         [Tooltip("Direction used when the NPC Progress HUD leaves the screen.")]
         [SerializeField] private Vector2 npcProgressHudSlideDirection = Vector2.up;
         [Tooltip("Direction used when a modal panel opens and closes.")]
@@ -366,11 +390,30 @@ namespace MiningSimulator.Ores
         public float ResetDataConfirmationDuration => resetDataConfirmationDuration;
         public Color ResetDataButtonColor => resetDataButtonColor;
         public Color ResetDataArmedColor => resetDataArmedColor;
+        public Vector2 InventoryMenuButtonPosition => inventoryMenuButtonPosition;
+        public Vector2 InventoryMenuButtonSize => inventoryMenuButtonSize;
+        public Vector2 InventoryPanelSize => inventoryPanelSize;
+        public Vector2 InventoryHeaderSize => inventoryHeaderSize;
+        public Vector2 InventoryCloseButtonPosition => inventoryCloseButtonPosition;
+        public Vector2 InventoryCloseButtonSize => inventoryCloseButtonSize;
+        public Vector2 InventoryFirstSlotPosition => inventoryFirstSlotPosition;
+        public Vector2 InventorySlotSize => inventorySlotSize;
+        public Vector2 InventorySlotSpacing => inventorySlotSpacing;
+        public float InventoryItemFontSize => inventoryItemFontSize;
+        public float InventoryCountFontSize => inventoryCountFontSize;
+        public Color InventoryPanelColor => inventoryPanelColor;
+        public Color InventoryHeaderColor => inventoryHeaderColor;
+        public Color InventorySlotColor => inventorySlotColor;
+        public Vector2 EffectToastPosition => effectToastPosition;
+        public Vector2 EffectToastSize => effectToastSize;
+        public float EffectToastFontSize => effectToastFontSize;
+        public Color EffectToastColor => effectToastColor;
         public float PanelTransitionDuration => panelTransitionDuration;
         public float PanelSlideExtraDistance => panelSlideExtraDistance;
         public Vector2 ShopSlideDirection => shopSlideDirection;
         public Vector2 RebirthHudSlideDirection => rebirthHudSlideDirection;
         public Vector2 AudioMenuSlideDirection => audioMenuSlideDirection;
+        public Vector2 InventoryMenuSlideDirection => inventoryMenuSlideDirection;
         public Vector2 NpcProgressHudSlideDirection => npcProgressHudSlideDirection;
         public Vector2 ModalSlideDirection => modalSlideDirection;
         public string ShopTitle => shopTitle;
@@ -524,6 +567,23 @@ namespace MiningSimulator.Ores
             resetDataButtonSize.y = Mathf.Max(1f, resetDataButtonSize.y);
             resetDataFontSize = Mathf.Max(1f, resetDataFontSize);
             resetDataConfirmationDuration = Mathf.Max(0.1f, resetDataConfirmationDuration);
+            inventoryMenuButtonSize.x = Mathf.Max(1f, inventoryMenuButtonSize.x);
+            inventoryMenuButtonSize.y = Mathf.Max(1f, inventoryMenuButtonSize.y);
+            inventoryPanelSize.x = Mathf.Max(1f, inventoryPanelSize.x);
+            inventoryPanelSize.y = Mathf.Max(1f, inventoryPanelSize.y);
+            inventoryHeaderSize.x = Mathf.Max(1f, inventoryHeaderSize.x);
+            inventoryHeaderSize.y = Mathf.Max(1f, inventoryHeaderSize.y);
+            inventoryCloseButtonSize.x = Mathf.Max(1f, inventoryCloseButtonSize.x);
+            inventoryCloseButtonSize.y = Mathf.Max(1f, inventoryCloseButtonSize.y);
+            inventorySlotSize.x = Mathf.Max(1f, inventorySlotSize.x);
+            inventorySlotSize.y = Mathf.Max(1f, inventorySlotSize.y);
+            inventorySlotSpacing.x = Mathf.Max(1f, inventorySlotSpacing.x);
+            inventorySlotSpacing.y = Mathf.Max(1f, inventorySlotSpacing.y);
+            inventoryItemFontSize = Mathf.Max(1f, inventoryItemFontSize);
+            inventoryCountFontSize = Mathf.Max(1f, inventoryCountFontSize);
+            effectToastSize.x = Mathf.Max(1f, effectToastSize.x);
+            effectToastSize.y = Mathf.Max(1f, effectToastSize.y);
+            effectToastFontSize = Mathf.Max(1f, effectToastFontSize);
             panelTransitionDuration = Mathf.Max(0.01f, panelTransitionDuration);
             panelSlideExtraDistance = Mathf.Max(0f, panelSlideExtraDistance);
             cardSpacing = Mathf.Max(0f, cardSpacing);

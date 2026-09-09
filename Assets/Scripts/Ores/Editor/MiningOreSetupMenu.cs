@@ -35,6 +35,11 @@ namespace MiningSimulator.Editor
         private const string AudioDataPath = AudioDataFolder + "/MiningAudioData.asset";
         private const string RebirthDataFolder = "Assets/GameData/Rebirth";
         private const string RebirthDataPath = RebirthDataFolder + "/MiningRebirthData.asset";
+        private const string ItemDataFolder = "Assets/GameData/Items";
+        private const string ItemDatabasePath = ItemDataFolder + "/MiningItemDatabase.asset";
+        private const string AppleItemPath = ItemDataFolder + "/Apple.asset";
+        private const string BananaItemPath = ItemDataFolder + "/Banana.asset";
+        private const string GreenAppleItemPath = ItemDataFolder + "/Green Apple.asset";
         private const string DataFolder = "Assets/GameData/Ores";
         private const string PrefabFolder = "Assets/Prefabs/Ores";
         private const string NpcPrefabFolder = "Assets/Prefabs/NPC";
@@ -128,6 +133,7 @@ namespace MiningSimulator.Editor
             EnsureFolder(UiDataFolder);
             EnsureFolder(AudioDataFolder);
             EnsureFolder(RebirthDataFolder);
+            EnsureFolder(ItemDataFolder);
             EnsureFolder(PrefabFolder);
             EnsureFolder(NpcPrefabFolder);
             EnsureFolder(SystemPrefabFolder);
@@ -155,15 +161,17 @@ namespace MiningSimulator.Editor
             AssignDefaultUiIconsIfMissing(uiData);
             MiningAudioData audioData = CreateOrUpdateAudioData();
             MiningRebirthData rebirthData = CreateOrUpdateRebirthData();
+            MiningItemDatabase itemDatabase = CreateOrUpdateItemDatabase();
             OreRewardPopup rewardPopupPrefab = CreateOrUpdateRewardPopupPrefab(uiData);
             MiningNpc npcPrefab = CreateOrUpdateNpcPrefab(npcData);
             CreateOrUpdateRuntimePrefab(npcPrefab, gameData, npcData, spawnData, upgradeData, uiData,
-                audioData, rebirthData, rewardPopupPrefab);
+                audioData, rebirthData, itemDatabase, rewardPopupPrefab);
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             RefreshLuckyBlockUpgradeUiInActiveScene(logMissingSceneObjects: false);
             RefreshNpcProgressionUiInActiveScene(logMissingSceneObjects: false);
+            RefreshItemSystemInActiveScene(itemDatabase, uiData, logMissingSceneObjects: false);
             Debug.Log($"Mining ore setup complete: {StarterOres.Length} independent OreData assets and prefabs.");
         }
 
@@ -177,6 +185,16 @@ namespace MiningSimulator.Editor
         public static void RefreshNpcProgressionUi()
         {
             RefreshNpcProgressionUiInActiveScene(logMissingSceneObjects: true);
+        }
+
+        [MenuItem("Mining Simulator/Setup/Refresh Item Drops And Inventory")]
+        public static void RefreshItemDropsAndInventory()
+        {
+            EnsureFolder(ItemDataFolder);
+            MiningItemDatabase itemDatabase = CreateOrUpdateItemDatabase();
+            MiningUiData uiData = CreateOrUpdateUiData();
+            RefreshItemSystemInActiveScene(itemDatabase, uiData, logMissingSceneObjects: true);
+            AssetDatabase.SaveAssets();
         }
 
         // Entry point used by Unity batch mode and CI.
@@ -619,6 +637,97 @@ namespace MiningSimulator.Editor
                 progression);
         }
 
+        private static void RefreshItemSystemInActiveScene(MiningItemDatabase itemDatabase,
+            MiningUiData uiData, bool logMissingSceneObjects)
+        {
+            OreSpawner oreSpawner = UnityEngine.Object.FindFirstObjectByType<OreSpawner>(
+                FindObjectsInactive.Include);
+            MiningUpgradeSystem upgradeSystem =
+                UnityEngine.Object.FindFirstObjectByType<MiningUpgradeSystem>(
+                    FindObjectsInactive.Include);
+            NpcProgressionSystem progressionSystem =
+                UnityEngine.Object.FindFirstObjectByType<NpcProgressionSystem>(
+                    FindObjectsInactive.Include);
+            MiningRebirthSystem rebirthSystem =
+                UnityEngine.Object.FindFirstObjectByType<MiningRebirthSystem>(
+                    FindObjectsInactive.Include);
+            MiningUiPanelCoordinator coordinator =
+                UnityEngine.Object.FindFirstObjectByType<MiningUiPanelCoordinator>(
+                    FindObjectsInactive.Include);
+            LuckyBlockDropSystem luckyBlockSystem =
+                UnityEngine.Object.FindFirstObjectByType<LuckyBlockDropSystem>(
+                    FindObjectsInactive.Include);
+
+            if (oreSpawner == null || upgradeSystem == null || progressionSystem == null ||
+                rebirthSystem == null || coordinator == null || itemDatabase == null || uiData == null)
+            {
+                if (logMissingSceneObjects)
+                {
+                    Debug.LogError("Cannot refresh item drops. The active Scene must contain " +
+                                   "OreSpawner, upgrade, NPC progression, Rebirth and UI systems.");
+                }
+                return;
+            }
+
+            GameObject sceneRoot = oreSpawner.transform.root.gameObject;
+            Transform itemRoot = sceneRoot.transform.Find("Item System");
+            if (itemRoot == null)
+            {
+                GameObject itemRootObject = new("Item System");
+                itemRootObject.transform.SetParent(sceneRoot.transform, false);
+                Undo.RegisterCreatedObjectUndo(itemRootObject, "Create Item System");
+                itemRoot = itemRootObject.transform;
+            }
+            MiningItemSystem itemSystem = itemRoot.GetComponent<MiningItemSystem>() ??
+                                          Undo.AddComponent<MiningItemSystem>(itemRoot.gameObject);
+            Transform droppedItems = EnsureChildObject(itemRoot, "Dropped Items");
+
+            Transform uiRoot = sceneRoot.transform.Find("UI Systems");
+            if (uiRoot == null)
+            {
+                GameObject uiRootObject = new("UI Systems");
+                uiRootObject.transform.SetParent(sceneRoot.transform, false);
+                Undo.RegisterCreatedObjectUndo(uiRootObject, "Create UI Systems");
+                uiRoot = uiRootObject.transform;
+            }
+            MiningInventoryPanel inventoryPanel = uiRoot.GetComponent<MiningInventoryPanel>() ??
+                                                  Undo.AddComponent<MiningInventoryPanel>(
+                                                      uiRoot.gameObject);
+            MiningEffectToast effectToast = uiRoot.GetComponent<MiningEffectToast>() ??
+                                            Undo.AddComponent<MiningEffectToast>(uiRoot.gameObject);
+
+            var itemSerialized = new SerializedObject(itemSystem);
+            SetReferenceIfMissing(itemSerialized.FindProperty("database"), itemDatabase);
+            SetReferenceIfMissing(itemSerialized.FindProperty("oreSpawner"), oreSpawner);
+            SetReferenceIfMissing(itemSerialized.FindProperty("luckyBlockSystem"), luckyBlockSystem);
+            SetReferenceIfMissing(itemSerialized.FindProperty("droppedItemParent"), droppedItems);
+            itemSerialized.ApplyModifiedPropertiesWithoutUndo();
+
+            var upgradeSerialized = new SerializedObject(upgradeSystem);
+            SetReferenceIfMissing(upgradeSerialized.FindProperty("itemSystem"), itemSystem);
+            upgradeSerialized.ApplyModifiedPropertiesWithoutUndo();
+            var progressionSerialized = new SerializedObject(progressionSystem);
+            SetReferenceIfMissing(progressionSerialized.FindProperty("itemSystem"), itemSystem);
+            progressionSerialized.ApplyModifiedPropertiesWithoutUndo();
+            var rebirthSerialized = new SerializedObject(rebirthSystem);
+            SetReferenceIfMissing(rebirthSerialized.FindProperty("itemSystem"), itemSystem);
+            rebirthSerialized.ApplyModifiedPropertiesWithoutUndo();
+
+            ConfigureInventoryUi(sceneRoot, inventoryPanel, effectToast, itemSystem, uiData);
+            ConfigureUiPanelCoordinator(sceneRoot, coordinator, uiData);
+            EditorUtility.SetDirty(itemSystem);
+            EditorUtility.SetDirty(inventoryPanel);
+            EditorUtility.SetDirty(effectToast);
+            EditorUtility.SetDirty(upgradeSystem);
+            EditorUtility.SetDirty(progressionSystem);
+            EditorUtility.SetDirty(rebirthSystem);
+            EditorUtility.SetDirty(coordinator);
+            EditorSceneManager.MarkSceneDirty(sceneRoot.scene);
+            Selection.activeTransform = sceneRoot.transform.Find(HudCanvasName + "/Inventory Panel");
+            Debug.Log("Item drops, 32-slot inventory and effect toast were refreshed in the active Scene.",
+                itemSystem);
+        }
+
         private static MiningAudioData CreateOrUpdateAudioData()
         {
             MiningAudioData audioData = AssetDatabase.LoadAssetAtPath<MiningAudioData>(AudioDataPath);
@@ -640,6 +749,81 @@ namespace MiningSimulator.Editor
                 AssetDatabase.CreateAsset(rebirthData, RebirthDataPath);
             }
             return rebirthData;
+        }
+
+        private static MiningItemDatabase CreateOrUpdateItemDatabase()
+        {
+            MiningItemData apple = CreateOrUpdateItem(AppleItemPath, "apple", "Táo",
+                "Tăng sát thương do NPC gây ra trong một khoảng thời gian.",
+                MiningItemEffectType.NpcDamage, "A", new Color(0.92f, 0.12f, 0.10f), 33.34f);
+            MiningItemData banana = CreateOrUpdateItem(BananaItemPath, "banana", "Chuối",
+                "Tăng số vàng nhận được từ Ore và Lucky Block trong một khoảng thời gian.",
+                MiningItemEffectType.MoneyReward, "B", new Color(1f, 0.82f, 0.08f), 33.33f);
+            MiningItemData greenApple = CreateOrUpdateItem(GreenAppleItemPath, "green_apple",
+                "Táo xanh", "Tăng tốc chạy của NPC trong một khoảng thời gian.",
+                MiningItemEffectType.NpcMoveSpeed, "G", new Color(0.26f, 0.82f, 0.18f), 33.33f);
+
+            MiningItemDatabase database =
+                AssetDatabase.LoadAssetAtPath<MiningItemDatabase>(ItemDatabasePath);
+            if (database == null)
+            {
+                database = ScriptableObject.CreateInstance<MiningItemDatabase>();
+                AssetDatabase.CreateAsset(database, ItemDatabasePath);
+            }
+
+            var serialized = new SerializedObject(database);
+            SerializedProperty items = serialized.FindProperty("items");
+            MiningItemData[] defaults = { apple, banana, greenApple };
+            foreach (MiningItemData item in defaults)
+            {
+                bool found = false;
+                for (int index = 0; index < items.arraySize; index++)
+                {
+                    if (items.GetArrayElementAtIndex(index).objectReferenceValue == item)
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    int index = items.arraySize;
+                    items.InsertArrayElementAtIndex(index);
+                    items.GetArrayElementAtIndex(index).objectReferenceValue = item;
+                }
+            }
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(database);
+            return database;
+        }
+
+        private static MiningItemData CreateOrUpdateItem(string path, string itemId,
+            string displayName, string description, MiningItemEffectType effectType,
+            string fallback, Color color, float selectionChance)
+        {
+            MiningItemData item = AssetDatabase.LoadAssetAtPath<MiningItemData>(path);
+            if (item != null)
+            {
+                return item;
+            }
+
+            item = ScriptableObject.CreateInstance<MiningItemData>();
+            AssetDatabase.CreateAsset(item, path);
+            var serialized = new SerializedObject(item);
+            serialized.FindProperty("itemId").stringValue = itemId;
+            serialized.FindProperty("displayName").stringValue = displayName;
+            serialized.FindProperty("description").stringValue = description;
+            serialized.FindProperty("rarity").enumValueIndex = (int)MiningItemRarity.Common;
+            serialized.FindProperty("effectType").enumValueIndex = (int)effectType;
+            serialized.FindProperty("iconFallback").stringValue = fallback;
+            serialized.FindProperty("fallbackColor").colorValue = color;
+            serialized.FindProperty("selectionChancePercent").floatValue = selectionChance;
+            serialized.FindProperty("maximumStack").intValue = 64;
+            serialized.FindProperty("effectPercent").floatValue = 25f;
+            serialized.FindProperty("effectDurationSeconds").floatValue = 30f;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(item);
+            return item;
         }
 
         private static OreRewardPopup CreateOrUpdateRewardPopupPrefab(MiningUiData uiData)
@@ -773,6 +957,7 @@ namespace MiningSimulator.Editor
         private static void CreateOrUpdateRuntimePrefab(MiningNpc npcPrefab, MiningGameData gameData,
             NpcData npcData, OreSpawnData spawnData, MiningUpgradeData upgradeData, MiningUiData uiData,
             MiningAudioData audioData, MiningRebirthData rebirthData,
+            MiningItemDatabase itemDatabase,
             OreRewardPopup rewardPopupPrefab)
         {
             GameObject existing = AssetDatabase.LoadAssetAtPath<GameObject>(RuntimePrefabPath);
@@ -807,8 +992,16 @@ namespace MiningSimulator.Editor
                 MiningUiPanelCoordinator panelCoordinator =
                     runtime.GetComponent<MiningUiPanelCoordinator>() ??
                     runtime.AddComponent<MiningUiPanelCoordinator>();
+                MiningItemSystem itemSystem = runtime.GetComponent<MiningItemSystem>() ??
+                                              runtime.AddComponent<MiningItemSystem>();
+                MiningInventoryPanel inventoryPanel = runtime.GetComponent<MiningInventoryPanel>() ??
+                                                      runtime.AddComponent<MiningInventoryPanel>();
+                MiningEffectToast effectToast = runtime.GetComponent<MiningEffectToast>() ??
+                                                runtime.AddComponent<MiningEffectToast>();
                 MiningOrbitCamera orbitCamera = runtime.GetComponent<MiningOrbitCamera>() ??
                                                 runtime.AddComponent<MiningOrbitCamera>();
+
+                Transform droppedItems = EnsureChildObject(runtime.transform, "Dropped Items");
 
                 Transform audioRoot = EnsureChildObject(runtime.transform, "Audio");
                 Transform musicSourceObject = EnsureChildObject(audioRoot, "Music Source");
@@ -844,6 +1037,7 @@ namespace MiningSimulator.Editor
                 var upgradeSystemSerialized = new SerializedObject(upgradeSystem);
                 SetReferenceIfMissing(upgradeSystemSerialized.FindProperty("wallet"), wallet);
                 SetReferenceIfMissing(upgradeSystemSerialized.FindProperty("upgradeData"), upgradeData);
+                SetReferenceIfMissing(upgradeSystemSerialized.FindProperty("itemSystem"), itemSystem);
                 upgradeSystemSerialized.ApplyModifiedPropertiesWithoutUndo();
 
                 var clickSerialized = new SerializedObject(clickInput);
@@ -865,6 +1059,7 @@ namespace MiningSimulator.Editor
                 SetReferenceIfMissing(progressionSerialized.FindProperty("upgradeSystem"),
                     upgradeSystem);
                 SetReferenceIfMissing(progressionSerialized.FindProperty("npcData"), npcData);
+                SetReferenceIfMissing(progressionSerialized.FindProperty("itemSystem"), itemSystem);
                 progressionSerialized.ApplyModifiedPropertiesWithoutUndo();
 
                 var hudSerialized = new SerializedObject(hud);
@@ -891,6 +1086,7 @@ namespace MiningSimulator.Editor
                 ConfigureRebirthHud(runtime, rebirthPanel, rebirthSystem, wallet, uiData);
                 ConfigureAudioSettings(runtime, audioSettingsPanel, audioManager, rebirthSystem,
                     uiData);
+                ConfigureInventoryUi(runtime, inventoryPanel, effectToast, itemSystem, uiData);
                 ConfigureUiPanelCoordinator(runtime, panelCoordinator, uiData);
                 ConfigureButtonSfx(runtime, audioManager);
 
@@ -901,7 +1097,17 @@ namespace MiningSimulator.Editor
                 SetReferenceIfMissing(rebirthSerialized.FindProperty("npcProgressionSystem"),
                     npcProgressionSystem);
                 SetReferenceIfMissing(rebirthSerialized.FindProperty("npcShop"), shop);
+                SetReferenceIfMissing(rebirthSerialized.FindProperty("itemSystem"), itemSystem);
                 rebirthSerialized.ApplyModifiedPropertiesWithoutUndo();
+
+                var itemSystemSerialized = new SerializedObject(itemSystem);
+                SetReferenceIfMissing(itemSystemSerialized.FindProperty("database"), itemDatabase);
+                SetReferenceIfMissing(itemSystemSerialized.FindProperty("oreSpawner"), spawner);
+                SetReferenceIfMissing(itemSystemSerialized.FindProperty("luckyBlockSystem"),
+                    runtime.GetComponent<LuckyBlockDropSystem>());
+                SetReferenceIfMissing(itemSystemSerialized.FindProperty("droppedItemParent"),
+                    droppedItems);
+                itemSystemSerialized.ApplyModifiedPropertiesWithoutUndo();
 
                 var audioSerialized = new SerializedObject(audioManager);
                 SetReferenceIfMissing(audioSerialized.FindProperty("audioData"), audioData);
@@ -1543,6 +1749,212 @@ namespace MiningSimulator.Editor
             serialized.ApplyModifiedPropertiesWithoutUndo();
         }
 
+        private static void ConfigureInventoryUi(GameObject runtime,
+            MiningInventoryPanel panelController, MiningEffectToast toastController,
+            MiningItemSystem itemSystem, MiningUiData uiData)
+        {
+            Transform canvas = runtime.transform.Find(HudCanvasName);
+            if (canvas == null || panelController == null || toastController == null ||
+                itemSystem == null || uiData == null)
+            {
+                return;
+            }
+
+            bool createdMenuButton = canvas.Find("Inventory Menu Button") == null;
+            Transform menuButtonTransform = EnsureUiObject(canvas, "Inventory Menu Button",
+                typeof(Image), typeof(Button));
+            if (createdMenuButton)
+            {
+                ConfigureTopRightRect(menuButtonTransform, uiData.InventoryMenuButtonPosition,
+                    uiData.InventoryMenuButtonSize);
+                StyleButton(menuButtonTransform, uiData.InventoryHeaderColor,
+                    uiData.TitleTextColor, uiData.OutlineColor, uiData.OutlineThickness, uiData);
+            }
+            TextMeshProUGUI menuLabel = EnsureText(menuButtonTransform, "Label");
+            if (createdMenuButton)
+            {
+                StretchRect(menuLabel.rectTransform);
+                menuLabel.fontSize = uiData.NavigationFontSize;
+                menuLabel.color = uiData.TitleTextColor;
+                menuLabel.alignment = TextAlignmentOptions.Center;
+            }
+            menuLabel.text = "TÚI ĐỒ";
+
+            bool createdPanel = canvas.Find("Inventory Panel") == null;
+            Transform panel = EnsureUiObject(canvas, "Inventory Panel", typeof(Image));
+            if (createdPanel)
+            {
+                ConfigureCenteredRect(panel, Vector2.zero, uiData.InventoryPanelSize);
+                panel.GetComponent<Image>().color = uiData.InventoryPanelColor;
+                ApplyOutline(panel.gameObject, uiData.OutlineColor, uiData.OutlineThickness);
+            }
+
+            bool createdHeader = panel.Find("Header") == null;
+            Transform header = EnsureUiObject(panel, "Header", typeof(Image));
+            if (createdHeader)
+            {
+                ConfigureTopLeftRect(header, Vector2.zero, uiData.InventoryHeaderSize);
+                header.GetComponent<Image>().color = uiData.InventoryHeaderColor;
+                ApplyOutline(header.gameObject, uiData.OutlineColor, uiData.OutlineThickness);
+            }
+            TextMeshProUGUI title = EnsureText(header, "Title");
+            if (createdHeader)
+            {
+                StretchRect(title.rectTransform);
+                title.fontSize = uiData.AudioTitleFontSize;
+                title.color = uiData.TitleTextColor;
+                title.alignment = TextAlignmentOptions.Center;
+            }
+            title.text = "TÚI ĐỒ  •  0/32 Ô";
+
+            bool createdClose = panel.Find("Close") == null;
+            Transform closeTransform = EnsureUiObject(panel, "Close", typeof(Image), typeof(Button));
+            if (createdClose)
+            {
+                ConfigureTopLeftRect(closeTransform, uiData.InventoryCloseButtonPosition,
+                    uiData.InventoryCloseButtonSize);
+                StyleButton(closeTransform, uiData.CloseButtonColor, uiData.TitleTextColor,
+                    uiData.OutlineColor, uiData.OutlineThickness, uiData);
+            }
+            Button closeButton = closeTransform.GetComponent<Button>();
+            TextMeshProUGUI closeLabel = EnsureText(closeTransform, "Label");
+            if (createdClose)
+            {
+                StretchRect(closeLabel.rectTransform);
+                closeLabel.fontSize = uiData.NavigationFontSize;
+                closeLabel.color = uiData.TitleTextColor;
+                closeLabel.alignment = TextAlignmentOptions.Center;
+            }
+            closeLabel.text = "X";
+
+            bool createdGrid = panel.Find("Grid") == null;
+            Transform grid = EnsureUiObject(panel, "Grid");
+            if (createdGrid)
+            {
+                StretchRect(grid.GetComponent<RectTransform>());
+            }
+
+            for (int index = 0; index < MiningItemDatabase.InventoryCapacity; index++)
+            {
+                string slotName = $"Slot {index + 1:00}";
+                bool createdSlot = grid.Find(slotName) == null;
+                Transform slot = EnsureUiObject(grid, slotName, typeof(Image), typeof(Button),
+                    typeof(MiningInventorySlotButton));
+                if (createdSlot)
+                {
+                    int column = index % 8;
+                    int row = index / 8;
+                    Vector2 position = uiData.InventoryFirstSlotPosition +
+                                       new Vector2(column * uiData.InventorySlotSpacing.x,
+                                           -row * uiData.InventorySlotSpacing.y);
+                    ConfigureTopLeftRect(slot, position, uiData.InventorySlotSize);
+                    slot.GetComponent<Image>().color = uiData.InventorySlotColor;
+                    ApplyOutline(slot.gameObject, uiData.OutlineColor, 2f);
+                    ConfigureSmoothButton(slot, uiData);
+                }
+                slot.GetComponent<Button>().targetGraphic = slot.GetComponent<Image>();
+                slot.GetComponent<MiningInventorySlotButton>().Configure(panelController, index);
+
+                bool createdIcon = slot.Find("Icon") == null;
+                Transform iconTransform = EnsureUiObject(slot, "Icon", typeof(Image));
+                Image icon = iconTransform.GetComponent<Image>();
+                if (createdIcon)
+                {
+                    ConfigureTopLeftRect(iconTransform, new Vector2(20f, -7f),
+                        new Vector2(56f, 50f));
+                    icon.preserveAspect = true;
+                    icon.raycastTarget = false;
+                }
+                icon.enabled = false;
+
+                bool createdFallback = slot.Find("Fallback") == null;
+                TextMeshProUGUI fallback = EnsureText(slot, "Fallback");
+                if (createdFallback)
+                {
+                    ConfigureTopLeftRect(fallback.transform, new Vector2(20f, -7f),
+                        new Vector2(56f, 50f));
+                    fallback.fontSize = 30f;
+                    fallback.alignment = TextAlignmentOptions.Center;
+                    fallback.raycastTarget = false;
+                }
+                fallback.text = string.Empty;
+
+                bool createdName = slot.Find("Name") == null;
+                TextMeshProUGUI itemName = EnsureText(slot, "Name");
+                if (createdName)
+                {
+                    ConfigureTopLeftRect(itemName.transform, new Vector2(4f, -59f),
+                        new Vector2(88f, 40f));
+                    itemName.fontSize = uiData.InventoryItemFontSize;
+                    itemName.color = uiData.TitleTextColor;
+                    itemName.alignment = TextAlignmentOptions.Center;
+                    itemName.textWrappingMode = TextWrappingModes.Normal;
+                    itemName.raycastTarget = false;
+                }
+                itemName.text = "TRỐNG";
+
+                bool createdCount = slot.Find("Count") == null;
+                TextMeshProUGUI count = EnsureText(slot, "Count");
+                if (createdCount)
+                {
+                    ConfigureTopLeftRect(count.transform, new Vector2(58f, -5f),
+                        new Vector2(32f, 24f));
+                    count.fontSize = uiData.InventoryCountFontSize;
+                    count.fontStyle = FontStyles.Bold;
+                    count.color = uiData.TitleTextColor;
+                    count.alignment = TextAlignmentOptions.TopRight;
+                    count.raycastTarget = false;
+                }
+                count.text = string.Empty;
+            }
+
+            bool createdToast = canvas.Find("Active Item Effects") == null;
+            Transform toast = EnsureUiObject(canvas, "Active Item Effects", typeof(Image));
+            if (createdToast)
+            {
+                RectTransform toastRect = toast.GetComponent<RectTransform>();
+                toastRect.anchorMin = new Vector2(0.5f, 1f);
+                toastRect.anchorMax = new Vector2(0.5f, 1f);
+                toastRect.pivot = new Vector2(0.5f, 1f);
+                toastRect.anchoredPosition = uiData.EffectToastPosition;
+                toastRect.sizeDelta = uiData.EffectToastSize;
+                toast.GetComponent<Image>().color = uiData.EffectToastColor;
+                ApplyOutline(toast.gameObject, uiData.OutlineColor, 2f);
+            }
+            TextMeshProUGUI toastLabel = EnsureText(toast, "Effects");
+            if (createdToast)
+            {
+                StretchRect(toastLabel.rectTransform);
+                toastLabel.margin = new Vector4(18f, 10f, 18f, 10f);
+                toastLabel.fontSize = uiData.EffectToastFontSize;
+                toastLabel.color = uiData.TitleTextColor;
+                toastLabel.alignment = TextAlignmentOptions.Center;
+                toastLabel.textWrappingMode = TextWrappingModes.Normal;
+                toastLabel.raycastTarget = false;
+            }
+            toastLabel.text = "";
+
+            panel.gameObject.SetActive(true);
+            var panelSerialized = new SerializedObject(panelController);
+            SetReferenceIfMissing(panelSerialized.FindProperty("itemSystem"), itemSystem);
+            SetReferenceIfMissing(panelSerialized.FindProperty("panelCoordinator"),
+                runtime.GetComponentInChildren<MiningUiPanelCoordinator>(true));
+            SetReferenceIfMissing(panelSerialized.FindProperty("uiData"), uiData);
+            SetReferenceIfMissing(panelSerialized.FindProperty("inventoryPanel"), panel.gameObject);
+            SetReferenceIfMissing(panelSerialized.FindProperty("openButton"),
+                menuButtonTransform.GetComponent<Button>());
+            SetReferenceIfMissing(panelSerialized.FindProperty("closeButton"), closeButton);
+            SetReferenceIfMissing(panelSerialized.FindProperty("titleLabel"), title);
+            panelSerialized.ApplyModifiedPropertiesWithoutUndo();
+
+            toast.gameObject.SetActive(true);
+            var toastSerialized = new SerializedObject(toastController);
+            SetReferenceIfMissing(toastSerialized.FindProperty("itemSystem"), itemSystem);
+            SetReferenceIfMissing(toastSerialized.FindProperty("toastRoot"), toast.gameObject);
+            SetReferenceIfMissing(toastSerialized.FindProperty("effectLabel"), toastLabel);
+            toastSerialized.ApplyModifiedPropertiesWithoutUndo();
+        }
+
         private static void ConfigureUiPanelCoordinator(GameObject runtime,
             MiningUiPanelCoordinator coordinator, MiningUiData uiData)
         {
@@ -1568,6 +1980,10 @@ namespace MiningSimulator.Editor
                 canvas.Find("Audio Settings Panel")?.GetComponent<RectTransform>());
             serialized.FindProperty("npcProgressHud").objectReferenceValue =
                 canvas.Find("NPC Progress HUD")?.GetComponent<RectTransform>();
+            SetReferenceIfMissing(serialized.FindProperty("inventoryMenuButton"),
+                canvas.Find("Inventory Menu Button")?.GetComponent<RectTransform>());
+            SetReferenceIfMissing(serialized.FindProperty("inventoryPanel"),
+                canvas.Find("Inventory Panel")?.GetComponent<RectTransform>());
             serialized.ApplyModifiedPropertiesWithoutUndo();
         }
 
@@ -2347,11 +2763,14 @@ namespace MiningSimulator.Editor
                 { typeof(MiningUpgradeSystem), "Upgrade System" },
                 { typeof(MiningRebirthSystem), "Rebirth System" },
                 { typeof(MiningAudioManager), "Audio System" },
+                { typeof(MiningItemSystem), "Item System" },
                 { typeof(MiningHud), "UI Systems" },
                 { typeof(MiningUpgradePanel), "UI Systems" },
                 { typeof(MiningRebirthPanel), "UI Systems" },
                 { typeof(MiningAudioSettingsPanel), "UI Systems" },
                 { typeof(MiningUiPanelCoordinator), "UI Systems" },
+                { typeof(MiningInventoryPanel), "UI Systems" },
+                { typeof(MiningEffectToast), "UI Systems" },
                 { typeof(MiningOrbitCamera), "Camera System" }
             };
 

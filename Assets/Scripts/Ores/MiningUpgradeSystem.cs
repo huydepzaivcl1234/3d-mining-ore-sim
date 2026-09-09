@@ -9,6 +9,7 @@ namespace MiningSimulator.Ores
     {
         [SerializeField] private PlayerWallet wallet;
         [SerializeField] private MiningUpgradeData upgradeData;
+        [SerializeField] private MiningItemSystem itemSystem;
 
         [SerializeField, Min(0)] private int moneyRewardStacks;
         [SerializeField, Min(0)] private int rareOreSpawnStacks;
@@ -26,6 +27,14 @@ namespace MiningSimulator.Ores
         public event Action UpgradesChanged;
         public event Action<MiningUpgradeType> UpgradePurchased;
         public float PermanentMoneyMultiplier => permanentMoneyMultiplier;
+
+        private void Awake()
+        {
+            if (itemSystem == null)
+            {
+                itemSystem = FindFirstObjectByType<MiningItemSystem>(FindObjectsInactive.Include);
+            }
+        }
 
         public int GetStacks(MiningUpgradeType type)
         {
@@ -128,7 +137,8 @@ namespace MiningSimulator.Ores
             }
 
             return baseReward * GetMultiplier(MiningUpgradeType.MoneyReward) *
-                   permanentMoneyMultiplier;
+                   permanentMoneyMultiplier *
+                   (itemSystem != null ? itemSystem.MoneyRewardMultiplier : 1f);
         }
 
         public float CalculateLuckyBlockReward(int baseReward)
@@ -139,7 +149,8 @@ namespace MiningSimulator.Ores
             }
 
             return baseReward * GetMultiplier(MiningUpgradeType.LuckyBlockReward) *
-                   permanentMoneyMultiplier;
+                   permanentMoneyMultiplier *
+                   (itemSystem != null ? itemSystem.MoneyRewardMultiplier : 1f);
         }
 
         public void SetPermanentMoneyMultiplier(float multiplier)

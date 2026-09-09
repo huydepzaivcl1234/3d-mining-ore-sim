@@ -234,9 +234,24 @@ namespace MiningSimulator.Ores
             float multiplier = upgradeSystem != null
                 ? upgradeSystem.GetMultiplier(MiningUpgradeType.OreDamage)
                 : 1f;
-            float upgradedDamage = damage * multiplier + damageRemainder;
-            int appliedDamage = Mathf.Max(1, Mathf.FloorToInt(upgradedDamage));
-            damageRemainder = upgradedDamage - appliedDamage;
+            return ApplyExactDamage(damage * multiplier);
+        }
+
+        public bool ApplyNpcDamage(float damage)
+        {
+            return data != null && !IsDepleted && damage > 0f && ApplyExactDamage(damage);
+        }
+
+        private bool ApplyExactDamage(float damage)
+        {
+            float accumulatedDamage = damage + damageRemainder;
+            int appliedDamage = Mathf.FloorToInt(accumulatedDamage);
+            if (appliedDamage <= 0)
+            {
+                damageRemainder = accumulatedDamage;
+                return true;
+            }
+            damageRemainder = accumulatedDamage - appliedDamage;
             currentDurability = Mathf.Max(0, currentDurability - appliedDamage);
             hitPunch?.Play();
             DurabilityChanged?.Invoke(currentDurability, MaxDurability);

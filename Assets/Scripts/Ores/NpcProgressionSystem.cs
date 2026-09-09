@@ -10,6 +10,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private OreSpawner oreSpawner;
         [SerializeField] private MiningUpgradeSystem upgradeSystem;
         [SerializeField] private NpcData npcData;
+        [SerializeField] private MiningItemSystem itemSystem;
 
         [Header("Runtime Progression")]
         [Tooltip("Shared level for every current and future mining NPC.")]
@@ -44,15 +45,30 @@ namespace MiningSimulator.Ores
                 float multiplier = upgradeSystem != null
                     ? upgradeSystem.GetMultiplier(MiningUpgradeType.OreDamage)
                     : 1f;
-                return baseDamage * multiplier;
+                float itemMultiplier = itemSystem != null ? itemSystem.NpcDamageMultiplier : 1f;
+                return baseDamage * multiplier * itemMultiplier;
             }
         }
-
+        public float CurrentMoveSpeedMultiplier
+        {
+            get
+            {
+                float upgradeMultiplier = upgradeSystem != null
+                    ? upgradeSystem.GetMultiplier(MiningUpgradeType.NpcMoveSpeed)
+                    : 1f;
+                float itemMultiplier = itemSystem != null ? itemSystem.NpcMoveSpeedMultiplier : 1f;
+                return upgradeMultiplier * itemMultiplier;
+            }
+        }
         public event Action ProgressionChanged;
         public event Action<int> LevelChanged;
 
         private void Awake()
         {
+            if (itemSystem == null)
+            {
+                itemSystem = FindFirstObjectByType<MiningItemSystem>(FindObjectsInactive.Include);
+            }
             ValidateProgression();
         }
 
@@ -68,6 +84,11 @@ namespace MiningSimulator.Ores
                 upgradeSystem.UpgradesChanged -= HandleUpgradesChanged;
                 upgradeSystem.UpgradesChanged += HandleUpgradesChanged;
             }
+            if (itemSystem != null)
+            {
+                itemSystem.EffectsChanged -= HandleItemEffectsChanged;
+                itemSystem.EffectsChanged += HandleItemEffectsChanged;
+            }
 
             ProgressionChanged?.Invoke();
         }
@@ -81,6 +102,10 @@ namespace MiningSimulator.Ores
             if (upgradeSystem != null)
             {
                 upgradeSystem.UpgradesChanged -= HandleUpgradesChanged;
+            }
+            if (itemSystem != null)
+            {
+                itemSystem.EffectsChanged -= HandleItemEffectsChanged;
             }
         }
 
@@ -128,6 +153,11 @@ namespace MiningSimulator.Ores
         }
 
         private void HandleUpgradesChanged()
+        {
+            ProgressionChanged?.Invoke();
+        }
+
+        private void HandleItemEffectsChanged()
         {
             ProgressionChanged?.Invoke();
         }

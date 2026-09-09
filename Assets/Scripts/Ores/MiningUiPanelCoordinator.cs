@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine;
 
 namespace MiningSimulator.Ores
@@ -18,6 +17,8 @@ namespace MiningSimulator.Ores
         [SerializeField] private RectTransform rebirthPanel;
         [SerializeField] private RectTransform audioSettingsPanel;
         [SerializeField] private RectTransform npcProgressHud;
+        [SerializeField] private RectTransform inventoryMenuButton;
+        [SerializeField] private RectTransform inventoryPanel;
 
         private Vector2 shopHome;
         private Vector2 rebirthHome;
@@ -25,6 +26,8 @@ namespace MiningSimulator.Ores
         private Vector2 upgradeHome;
         private Vector2 rebirthPanelHome;
         private Vector2 audioSettingsHome;
+        private Vector2 inventoryMenuHome;
+        private Vector2 inventoryPanelHome;
 
         private Vector2 npcProgressHome;
         private RectTransform activeModal;
@@ -32,6 +35,14 @@ namespace MiningSimulator.Ores
         private readonly Dictionary<RectTransform, Vector2> additionalPanelHomes = new();
 
         public MiningUiData UiData => uiData;
+
+        public void RegisterInventoryUi(RectTransform menuButton, RectTransform panel)
+        {
+            inventoryMenuButton = menuButton;
+            inventoryPanel = panel;
+            inventoryMenuHome = GetPosition(menuButton);
+            inventoryPanelHome = GetPosition(panel);
+        }
 
         private float TransitionDuration => uiData != null ? uiData.PanelTransitionDuration : 0.28f;
         private float SlideExtraDistance => uiData != null ? uiData.PanelSlideExtraDistance : 80f;
@@ -41,6 +52,8 @@ namespace MiningSimulator.Ores
             uiData != null ? uiData.RebirthHudSlideDirection : Vector2.up, Vector2.up);
         private Vector2 AudioMenuSlideDirection => GetDirection(
             uiData != null ? uiData.AudioMenuSlideDirection : Vector2.right, Vector2.right);
+        private Vector2 InventoryMenuSlideDirection => GetDirection(
+            uiData != null ? uiData.InventoryMenuSlideDirection : Vector2.right, Vector2.right);
         private Vector2 NpcProgressHudSlideDirection => GetDirection(
             uiData != null ? uiData.NpcProgressHudSlideDirection : Vector2.up, Vector2.up);
         private Vector2 ModalSlideDirection => GetDirection(
@@ -67,6 +80,7 @@ namespace MiningSimulator.Ores
                 HideModalImmediately(upgradePanel);
                 HideModalImmediately(rebirthPanel);
                 HideModalImmediately(audioSettingsPanel);
+                HideModalImmediately(inventoryPanel);
             }
         }
 
@@ -127,6 +141,8 @@ namespace MiningSimulator.Ores
             upgradeHome = GetPosition(upgradePanel);
             rebirthPanelHome = GetPosition(rebirthPanel);
             audioSettingsHome = GetPosition(audioSettingsPanel);
+            inventoryMenuHome = GetPosition(inventoryMenuButton);
+            inventoryPanelHome = GetPosition(inventoryPanel);
             npcProgressHome = GetPosition(npcProgressHud);
             initialized = true;
         }
@@ -145,6 +161,8 @@ namespace MiningSimulator.Ores
             if (rebirthPanel != null && rebirthPanel.gameObject.activeSelf) return rebirthPanel;
             if (audioSettingsPanel != null && audioSettingsPanel.gameObject.activeSelf)
                 return audioSettingsPanel;
+            if (inventoryPanel != null && inventoryPanel.gameObject.activeSelf)
+                return inventoryPanel;
             return null;
         }
 
@@ -154,6 +172,8 @@ namespace MiningSimulator.Ores
             AnimateBasePanel(rebirthHud, rebirthHome, RebirthHudSlideDirection, visible);
             AnimateBasePanel(audioMenuButton, audioMenuHome, AudioMenuSlideDirection, visible);
             AnimateBasePanel(npcProgressHud, npcProgressHome, NpcProgressHudSlideDirection, visible);
+            AnimateBasePanel(inventoryMenuButton, inventoryMenuHome, InventoryMenuSlideDirection,
+                visible);
         }
 
         private void AnimateBasePanel(RectTransform panel, Vector2 home, Vector2 direction,
@@ -179,6 +199,8 @@ namespace MiningSimulator.Ores
             SetBasePanelImmediately(audioMenuButton, audioMenuHome, AudioMenuSlideDirection, visible);
             SetBasePanelImmediately(npcProgressHud, npcProgressHome,
                 NpcProgressHudSlideDirection, visible);
+            SetBasePanelImmediately(inventoryMenuButton, inventoryMenuHome,
+                InventoryMenuSlideDirection, visible);
         }
 
         private void SetBasePanelImmediately(RectTransform panel, Vector2 home, Vector2 direction,
@@ -230,6 +252,7 @@ namespace MiningSimulator.Ores
             if (panel == upgradePanel) return upgradeHome;
             if (panel == rebirthPanel) return rebirthPanelHome;
             if (panel == audioSettingsPanel) return audioSettingsHome;
+            if (panel == inventoryPanel) return inventoryPanelHome;
             if (panel == npcProgressHud) return npcProgressHome;
             if (panel != null && additionalPanelHomes.TryGetValue(panel, out Vector2 home))
                 return home;
@@ -239,7 +262,8 @@ namespace MiningSimulator.Ores
         private void CacheAdditionalPanelHome(RectTransform panel)
         {
             if (panel == null || panel == upgradePanel || panel == rebirthPanel ||
-                panel == audioSettingsPanel || additionalPanelHomes.ContainsKey(panel))
+                panel == audioSettingsPanel || panel == inventoryPanel ||
+                additionalPanelHomes.ContainsKey(panel))
             {
                 return;
             }

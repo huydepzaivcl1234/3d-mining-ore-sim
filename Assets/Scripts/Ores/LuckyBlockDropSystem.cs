@@ -30,6 +30,7 @@ namespace MiningSimulator.Ores
 
         public int ActiveCount => activeBlocks.Count;
         public int PooledCount => pooledBlocks.Count;
+        public event System.Action<LuckyBlock, float> LuckyBlockRewardGranted;
 
         private void Awake()
         {
@@ -478,7 +479,13 @@ namespace MiningSimulator.Ores
 
         private void HandleRewardGranted(LuckyBlock block, float amount)
         {
-            if (block == null || amount <= 0f || rewardPopupPrefab == null || uiData == null)
+            if (block == null)
+            {
+                return;
+            }
+
+            LuckyBlockRewardGranted?.Invoke(block, amount);
+            if (amount <= 0f || rewardPopupPrefab == null || uiData == null)
             {
                 return;
             }

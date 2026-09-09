@@ -26,6 +26,7 @@ namespace MiningSimulator.Ores
         private MiningHitPunch hitPunch;
         private bool resolved;
         private bool hasLanded;
+        private float damageRemainder;
         private readonly Dictionary<MiningNpc, int> reservedMiners = new();
 
         public LuckyBlockType Type => type;
@@ -179,6 +180,7 @@ namespace MiningSimulator.Ores
             resolved = false;
             lifetime = 0f;
             hasLanded = false;
+            damageRemainder = 0f;
             reservedMiners.Clear();
             body ??= GetComponent<Rigidbody>();
             if (visualRoot != null)
@@ -220,7 +222,25 @@ namespace MiningSimulator.Ores
                 return false;
             }
 
-            currentDurability = Mathf.Max(0, currentDurability - damage);
+            return ApplyExactDamage(damage);
+        }
+
+        public bool ApplyNpcDamage(float damage)
+        {
+            return !resolved && variant != null && damage > 0f && ApplyExactDamage(damage);
+        }
+
+        private bool ApplyExactDamage(float damage)
+        {
+            float accumulatedDamage = damage + damageRemainder;
+            int appliedDamage = Mathf.FloorToInt(accumulatedDamage);
+            if (appliedDamage <= 0)
+            {
+                damageRemainder = accumulatedDamage;
+                return true;
+            }
+            damageRemainder = accumulatedDamage - appliedDamage;
+            currentDurability = Mathf.Max(0, currentDurability - appliedDamage);
             hitPunch?.Play();
             DurabilityChanged?.Invoke(currentDurability, MaximumDurability);
             if (currentDurability > 0)
