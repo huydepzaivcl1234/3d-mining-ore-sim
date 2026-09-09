@@ -163,7 +163,7 @@ namespace MiningSimulator.Ores
             RefreshProgressBar(money, requirement);
         }
 
-        private void RefreshProgressBar(int current, int maximum)
+        private void RefreshProgressBar(float current, int maximum)
         {
             if (progressBar == null)
             {
