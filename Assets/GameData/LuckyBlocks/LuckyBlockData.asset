@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: LuckyBlockData
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.LuckyBlockData
   dropCheckIntervalSeconds: 1
-  dropChancePerCheckPercent: 0.1
+  dropChancePerCheckPercent: 0.5
   maximumActiveBlocks: 2
   positionAttemptsPerDrop: 16
   blockSize: 0.5
