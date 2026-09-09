@@ -48,7 +48,7 @@ MonoBehaviour:
   - type: 1
     displayName: Diamond Lucky Block
     model: {fileID: 7434537489489529207, guid: 5867ca1d958fe4248a5ccbc4260f6b2e, type: 3}
-    selectionWeight: 4.9
+    selectionWeight: 75
     durability: 20
     clickDamage: 1
     moneyReward: 500

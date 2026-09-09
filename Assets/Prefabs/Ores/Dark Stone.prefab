@@ -521,15 +521,15 @@ PrefabInstance:
     - target: {fileID: 7923854003312105274, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
       propertyPath: simpleBar._srGhostBar
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 2154079574232852629}
     - target: {fileID: 7923854003312105274, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
       propertyPath: simpleBar._srBackground
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 1924287987339067524}
     - target: {fileID: 7923854003312105274, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
       propertyPath: simpleBar._srPrimaryBar
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 6780126024383308785}
     - target: {fileID: 7923854003312105274, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
       propertyPath: simpleBar._healAnimDelay
       value: 0.005
@@ -557,6 +557,21 @@ PrefabInstance:
 --- !u!4 &1124989257477466903 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4385716689640749430, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
+  m_PrefabInstance: {fileID: 3693499059430675041}
+  m_PrefabAsset: {fileID: 0}
+--- !u!212 &1924287987339067524 stripped
+SpriteRenderer:
+  m_CorrespondingSourceObject: {fileID: 3023463917562057445, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
+  m_PrefabInstance: {fileID: 3693499059430675041}
+  m_PrefabAsset: {fileID: 0}
+--- !u!212 &2154079574232852629 stripped
+SpriteRenderer:
+  m_CorrespondingSourceObject: {fileID: 3361130246048332532, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
+  m_PrefabInstance: {fileID: 3693499059430675041}
+  m_PrefabAsset: {fileID: 0}
+--- !u!212 &6780126024383308785 stripped
+SpriteRenderer:
+  m_CorrespondingSourceObject: {fileID: 7878530095124935056, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
   m_PrefabInstance: {fileID: 3693499059430675041}
   m_PrefabAsset: {fileID: 0}
 --- !u!114 &6824887375905375579 stripped

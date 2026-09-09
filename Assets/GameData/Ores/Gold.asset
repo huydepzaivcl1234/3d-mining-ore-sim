@@ -20,6 +20,7 @@ MonoBehaviour:
   durability: 90
   clickDamage: 5
   baseSellValue: 35
+  experienceReward: 15
   destroyDelay: 0
   maximumMiningNpcs: 5
   npcStandDistance: 1.4

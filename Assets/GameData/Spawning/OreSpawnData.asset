@@ -20,11 +20,11 @@ MonoBehaviour:
   - ore: {fileID: 11400000, guid: 40db213d6c25d9a46b3ce1a4e0ff06b4, type: 2}
     spawnWeight: 40
   - ore: {fileID: 11400000, guid: 74e09bd17e9dfd9c7fa895c0dcaad7da, type: 2}
-    spawnWeight: 10
+    spawnWeight: 3
   - ore: {fileID: 11400000, guid: bda08fd18d8aa0ee377cd8a982164c74, type: 2}
-    spawnWeight: 5
-  - ore: {fileID: 11400000, guid: 6ce1f29ef4520f9de60df99934688572, type: 2}
     spawnWeight: 1
+  - ore: {fileID: 11400000, guid: 6ce1f29ef4520f9de60df99934688572, type: 2}
+    spawnWeight: 0.05
   rarityRules:
   - rarity: 0
     baseWeightMultiplier: 1
