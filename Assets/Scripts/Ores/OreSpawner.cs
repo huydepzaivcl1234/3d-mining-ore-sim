@@ -30,7 +30,7 @@ namespace MiningSimulator.Ores
         public OreSpawnData SpawnData => spawnData;
         public MiningUpgradeSystem UpgradeSystem => upgradeSystem;
         public event System.Action<Ore> OreDamaged;
-        public event System.Action<Ore, int> OreRewardGranted;
+        public event System.Action<Ore, float> OreRewardGranted;
 
         public bool TryReserveClosestOre(MiningNpc miner, Vector3 origin, int miningPower,
             out Ore reservedOre, out int slotIndex)
@@ -461,7 +461,7 @@ namespace MiningSimulator.Ores
             OreDamaged?.Invoke(ore);
         }
 
-        private void HandleRewardGranted(Ore ore, int reward)
+        private void HandleRewardGranted(Ore ore, float reward)
         {
             if (ore == null)
             {

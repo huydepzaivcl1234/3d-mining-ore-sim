@@ -2,14 +2,19 @@ using System.Globalization;
 
 namespace MiningSimulator.Ores
 {
-    /// <summary>Formats whole-number currency consistently without changing wallet storage.</summary>
+    /// <summary>Formats currency with Vietnamese decimal and grouping separators.</summary>
     public static class MiningMoneyFormatter
     {
-        private static readonly CultureInfo DisplayCulture = CultureInfo.InvariantCulture;
-
-        public static string Format(int amount)
+        private static readonly NumberFormatInfo DisplayFormat = new()
         {
-            return amount.ToString("#,0", DisplayCulture);
+            NumberDecimalSeparator = ",",
+            NumberGroupSeparator = ".",
+            NumberGroupSizes = new[] { 3 }
+        };
+
+        public static string Format(float amount)
+        {
+            return amount.ToString("#,0.##", DisplayFormat);
         }
     }
 }

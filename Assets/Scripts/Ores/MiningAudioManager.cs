@@ -353,7 +353,7 @@ namespace MiningSimulator.Ores
             PlaySfx(audioData.OreHitSfx);
         }
 
-        private void HandleOreRewardGranted(Ore ore, int reward)
+        private void HandleOreRewardGranted(Ore ore, float reward)
         {
             if (audioData != null)
             {

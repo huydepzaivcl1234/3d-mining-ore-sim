@@ -19,8 +19,6 @@ namespace MiningSimulator.Ores
         [SerializeField, Min(0)] private int luckyBlockRewardStacks;
         [SerializeField, Min(0)] private int luckyBlockDropChanceStacks;
 
-        private float rewardRemainder;
-        private float luckyBlockRewardRemainder;
         private float permanentMoneyMultiplier = 1f;
 
         public MiningUpgradeData UpgradeData => upgradeData;
@@ -117,32 +115,26 @@ namespace MiningSimulator.Ores
             return 1f + definition.PercentPerStack * GetStacks(type) * 0.01f;
         }
 
-        public int CalculateMiningReward(int baseReward)
+        public float CalculateMiningReward(int baseReward)
         {
             if (baseReward <= 0)
             {
-                return 0;
+                return 0f;
             }
 
-            float upgradedReward = baseReward * GetMultiplier(MiningUpgradeType.MoneyReward) *
-                                   permanentMoneyMultiplier + rewardRemainder;
-            int wholeReward = Mathf.FloorToInt(upgradedReward);
-            rewardRemainder = upgradedReward - wholeReward;
-            return wholeReward;
+            return baseReward * GetMultiplier(MiningUpgradeType.MoneyReward) *
+                   permanentMoneyMultiplier;
         }
 
-        public int CalculateLuckyBlockReward(int baseReward)
+        public float CalculateLuckyBlockReward(int baseReward)
         {
             if (baseReward <= 0)
             {
-                return 0;
+                return 0f;
             }
 
-            float upgradedReward = baseReward * GetMultiplier(MiningUpgradeType.LuckyBlockReward) *
-                                   permanentMoneyMultiplier + luckyBlockRewardRemainder;
-            int wholeReward = Mathf.FloorToInt(upgradedReward);
-            luckyBlockRewardRemainder = upgradedReward - wholeReward;
-            return wholeReward;
+            return baseReward * GetMultiplier(MiningUpgradeType.LuckyBlockReward) *
+                   permanentMoneyMultiplier;
         }
 
         public void SetPermanentMoneyMultiplier(float multiplier)
@@ -160,8 +152,6 @@ namespace MiningSimulator.Ores
             npcCapacityStacks = 0;
             luckyBlockRewardStacks = 0;
             luckyBlockDropChanceStacks = 0;
-            rewardRemainder = 0f;
-            luckyBlockRewardRemainder = 0f;
             UpgradesChanged?.Invoke();
         }
 

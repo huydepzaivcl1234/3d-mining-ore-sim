@@ -35,7 +35,7 @@ namespace MiningSimulator.Ores
         public bool IsResolved => resolved;
         public event Action<LuckyBlock> Damaged;
         public event Action<int, int> DurabilityChanged;
-        public event Action<LuckyBlock, int> RewardGranted;
+        public event Action<LuckyBlock, float> RewardGranted;
         public event Action<LuckyBlock> Broken;
         public event Action<LuckyBlock> Expired;
 
@@ -230,7 +230,7 @@ namespace MiningSimulator.Ores
             }
 
             resolved = true;
-            int reward = upgradeSystem != null
+            float reward = upgradeSystem != null
                 ? upgradeSystem.CalculateLuckyBlockReward(variant.MoneyReward)
                 : Mathf.Max(0, variant.MoneyReward);
             wallet?.AddMoney(reward);

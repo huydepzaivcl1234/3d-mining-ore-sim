@@ -29,7 +29,7 @@ namespace MiningSimulator.Ores
         public bool IsDepleted => currentDurability <= 0;
         public event Action<Ore> Depleted;
         public event Action<Ore> Damaged;
-        public event Action<Ore, int> RewardGranted;
+        public event Action<Ore, float> RewardGranted;
         public event Action<int, int> DurabilityChanged;
 
         public bool CanAcceptMiner(MiningNpc miner, int miningPower)
@@ -288,7 +288,7 @@ namespace MiningSimulator.Ores
 
             rewardGranted = true;
             reservedMiners.Clear();
-            int reward = upgradeSystem != null
+            float reward = upgradeSystem != null
                 ? upgradeSystem.CalculateMiningReward(data.BaseSellValue)
                 : data.BaseSellValue;
             wallet?.AddMoney(reward);

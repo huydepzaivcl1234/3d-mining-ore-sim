@@ -94,7 +94,7 @@ namespace MiningSimulator.Ores
             upgradeSystem?.SetPermanentMoneyMultiplier(PermanentMoneyMultiplier);
         }
 
-        private void HandleMoneyChanged(int money)
+        private void HandleMoneyChanged(float money)
         {
             StateChanged?.Invoke();
         }

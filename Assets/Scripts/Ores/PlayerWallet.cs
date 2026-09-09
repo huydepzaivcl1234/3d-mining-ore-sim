@@ -9,41 +9,40 @@ namespace MiningSimulator.Ores
     {
         [Header("Money")]
         [Tooltip("The single authoritative balance. You can change it in the Inspector during Play Mode.")]
-        [Min(0), SerializeField] private int currentMoney = 100;
+        [Min(0f), SerializeField] private float currentMoney = 100f;
 
-        public int CurrentMoney => currentMoney;
-        public event Action<int> MoneyChanged;
+        public float CurrentMoney => currentMoney;
+        public event Action<float> MoneyChanged;
 
         private void Awake()
         {
-            currentMoney = Mathf.Max(0, currentMoney);
+            currentMoney = Mathf.Max(0f, currentMoney);
             MoneyChanged?.Invoke(currentMoney);
         }
 
         private void OnValidate()
         {
-            currentMoney = Mathf.Max(0, currentMoney);
+            currentMoney = Mathf.Max(0f, currentMoney);
             if (Application.isPlaying)
             {
                 MoneyChanged?.Invoke(currentMoney);
             }
         }
 
-        public void AddMoney(int amount)
+        public void AddMoney(float amount)
         {
-            if (amount <= 0)
+            if (amount <= 0f)
             {
                 return;
             }
 
-            long updatedMoney = (long)currentMoney + amount;
-            currentMoney = (int)Math.Min(int.MaxValue, updatedMoney);
+            currentMoney = Mathf.Min(float.MaxValue, currentMoney + amount);
             MoneyChanged?.Invoke(currentMoney);
         }
 
-        public bool TrySpend(int amount)
+        public bool TrySpend(float amount)
         {
-            if (amount < 0 || amount > currentMoney)
+            if (amount < 0f || amount > currentMoney)
             {
                 return false;
             }
@@ -53,10 +52,10 @@ namespace MiningSimulator.Ores
             return true;
         }
 
-        public void SetMoney(int amount)
+        public void SetMoney(float amount)
         {
-            int safeAmount = Mathf.Max(0, amount);
-            if (currentMoney == safeAmount)
+            float safeAmount = Mathf.Max(0f, amount);
+            if (Mathf.Approximately(currentMoney, safeAmount))
             {
                 return;
             }
@@ -67,12 +66,12 @@ namespace MiningSimulator.Ores
 
         public void ResetMoney()
         {
-            if (currentMoney == 0)
+            if (currentMoney == 0f)
             {
                 return;
             }
 
-            SetMoney(0);
+            SetMoney(0f);
         }
     }
 }

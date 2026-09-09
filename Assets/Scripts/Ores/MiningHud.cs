@@ -27,9 +27,8 @@ namespace MiningSimulator.Ores
         [SerializeField] private string purchaseFailedMessage =
             "Không đủ tiền hoặc đã đạt giới hạn thợ mỏ.";
 
-        private int displayedMoney;
-        private int targetMoney;
-        private float countAccumulator;
+        private float displayedMoney;
+        private float targetMoney;
         private float currentCountSpeed;
 
         private void OnEnable()
@@ -78,21 +77,13 @@ namespace MiningSimulator.Ores
 
         private void Update()
         {
-            if (displayedMoney == targetMoney || gameData == null)
+            if (Mathf.Approximately(displayedMoney, targetMoney) || gameData == null)
             {
                 return;
             }
 
-            countAccumulator += Time.unscaledDeltaTime * currentCountSpeed;
-            int wholeUnits = Mathf.FloorToInt(countAccumulator);
-            if (wholeUnits <= 0)
-            {
-                return;
-            }
-
-            countAccumulator -= wholeUnits;
-            int difference = targetMoney - displayedMoney;
-            displayedMoney += Mathf.Clamp(difference, -wholeUnits, wholeUnits);
+            displayedMoney = Mathf.MoveTowards(displayedMoney, targetMoney,
+                Time.unscaledDeltaTime * currentCountSpeed);
             RefreshMoneyText();
         }
 
@@ -106,10 +97,9 @@ namespace MiningSimulator.Ores
             RefreshOtherText();
         }
 
-        private void HandleMoneyChanged(int money)
+        private void HandleMoneyChanged(float money)
         {
             targetMoney = money;
-            countAccumulator = 0f;
 
             if (gameData == null)
             {
@@ -117,7 +107,7 @@ namespace MiningSimulator.Ores
             }
             else
             {
-                int difference = Mathf.Abs(targetMoney - displayedMoney);
+                float difference = Mathf.Abs(targetMoney - displayedMoney);
                 float durationLimitedSpeed = difference / gameData.MoneyCountMaximumDuration;
                 currentCountSpeed = Mathf.Max(gameData.MoneyCountUnitsPerSecond, durationLimitedSpeed);
             }

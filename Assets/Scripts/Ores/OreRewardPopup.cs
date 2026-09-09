@@ -16,7 +16,7 @@ namespace MiningSimulator.Ores
         private Color startColor;
         private float elapsed;
 
-        public void Initialize(int amount, Vector3 worldPosition, MiningUiData targetUiData)
+        public void Initialize(float amount, Vector3 worldPosition, MiningUiData targetUiData)
         {
             uiData = targetUiData;
             label ??= GetComponent<TextMeshPro>();

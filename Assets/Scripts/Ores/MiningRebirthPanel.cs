@@ -131,7 +131,7 @@ namespace MiningSimulator.Ores
 
         private void Refresh()
         {
-            int money = wallet != null ? wallet.CurrentMoney : 0;
+            float money = wallet != null ? wallet.CurrentMoney : 0f;
             int requirement = rebirthSystem != null ? rebirthSystem.CurrentRequirement : 1;
 
             if (progressLabel != null)

@@ -491,9 +491,9 @@ namespace MiningSimulator.Ores
             block.Expired -= HandleBlockFinished;
         }
 
-        private void HandleRewardGranted(LuckyBlock block, int amount)
+        private void HandleRewardGranted(LuckyBlock block, float amount)
         {
-            if (block == null || amount <= 0 || rewardPopupPrefab == null || uiData == null)
+            if (block == null || amount <= 0f || rewardPopupPrefab == null || uiData == null)
             {
                 return;
             }

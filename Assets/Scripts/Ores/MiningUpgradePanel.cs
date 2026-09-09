@@ -165,7 +165,7 @@ namespace MiningSimulator.Ores
             Refresh();
         }
 
-        private void HandleMoneyChanged(int money) => Refresh();
+        private void HandleMoneyChanged(float money) => Refresh();
 
         private void Refresh()
         {
