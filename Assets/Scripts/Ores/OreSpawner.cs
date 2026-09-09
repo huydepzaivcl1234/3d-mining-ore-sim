@@ -288,41 +288,17 @@ namespace MiningSimulator.Ores
                 return specialOre;
             }
 
-            float totalWeight = 0f;
-            foreach (OreSpawnEntry entry in spawnData.OreSpawnTable)
-            {
-                if (entry?.Ore != null && entry.Ore.Prefab != null)
-                {
-                    totalWeight += Mathf.Max(0f, GetEffectiveWeight(entry));
-                }
-            }
+            OreSpawnEntry selectedEntry = PercentageChanceSelector.Choose(
+                spawnData.OreSpawnTable,
+                GetEffectiveSpawnChancePercent,
+                IsSpawnableOreEntry,
+                UnityEngine.Random.value);
+            return selectedEntry?.Ore;
+        }
 
-            if (totalWeight <= 0f)
-            {
-                return null;
-            }
-
-            float choice = UnityEngine.Random.value * totalWeight;
-            foreach (OreSpawnEntry entry in spawnData.OreSpawnTable)
-            {
-                if (entry?.Ore == null || entry.Ore.Prefab == null)
-                {
-                    continue;
-                }
-
-                float effectiveWeight = GetEffectiveWeight(entry);
-                if (effectiveWeight <= 0f)
-                {
-                    continue;
-                }
-                choice -= effectiveWeight;
-                if (choice <= 0f)
-                {
-                    return entry.Ore;
-                }
-            }
-
-            return null;
+        private static bool IsSpawnableOreEntry(OreSpawnEntry entry)
+        {
+            return entry.Ore != null && entry.Ore.Prefab != null;
         }
 
         private bool CanSpawnSpecialOre(OreData specialOre)
@@ -344,24 +320,25 @@ namespace MiningSimulator.Ores
             return activeCount < maximum;
         }
 
-        private float GetEffectiveWeight(OreSpawnEntry entry)
+        private float GetEffectiveSpawnChancePercent(OreSpawnEntry entry)
         {
             OreRaritySpawnRule rule = spawnData.GetRarityRule(entry.Ore.Rarity);
-            float rarityMultiplier = rule != null ? rule.BaseWeightMultiplier : 1f;
-            float baseWeight = Mathf.Max(0f, entry.SpawnWeight) * rarityMultiplier;
+            float rarityMultiplier = rule != null ? rule.BaseChanceMultiplier : 1f;
+            float baseChancePercent = Mathf.Clamp(entry.SpawnChancePercent, 0f, 100f) *
+                                      rarityMultiplier;
             if (rule == null || !rule.AffectedByRareUpgrade || upgradeSystem == null)
             {
-                return baseWeight;
+                return baseChancePercent;
             }
 
             float bonusFraction = Mathf.Max(0f,
                 upgradeSystem.GetMultiplier(MiningUpgradeType.RareOreSpawn) - 1f);
-            if (baseWeight > 0f)
+            if (baseChancePercent > 0f)
             {
-                return baseWeight * (1f + bonusFraction);
+                return baseChancePercent * (1f + bonusFraction);
             }
 
-            return rule.ZeroWeightUnlockAtOneHundredPercentBonus * bonusFraction;
+            return rule.ZeroChanceUnlockAtOneHundredPercentBonus * bonusFraction;
         }
 
         private void KeepAboveSurface(GameObject instance, float surfaceY)

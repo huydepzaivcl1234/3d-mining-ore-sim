@@ -182,36 +182,21 @@ namespace MiningSimulator.Ores
 
         private LuckyBlockVariantData ChooseVariant()
         {
-            float totalWeight = 0f;
-            foreach (LuckyBlockVariantData variant in data.Variants)
-            {
-                if (variant?.Model != null)
-                {
-                    totalWeight += Mathf.Max(0f, variant.SelectionWeight);
-                }
-            }
+            return PercentageChanceSelector.Choose(
+                data.Variants,
+                GetVariantChancePercent,
+                IsSelectableVariant,
+                Random.value);
+        }
 
-            if (totalWeight <= 0f)
-            {
-                return null;
-            }
+        private static float GetVariantChancePercent(LuckyBlockVariantData variant)
+        {
+            return variant.SelectionChancePercent;
+        }
 
-            float selection = Random.value * totalWeight;
-            foreach (LuckyBlockVariantData variant in data.Variants)
-            {
-                if (variant?.Model == null)
-                {
-                    continue;
-                }
-
-                selection -= Mathf.Max(0f, variant.SelectionWeight);
-                if (selection <= 0f)
-                {
-                    return variant;
-                }
-            }
-
-            return null;
+        private static bool IsSelectableVariant(LuckyBlockVariantData variant)
+        {
+            return variant.Model != null;
         }
 
         private bool TryChooseLandingPosition(LuckyBlockVariantData variant,

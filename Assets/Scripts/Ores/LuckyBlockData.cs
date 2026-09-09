@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace MiningSimulator.Ores
 {
@@ -17,7 +18,9 @@ namespace MiningSimulator.Ores
         [SerializeField] private LuckyBlockType type;
         [SerializeField] private string displayName = "Lucky Block";
         [SerializeField] private GameObject model;
-        [Min(0f), SerializeField] private float selectionWeight = 1f;
+        [FormerlySerializedAs("selectionWeight"), InspectorName("Selection Chance (%)")]
+        [Range(0f, 100f), SerializeField]
+        private float selectionChancePercent = 1f;
         [Min(1), SerializeField] private int durability = 10;
         [Min(1), SerializeField] private int clickDamage = 1;
         [Min(0), SerializeField] private int moneyReward = 100;
@@ -29,7 +32,7 @@ namespace MiningSimulator.Ores
         public LuckyBlockType Type => type;
         public string DisplayName => displayName;
         public GameObject Model => model;
-        public float SelectionWeight => selectionWeight;
+        public float SelectionChancePercent => selectionChancePercent;
         public int Durability => durability;
         public int ClickDamage => clickDamage;
         public int MoneyReward => moneyReward;
@@ -40,7 +43,7 @@ namespace MiningSimulator.Ores
 
         internal void Validate()
         {
-            selectionWeight = Mathf.Max(0f, selectionWeight);
+            selectionChancePercent = Mathf.Clamp(selectionChancePercent, 0f, 100f);
             durability = Mathf.Max(1, durability);
             clickDamage = Mathf.Max(1, clickDamage);
             moneyReward = Mathf.Max(0, moneyReward);
@@ -90,6 +93,7 @@ namespace MiningSimulator.Ores
         [Min(0), SerializeField] private int maximumPooledBlocks = 6;
 
         [Header("Variants")]
+        [Tooltip("Enter percentages from 0 to 100. Valid variants are normalized to a 100% roll at runtime.")]
         [SerializeField] private List<LuckyBlockVariantData> variants = new();
 
         public float DropCheckIntervalSeconds => dropCheckIntervalSeconds;

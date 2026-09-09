@@ -69,10 +69,10 @@
 - Each ore owns an independent OreData asset and prefab; runtime state lives on the Ore component.
 - Each `OreData` contains only ore-owned values, including durability, rewards, required power, and NPC mining slots.
 - NPC-only tuning lives in `Assets/GameData/NPC/NpcData.asset`.
-- `OreSpawner` is the spawn manager and reads ratios, spawn speed, limits, and placement from `Assets/GameData/Spawning/OreSpawnData.asset`.
+- `OreSpawner` is the spawn manager and reads percentages, spawn speed, limits, and placement from `Assets/GameData/Spawning/OreSpawnData.asset`.
 - Ore placement keeps collider bounds above the spawn surface; rotation range and surface clearance remain designer-configurable.
 - Ore health bars use collider bounds in world space, so ore rotation cannot rotate the bar anchor into the ground; per-ore offset and scale live in each `OreData`.
-- The editable TMP upgrade panel buys money, rare-ore weight, and ore-damage stacks from `Assets/GameData/Upgrades/MiningUpgradeData.asset`.
+- The editable TMP upgrade panel buys money, rare-ore chance, and ore-damage stacks from `Assets/GameData/Upgrades/MiningUpgradeData.asset`.
 - Upgrade panel presentation is authored as real prefab UI and seeded from `Assets/GameData/UI/MiningUiData.asset`.
 - Shared economy, HUD animation, click, and camera tuning lives in `Assets/GameData/MiningGameData.asset`.
 - NPC miners reserve limited slots around compatible ores and use Rigidbody/CapsuleCollider collision.
@@ -90,7 +90,7 @@
 - `MiningMoneyFormatter` is the single formatter for balance, prices, Rebirth requirements,
   and ore reward popups. Compact values place the suffix at the decimal point
   (`1,000 -> 1K`, `1,500 -> 1K5`) and cover the wallet's full finite float range.
-- Rarity is explicit (`Common`, `Uncommon`, `Rare`, `Epic`, `Legendary`). Zero-weight Rare+
+- Rarity is explicit (`Common`, `Uncommon`, `Rare`, `Epic`, `Legendary`). Zero-percent Rare+
   ores unlock progressively through the rare-spawn upgrade using rarity rules in `OreSpawnData`.
 - Upgrade data also controls ore-spawn speed and NPC movement speed stacks, costs, and per-stack percentages.
 - The editable runtime HUD uses TextMeshPro components and is created as serialized prefab content by the setup menu.
@@ -116,6 +116,9 @@
 - `MiningRebirthPanel` presents an editable red/white confirmation modal and an event-driven HUD with
   a green UI MicroBar. Rebirth layout, typography, colors, and smooth button animation live in
   `MiningUiData.asset`.
+- Ore and Lucky Block selection tables are authored as percentages. Runtime selection normalizes
+  valid entries to 100%, and the rare-ore upgrade increases Rare+ percentages before normalization,
+  matching the probability model intended for future gacha content.
 - `DayNightSystem` is an independent Scene object. `DayNightData` owns cycle duration, transition,
   sun/ambient/fog presentation, day-only Light Stone chance, night-only Dark Stone chance, and aura
   tuning. `OreSpawner` checks the period-specific percentage before falling back to the unchanged

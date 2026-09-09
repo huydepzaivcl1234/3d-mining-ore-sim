@@ -77,7 +77,7 @@ namespace MiningSimulator.Editor
         }
 
         private static void ConfigureVariant(SerializedProperty property, LuckyBlockType type,
-            string displayName, GameObject model, float weight, int durability, int clickDamage,
+            string displayName, GameObject model, float chancePercent, int durability, int clickDamage,
             int reward, float sizeMultiplier, bool overwrite)
         {
             property.FindPropertyRelative("type").enumValueIndex = (int)type;
@@ -88,7 +88,7 @@ namespace MiningSimulator.Editor
 
             property.FindPropertyRelative("displayName").stringValue = displayName;
             property.FindPropertyRelative("model").objectReferenceValue = model;
-            property.FindPropertyRelative("selectionWeight").floatValue = weight;
+            property.FindPropertyRelative("selectionChancePercent").floatValue = chancePercent;
             property.FindPropertyRelative("durability").intValue = durability;
             property.FindPropertyRelative("clickDamage").intValue = clickDamage;
             property.FindPropertyRelative("moneyReward").intValue = reward;

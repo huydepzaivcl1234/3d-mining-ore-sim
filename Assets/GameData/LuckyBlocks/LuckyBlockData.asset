@@ -37,7 +37,7 @@ MonoBehaviour:
   - type: 0
     displayName: Gold Lucky Block
     model: {fileID: 8618107355624472436, guid: 76b6f2ddb67bc194d97117aedb0a2c12, type: 3}
-    selectionWeight: 95
+    selectionChancePercent: 55.8495
     durability: 10
     clickDamage: 1
     moneyReward: 100
@@ -48,7 +48,7 @@ MonoBehaviour:
   - type: 1
     displayName: Diamond Lucky Block
     model: {fileID: 7434537489489529207, guid: 5867ca1d958fe4248a5ccbc4260f6b2e, type: 3}
-    selectionWeight: 75
+    selectionChancePercent: 44.0917
     durability: 20
     clickDamage: 1
     moneyReward: 500
@@ -59,7 +59,7 @@ MonoBehaviour:
   - type: 2
     displayName: Rainbow Lucky Block
     model: {fileID: 7888907797540685395, guid: b66fed56c8d470b4ba5a58a6d87404c4, type: 3}
-    selectionWeight: 0.1
+    selectionChancePercent: 0.0588
     durability: 35
     clickDamage: 1
     moneyReward: 1500
