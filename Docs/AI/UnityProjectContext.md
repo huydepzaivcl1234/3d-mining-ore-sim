@@ -59,6 +59,9 @@
 
 - Lucky Block progression includes separate reward and drop-chance upgrades owned by
   `MiningUpgradeData` and applied by the existing `MiningUpgradeSystem`.
+- The active Scene upgrade panel can be refreshed through
+  `Mining Simulator/Setup/Refresh Lucky Block Upgrade UI`; it adds the two Lucky Block
+  cards and their dedicated sprites without replacing designer-assigned existing icons.
 - `MiningHitPunch` is reusable smooth scale-and-lift feedback. Ore roots animate with
   their colliders; falling Lucky Blocks animate only their visual child.
 

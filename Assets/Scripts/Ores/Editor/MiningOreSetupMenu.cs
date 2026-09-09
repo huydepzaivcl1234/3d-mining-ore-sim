@@ -40,6 +40,10 @@ namespace MiningSimulator.Editor
         private const string NpcPrefabFolder = "Assets/Prefabs/NPC";
         private const string SystemPrefabFolder = "Assets/Prefabs/Systems";
         private const string UiPrefabFolder = "Assets/Prefabs/UI";
+        private const string LuckyBlockRewardIconPath =
+            UiPrefabFolder + "/UpgradeLuckyBlockReward.png";
+        private const string LuckyBlockDropChanceIconPath =
+            UiPrefabFolder + "/UpgradeLuckyBlockDropChance.png";
         private const string NpcPrefabPath = NpcPrefabFolder + "/MiningNpc.prefab";
         private const string RuntimePrefabPath = SystemPrefabFolder + "/MiningRuntime.prefab";
         private const string RewardPopupPrefabPath = UiPrefabFolder + "/OreRewardPopup.prefab";
@@ -141,7 +145,14 @@ namespace MiningSimulator.Editor
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
+            RefreshLuckyBlockUpgradeUiInActiveScene(logMissingSceneObjects: false);
             Debug.Log($"Mining ore setup complete: {StarterOres.Length} independent OreData assets and prefabs.");
+        }
+
+        [MenuItem("Mining Simulator/Setup/Refresh Lucky Block Upgrade UI")]
+        public static void RefreshLuckyBlockUpgradeUi()
+        {
+            RefreshLuckyBlockUpgradeUiInActiveScene(logMissingSceneObjects: true);
         }
 
         // Entry point used by Unity batch mode and CI.
@@ -427,6 +438,57 @@ namespace MiningSimulator.Editor
                 AssetDatabase.CreateAsset(uiData, UiDataPath);
             }
             return uiData;
+        }
+
+        private static void RefreshLuckyBlockUpgradeUiInActiveScene(
+            bool logMissingSceneObjects)
+        {
+            MiningUpgradePanel panel = UnityEngine.Object.FindFirstObjectByType<MiningUpgradePanel>(
+                FindObjectsInactive.Include);
+            MiningUpgradeSystem upgradeSystem =
+                UnityEngine.Object.FindFirstObjectByType<MiningUpgradeSystem>(
+                    FindObjectsInactive.Include);
+            PlayerWallet wallet = UnityEngine.Object.FindFirstObjectByType<PlayerWallet>(
+                FindObjectsInactive.Include);
+            MiningUpgradeData upgradeData =
+                AssetDatabase.LoadAssetAtPath<MiningUpgradeData>(UpgradeDataPath);
+            MiningUiData uiData = AssetDatabase.LoadAssetAtPath<MiningUiData>(UiDataPath);
+
+            if (panel == null || upgradeSystem == null || wallet == null ||
+                upgradeData == null || uiData == null)
+            {
+                if (logMissingSceneObjects)
+                {
+                    Debug.LogError("Cannot refresh Lucky Block upgrade UI. The active Scene must " +
+                                   "contain PlayerWallet, MiningUpgradeSystem and " +
+                                   "MiningUpgradePanel.");
+                }
+                return;
+            }
+
+            AssignLuckyBlockUpgradeIconsIfMissing(uiData);
+            GameObject sceneRoot = panel.transform.root.gameObject;
+            Undo.RecordObject(panel, "Refresh Lucky Block Upgrade UI");
+            ConfigureUpgradePanel(sceneRoot, panel, upgradeSystem, wallet, upgradeData, uiData);
+            EditorUtility.SetDirty(panel);
+            EditorSceneManager.MarkSceneDirty(panel.gameObject.scene);
+            AssetDatabase.SaveAssets();
+            Selection.activeTransform = sceneRoot.transform.Find(HudCanvasName + "/Upgrade Panel");
+            Debug.Log("Lucky Block upgrade cards and icons were refreshed in the active Scene.",
+                panel);
+        }
+
+        private static void AssignLuckyBlockUpgradeIconsIfMissing(MiningUiData uiData)
+        {
+            var serialized = new SerializedObject(uiData);
+            SetReferenceIfMissing(serialized.FindProperty("luckyBlockRewardIconSprite"),
+                AssetDatabase.LoadAssetAtPath<Sprite>(LuckyBlockRewardIconPath));
+            SetReferenceIfMissing(serialized.FindProperty("luckyBlockDropChanceIconSprite"),
+                AssetDatabase.LoadAssetAtPath<Sprite>(LuckyBlockDropChanceIconPath));
+            if (serialized.ApplyModifiedPropertiesWithoutUndo())
+            {
+                EditorUtility.SetDirty(uiData);
+            }
         }
 
         private static MiningAudioData CreateOrUpdateAudioData()
@@ -996,12 +1058,18 @@ namespace MiningSimulator.Editor
             EnsureUpgradeCard(upgradePanelTransform, "NPC Capacity Upgrade", 5,
                 GetCapacityUpgradePreview(upgradeData.NpcCapacity), uiData.NpcCapacityIconSprite,
                 uiData.NpcCapacityIconFallback, uiData);
+            Sprite luckyBlockRewardIcon = uiData.LuckyBlockRewardIconSprite != null
+                ? uiData.LuckyBlockRewardIconSprite
+                : AssetDatabase.LoadAssetAtPath<Sprite>(LuckyBlockRewardIconPath);
+            Sprite luckyBlockDropChanceIcon = uiData.LuckyBlockDropChanceIconSprite != null
+                ? uiData.LuckyBlockDropChanceIconSprite
+                : AssetDatabase.LoadAssetAtPath<Sprite>(LuckyBlockDropChanceIconPath);
             EnsureUpgradeCard(upgradePanelTransform, "Lucky Block Reward Upgrade", 6,
                 GetUpgradePreview(upgradeData.LuckyBlockReward),
-                uiData.LuckyBlockRewardIconSprite, uiData.LuckyBlockRewardIconFallback, uiData);
+                luckyBlockRewardIcon, uiData.LuckyBlockRewardIconFallback, uiData);
             EnsureUpgradeCard(upgradePanelTransform, "Lucky Block Drop Chance Upgrade", 7,
                 GetUpgradePreview(upgradeData.LuckyBlockDropChance),
-                uiData.LuckyBlockDropChanceIconSprite,
+                luckyBlockDropChanceIcon,
                 uiData.LuckyBlockDropChanceIconFallback, uiData);
 
             Vector2 backButtonPosition = uiData.BackButtonPosition;
