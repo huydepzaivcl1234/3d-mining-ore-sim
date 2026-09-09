@@ -17,6 +17,30 @@ MonoBehaviour:
   dayDurationSeconds: 120
   nightDurationSeconds: 90
   transitionDurationSeconds: 8
+  transitionCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
   daySunRotation: {x: 45, y: -30, z: 0}
   nightSunRotation: {x: 210, y: -30, z: 0}
   daySunColor: {r: 1, g: 0.94, b: 0.78, a: 1}
@@ -24,15 +48,26 @@ MonoBehaviour:
   daySunIntensity: 1.35
   nightSunIntensity: 0.18
   dayAmbientColor: {r: 0.72, g: 0.78, b: 0.86, a: 1}
-  nightAmbientColor: {r: 0.055, g: 0.07, b: 0.15, a: 1}
+  nightAmbientColor: {r: 0.12, g: 0.16, b: 0.28, a: 1}
   controlSkybox: 1
+  skyboxMaterial: {fileID: 2100000, guid: 1cf6f4c6e6e0518419839d3f5448dd99, type: 2}
   daySkyTint: {r: 0.52, g: 0.72, b: 1, a: 1}
-  nightSkyTint: {r: 0.025, g: 0.035, b: 0.11, a: 1}
+  nightSkyTint: {r: 0.25, g: 0.31, b: 0.52, a: 1}
   daySkyExposure: 1.15
-  nightSkyExposure: 0.18
+  nightSkyExposure: 0.58
+  controlExtendedSkybox: 1
+  skyRotationSpeed: 0.35
+  daySkyFogIntensity: 0.72
+  nightSkyFogIntensity: 0.95
+  daySkyFogHeight: 0.74
+  nightSkyFogHeight: 0.58
+  daySkyFogSmoothness: 0.12
+  nightSkyFogSmoothness: 0.48
+  daySkyFogFill: 0.04
+  nightSkyFogFill: 0.12
   controlFog: 1
   dayFogColor: {r: 0.65, g: 0.78, b: 0.9, a: 1}
-  nightFogColor: {r: 0.025, g: 0.035, b: 0.085, a: 1}
+  nightFogColor: {r: 0.07, g: 0.1, b: 0.2, a: 1}
   dayFogDensity: 0.002
   nightFogDensity: 0.012
   lightStone: {fileID: 11400000, guid: 60b3200fc7d6b3149bc117a7a0eda15b, type: 2}

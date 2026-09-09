@@ -1,5 +1,7 @@
 using System;
+using PrimeTween;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace MiningSimulator.Ores
 {
@@ -10,12 +12,28 @@ namespace MiningSimulator.Ores
         [SerializeField] private DayNightData data;
         [SerializeField] private Light sun;
 
+        private static readonly int SkyTintId = Shader.PropertyToID("_SkyTint");
+        private static readonly int TintId = Shader.PropertyToID("_Tint");
+        private static readonly int TintColorId = Shader.PropertyToID("_TintColor");
+        private static readonly int ExposureId = Shader.PropertyToID("_Exposure");
+        private static readonly int CubemapTransitionId = Shader.PropertyToID("_CubemapTransition");
+        private static readonly int RotationSpeedId = Shader.PropertyToID("_RotationSpeed");
+        private static readonly int EnableRotationId = Shader.PropertyToID("_EnableRotation");
+        private static readonly int EnableFogId = Shader.PropertyToID("_EnableFog");
+        private static readonly int FogIntensityId = Shader.PropertyToID("_FogIntensity");
+        private static readonly int FogHeightId = Shader.PropertyToID("_FogHeight");
+        private static readonly int FogSmoothnessId = Shader.PropertyToID("_FogSmoothness");
+        private static readonly int FogFillId = Shader.PropertyToID("_FogFill");
+
         private MiningTimePeriod currentPeriod;
-        private MiningTimePeriod previousPeriod;
         private float periodElapsed;
+        private float daylight;
+        private float transitionFromDaylight;
+        private float transitionToDaylight;
         private bool initialized;
         private Material originalSkybox;
         private Material runtimeSkybox;
+        private Tween lightingTween;
 
         public MiningTimePeriod CurrentPeriod => currentPeriod;
 
@@ -49,11 +67,17 @@ namespace MiningSimulator.Ores
         {
             InitializeIfNeeded();
             PrepareRuntimeSkybox();
-            ApplyLighting(1f);
+            ApplyLighting(daylight);
+        }
+
+        private void OnDisable()
+        {
+            StopLightingTween();
         }
 
         private void OnDestroy()
         {
+            StopLightingTween();
             if (runtimeSkybox == null)
             {
                 return;
@@ -81,19 +105,13 @@ namespace MiningSimulator.Ores
                 if (periodElapsed >= duration)
                 {
                     periodElapsed %= duration;
-                    previousPeriod = currentPeriod;
                     currentPeriod = currentPeriod == MiningTimePeriod.Day
                         ? MiningTimePeriod.Night
                         : MiningTimePeriod.Day;
+                    BeginLightingTransition();
                     PeriodChanged?.Invoke(currentPeriod);
                 }
             }
-
-            float transition = data.TransitionDurationSeconds <= 0f
-                ? 1f
-                : Mathf.SmoothStep(0f, 1f,
-                    Mathf.Clamp01(periodElapsed / data.TransitionDurationSeconds));
-            ApplyLighting(transition);
         }
 
         public bool TryChooseSpecialOre(float rollPercent, out OreData ore)
@@ -126,10 +144,9 @@ namespace MiningSimulator.Ores
                 return;
             }
 
-            previousPeriod = currentPeriod;
             currentPeriod = period;
             periodElapsed = 0f;
-            ApplyLighting(data != null && data.TransitionDurationSeconds > 0f ? 0f : 1f);
+            BeginLightingTransition();
             PeriodChanged?.Invoke(currentPeriod);
         }
 
@@ -141,8 +158,8 @@ namespace MiningSimulator.Ores
             }
 
             currentPeriod = data != null ? data.StartingPeriod : MiningTimePeriod.Day;
-            previousPeriod = currentPeriod;
             periodElapsed = 0f;
+            daylight = currentPeriod == MiningTimePeriod.Day ? 1f : 0f;
             initialized = true;
         }
 
@@ -158,52 +175,99 @@ namespace MiningSimulator.Ores
                 : data.NightDurationSeconds;
         }
 
-        private void ApplyLighting(float transition)
+        private void BeginLightingTransition()
         {
             if (data == null)
             {
                 return;
             }
 
-            float targetDay = currentPeriod == MiningTimePeriod.Day ? 1f : 0f;
-            float sourceDay = previousPeriod == MiningTimePeriod.Day ? 1f : 0f;
-            float daylight = Mathf.Lerp(sourceDay, targetDay, transition);
+            StopLightingTween();
+            transitionFromDaylight = daylight;
+            transitionToDaylight = currentPeriod == MiningTimePeriod.Day ? 1f : 0f;
+            float duration = data.TransitionDurationSeconds;
+            if (duration <= 0f || Mathf.Approximately(transitionFromDaylight, transitionToDaylight))
+            {
+                daylight = transitionToDaylight;
+                ApplyLighting(daylight);
+                return;
+            }
+
+            lightingTween = Tween.Custom(this, 0f, 1f, duration,
+                static (target, progress) => target.ApplyTransitionProgress(progress), Ease.Linear);
+        }
+
+        private void ApplyTransitionProgress(float progress)
+        {
+            daylight = Mathf.Lerp(transitionFromDaylight, transitionToDaylight,
+                data.EvaluateTransition(progress));
+            ApplyLighting(daylight);
+        }
+
+        private void StopLightingTween()
+        {
+            if (lightingTween.isAlive)
+            {
+                lightingTween.Stop();
+            }
+        }
+
+        private void ApplyLighting(float daylightAmount)
+        {
+            if (data == null)
+            {
+                return;
+            }
 
             if (sun != null)
             {
                 RenderSettings.sun = sun;
                 sun.transform.rotation = Quaternion.Slerp(
                     Quaternion.Euler(data.NightSunRotation),
-                    Quaternion.Euler(data.DaySunRotation), daylight);
-                sun.color = Color.Lerp(data.NightSunColor, data.DaySunColor, daylight);
-                sun.intensity = Mathf.Lerp(data.NightSunIntensity, data.DaySunIntensity, daylight);
+                    Quaternion.Euler(data.DaySunRotation), daylightAmount);
+                sun.color = Color.Lerp(data.NightSunColor, data.DaySunColor, daylightAmount);
+                sun.intensity = Mathf.Lerp(data.NightSunIntensity, data.DaySunIntensity, daylightAmount);
             }
 
+            RenderSettings.ambientMode = AmbientMode.Flat;
             RenderSettings.ambientLight = Color.Lerp(
-                data.NightAmbientColor, data.DayAmbientColor, daylight);
-            ApplySkybox(daylight);
+                data.NightAmbientColor, data.DayAmbientColor, daylightAmount);
+            ApplySkybox(daylightAmount);
             if (data.ControlFog)
             {
                 RenderSettings.fog = true;
-                RenderSettings.fogColor = Color.Lerp(data.NightFogColor, data.DayFogColor, daylight);
+                RenderSettings.fogColor = Color.Lerp(data.NightFogColor, data.DayFogColor, daylightAmount);
                 RenderSettings.fogDensity = Mathf.Lerp(
-                    data.NightFogDensity, data.DayFogDensity, daylight);
+                    data.NightFogDensity, data.DayFogDensity, daylightAmount);
             }
         }
 
         private void PrepareRuntimeSkybox()
         {
-            if (data == null || !data.ControlSkybox || RenderSettings.skybox == null)
+            if (data == null || !data.ControlSkybox)
             {
                 return;
             }
 
             originalSkybox = RenderSettings.skybox;
-            runtimeSkybox = new Material(originalSkybox)
+            Material sourceSkybox = data.SkyboxMaterial != null
+                ? data.SkyboxMaterial
+                : originalSkybox;
+            if (sourceSkybox == null)
             {
-                name = originalSkybox.name + " (Day Night Runtime)"
+                return;
+            }
+
+            runtimeSkybox = new Material(sourceSkybox)
+            {
+                name = sourceSkybox.name + " (Day Night Runtime)"
             };
             RenderSettings.skybox = runtimeSkybox;
+
+            if (data.ControlExtendedSkybox)
+            {
+                SetExtendedSkyboxFeatures();
+            }
         }
 
         private void ApplySkybox(float daylight)
@@ -214,12 +278,53 @@ namespace MiningSimulator.Ores
             }
 
             Color tint = Color.Lerp(data.NightSkyTint, data.DaySkyTint, daylight);
-            if (runtimeSkybox.HasProperty("_SkyTint")) runtimeSkybox.SetColor("_SkyTint", tint);
-            if (runtimeSkybox.HasProperty("_Tint")) runtimeSkybox.SetColor("_Tint", tint);
-            if (runtimeSkybox.HasProperty("_Exposure"))
+            if (runtimeSkybox.HasProperty(SkyTintId)) runtimeSkybox.SetColor(SkyTintId, tint);
+            if (runtimeSkybox.HasProperty(TintId)) runtimeSkybox.SetColor(TintId, tint);
+            if (runtimeSkybox.HasProperty(TintColorId)) runtimeSkybox.SetColor(TintColorId, tint);
+            if (runtimeSkybox.HasProperty(ExposureId))
             {
-                runtimeSkybox.SetFloat("_Exposure", Mathf.Lerp(
+                runtimeSkybox.SetFloat(ExposureId, Mathf.Lerp(
                     data.NightSkyExposure, data.DaySkyExposure, daylight));
+            }
+
+            if (!data.ControlExtendedSkybox)
+            {
+                return;
+            }
+
+            SetFloatIfPresent(CubemapTransitionId, 1f - daylight);
+            SetFloatIfPresent(FogIntensityId, Mathf.Lerp(
+                data.NightSkyFogIntensity, data.DaySkyFogIntensity, daylight));
+            SetFloatIfPresent(FogHeightId, Mathf.Lerp(
+                data.NightSkyFogHeight, data.DaySkyFogHeight, daylight));
+            SetFloatIfPresent(FogSmoothnessId, Mathf.Lerp(
+                data.NightSkyFogSmoothness, data.DaySkyFogSmoothness, daylight));
+            SetFloatIfPresent(FogFillId, Mathf.Lerp(
+                data.NightSkyFogFill, data.DaySkyFogFill, daylight));
+        }
+
+        private void SetExtendedSkyboxFeatures()
+        {
+            if (runtimeSkybox.HasProperty(EnableRotationId))
+            {
+                runtimeSkybox.SetFloat(EnableRotationId, 1f);
+                runtimeSkybox.EnableKeyword("_ENABLEROTATION_ON");
+            }
+
+            if (runtimeSkybox.HasProperty(EnableFogId))
+            {
+                runtimeSkybox.SetFloat(EnableFogId, 1f);
+                runtimeSkybox.EnableKeyword("_ENABLEFOG_ON");
+            }
+
+            SetFloatIfPresent(RotationSpeedId, data.SkyRotationSpeed);
+        }
+
+        private void SetFloatIfPresent(int propertyId, float value)
+        {
+            if (runtimeSkybox.HasProperty(propertyId))
+            {
+                runtimeSkybox.SetFloat(propertyId, value);
             }
         }
 
