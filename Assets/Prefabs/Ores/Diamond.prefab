@@ -177,6 +177,42 @@ PrefabInstance:
       propertyPath: m_Name
       value: Ore Health Bar
       objectReference: {fileID: 0}
+    - target: {fileID: 7923854003312105274, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
+      propertyPath: simpleBar._healAnim
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7923854003312105274, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
+      propertyPath: simpleBar._damageAnim
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7923854003312105274, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
+      propertyPath: simpleBar._srGhostBar
+      value: 
+      objectReference: {fileID: 6765391019785955283}
+    - target: {fileID: 7923854003312105274, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
+      propertyPath: simpleBar._srBackground
+      value: 
+      objectReference: {fileID: 6535810505808990146}
+    - target: {fileID: 7923854003312105274, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
+      propertyPath: simpleBar._srPrimaryBar
+      value: 
+      objectReference: {fileID: 2166359025239256247}
+    - target: {fileID: 7923854003312105274, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
+      propertyPath: simpleBar._healAnimDelay
+      value: 0.005
+      objectReference: {fileID: 0}
+    - target: {fileID: 7923854003312105274, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
+      propertyPath: simpleBar._damageAnimDelay
+      value: 0.005
+      objectReference: {fileID: 0}
+    - target: {fileID: 7923854003312105274, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
+      propertyPath: simpleBar._healAnimDuration
+      value: 0.01
+      objectReference: {fileID: 0}
+    - target: {fileID: 7923854003312105274, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
+      propertyPath: simpleBar._damageAnimDuration
+      value: 0.01
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -185,6 +221,11 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 2916550690691672046}
   m_SourcePrefab: {fileID: 100100000, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
+--- !u!212 &2166359025239256247 stripped
+SpriteRenderer:
+  m_CorrespondingSourceObject: {fileID: 7878530095124935056, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
+  m_PrefabInstance: {fileID: 8306429294649646375}
+  m_PrefabAsset: {fileID: 0}
 --- !u!114 &2211674601078131229 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 7923854003312105274, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
@@ -220,5 +261,15 @@ MonoBehaviour:
 --- !u!4 &5736301114139370577 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4385716689640749430, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
+  m_PrefabInstance: {fileID: 8306429294649646375}
+  m_PrefabAsset: {fileID: 0}
+--- !u!212 &6535810505808990146 stripped
+SpriteRenderer:
+  m_CorrespondingSourceObject: {fileID: 3023463917562057445, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
+  m_PrefabInstance: {fileID: 8306429294649646375}
+  m_PrefabAsset: {fileID: 0}
+--- !u!212 &6765391019785955283 stripped
+SpriteRenderer:
+  m_CorrespondingSourceObject: {fileID: 3361130246048332532, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
   m_PrefabInstance: {fileID: 8306429294649646375}
   m_PrefabAsset: {fileID: 0}

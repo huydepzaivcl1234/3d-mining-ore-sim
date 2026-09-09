@@ -484,6 +484,42 @@ PrefabInstance:
       propertyPath: m_Name
       value: Ore Health Bar
       objectReference: {fileID: 0}
+    - target: {fileID: 7923854003312105274, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
+      propertyPath: simpleBar._healAnim
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7923854003312105274, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
+      propertyPath: simpleBar._damageAnim
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7923854003312105274, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
+      propertyPath: simpleBar._srGhostBar
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 7923854003312105274, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
+      propertyPath: simpleBar._srBackground
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 7923854003312105274, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
+      propertyPath: simpleBar._srPrimaryBar
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 7923854003312105274, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
+      propertyPath: simpleBar._healAnimDelay
+      value: 0.005
+      objectReference: {fileID: 0}
+    - target: {fileID: 7923854003312105274, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
+      propertyPath: simpleBar._damageAnimDelay
+      value: 0.005
+      objectReference: {fileID: 0}
+    - target: {fileID: 7923854003312105274, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
+      propertyPath: simpleBar._healAnimDuration
+      value: 0.01
+      objectReference: {fileID: 0}
+    - target: {fileID: 7923854003312105274, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
+      propertyPath: simpleBar._damageAnimDuration
+      value: 0.01
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

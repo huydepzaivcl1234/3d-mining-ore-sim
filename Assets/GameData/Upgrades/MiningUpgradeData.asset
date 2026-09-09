@@ -56,7 +56,7 @@ MonoBehaviour:
     costIncreasePerPurchase: 10
   luckyBlockDropChance:
     displayName: "T\u0103ng t\u1EC9 l\u1EC7 Lucky Block"
-    percentPerStack: 5
+    percentPerStack: 10
     maximumStacks: 100
     startingCost: 25
     costIncreasePerPurchase: 10
