@@ -87,6 +87,9 @@
   pushing is disabled in `NpcData` to prevent Rigidbody contact jitter; separation keeps miners apart.
 - Ore depletion raises a reward event. `OreSpawner` creates the authored TMP reward popup prefab at
   the ore collider top, and popup motion, lifetime, scale, text, and colors live in `MiningUiData`.
+- `MiningMoneyFormatter` is the single formatter for balance, prices, Rebirth requirements,
+  and ore reward popups. Compact values place the suffix at the decimal point
+  (`1,000 -> 1K`, `1,500 -> 1K5`) and cover the wallet's full finite float range.
 - Rarity is explicit (`Common`, `Uncommon`, `Rare`, `Epic`, `Legendary`). Zero-weight Rare+
   ores unlock progressively through the rare-spawn upgrade using rarity rules in `OreSpawnData`.
 - Upgrade data also controls ore-spawn speed and NPC movement speed stacks, costs, and per-stack percentages.
@@ -143,6 +146,11 @@
 - Preserve Unity-generated `.meta` GUIDs.
 - Binary Blender/image files are managed through Git LFS.
 - Do not stage unrelated Unity settings changes when implementing isolated features.
+- Preserve designer-authored UI positions, sizes, anchors, pivots, and assigned icon sprites
+  unless the user explicitly requests that exact property to change.
+- UI refresh/setup tools must reuse and update the existing named UI object in place. They must
+  not create a duplicate UI object, reset unrelated layout values, or overwrite a designer icon.
+- Keep every UI change limited to the exact requested target; preserve all unrelated UI state.
 
 ## Unknowns And Confidence
 
