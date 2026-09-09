@@ -18,6 +18,7 @@ namespace MiningSimulator.Ores
         [SerializeField, Min(0)] private int npcCapacityStacks;
         [SerializeField, Min(0)] private int luckyBlockRewardStacks;
         [SerializeField, Min(0)] private int luckyBlockDropChanceStacks;
+        [SerializeField, Min(0)] private int npcExperienceStacks;
 
         private float permanentMoneyMultiplier = 1f;
 
@@ -38,6 +39,7 @@ namespace MiningSimulator.Ores
                 MiningUpgradeType.NpcCapacity => npcCapacityStacks,
                 MiningUpgradeType.LuckyBlockReward => luckyBlockRewardStacks,
                 MiningUpgradeType.LuckyBlockDropChance => luckyBlockDropChanceStacks,
+                MiningUpgradeType.NpcExperience => npcExperienceStacks,
                 _ => 0
             };
         }
@@ -97,6 +99,9 @@ namespace MiningSimulator.Ores
                 case MiningUpgradeType.LuckyBlockDropChance:
                     luckyBlockDropChanceStacks++;
                     break;
+                case MiningUpgradeType.NpcExperience:
+                    npcExperienceStacks++;
+                    break;
             }
 
             UpgradesChanged?.Invoke();
@@ -152,6 +157,7 @@ namespace MiningSimulator.Ores
             npcCapacityStacks = 0;
             luckyBlockRewardStacks = 0;
             luckyBlockDropChanceStacks = 0;
+            npcExperienceStacks = 0;
             UpgradesChanged?.Invoke();
         }
 
@@ -175,6 +181,8 @@ namespace MiningSimulator.Ores
                 upgradeData.LuckyBlockReward.MaximumStacks);
             luckyBlockDropChanceStacks = Mathf.Clamp(luckyBlockDropChanceStacks, 0,
                 upgradeData.LuckyBlockDropChance.MaximumStacks);
+            npcExperienceStacks = Mathf.Clamp(npcExperienceStacks, 0,
+                upgradeData.NpcExperience.MaximumStacks);
         }
     }
 }

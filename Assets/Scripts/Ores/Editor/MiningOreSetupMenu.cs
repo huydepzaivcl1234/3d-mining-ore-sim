@@ -44,6 +44,8 @@ namespace MiningSimulator.Editor
             UiPrefabFolder + "/UpgradeLuckyBlockReward.png";
         private const string LuckyBlockDropChanceIconPath =
             UiPrefabFolder + "/UpgradeLuckyBlockDropChance.png";
+        private const string NpcExperienceIconPath =
+            UiPrefabFolder + "/UpgradeNpcExperience.png";
         private const string NpcPrefabPath = NpcPrefabFolder + "/MiningNpc.prefab";
         private const string RuntimePrefabPath = SystemPrefabFolder + "/MiningRuntime.prefab";
         private const string RewardPopupPrefabPath = UiPrefabFolder + "/OreRewardPopup.prefab";
@@ -146,6 +148,7 @@ namespace MiningSimulator.Editor
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             RefreshLuckyBlockUpgradeUiInActiveScene(logMissingSceneObjects: false);
+            RefreshNpcProgressionUiInActiveScene(logMissingSceneObjects: false);
             Debug.Log($"Mining ore setup complete: {StarterOres.Length} independent OreData assets and prefabs.");
         }
 
@@ -153,6 +156,12 @@ namespace MiningSimulator.Editor
         public static void RefreshLuckyBlockUpgradeUi()
         {
             RefreshLuckyBlockUpgradeUiInActiveScene(logMissingSceneObjects: true);
+        }
+
+        [MenuItem("Mining Simulator/Setup/Refresh NPC Progression UI")]
+        public static void RefreshNpcProgressionUi()
+        {
+            RefreshNpcProgressionUiInActiveScene(logMissingSceneObjects: true);
         }
 
         // Entry point used by Unity batch mode and CI.
@@ -485,6 +494,90 @@ namespace MiningSimulator.Editor
                 AssetDatabase.LoadAssetAtPath<Sprite>(LuckyBlockRewardIconPath));
             SetReferenceIfMissing(serialized.FindProperty("luckyBlockDropChanceIconSprite"),
                 AssetDatabase.LoadAssetAtPath<Sprite>(LuckyBlockDropChanceIconPath));
+            if (serialized.ApplyModifiedPropertiesWithoutUndo())
+            {
+                EditorUtility.SetDirty(uiData);
+            }
+        }
+
+        private static void RefreshNpcProgressionUiInActiveScene(bool logMissingSceneObjects)
+        {
+            NpcShop shop = UnityEngine.Object.FindFirstObjectByType<NpcShop>(
+                FindObjectsInactive.Include);
+            OreSpawner oreSpawner = UnityEngine.Object.FindFirstObjectByType<OreSpawner>(
+                FindObjectsInactive.Include);
+            MiningUpgradeSystem upgradeSystem =
+                UnityEngine.Object.FindFirstObjectByType<MiningUpgradeSystem>(
+                    FindObjectsInactive.Include);
+            MiningUpgradePanel upgradePanel =
+                UnityEngine.Object.FindFirstObjectByType<MiningUpgradePanel>(
+                    FindObjectsInactive.Include);
+            MiningRebirthSystem rebirthSystem =
+                UnityEngine.Object.FindFirstObjectByType<MiningRebirthSystem>(
+                    FindObjectsInactive.Include);
+            PlayerWallet wallet = UnityEngine.Object.FindFirstObjectByType<PlayerWallet>(
+                FindObjectsInactive.Include);
+            NpcData npcData = AssetDatabase.LoadAssetAtPath<NpcData>(NpcDataPath);
+            MiningUpgradeData upgradeData =
+                AssetDatabase.LoadAssetAtPath<MiningUpgradeData>(UpgradeDataPath);
+            MiningUiData uiData = AssetDatabase.LoadAssetAtPath<MiningUiData>(UiDataPath);
+
+            if (shop == null || oreSpawner == null || upgradeSystem == null ||
+                upgradePanel == null || wallet == null || npcData == null ||
+                upgradeData == null || uiData == null)
+            {
+                if (logMissingSceneObjects)
+                {
+                    Debug.LogError("Cannot refresh NPC progression UI. The active Scene must " +
+                                   "contain NpcShop, OreSpawner, PlayerWallet, " +
+                                   "MiningUpgradeSystem and MiningUpgradePanel.");
+                }
+                return;
+            }
+
+            AssignNpcExperienceIconIfMissing(uiData);
+            GameObject sceneRoot = shop.transform.root.gameObject;
+            NpcProgressionSystem progression = shop.GetComponent<NpcProgressionSystem>();
+            if (progression == null)
+            {
+                progression = Undo.AddComponent<NpcProgressionSystem>(shop.gameObject);
+            }
+
+            var progressionSerialized = new SerializedObject(progression);
+            SetReferenceIfMissing(progressionSerialized.FindProperty("oreSpawner"), oreSpawner);
+            SetReferenceIfMissing(progressionSerialized.FindProperty("upgradeSystem"), upgradeSystem);
+            SetReferenceIfMissing(progressionSerialized.FindProperty("npcData"), npcData);
+            progressionSerialized.ApplyModifiedPropertiesWithoutUndo();
+
+            var shopSerialized = new SerializedObject(shop);
+            SetReferenceIfMissing(shopSerialized.FindProperty("progressionSystem"), progression);
+            shopSerialized.ApplyModifiedPropertiesWithoutUndo();
+
+            if (rebirthSystem != null)
+            {
+                var rebirthSerialized = new SerializedObject(rebirthSystem);
+                SetReferenceIfMissing(rebirthSerialized.FindProperty("npcProgressionSystem"),
+                    progression);
+                rebirthSerialized.ApplyModifiedPropertiesWithoutUndo();
+            }
+
+            ConfigureNpcProgressionHud(sceneRoot, progression, shop, npcData, uiData);
+            ConfigureUpgradePanel(sceneRoot, upgradePanel, upgradeSystem, wallet, upgradeData, uiData);
+            EditorUtility.SetDirty(progression);
+            EditorUtility.SetDirty(shop);
+            EditorUtility.SetDirty(upgradePanel);
+            EditorSceneManager.MarkSceneDirty(shop.gameObject.scene);
+            AssetDatabase.SaveAssets();
+            Selection.activeTransform = sceneRoot.transform.Find(HudCanvasName + "/NPC Progress HUD");
+            Debug.Log("NPC level, power, smooth XP HUD and XP upgrade were refreshed in the active Scene.",
+                progression);
+        }
+
+        private static void AssignNpcExperienceIconIfMissing(MiningUiData uiData)
+        {
+            var serialized = new SerializedObject(uiData);
+            SetReferenceIfMissing(serialized.FindProperty("npcExperienceIconSprite"),
+                AssetDatabase.LoadAssetAtPath<Sprite>(NpcExperienceIconPath));
             if (serialized.ApplyModifiedPropertiesWithoutUndo())
             {
                 EditorUtility.SetDirty(uiData);
@@ -1002,7 +1095,7 @@ namespace MiningSimulator.Editor
             panelRect.anchoredPosition = Vector2.zero;
             Vector2 upgradePanelSize = uiData.PanelSize;
             upgradePanelSize.y = Mathf.Max(upgradePanelSize.y,
-                uiData.ExpandedUpgradePanelMinimumHeight);
+                uiData.ExperienceUpgradePanelMinimumHeight);
             panelRect.sizeDelta = upgradePanelSize;
             Image panelImage = upgradePanelTransform.GetComponent<Image>() ??
                                upgradePanelTransform.gameObject.AddComponent<Image>();
@@ -1071,10 +1164,16 @@ namespace MiningSimulator.Editor
                 GetUpgradePreview(upgradeData.LuckyBlockDropChance),
                 luckyBlockDropChanceIcon,
                 uiData.LuckyBlockDropChanceIconFallback, uiData);
+            Sprite npcExperienceIcon = uiData.NpcExperienceIconSprite != null
+                ? uiData.NpcExperienceIconSprite
+                : AssetDatabase.LoadAssetAtPath<Sprite>(NpcExperienceIconPath);
+            EnsureUpgradeCard(upgradePanelTransform, "NPC Experience Upgrade", 8,
+                GetUpgradePreview(upgradeData.NpcExperience), npcExperienceIcon,
+                uiData.NpcExperienceIconFallback, uiData);
 
             Vector2 backButtonPosition = uiData.BackButtonPosition;
             backButtonPosition.y = Mathf.Min(backButtonPosition.y,
-                uiData.ExpandedUpgradeBackButtonY);
+                uiData.ExperienceUpgradeBackButtonY);
             Button backButton = EnsureStyledButton(upgradePanelTransform, "Back", backButtonPosition,
                 uiData.BackButtonSize, uiData.NavigationButtonColor, uiData.TitleTextColor, uiData);
             TextMeshProUGUI backLabel = backButton.GetComponentInChildren<TextMeshProUGUI>(true);
@@ -1112,7 +1211,83 @@ namespace MiningSimulator.Editor
             WireUpgradeButton(serialized, "luckyBlockDropChanceButton",
                 "luckyBlockDropChanceLabel",
                 upgradePanelTransform.Find("Lucky Block Drop Chance Upgrade"));
+            WireUpgradeButton(serialized, "npcExperienceButton", "npcExperienceLabel",
+                upgradePanelTransform.Find("NPC Experience Upgrade"));
             serialized.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static void ConfigureNpcProgressionHud(GameObject sceneRoot,
+            NpcProgressionSystem progressionSystem, NpcShop shop, NpcData npcData,
+            MiningUiData uiData)
+        {
+            Transform canvas = sceneRoot.transform.Find(HudCanvasName);
+            if (canvas == null || uiData == null)
+            {
+                return;
+            }
+
+            Transform hud = EnsureUiObject(canvas, "NPC Progress HUD", typeof(Image),
+                typeof(NpcProgressionHud));
+            ConfigureTopLeftRect(hud, uiData.NpcProgressHudPosition, uiData.NpcProgressHudSize);
+            Image hudImage = hud.GetComponent<Image>();
+            hudImage.color = uiData.NpcProgressPanelColor;
+            hudImage.raycastTarget = false;
+            ApplyOutline(hud.gameObject, uiData.OutlineColor, uiData.OutlineThickness);
+
+            TextMeshProUGUI levelLabel = EnsureText(hud, "Level");
+            ConfigureTopLeftRect(levelLabel.transform, uiData.NpcProgressTextPosition,
+                uiData.NpcProgressTextSize);
+            levelLabel.text = "CẤP THỢ MỎ: 1";
+            levelLabel.fontSize = uiData.NpcProgressTitleFontSize;
+            levelLabel.color = uiData.ShopTextColor;
+            levelLabel.alignment = TextAlignmentOptions.Left;
+
+            TextMeshProUGUI powerLabel = EnsureText(hud, "Power");
+            ConfigureTopLeftRect(powerLabel.transform, uiData.NpcPowerTextPosition,
+                uiData.NpcPowerTextSize);
+            powerLabel.text = "NPC: 0  •  POWER: 1  •  TỔNG DMG: 0";
+            powerLabel.fontSize = uiData.NpcProgressInfoFontSize;
+            powerLabel.color = uiData.ShopTextColor;
+            powerLabel.alignment = TextAlignmentOptions.Left;
+
+            Transform bar = EnsureUiObject(hud, "Experience Bar", typeof(Image));
+            ConfigureTopLeftRect(bar, uiData.NpcExperienceBarPosition,
+                uiData.NpcExperienceBarSize);
+            Image barBackground = bar.GetComponent<Image>();
+            barBackground.color = uiData.NpcExperienceBarBackgroundColor;
+            barBackground.raycastTarget = false;
+
+            Transform fillTransform = EnsureUiObject(bar, "Fill", typeof(Image));
+            StretchRect(fillTransform.GetComponent<RectTransform>());
+            Image fill = fillTransform.GetComponent<Image>();
+            fill.sprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UISprite.psd");
+            fill.type = Image.Type.Filled;
+            fill.fillMethod = Image.FillMethod.Horizontal;
+            fill.fillOrigin = 0;
+            fill.fillAmount = 0f;
+            fill.color = uiData.NpcExperienceBarColor;
+            fill.raycastTarget = false;
+
+            TextMeshProUGUI experienceLabel = EnsureText(hud, "Experience");
+            ConfigureTopLeftRect(experienceLabel.transform, uiData.NpcExperienceTextPosition,
+                uiData.NpcExperienceTextSize);
+            experienceLabel.text = "0 / 10 XP";
+            experienceLabel.fontSize = uiData.NpcProgressInfoFontSize;
+            experienceLabel.color = uiData.ShopTextColor;
+            experienceLabel.alignment = TextAlignmentOptions.Center;
+
+            NpcProgressionHud controller = hud.GetComponent<NpcProgressionHud>();
+            var serialized = new SerializedObject(controller);
+            SetReferenceIfMissing(serialized.FindProperty("progressionSystem"), progressionSystem);
+            SetReferenceIfMissing(serialized.FindProperty("npcShop"), shop);
+            SetReferenceIfMissing(serialized.FindProperty("npcData"), npcData);
+            SetReferenceIfMissing(serialized.FindProperty("uiData"), uiData);
+            SetReferenceIfMissing(serialized.FindProperty("levelLabel"), levelLabel);
+            SetReferenceIfMissing(serialized.FindProperty("powerLabel"), powerLabel);
+            SetReferenceIfMissing(serialized.FindProperty("experienceLabel"), experienceLabel);
+            SetReferenceIfMissing(serialized.FindProperty("experienceFill"), fill);
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(controller);
         }
 
         private static Button EnsureUpgradeCard(Transform parent, string name, int index,

@@ -10,6 +10,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private PlayerWallet wallet;
         [SerializeField] private MiningUpgradeSystem upgradeSystem;
         [SerializeField] private MiningRebirthData rebirthData;
+        [SerializeField] private NpcProgressionSystem npcProgressionSystem;
         private int completedRebirths;
 
         public int CompletedRebirths => completedRebirths;
@@ -65,6 +66,7 @@ namespace MiningSimulator.Ores
             SaveProgress();
             ApplyPermanentBoost();
             upgradeSystem?.ResetAllUpgrades();
+            npcProgressionSystem?.ResetProgression();
             wallet.ResetMoney();
             RebirthCompleted?.Invoke(completedRebirths);
             StateChanged?.Invoke();

@@ -73,6 +73,26 @@ namespace MiningSimulator.Ores
         [SerializeField] private string npcCapacityIconFallback = "+1";
         [SerializeField] private string luckyBlockRewardIconFallback = "L$";
         [SerializeField] private string luckyBlockDropChanceIconFallback = "L%";
+        [SerializeField] private Sprite npcExperienceIconSprite;
+        [SerializeField] private string npcExperienceIconFallback = "XP";
+
+        [Header("NPC Progress HUD")]
+        [SerializeField] private Vector2 npcProgressHudPosition = new(370f, -24f);
+        [SerializeField] private Vector2 npcProgressHudSize = new(380f, 170f);
+        [SerializeField] private Vector2 npcProgressTextPosition = new(18f, -14f);
+        [SerializeField] private Vector2 npcProgressTextSize = new(344f, 30f);
+        [SerializeField] private Vector2 npcPowerTextPosition = new(18f, -50f);
+        [SerializeField] private Vector2 npcPowerTextSize = new(344f, 30f);
+        [SerializeField] private Vector2 npcExperienceBarPosition = new(18f, -94f);
+        [SerializeField] private Vector2 npcExperienceBarSize = new(344f, 28f);
+        [SerializeField] private Vector2 npcExperienceTextPosition = new(18f, -126f);
+        [SerializeField] private Vector2 npcExperienceTextSize = new(344f, 24f);
+        [Min(1f), SerializeField] private float npcProgressTitleFontSize = 21f;
+        [Min(1f), SerializeField] private float npcProgressInfoFontSize = 17f;
+        [Min(0.01f), SerializeField] private float npcExperienceBarAnimationSpeed = 2.5f;
+        [SerializeField] private Color npcProgressPanelColor = new(0.035f, 0.045f, 0.06f, 0.94f);
+        [SerializeField] private Color npcExperienceBarColor = new(0.12f, 0.9f, 0.22f, 1f);
+        [SerializeField] private Color npcExperienceBarBackgroundColor = new(0.18f, 0.22f, 0.24f, 1f);
 
         [Header("Smooth Button Animation")]
         [SerializeField] private bool smoothButtonAnimationEnabled = true;
@@ -143,6 +163,9 @@ namespace MiningSimulator.Ores
         [Min(1f), SerializeField] private float expandedUpgradePanelMinimumHeight = 960f;
         [Tooltip("Back button Y position used when all Lucky Block upgrade cards are present.")]
         [SerializeField] private float expandedUpgradeBackButtonY = -878f;
+        [Tooltip("Minimum panel height when the NPC experience upgrade card is present.")]
+        [Min(1f), SerializeField] private float experienceUpgradePanelMinimumHeight = 1060f;
+        [SerializeField] private float experienceUpgradeBackButtonY = -978f;
         [SerializeField] private Vector2 openButtonSize = new(294f, 46f);
         [SerializeField] private Vector2 openButtonPosition = new(18f, -266f);
         [Min(0f), SerializeField] private float outlineThickness = 4f;
@@ -249,6 +272,7 @@ namespace MiningSimulator.Ores
         public Sprite NpcCapacityIconSprite => npcCapacityIconSprite;
         public Sprite LuckyBlockRewardIconSprite => luckyBlockRewardIconSprite;
         public Sprite LuckyBlockDropChanceIconSprite => luckyBlockDropChanceIconSprite;
+        public Sprite NpcExperienceIconSprite => npcExperienceIconSprite;
         public string MoneyRewardIconFallback => moneyRewardIconFallback;
         public string RareOreIconFallback => rareOreIconFallback;
         public string OreDamageIconFallback => oreDamageIconFallback;
@@ -259,6 +283,24 @@ namespace MiningSimulator.Ores
             luckyBlockRewardIconFallback) ? "L$" : luckyBlockRewardIconFallback;
         public string LuckyBlockDropChanceIconFallback => string.IsNullOrWhiteSpace(
             luckyBlockDropChanceIconFallback) ? "L%" : luckyBlockDropChanceIconFallback;
+        public string NpcExperienceIconFallback => string.IsNullOrWhiteSpace(
+            npcExperienceIconFallback) ? "XP" : npcExperienceIconFallback;
+        public Vector2 NpcProgressHudPosition => npcProgressHudPosition;
+        public Vector2 NpcProgressHudSize => npcProgressHudSize;
+        public Vector2 NpcProgressTextPosition => npcProgressTextPosition;
+        public Vector2 NpcProgressTextSize => npcProgressTextSize;
+        public Vector2 NpcPowerTextPosition => npcPowerTextPosition;
+        public Vector2 NpcPowerTextSize => npcPowerTextSize;
+        public Vector2 NpcExperienceBarPosition => npcExperienceBarPosition;
+        public Vector2 NpcExperienceBarSize => npcExperienceBarSize;
+        public Vector2 NpcExperienceTextPosition => npcExperienceTextPosition;
+        public Vector2 NpcExperienceTextSize => npcExperienceTextSize;
+        public float NpcProgressTitleFontSize => npcProgressTitleFontSize;
+        public float NpcProgressInfoFontSize => npcProgressInfoFontSize;
+        public float NpcExperienceBarAnimationSpeed => npcExperienceBarAnimationSpeed;
+        public Color NpcProgressPanelColor => npcProgressPanelColor;
+        public Color NpcExperienceBarColor => npcExperienceBarColor;
+        public Color NpcExperienceBarBackgroundColor => npcExperienceBarBackgroundColor;
         public bool SmoothButtonAnimationEnabled => smoothButtonAnimationEnabled;
         public float ButtonHoverScale => buttonHoverScale;
         public float ButtonHoverPunchScale => buttonHoverPunchScale;
@@ -318,6 +360,12 @@ namespace MiningSimulator.Ores
         public float ExpandedUpgradeBackButtonY => expandedUpgradeBackButtonY < 0f
             ? expandedUpgradeBackButtonY
             : -878f;
+        public float ExperienceUpgradePanelMinimumHeight => Mathf.Max(
+            ExpandedUpgradePanelMinimumHeight,
+            experienceUpgradePanelMinimumHeight > 0f ? experienceUpgradePanelMinimumHeight : 1060f);
+        public float ExperienceUpgradeBackButtonY => experienceUpgradeBackButtonY < 0f
+            ? experienceUpgradeBackButtonY
+            : -978f;
         public Vector2 OpenButtonSize => openButtonSize;
         public Vector2 OpenButtonPosition => openButtonPosition;
         public float OutlineThickness => outlineThickness;
@@ -370,6 +418,8 @@ namespace MiningSimulator.Ores
             panelSize.y = Mathf.Max(1f, panelSize.y);
             expandedUpgradePanelMinimumHeight = Mathf.Max(panelSize.y,
                 expandedUpgradePanelMinimumHeight);
+            experienceUpgradePanelMinimumHeight = Mathf.Max(expandedUpgradePanelMinimumHeight,
+                experienceUpgradePanelMinimumHeight);
             headerSize.x = Mathf.Max(1f, headerSize.x);
             headerSize.y = Mathf.Max(1f, headerSize.y);
             cardSize.x = Mathf.Max(1f, cardSize.x);
@@ -382,6 +432,19 @@ namespace MiningSimulator.Ores
             upgradeCardIconSize.x = Mathf.Max(1f, upgradeCardIconSize.x);
             upgradeCardIconSize.y = Mathf.Max(1f, upgradeCardIconSize.y);
             upgradeCardIconPadding = Mathf.Max(0f, upgradeCardIconPadding);
+            npcProgressHudSize.x = Mathf.Max(1f, npcProgressHudSize.x);
+            npcProgressHudSize.y = Mathf.Max(1f, npcProgressHudSize.y);
+            npcProgressTextSize.x = Mathf.Max(1f, npcProgressTextSize.x);
+            npcProgressTextSize.y = Mathf.Max(1f, npcProgressTextSize.y);
+            npcPowerTextSize.x = Mathf.Max(1f, npcPowerTextSize.x);
+            npcPowerTextSize.y = Mathf.Max(1f, npcPowerTextSize.y);
+            npcExperienceBarSize.x = Mathf.Max(1f, npcExperienceBarSize.x);
+            npcExperienceBarSize.y = Mathf.Max(1f, npcExperienceBarSize.y);
+            npcExperienceTextSize.x = Mathf.Max(1f, npcExperienceTextSize.x);
+            npcExperienceTextSize.y = Mathf.Max(1f, npcExperienceTextSize.y);
+            npcProgressTitleFontSize = Mathf.Max(1f, npcProgressTitleFontSize);
+            npcProgressInfoFontSize = Mathf.Max(1f, npcProgressInfoFontSize);
+            npcExperienceBarAnimationSpeed = Mathf.Max(0.01f, npcExperienceBarAnimationSpeed);
             buttonHoverScale = Mathf.Max(1f, buttonHoverScale);
             buttonHoverPunchScale = Mathf.Max(buttonHoverScale, buttonHoverPunchScale);
             buttonPressedScale = Mathf.Clamp(buttonPressedScale, 0.5f, 1f);

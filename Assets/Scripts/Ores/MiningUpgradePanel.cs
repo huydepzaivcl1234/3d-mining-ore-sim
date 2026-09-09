@@ -25,6 +25,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private Button npcCapacityButton;
         [SerializeField] private Button luckyBlockRewardButton;
         [SerializeField] private Button luckyBlockDropChanceButton;
+        [SerializeField] private Button npcExperienceButton;
         [SerializeField] private TextMeshProUGUI moneyRewardLabel;
         [SerializeField] private TextMeshProUGUI rareOreSpawnLabel;
         [SerializeField] private TextMeshProUGUI oreDamageLabel;
@@ -33,6 +34,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private TextMeshProUGUI npcCapacityLabel;
         [SerializeField] private TextMeshProUGUI luckyBlockRewardLabel;
         [SerializeField] private TextMeshProUGUI luckyBlockDropChanceLabel;
+        [SerializeField] private TextMeshProUGUI npcExperienceLabel;
         [SerializeField] private bool openOnPlay;
 
         [Header("Editable Text")]
@@ -100,6 +102,7 @@ namespace MiningSimulator.Ores
             npcCapacityButton?.onClick.AddListener(BuyNpcCapacity);
             luckyBlockRewardButton?.onClick.AddListener(BuyLuckyBlockReward);
             luckyBlockDropChanceButton?.onClick.AddListener(BuyLuckyBlockDropChance);
+            npcExperienceButton?.onClick.AddListener(BuyNpcExperience);
         }
 
         private void RemoveListeners()
@@ -115,6 +118,7 @@ namespace MiningSimulator.Ores
             npcCapacityButton?.onClick.RemoveListener(BuyNpcCapacity);
             luckyBlockRewardButton?.onClick.RemoveListener(BuyLuckyBlockReward);
             luckyBlockDropChanceButton?.onClick.RemoveListener(BuyLuckyBlockDropChance);
+            npcExperienceButton?.onClick.RemoveListener(BuyNpcExperience);
         }
 
         private void OpenPanel()
@@ -158,6 +162,7 @@ namespace MiningSimulator.Ores
         private void BuyNpcCapacity() => Buy(MiningUpgradeType.NpcCapacity);
         private void BuyLuckyBlockReward() => Buy(MiningUpgradeType.LuckyBlockReward);
         private void BuyLuckyBlockDropChance() => Buy(MiningUpgradeType.LuckyBlockDropChance);
+        private void BuyNpcExperience() => Buy(MiningUpgradeType.NpcExperience);
 
         private void Buy(MiningUpgradeType type)
         {
@@ -179,6 +184,8 @@ namespace MiningSimulator.Ores
                 luckyBlockRewardLabel);
             RefreshUpgrade(MiningUpgradeType.LuckyBlockDropChance, luckyBlockDropChanceButton,
                 luckyBlockDropChanceLabel);
+            RefreshUpgrade(MiningUpgradeType.NpcExperience, npcExperienceButton,
+                npcExperienceLabel);
         }
 
         private void RefreshCapacityUpgrade()

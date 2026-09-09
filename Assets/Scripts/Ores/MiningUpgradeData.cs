@@ -12,7 +12,8 @@ namespace MiningSimulator.Ores
         NpcMoveSpeed = 4,
         NpcCapacity = 5,
         LuckyBlockReward = 6,
-        LuckyBlockDropChance = 7
+        LuckyBlockDropChance = 7,
+        NpcExperience = 8
     }
 
     [Serializable]
@@ -93,6 +94,10 @@ namespace MiningSimulator.Ores
         [SerializeField] private MiningUpgradeDefinition luckyBlockDropChance =
             new("Tăng tỉ lệ Lucky Block", 1f);
 
+        [Header("NPC Experience")]
+        [SerializeField] private MiningUpgradeDefinition npcExperience =
+            new("Tăng kinh nghiệm NPC", 1f);
+
         public MiningUpgradeDefinition MoneyReward => moneyReward;
         public MiningUpgradeDefinition RareOreSpawn => rareOreSpawn;
         public MiningUpgradeDefinition OreDamage => oreDamage;
@@ -103,6 +108,8 @@ namespace MiningSimulator.Ores
             new MiningUpgradeDefinition("Tăng tiền Lucky Block", 1f);
         public MiningUpgradeDefinition LuckyBlockDropChance => luckyBlockDropChance ??=
             new MiningUpgradeDefinition("Tăng tỉ lệ Lucky Block", 1f);
+        public MiningUpgradeDefinition NpcExperience => npcExperience ??=
+            new MiningUpgradeDefinition("Tăng kinh nghiệm NPC", 1f);
 
         public MiningUpgradeDefinition GetDefinition(MiningUpgradeType type)
         {
@@ -116,6 +123,7 @@ namespace MiningSimulator.Ores
                 MiningUpgradeType.NpcCapacity => npcCapacity,
                 MiningUpgradeType.LuckyBlockReward => LuckyBlockReward,
                 MiningUpgradeType.LuckyBlockDropChance => LuckyBlockDropChance,
+                MiningUpgradeType.NpcExperience => NpcExperience,
                 _ => moneyReward
             };
         }
@@ -130,6 +138,7 @@ namespace MiningSimulator.Ores
             npcCapacity?.Validate();
             LuckyBlockReward.Validate();
             LuckyBlockDropChance.Validate();
+            NpcExperience.Validate();
         }
     }
 }

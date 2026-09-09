@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace MiningSimulator.Ores
@@ -27,6 +28,12 @@ namespace MiningSimulator.Ores
         [Min(1), SerializeField] private int damagePerHit = 2;
         [Min(0.05f), SerializeField] private float secondsPerHit = 0.65f;
         [Min(0.05f), SerializeField] private float targetRefreshInterval = 0.35f;
+
+        [Header("Level And Experience")]
+        [Min(1), SerializeField] private int maximumLevel = 100;
+        [Min(1), SerializeField] private int startingExperienceRequirement = 10;
+        [Min(1f), SerializeField] private float experienceRequirementGrowth = 1.2f;
+        [Min(1), SerializeField] private int miningPowerPerLevel = 1;
 
         [Header("Ore Sight")]
         [Min(0.05f), SerializeField] private float oreSightProbeRadius = 0.35f;
@@ -92,6 +99,10 @@ namespace MiningSimulator.Ores
         public int DamagePerHit => damagePerHit;
         public float SecondsPerHit => secondsPerHit;
         public float TargetRefreshInterval => targetRefreshInterval;
+        public int MaximumLevel => maximumLevel;
+        public int StartingExperienceRequirement => startingExperienceRequirement;
+        public float ExperienceRequirementGrowth => experienceRequirementGrowth;
+        public int MiningPowerPerLevel => miningPowerPerLevel;
         public float OreSightProbeRadius => oreSightProbeRadius;
         public float OreSightDistance => oreSightDistance;
         public float OreSightOriginHeight => oreSightOriginHeight;
@@ -125,6 +136,14 @@ namespace MiningSimulator.Ores
         public Vector3 ToolHeadLocalPosition => toolHeadLocalPosition;
         public Vector3 ToolHeadLocalScale => toolHeadLocalScale;
 
+        public int GetExperienceRequirement(int level)
+        {
+            int safeLevel = Mathf.Max(1, level);
+            double requirement = startingExperienceRequirement *
+                                 Math.Pow(experienceRequirementGrowth, safeLevel - 1);
+            return (int)Math.Min(int.MaxValue, Math.Ceiling(requirement));
+        }
+
         private void OnValidate()
         {
             purchaseCost = Mathf.Max(0, purchaseCost);
@@ -144,6 +163,10 @@ namespace MiningSimulator.Ores
             damagePerHit = Mathf.Max(1, damagePerHit);
             secondsPerHit = Mathf.Max(0.05f, secondsPerHit);
             targetRefreshInterval = Mathf.Max(0.05f, targetRefreshInterval);
+            maximumLevel = Mathf.Max(1, maximumLevel);
+            startingExperienceRequirement = Mathf.Max(1, startingExperienceRequirement);
+            experienceRequirementGrowth = Mathf.Max(1f, experienceRequirementGrowth);
+            miningPowerPerLevel = Mathf.Max(1, miningPowerPerLevel);
             oreSightProbeRadius = Mathf.Max(0.05f, oreSightProbeRadius);
             oreSightDistance = Mathf.Max(miningRange, oreSightDistance);
             oreSightOriginHeight = Mathf.Max(0f, oreSightOriginHeight);

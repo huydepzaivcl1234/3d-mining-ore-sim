@@ -44,6 +44,10 @@ namespace MiningSimulator.Ores
         [Header("Economy")]
         [Min(0), SerializeField] private int baseSellValue = 1;
 
+        [Header("Experience")]
+        [Tooltip("Base NPC experience awarded whenever this ore is depleted.")]
+        [Min(0), SerializeField] private int experienceReward = 1;
+
         [Header("Depletion")]
         [Min(0f), SerializeField] private float destroyDelay;
 
@@ -76,6 +80,7 @@ namespace MiningSimulator.Ores
         public int MaxHealth => durability;
         public int ClickDamage => clickDamage;
         public int BaseSellValue => baseSellValue;
+        public int ExperienceReward => experienceReward;
         public float DestroyDelay => destroyDelay;
         public int MaximumMiningNpcs => maximumMiningNpcs;
         public float NpcStandDistance => npcStandDistance;
@@ -98,6 +103,7 @@ namespace MiningSimulator.Ores
             durability = Mathf.Max(1, durability);
             clickDamage = Mathf.Max(1, clickDamage);
             baseSellValue = Mathf.Max(0, baseSellValue);
+            experienceReward = Mathf.Max(0, experienceReward);
             destroyDelay = Mathf.Max(0f, destroyDelay);
             maximumMiningNpcs = Mathf.Max(1, maximumMiningNpcs);
             npcStandDistance = Mathf.Max(0.1f, npcStandDistance);

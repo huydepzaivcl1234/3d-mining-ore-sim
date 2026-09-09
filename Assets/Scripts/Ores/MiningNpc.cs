@@ -13,6 +13,7 @@ namespace MiningSimulator.Ores
         [Header("References")]
         [SerializeField] private OreSpawner oreSpawner;
         [SerializeField] private NpcData npcData;
+        [SerializeField] private NpcProgressionSystem progressionSystem;
         [SerializeField] private Transform toolPivot;
 
         private readonly RaycastHit[] obstacleHits = new RaycastHit[32];
@@ -50,21 +51,35 @@ namespace MiningSimulator.Ores
 
         public void Initialize(OreSpawner targetSpawner, NpcData targetNpcData)
         {
-            Initialize(targetSpawner, targetNpcData, null);
+            Initialize(targetSpawner, targetNpcData, null, null);
         }
 
         public void Initialize(OreSpawner targetSpawner, NpcData targetNpcData,
             LuckyBlockDropSystem targetLuckyBlockSystem)
         {
+            Initialize(targetSpawner, targetNpcData, targetLuckyBlockSystem, null);
+        }
+
+        public void Initialize(OreSpawner targetSpawner, NpcData targetNpcData,
+            LuckyBlockDropSystem targetLuckyBlockSystem,
+            NpcProgressionSystem targetProgressionSystem)
+        {
             ReleaseTarget();
             oreSpawner = targetSpawner;
             npcData = targetNpcData;
             luckyBlockSystem = targetLuckyBlockSystem;
+            progressionSystem = targetProgressionSystem != null
+                ? targetProgressionSystem
+                : FindFirstObjectByType<NpcProgressionSystem>(FindObjectsInactive.Include);
             nextTargetRefreshTime = 0f;
             ConfigurePhysics();
             RegisterNpcCollisionPairing();
             ResetProgressTracking();
         }
+
+        private int CurrentMiningPower => progressionSystem != null
+            ? progressionSystem.CurrentMiningPower
+            : npcData != null ? npcData.MiningPower : 1;
 
         private void Awake()
         {
@@ -261,12 +276,12 @@ namespace MiningSimulator.Ores
                 ? ignoredLuckyBlock
                 : null;
             bool foundOre = oreSpawner.TryReserveClosestOre(this, currentPosition,
-                npcData.MiningPower, excludedOre, out Ore ore, out int oreSlotIndex);
+                CurrentMiningPower, excludedOre, out Ore ore, out int oreSlotIndex);
             LuckyBlock block = null;
             int blockSlotIndex = -1;
             bool foundBlock = luckyBlockSystem != null &&
                               luckyBlockSystem.TryReserveClosestBlock(this, currentPosition,
-                                  npcData.MiningPower, excludedBlock, out block,
+                                  CurrentMiningPower, excludedBlock, out block,
                                   out blockSlotIndex);
 
             if (foundOre && foundBlock)
@@ -300,7 +315,7 @@ namespace MiningSimulator.Ores
                 return ore == targetOre;
             }
 
-            if (!oreSpawner.TryReserveOre(this, ore, npcData.MiningPower, out int slotIndex))
+            if (!oreSpawner.TryReserveOre(this, ore, CurrentMiningPower, out int slotIndex))
             {
                 return false;
             }
@@ -378,13 +393,13 @@ namespace MiningSimulator.Ores
         {
             return npcData != null && ore != null && ore.isActiveAndEnabled &&
                    !ore.IsDepleted && ore.Data != null &&
-                   ore.Data.MiningPowerRequired <= npcData.MiningPower;
+                   ore.Data.MiningPowerRequired <= CurrentMiningPower;
         }
 
         private bool CanMine(LuckyBlock block)
         {
             return npcData != null && block != null && block.isActiveAndEnabled &&
-                   !block.IsResolved && block.CanAcceptMiner(this, npcData.MiningPower);
+                   !block.IsResolved && block.CanAcceptMiner(this, CurrentMiningPower);
         }
 
         private Vector3 GetTargetPosition()
@@ -446,7 +461,7 @@ namespace MiningSimulator.Ores
                     (ore == ignoredOre && Time.time < ignoredOreUntil) ||
                     hit.distance >= closestHitDistance ||
                     !CanMine(ore) || ore.SqrDistanceToSurface(currentPosition) > miningRangeSqr ||
-                    !ore.CanAcceptMiner(this, npcData.MiningPower))
+                    !ore.CanAcceptMiner(this, CurrentMiningPower))
                 {
                     continue;
                 }
