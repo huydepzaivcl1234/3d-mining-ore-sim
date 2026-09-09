@@ -53,8 +53,8 @@ MonoBehaviour:
   npcIconFallback: N
   buyNpcIconFallback: +
   openUpgradeIconFallback: UP
-  upgradeCardIconSize: {x: 52, y: 52}
-  upgradeCardIconPosition: {x: 14, y: -13}
+  upgradeCardIconSize: {x: 86, y: 86}
+  upgradeCardIconPosition: {x: 22, y: -25}
   upgradeCardIconPadding: 1
   moneyRewardIconSprite: {fileID: 21300000, guid: 8f0be4d69f2c4bed9d87f2300af36e8e, type: 3}
   rareOreIconSprite: {fileID: 21300000, guid: 3de4b9cc4f6346bf8b55e7c1ca9bc0ad, type: 3}
@@ -74,6 +74,8 @@ MonoBehaviour:
   luckyBlockDropChanceIconFallback: L%
   npcExperienceIconSprite: {fileID: 21300000, guid: 7c995e6e67c1621b7e2318c398c8c331, type: 3}
   npcExperienceIconFallback: XP
+  itemDropChanceIconSprite: {fileID: 21300000, guid: ed19d011a7066314c5a6d50465747200, type: 3}
+  itemDropChanceIconFallback: I%
   npcProgressHudPosition: {x: 370, y: -24}
   npcProgressHudSize: {x: 380, y: 170}
   npcProgressHeaderIconPosition: {x: 10, y: -4}
@@ -174,15 +176,18 @@ MonoBehaviour:
   rewardPopupColor: {r: 1, g: 0.82, b: 0.16, a: 1}
   rewardPopupOutlineColor: {r: 0.08, g: 0.04, b: 0.01, a: 1}
   rewardPopupOutlineWidth: 0.2
-  panelSize: {x: 720, y: 780}
-  headerSize: {x: 720, y: 82}
-  cardSize: {x: 620, y: 78}
-  firstCardPosition: {x: 50, y: -104}
-  cardSpacing: 88
+  upgradePanelFullscreen: 1
+  upgradeCardColumns: 2
+  upgradeCardColumnSpacing: 920
+  panelSize: {x: 1920, y: 1080}
+  headerSize: {x: 1920, y: 82}
+  cardSize: {x: 820, y: 136}
+  firstCardPosition: {x: 90, y: -110}
+  cardSpacing: 154
   closeButtonSize: {x: 58, y: 58}
-  closeButtonPosition: {x: 678, y: -12}
-  backButtonSize: {x: 180, y: 54}
-  backButtonPosition: {x: 270, y: -706}
+  closeButtonPosition: {x: 1848, y: -12}
+  backButtonSize: {x: 220, y: 54}
+  backButtonPosition: {x: 850, y: -990}
   expandedUpgradePanelMinimumHeight: 960
   expandedUpgradeBackButtonY: -878
   experienceUpgradePanelMinimumHeight: 1060
@@ -191,9 +196,9 @@ MonoBehaviour:
   openButtonPosition: {x: 18, y: -266}
   outlineThickness: 4
   titleFontSize: 32
-  cardFontSize: 20
+  cardFontSize: 22
   navigationFontSize: 20
-  cardTextMargin: {x: 82, y: 0, z: 18, w: 0}
+  cardTextMargin: {x: 132, y: 0, z: 24, w: 0}
   panelColor: {r: 0.93, g: 0.96, b: 0.98, a: 1}
   headerColor: {r: 0.2, g: 0.65, b: 0.94, a: 1}
   outlineColor: {r: 0.025, g: 0.055, b: 0.09, a: 1}

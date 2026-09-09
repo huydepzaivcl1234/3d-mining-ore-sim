@@ -20,6 +20,7 @@ namespace MiningSimulator.Ores
         [SerializeField, Min(0)] private int luckyBlockRewardStacks;
         [SerializeField, Min(0)] private int luckyBlockDropChanceStacks;
         [SerializeField, Min(0)] private int npcExperienceStacks;
+        [SerializeField, Min(0)] private int itemDropChanceStacks;
 
         private float permanentMoneyMultiplier = 1f;
 
@@ -49,6 +50,7 @@ namespace MiningSimulator.Ores
                 MiningUpgradeType.LuckyBlockReward => luckyBlockRewardStacks,
                 MiningUpgradeType.LuckyBlockDropChance => luckyBlockDropChanceStacks,
                 MiningUpgradeType.NpcExperience => npcExperienceStacks,
+                MiningUpgradeType.ItemDropChance => itemDropChanceStacks,
                 _ => 0
             };
         }
@@ -111,6 +113,9 @@ namespace MiningSimulator.Ores
                 case MiningUpgradeType.NpcExperience:
                     npcExperienceStacks++;
                     break;
+                case MiningUpgradeType.ItemDropChance:
+                    itemDropChanceStacks++;
+                    break;
             }
 
             UpgradesChanged?.Invoke();
@@ -127,6 +132,19 @@ namespace MiningSimulator.Ores
 
             MiningUpgradeDefinition definition = upgradeData.GetDefinition(type);
             return 1f + definition.PercentPerStack * GetStacks(type) * 0.01f;
+        }
+
+        public float GetAddedPercent(MiningUpgradeType type)
+        {
+            if (upgradeData == null)
+            {
+                return 0f;
+            }
+
+            MiningUpgradeDefinition definition = upgradeData.GetDefinition(type);
+            return definition != null
+                ? definition.PercentPerStack * GetStacks(type)
+                : 0f;
         }
 
         public float CalculateMiningReward(int baseReward)
@@ -169,6 +187,7 @@ namespace MiningSimulator.Ores
             luckyBlockRewardStacks = 0;
             luckyBlockDropChanceStacks = 0;
             npcExperienceStacks = 0;
+            itemDropChanceStacks = 0;
             UpgradesChanged?.Invoke();
         }
 
@@ -194,6 +213,8 @@ namespace MiningSimulator.Ores
                 upgradeData.LuckyBlockDropChance.MaximumStacks);
             npcExperienceStacks = Mathf.Clamp(npcExperienceStacks, 0,
                 upgradeData.NpcExperience.MaximumStacks);
+            itemDropChanceStacks = Mathf.Clamp(itemDropChanceStacks, 0,
+                upgradeData.ItemDropChance.MaximumStacks);
         }
     }
 }

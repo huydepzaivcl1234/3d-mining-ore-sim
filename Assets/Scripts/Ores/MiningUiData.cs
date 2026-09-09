@@ -54,8 +54,8 @@ namespace MiningSimulator.Ores
         [SerializeField] private string openUpgradeIconFallback = "UP";
 
         [Header("Upgrade Card Icons")]
-        [SerializeField] private Vector2 upgradeCardIconSize = new(52f, 52f);
-        [SerializeField] private Vector2 upgradeCardIconPosition = new(14f, -13f);
+        [SerializeField] private Vector2 upgradeCardIconSize = new(86f, 86f);
+        [SerializeField] private Vector2 upgradeCardIconPosition = new(22f, -25f);
         [Min(0f), SerializeField] private float upgradeCardIconPadding = 1f;
         [SerializeField] private Sprite moneyRewardIconSprite;
         [SerializeField] private Sprite rareOreIconSprite;
@@ -75,6 +75,8 @@ namespace MiningSimulator.Ores
         [SerializeField] private string luckyBlockDropChanceIconFallback = "L%";
         [SerializeField] private Sprite npcExperienceIconSprite;
         [SerializeField] private string npcExperienceIconFallback = "XP";
+        [SerializeField] private Sprite itemDropChanceIconSprite;
+        [SerializeField] private string itemDropChanceIconFallback = "I%";
 
         [Header("NPC Progress HUD")]
         [SerializeField] private Vector2 npcProgressHudPosition = new(370f, -24f);
@@ -201,15 +203,18 @@ namespace MiningSimulator.Ores
         [Range(0f, 1f), SerializeField] private float rewardPopupOutlineWidth = 0.2f;
 
         [Header("Upgrade Panel Layout")]
-        [SerializeField] private Vector2 panelSize = new(720f, 780f);
-        [SerializeField] private Vector2 headerSize = new(720f, 82f);
-        [SerializeField] private Vector2 cardSize = new(620f, 78f);
-        [SerializeField] private Vector2 firstCardPosition = new(50f, -104f);
-        [Min(0f), SerializeField] private float cardSpacing = 88f;
+        [SerializeField] private bool upgradePanelFullscreen = true;
+        [Min(1), SerializeField] private int upgradeCardColumns = 2;
+        [Min(0f), SerializeField] private float upgradeCardColumnSpacing = 920f;
+        [SerializeField] private Vector2 panelSize = new(1920f, 1080f);
+        [SerializeField] private Vector2 headerSize = new(1920f, 82f);
+        [SerializeField] private Vector2 cardSize = new(820f, 136f);
+        [SerializeField] private Vector2 firstCardPosition = new(90f, -110f);
+        [Min(0f), SerializeField] private float cardSpacing = 154f;
         [SerializeField] private Vector2 closeButtonSize = new(58f, 58f);
-        [SerializeField] private Vector2 closeButtonPosition = new(678f, -12f);
-        [SerializeField] private Vector2 backButtonSize = new(180f, 54f);
-        [SerializeField] private Vector2 backButtonPosition = new(270f, -706f);
+        [SerializeField] private Vector2 closeButtonPosition = new(1848f, -12f);
+        [SerializeField] private Vector2 backButtonSize = new(220f, 54f);
+        [SerializeField] private Vector2 backButtonPosition = new(850f, -990f);
         [Tooltip("Minimum panel height used when all Lucky Block upgrade cards are present.")]
         [Min(1f), SerializeField] private float expandedUpgradePanelMinimumHeight = 960f;
         [Tooltip("Back button Y position used when all Lucky Block upgrade cards are present.")]
@@ -223,9 +228,9 @@ namespace MiningSimulator.Ores
 
         [Header("Upgrade Panel Typography")]
         [Min(1f), SerializeField] private float titleFontSize = 32f;
-        [Min(1f), SerializeField] private float cardFontSize = 20f;
+        [Min(1f), SerializeField] private float cardFontSize = 22f;
         [Min(1f), SerializeField] private float navigationFontSize = 20f;
-        [SerializeField] private Vector4 cardTextMargin = new(82f, 0f, 18f, 0f);
+        [SerializeField] private Vector4 cardTextMargin = new(132f, 0f, 24f, 0f);
 
         [Header("Upgrade Panel Colors")]
         [SerializeField] private Color panelColor = new(0.93f, 0.96f, 0.98f, 1f);
@@ -330,6 +335,7 @@ namespace MiningSimulator.Ores
         public Sprite LuckyBlockRewardIconSprite => luckyBlockRewardIconSprite;
         public Sprite LuckyBlockDropChanceIconSprite => luckyBlockDropChanceIconSprite;
         public Sprite NpcExperienceIconSprite => npcExperienceIconSprite;
+        public Sprite ItemDropChanceIconSprite => itemDropChanceIconSprite;
         public string MoneyRewardIconFallback => moneyRewardIconFallback;
         public string RareOreIconFallback => rareOreIconFallback;
         public string OreDamageIconFallback => oreDamageIconFallback;
@@ -342,6 +348,8 @@ namespace MiningSimulator.Ores
             luckyBlockDropChanceIconFallback) ? "L%" : luckyBlockDropChanceIconFallback;
         public string NpcExperienceIconFallback => string.IsNullOrWhiteSpace(
             npcExperienceIconFallback) ? "XP" : npcExperienceIconFallback;
+        public string ItemDropChanceIconFallback => string.IsNullOrWhiteSpace(
+            itemDropChanceIconFallback) ? "I%" : itemDropChanceIconFallback;
         public Vector2 NpcProgressHudPosition => npcProgressHudPosition;
         public Vector2 NpcProgressHudSize => npcProgressHudSize;
         public Vector2 NpcProgressHeaderIconPosition => npcProgressHeaderIconPosition;
@@ -443,6 +451,9 @@ namespace MiningSimulator.Ores
         public Color RewardPopupOutlineColor => rewardPopupOutlineColor;
         public float RewardPopupOutlineWidth => rewardPopupOutlineWidth;
         public Vector2 PanelSize => panelSize;
+        public bool UpgradePanelFullscreen => upgradePanelFullscreen;
+        public int UpgradeCardColumns => Mathf.Max(1, upgradeCardColumns);
+        public float UpgradeCardColumnSpacing => Mathf.Max(0f, upgradeCardColumnSpacing);
         public Vector2 HeaderSize => headerSize;
         public Vector2 CardSize => cardSize;
         public Vector2 FirstCardPosition => firstCardPosition;
@@ -477,6 +488,17 @@ namespace MiningSimulator.Ores
         public Color CloseButtonColor => closeButtonColor;
         public Color NavigationButtonColor => navigationButtonColor;
         public Color TitleTextColor => titleTextColor;
+
+        public Vector2 GetUpgradeCardPosition(int index)
+        {
+            int safeIndex = Mathf.Max(0, index);
+            int columns = UpgradeCardColumns;
+            int column = safeIndex % columns;
+            int row = safeIndex / columns;
+            return firstCardPosition + new Vector2(
+                column * UpgradeCardColumnSpacing,
+                -row * cardSpacing);
+        }
         public Vector2 RebirthHudPosition => rebirthHudPosition;
         public Vector2 RebirthHudSize => rebirthHudSize;
         public Vector2 RebirthHudHeaderSize => rebirthHudHeaderSize;

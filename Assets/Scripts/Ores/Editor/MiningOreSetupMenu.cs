@@ -67,6 +67,8 @@ namespace MiningSimulator.Editor
             UiPrefabFolder + "/UpgradeLuckyBlockDropChance.png";
         private const string NpcExperienceIconPath =
             UiPrefabFolder + "/UpgradeNpcExperience.png";
+        private const string ItemDropChanceIconPath =
+            UiPrefabFolder + "/UpgradeItemDropChance.png";
         private const string NpcPrefabPath = NpcPrefabFolder + "/MiningNpc.prefab";
         private const string RuntimePrefabPath = SystemPrefabFolder + "/MiningRuntime.prefab";
         private const string RewardPopupPrefabPath = UiPrefabFolder + "/OreRewardPopup.prefab";
@@ -177,7 +179,7 @@ namespace MiningSimulator.Editor
             Debug.Log($"Mining ore setup complete: {StarterOres.Length} independent OreData assets and prefabs.");
         }
 
-        [MenuItem("Mining Simulator/Setup/Refresh Lucky Block Upgrade UI")]
+        [MenuItem("Mining Simulator/Setup/Refresh Upgrade UI")]
         public static void RefreshLuckyBlockUpgradeUi()
         {
             RefreshLuckyBlockUpgradeUiInActiveScene(logMissingSceneObjects: true);
@@ -503,7 +505,7 @@ namespace MiningSimulator.Editor
             {
                 if (logMissingSceneObjects)
                 {
-                    Debug.LogError("Cannot refresh Lucky Block upgrade UI. The active Scene must " +
+                    Debug.LogError("Cannot refresh upgrade UI. The active Scene must " +
                                    "contain PlayerWallet, MiningUpgradeSystem and " +
                                    "MiningUpgradePanel.");
                 }
@@ -518,7 +520,7 @@ namespace MiningSimulator.Editor
             EditorSceneManager.MarkSceneDirty(panel.gameObject.scene);
             AssetDatabase.SaveAssets();
             Selection.activeTransform = sceneRoot.transform.Find(HudCanvasName + "/Upgrade Panel");
-            Debug.Log("Lucky Block upgrade cards and icons were refreshed in the active Scene.",
+            Debug.Log("Full-screen upgrade cards and icons were refreshed in the active Scene.",
                 panel);
         }
 
@@ -552,6 +554,8 @@ namespace MiningSimulator.Editor
                 AssetDatabase.LoadAssetAtPath<Sprite>(LuckyBlockDropChanceIconPath));
             SetReferenceIfMissing(serialized.FindProperty("npcExperienceIconSprite"),
                 AssetDatabase.LoadAssetAtPath<Sprite>(NpcExperienceIconPath));
+            SetReferenceIfMissing(serialized.FindProperty("itemDropChanceIconSprite"),
+                AssetDatabase.LoadAssetAtPath<Sprite>(ItemDropChanceIconPath));
             if (serialized.ApplyModifiedPropertiesWithoutUndo())
             {
                 EditorUtility.SetDirty(uiData);
@@ -702,6 +706,7 @@ namespace MiningSimulator.Editor
             SetReferenceIfMissing(itemSerialized.FindProperty("database"), itemDatabase);
             SetReferenceIfMissing(itemSerialized.FindProperty("oreSpawner"), oreSpawner);
             SetReferenceIfMissing(itemSerialized.FindProperty("luckyBlockSystem"), luckyBlockSystem);
+            SetReferenceIfMissing(itemSerialized.FindProperty("upgradeSystem"), upgradeSystem);
             SetReferenceIfMissing(itemSerialized.FindProperty("droppedItemParent"), droppedItems);
             itemSerialized.ApplyModifiedPropertiesWithoutUndo();
 
@@ -1126,6 +1131,8 @@ namespace MiningSimulator.Editor
                 SetReferenceIfMissing(itemSystemSerialized.FindProperty("oreSpawner"), spawner);
                 SetReferenceIfMissing(itemSystemSerialized.FindProperty("luckyBlockSystem"),
                     runtime.GetComponent<LuckyBlockDropSystem>());
+                SetReferenceIfMissing(itemSystemSerialized.FindProperty("upgradeSystem"),
+                    upgradeSystem);
                 SetReferenceIfMissing(itemSystemSerialized.FindProperty("droppedItemParent"),
                     droppedItems);
                 itemSystemSerialized.ApplyModifiedPropertiesWithoutUndo();
@@ -1367,14 +1374,25 @@ namespace MiningSimulator.Editor
             }
 
             RectTransform panelRect = upgradePanelTransform.GetComponent<RectTransform>();
-            panelRect.anchorMin = new Vector2(0.5f, 0.5f);
-            panelRect.anchorMax = new Vector2(0.5f, 0.5f);
+            panelRect.anchorMin = uiData.UpgradePanelFullscreen
+                ? Vector2.zero
+                : new Vector2(0.5f, 0.5f);
+            panelRect.anchorMax = uiData.UpgradePanelFullscreen
+                ? Vector2.one
+                : new Vector2(0.5f, 0.5f);
             panelRect.pivot = new Vector2(0.5f, 0.5f);
             panelRect.anchoredPosition = Vector2.zero;
-            Vector2 upgradePanelSize = uiData.PanelSize;
-            upgradePanelSize.y = Mathf.Max(upgradePanelSize.y,
-                uiData.ExperienceUpgradePanelMinimumHeight);
-            panelRect.sizeDelta = upgradePanelSize;
+            if (uiData.UpgradePanelFullscreen)
+            {
+                panelRect.sizeDelta = Vector2.zero;
+            }
+            else
+            {
+                Vector2 upgradePanelSize = uiData.PanelSize;
+                upgradePanelSize.y = Mathf.Max(upgradePanelSize.y,
+                    uiData.ExperienceUpgradePanelMinimumHeight);
+                panelRect.sizeDelta = upgradePanelSize;
+            }
             Image panelImage = upgradePanelTransform.GetComponent<Image>() ??
                                upgradePanelTransform.gameObject.AddComponent<Image>();
             panelImage.color = uiData.PanelColor;
@@ -1383,10 +1401,14 @@ namespace MiningSimulator.Editor
             Transform header = EnsureUiObject(upgradePanelTransform, "Header", typeof(Image));
             RectTransform headerRect = header.GetComponent<RectTransform>();
             headerRect.anchorMin = new Vector2(0f, 1f);
-            headerRect.anchorMax = new Vector2(0f, 1f);
+            headerRect.anchorMax = uiData.UpgradePanelFullscreen
+                ? new Vector2(1f, 1f)
+                : new Vector2(0f, 1f);
             headerRect.pivot = new Vector2(0f, 1f);
             headerRect.anchoredPosition = Vector2.zero;
-            headerRect.sizeDelta = uiData.HeaderSize;
+            headerRect.sizeDelta = uiData.UpgradePanelFullscreen
+                ? new Vector2(0f, uiData.HeaderSize.y)
+                : uiData.HeaderSize;
             header.GetComponent<Image>().color = uiData.HeaderColor;
             ApplyOutline(header.gameObject, uiData.OutlineColor, uiData.OutlineThickness);
 
@@ -1448,10 +1470,19 @@ namespace MiningSimulator.Editor
             EnsureUpgradeCard(upgradePanelTransform, "NPC Experience Upgrade", 8,
                 GetUpgradePreview(upgradeData.NpcExperience), npcExperienceIcon,
                 uiData.NpcExperienceIconFallback, uiData);
+            Sprite itemDropChanceIcon = uiData.ItemDropChanceIconSprite != null
+                ? uiData.ItemDropChanceIconSprite
+                : AssetDatabase.LoadAssetAtPath<Sprite>(ItemDropChanceIconPath);
+            EnsureUpgradeCard(upgradePanelTransform, "Item Drop Chance Upgrade", 9,
+                GetUpgradePreview(upgradeData.ItemDropChance), itemDropChanceIcon,
+                uiData.ItemDropChanceIconFallback, uiData);
 
             Vector2 backButtonPosition = uiData.BackButtonPosition;
-            backButtonPosition.y = Mathf.Min(backButtonPosition.y,
-                uiData.ExperienceUpgradeBackButtonY);
+            if (!uiData.UpgradePanelFullscreen)
+            {
+                backButtonPosition.y = Mathf.Min(backButtonPosition.y,
+                    uiData.ExperienceUpgradeBackButtonY);
+            }
             Button backButton = EnsureStyledButton(upgradePanelTransform, "Back", backButtonPosition,
                 uiData.BackButtonSize, uiData.NavigationButtonColor, uiData.TitleTextColor, uiData);
             TextMeshProUGUI backLabel = backButton.GetComponentInChildren<TextMeshProUGUI>(true);
@@ -1491,6 +1522,8 @@ namespace MiningSimulator.Editor
                 upgradePanelTransform.Find("Lucky Block Drop Chance Upgrade"));
             WireUpgradeButton(serialized, "npcExperienceButton", "npcExperienceLabel",
                 upgradePanelTransform.Find("NPC Experience Upgrade"));
+            WireUpgradeButton(serialized, "itemDropChanceButton", "itemDropChanceLabel",
+                upgradePanelTransform.Find("Item Drop Chance Upgrade"));
             serialized.ApplyModifiedPropertiesWithoutUndo();
         }
 
@@ -1661,7 +1694,7 @@ namespace MiningSimulator.Editor
         private static Button EnsureUpgradeCard(Transform parent, string name, int index,
             string preview, Sprite iconSprite, string iconFallback, MiningUiData uiData)
         {
-            Vector2 position = uiData.FirstCardPosition + Vector2.down * uiData.CardSpacing * index;
+            Vector2 position = uiData.GetUpgradeCardPosition(index);
             Button button = EnsureStyledButton(parent, name, position, uiData.CardSize, uiData.CardColor,
                 uiData.CardTextColor, uiData);
             TextMeshProUGUI label = EnsureText(button.transform, "Label");

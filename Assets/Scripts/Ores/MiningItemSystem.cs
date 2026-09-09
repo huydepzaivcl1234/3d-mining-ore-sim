@@ -63,6 +63,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private MiningItemDatabase database;
         [SerializeField] private OreSpawner oreSpawner;
         [SerializeField] private LuckyBlockDropSystem luckyBlockSystem;
+        [SerializeField] private MiningUpgradeSystem upgradeSystem;
         [SerializeField] private Transform droppedItemParent;
 
         private readonly RuntimeSlot[] slots = new RuntimeSlot[MiningItemDatabase.InventoryCapacity];
@@ -314,7 +315,8 @@ namespace MiningSimulator.Ores
 
         private void HandleOreRewardGranted(Ore ore, float reward)
         {
-            if (ore != null && database != null && database.TryRoll(false, out MiningItemData item))
+            if (ore != null && database != null && database.TryRoll(false,
+                GetItemDropChanceBonus(), out MiningItemData item))
             {
                 SpawnWorldItem(item, ore.GetWorldTopCenter());
             }
@@ -322,10 +324,18 @@ namespace MiningSimulator.Ores
 
         private void HandleLuckyBlockRewardGranted(LuckyBlock block, float reward)
         {
-            if (block != null && database != null && database.TryRoll(true, out MiningItemData item))
+            if (block != null && database != null && database.TryRoll(true,
+                GetItemDropChanceBonus(), out MiningItemData item))
             {
                 SpawnWorldItem(item, block.GetWorldTopCenter());
             }
+        }
+
+        private float GetItemDropChanceBonus()
+        {
+            return upgradeSystem != null
+                ? upgradeSystem.GetAddedPercent(MiningUpgradeType.ItemDropChance)
+                : 0f;
         }
 
         private void SpawnWorldItem(MiningItemData item, Vector3 sourcePosition)
@@ -375,6 +385,11 @@ namespace MiningSimulator.Ores
             if (luckyBlockSystem == null)
             {
                 luckyBlockSystem = FindFirstObjectByType<LuckyBlockDropSystem>(
+                    FindObjectsInactive.Include);
+            }
+            if (upgradeSystem == null)
+            {
+                upgradeSystem = FindFirstObjectByType<MiningUpgradeSystem>(
                     FindObjectsInactive.Include);
             }
         }

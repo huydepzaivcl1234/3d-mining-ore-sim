@@ -66,3 +66,9 @@ MonoBehaviour:
     maximumStacks: 100
     startingCost: 25
     costIncreasePerPurchase: 10
+  itemDropChance:
+    displayName: "T\u0103ng t\u1EC9 l\u1EC7 r\u01A1i v\u1EADt ph\u1EA9m"
+    percentPerStack: 1
+    maximumStacks: 100
+    startingCost: 25
+    costIncreasePerPurchase: 10

@@ -159,6 +159,9 @@ Assets/UI/Icons/Upgrades/*.png -filter -diff -merge binary
 # do not depend on separately uploaded LFS objects.
 Assets/Ores/Icons/*.png -filter -diff -merge binary
 
+# The generated item-drop upgrade icon is small and must not require a separate LFS upload.
+Assets/Prefabs/UI/UpgradeItemDropChance.png -filter -diff -merge binary
+
 # Compressed Archive
 *.7z                    lfs
 *.bz2                   lfs

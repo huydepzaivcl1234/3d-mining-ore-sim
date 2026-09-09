@@ -68,10 +68,18 @@ namespace MiningSimulator.Ores
 
         public bool TryRoll(bool fromLuckyBlock, out MiningItemData item)
         {
+            return TryRoll(fromLuckyBlock, 0f, out item);
+        }
+
+        public bool TryRoll(bool fromLuckyBlock, float addedDropChancePercent,
+            out MiningItemData item)
+        {
             item = null;
-            float sourceChance = fromLuckyBlock
+            float baseSourceChance = fromLuckyBlock
                 ? luckyBlockDropChancePercent
                 : oreDropChancePercent;
+            float sourceChance = Mathf.Clamp(baseSourceChance +
+                Mathf.Max(0f, addedDropChancePercent), 0f, 100f);
             if (sourceChance <= 0f || (sourceChance < 100f &&
                 Random.value >= sourceChance * 0.01f))
             {
