@@ -45,9 +45,9 @@ MonoBehaviour:
   npcIconColor: {r: 0.2, g: 0.65, b: 0.94, a: 1}
   upgradeIconColor: {r: 0.14, g: 0.72, b: 0.52, a: 1}
   iconSymbolColor: {r: 1, g: 1, b: 1, a: 1}
-  moneyIconSprite: {fileID: 0}
-  npcIconSprite: {fileID: 0}
-  buyNpcIconSprite: {fileID: 0}
+  moneyIconSprite: {fileID: 62247565, guid: 4f7ca63df9f4a0e4db24cfd637f9b2d2, type: 3}
+  npcIconSprite: {fileID: 451636688, guid: bf740a43e6c32ad4fb5f99f2aa91a9a0, type: 3}
+  buyNpcIconSprite: {fileID: 451636688, guid: bf740a43e6c32ad4fb5f99f2aa91a9a0, type: 3}
   openUpgradeIconSprite: {fileID: 0}
   moneyIconFallback: $
   npcIconFallback: N
@@ -56,12 +56,12 @@ MonoBehaviour:
   upgradeCardIconSize: {x: 52, y: 52}
   upgradeCardIconPosition: {x: 14, y: -13}
   upgradeCardIconPadding: 1
-  moneyRewardIconSprite: {fileID: 0}
-  rareOreIconSprite: {fileID: 0}
-  oreDamageIconSprite: {fileID: 0}
-  oreSpawnSpeedIconSprite: {fileID: 0}
-  npcMoveSpeedIconSprite: {fileID: 0}
-  npcCapacityIconSprite: {fileID: 0}
+  moneyRewardIconSprite: {fileID: 21300000, guid: 8f0be4d69f2c4bed9d87f2300af36e8e, type: 3}
+  rareOreIconSprite: {fileID: 21300000, guid: 3de4b9cc4f6346bf8b55e7c1ca9bc0ad, type: 3}
+  oreDamageIconSprite: {fileID: 21300000, guid: bd3453b0181f4bb08c8b2a42e54e0957, type: 3}
+  oreSpawnSpeedIconSprite: {fileID: 21300000, guid: 79e259b7491d4a8f83a46b760a2690f1, type: 3}
+  npcMoveSpeedIconSprite: {fileID: 21300000, guid: 91682228e8024b459ce2f36dbd1ef34a, type: 3}
+  npcCapacityIconSprite: {fileID: 451636688, guid: bf740a43e6c32ad4fb5f99f2aa91a9a0, type: 3}
   luckyBlockRewardIconSprite: {fileID: 21300000, guid: 646e8b94a79b4c0491703aa4a7f4eff3, type: 3}
   luckyBlockDropChanceIconSprite: {fileID: 21300000, guid: e1507aa5451b4cd3b50808c42bdf9e41, type: 3}
   moneyRewardIconFallback: $
@@ -76,6 +76,9 @@ MonoBehaviour:
   npcExperienceIconFallback: XP
   npcProgressHudPosition: {x: 370, y: -24}
   npcProgressHudSize: {x: 380, y: 170}
+  npcProgressHeaderIconPosition: {x: 10, y: -4}
+  npcProgressHeaderIconSize: {x: 42, y: 42}
+  npcProgressTitleMargin: {x: 58, y: 0, z: 14, w: 0}
   npcProgressTextPosition: {x: 18, y: -14}
   npcProgressTextSize: {x: 344, y: 30}
   npcPowerTextPosition: {x: 18, y: -50}

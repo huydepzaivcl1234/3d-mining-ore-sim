@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
 namespace MiningSimulator.Ores
@@ -16,6 +17,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private RectTransform upgradePanel;
         [SerializeField] private RectTransform rebirthPanel;
         [SerializeField] private RectTransform audioSettingsPanel;
+        [SerializeField] private RectTransform npcProgressHud;
 
         private Vector2 shopHome;
         private Vector2 rebirthHome;
@@ -23,6 +25,8 @@ namespace MiningSimulator.Ores
         private Vector2 upgradeHome;
         private Vector2 rebirthPanelHome;
         private Vector2 audioSettingsHome;
+
+        private Vector2 npcProgressHome;
         private RectTransform activeModal;
         private bool initialized;
         private readonly Dictionary<RectTransform, Vector2> additionalPanelHomes = new();
@@ -111,6 +115,7 @@ namespace MiningSimulator.Ores
             upgradeHome = GetPosition(upgradePanel);
             rebirthPanelHome = GetPosition(rebirthPanel);
             audioSettingsHome = GetPosition(audioSettingsPanel);
+            npcProgressHome = GetPosition(npcProgressHud);
             initialized = true;
         }
 
@@ -127,7 +132,8 @@ namespace MiningSimulator.Ores
             if (upgradePanel != null && upgradePanel.gameObject.activeSelf) return upgradePanel;
             if (rebirthPanel != null && rebirthPanel.gameObject.activeSelf) return rebirthPanel;
             if (audioSettingsPanel != null && audioSettingsPanel.gameObject.activeSelf)
-                return audioSettingsPanel;
+            if (npcProgressHud != null && npcProgressHud.gameObject.activeSelf) return npcProgressHud;
+         
             return null;
         }
 
@@ -136,6 +142,7 @@ namespace MiningSimulator.Ores
             AnimateBasePanel(shopPanel, shopHome, Vector2.left, visible);
             AnimateBasePanel(rebirthHud, rebirthHome, Vector2.up, visible);
             AnimateBasePanel(audioMenuButton, audioMenuHome, Vector2.right, visible);
+            AnimateBasePanel(npcProgressHud, npcProgressHome, Vector2.up, visible);
         }
 
         private void AnimateBasePanel(RectTransform panel, Vector2 home, Vector2 direction,
@@ -157,6 +164,7 @@ namespace MiningSimulator.Ores
             SetBasePanelImmediately(shopPanel, shopHome, Vector2.left, visible);
             SetBasePanelImmediately(rebirthHud, rebirthHome, Vector2.up, visible);
             SetBasePanelImmediately(audioMenuButton, audioMenuHome, Vector2.right, visible);
+            SetBasePanelImmediately(npcProgressHud, npcProgressHome, Vector2.up, visible);
         }
 
         private void SetBasePanelImmediately(RectTransform panel, Vector2 home, Vector2 direction,
@@ -199,6 +207,7 @@ namespace MiningSimulator.Ores
             if (panel == upgradePanel) return upgradeHome;
             if (panel == rebirthPanel) return rebirthPanelHome;
             if (panel == audioSettingsPanel) return audioSettingsHome;
+            if (panel == npcProgressHud) return npcProgressHome;
             if (panel != null && additionalPanelHomes.TryGetValue(panel, out Vector2 home))
                 return home;
             return GetPosition(panel);
