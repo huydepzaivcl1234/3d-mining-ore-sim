@@ -19,6 +19,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private AudioClip oreBreakSfx;
         [SerializeField] private AudioClip npcPurchasedSfx;
         [SerializeField] private AudioClip upgradePurchasedSfx;
+        [SerializeField] private AudioClip levelUpSfx;
         [SerializeField] private AudioClip rebirthSfx;
 
         [Header("UI SFX")]
@@ -42,6 +43,7 @@ namespace MiningSimulator.Ores
         public AudioClip OreBreakSfx => oreBreakSfx;
         public AudioClip NpcPurchasedSfx => npcPurchasedSfx;
         public AudioClip UpgradePurchasedSfx => upgradePurchasedSfx;
+        public AudioClip LevelUpSfx => levelUpSfx;
         public AudioClip RebirthSfx => rebirthSfx;
         public AudioClip PanelOpenSfx => panelOpenSfx;
         public AudioClip ButtonClickSfx => buttonClickSfx;

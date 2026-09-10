@@ -14,6 +14,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private MiningAudioData audioData;
         [SerializeField] private OreSpawner oreSpawner;
         [SerializeField] private NpcShop npcShop;
+        [SerializeField] private NpcProgressionSystem progressionSystem;
         [SerializeField] private MiningUpgradeSystem upgradeSystem;
         [SerializeField] private MiningUpgradePanel upgradePanel;
         [SerializeField] private MiningRebirthSystem rebirthSystem;
@@ -57,6 +58,12 @@ namespace MiningSimulator.Ores
             {
                 npcShop.NpcPurchased -= HandleNpcPurchased;
                 npcShop.NpcPurchased += HandleNpcPurchased;
+            }
+
+            if (progressionSystem != null)
+            {
+                progressionSystem.LevelChanged -= HandleLevelUp;
+                progressionSystem.LevelChanged += HandleLevelUp;
             }
 
             if (upgradeSystem != null)
@@ -118,6 +125,11 @@ namespace MiningSimulator.Ores
             if (npcShop != null)
             {
                 npcShop.NpcPurchased -= HandleNpcPurchased;
+            }
+
+            if (progressionSystem != null)
+            {
+                progressionSystem.LevelChanged -= HandleLevelUp;
             }
 
             if (upgradeSystem != null)
@@ -366,6 +378,14 @@ namespace MiningSimulator.Ores
             if (audioData != null)
             {
                 PlaySfx(audioData.NpcPurchasedSfx);
+            }
+        }
+
+        private void HandleLevelUp(int newLevel)
+        {
+            if (audioData != null)
+            {
+                PlaySfx(audioData.LevelUpSfx);
             }
         }
 
