@@ -28,6 +28,9 @@ namespace MiningSimulator.Ores
         private int sourceSlotIndex = -1;
         private bool spinning;
         private Tween spinTween;
+        private RectTransform centerHub;
+
+        private static Sprite cachedWheelSprite;
 
         public void Configure(MiningItemSystem system, PlayerWallet playerWallet,
             MiningUiPanelCoordinator coordinator, MiningUiData data, RectTransform inventoryPanel)
@@ -244,8 +247,14 @@ namespace MiningSimulator.Ores
             }
 
             int count = giftBox.GiftRewards.Count;
-            float radius = uiData != null ? uiData.GiftWheelRewardRadius : 142f;
-            Vector2 cardSize = uiData != null ? uiData.GiftWheelRewardSize : new Vector2(150f, 58f);
+            if (count <= 0)
+            {
+                return;
+            }
+
+            float step = 360f / count;
+            float labelRadius = uiData != null ? uiData.GiftWheelRewardRadius : 142f;
+            Vector2 labelSize = uiData != null ? uiData.GiftWheelRewardSize : new Vector2(150f, 58f);
             for (int index = 0; index < count; index++)
             {
                 MiningGiftReward reward = giftBox.GiftRewards[index];
@@ -254,15 +263,40 @@ namespace MiningSimulator.Ores
                     continue;
                 }
 
-                float angle = index * 360f / Mathf.Max(1, count);
-                float radians = angle * Mathf.Deg2Rad;
-                GameObject card = CreateImage(wheel, $"Reward {index + 1:00}", reward.WheelColor);
-                RectTransform rect = (RectTransform)card.transform;
-                SetCenteredRect(rect,
-                    new Vector2(Mathf.Sin(radians) * radius, Mathf.Cos(radians) * radius), cardSize);
-                TextMeshProUGUI label = CreateLabel(rect, "Label", 17f, Color.white);
+                float centerAngle = index * step;
+                float startAngle = centerAngle - step * 0.5f;
+
+                // A real pie-slice wedge that fills exactly its share of the circular wheel.
+                // Wedges are rotated into place (not translated like the old rectangles), so
+                // they always tile edge-to-edge with no overlap or gaps, and the wheel keeps
+                // looking like a smooth circle at every spin rotation instead of a square.
+                rewardCards.Add(CreateWedge(wheel, $"Wedge {index + 1:00}", reward.WheelColor,
+                    step / 360f, startAngle));
+                rewardCards.Add(CreateDivider(wheel, startAngle));
+
+                float radians = centerAngle * Mathf.Deg2Rad;
+                GameObject labelObject = new("Reward Label", typeof(RectTransform),
+                    typeof(CanvasRenderer), typeof(TextMeshProUGUI));
+                labelObject.transform.SetParent(wheel, false);
+                RectTransform labelRect = (RectTransform)labelObject.transform;
+                SetCenteredRect(labelRect,
+                    new Vector2(Mathf.Sin(radians) * labelRadius, Mathf.Cos(radians) * labelRadius),
+                    labelSize);
+                TextMeshProUGUI label = labelObject.GetComponent<TextMeshProUGUI>();
+                label.fontSize = 17f;
+                label.color = Color.white;
+                label.alignment = TextAlignmentOptions.Center;
+                label.textWrappingMode = TextWrappingModes.Normal;
+                label.raycastTarget = false;
                 label.text = $"{reward.GetDisplayName()}\n{giftBox.GetGiftRewardDisplayPercent(reward):0.##}%";
-                rewardCards.Add(card);
+                rewardCards.Add(labelObject);
+            }
+
+            // Wedges are appended after the hub, which would otherwise bury the "RARE"
+            // center label under the slice tips that converge at the middle of the wheel.
+            if (centerHub != null)
+            {
+                centerHub.SetAsLastSibling();
             }
         }
 
@@ -295,9 +329,18 @@ namespace MiningSimulator.Ores
             wheel = (RectTransform)wheelObject.transform;
             SetCenteredRect(wheel, new Vector2(0f, 32f),
                 uiData != null ? uiData.GiftWheelSize : new Vector2(360f, 360f));
-            TextMeshProUGUI center = CreateLabel(wheel, "Center", 22f, new Color(1f, 0.78f, 0.16f));
+            Image wheelImage = wheelObject.GetComponent<Image>();
+            wheelImage.sprite = GetWheelSprite();
+            wheelImage.type = Image.Type.Simple;
+
+            GameObject hubObject = CreateImage(wheel, "Hub", new Color(0.08f, 0.1f, 0.15f, 0.95f));
+            centerHub = (RectTransform)hubObject.transform;
+            SetCenteredRect(centerHub, Vector2.zero, new Vector2(112f, 112f));
+            Image hubImage = hubObject.GetComponent<Image>();
+            hubImage.sprite = GetWheelSprite();
+            hubImage.type = Image.Type.Simple;
+            TextMeshProUGUI center = CreateLabel(centerHub, "Center", 22f, new Color(1f, 0.78f, 0.16f));
             center.text = "RARE";
-            center.rectTransform.sizeDelta = new Vector2(100f, 44f);
 
             TextMeshProUGUI pointer = CreateLabel(panel, "Pointer", 42f,
                 new Color(1f, 0.82f, 0.12f));
@@ -314,6 +357,95 @@ namespace MiningSimulator.Ores
                 uiData != null ? uiData.GiftWheelSpinButtonColor : new Color(1f, 0.62f, 0.08f));
             spinLabel = spinButton.transform.Find("Label").GetComponent<TextMeshProUGUI>();
             spinButton.onClick.AddListener(StartSpin);
+        }
+
+        /// <summary>A soft-edged white circle, generated once and reused for the wheel
+        /// background, the center hub, and every pie wedge (via radial fill).</summary>
+        private static Sprite GetWheelSprite()
+        {
+            if (cachedWheelSprite != null)
+            {
+                return cachedWheelSprite;
+            }
+
+            const int size = 256;
+            const float edgeSoftness = 1.5f;
+            var texture = new Texture2D(size, size, TextureFormat.RGBA32, false)
+            {
+                wrapMode = TextureWrapMode.Clamp,
+                filterMode = FilterMode.Bilinear,
+                name = "GiftWheelCircle"
+            };
+
+            Vector2 center = new(size * 0.5f, size * 0.5f);
+            float radius = size * 0.5f - 1f;
+            var pixels = new Color32[size * size];
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float distance = Vector2.Distance(new Vector2(x + 0.5f, y + 0.5f), center);
+                    float alpha = Mathf.Clamp01((radius - distance) / edgeSoftness + 0.5f);
+                    pixels[y * size + x] = new Color(1f, 1f, 1f, alpha);
+                }
+            }
+
+            texture.SetPixels32(pixels);
+            texture.Apply();
+            cachedWheelSprite = Sprite.Create(texture, new Rect(0f, 0f, size, size),
+                new Vector2(0.5f, 0.5f), 100f);
+            return cachedWheelSprite;
+        }
+
+        /// <summary>One pie slice covering [startAngle, startAngle + fillAmount * 360],
+        /// measured clockwise from the top (matching the pointer). Rotated into place
+        /// rather than translated, so adjacent wedges always share an exact edge.</summary>
+        private static GameObject CreateWedge(Transform parent, string objectName, Color color,
+            float fillAmount, float startAngle)
+        {
+            GameObject child = new(objectName, typeof(RectTransform), typeof(CanvasRenderer),
+                typeof(Image));
+            child.transform.SetParent(parent, false);
+            RectTransform rect = (RectTransform)child.transform;
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+            rect.localRotation = Quaternion.Euler(0f, 0f, -startAngle);
+
+            Image image = child.GetComponent<Image>();
+            image.color = color;
+            image.sprite = GetWheelSprite();
+            image.type = Image.Type.Filled;
+            image.fillMethod = Image.FillMethod.Radial360;
+            image.fillOrigin = (int)Image.Origin360.Top;
+            image.fillClockwise = true;
+            image.fillAmount = Mathf.Clamp01(fillAmount);
+            return child;
+        }
+
+        /// <summary>A thin radial line marking the boundary between two wedges.</summary>
+        private static GameObject CreateDivider(Transform parent, float angle)
+        {
+            GameObject child = new("Divider", typeof(RectTransform), typeof(CanvasRenderer),
+                typeof(Image));
+            child.transform.SetParent(parent, false);
+            RectTransform wheelRect = (RectTransform)parent;
+            float wheelRadius = Mathf.Min(wheelRect.rect.width, wheelRect.rect.height) * 0.5f;
+
+            RectTransform rect = (RectTransform)child.transform;
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0f);
+            rect.anchoredPosition = Vector2.zero;
+            rect.sizeDelta = new Vector2(3f, wheelRadius);
+            rect.localRotation = Quaternion.Euler(0f, 0f, -angle);
+
+            Image image = child.GetComponent<Image>();
+            image.color = new Color(0f, 0f, 0f, 0.35f);
+            image.raycastTarget = false;
+            return child;
         }
 
         private static GameObject CreateImage(Transform parent, string objectName, Color color)
