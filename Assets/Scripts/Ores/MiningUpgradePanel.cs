@@ -50,6 +50,16 @@ namespace MiningSimulator.Ores
 
         private void Awake()
         {
+            // The 10 purchase buttons get their own distinct feedback (UpgradePurchasedSfx,
+            // fired once per successful buy via upgradeSystem.UpgradePurchased — see
+            // MiningAudioManager.HandleUpgradePurchased). Strip the generic per-click SFX
+            // component from just those buttons so a buy doesn't also play the shared button
+            // click sound; Open/Back/Close keep it untouched.
+            StripGenericClickSfx(moneyRewardButton, rareOreSpawnButton, oreDamageButton,
+                oreSpawnSpeedButton, npcMoveSpeedButton, npcCapacityButton,
+                luckyBlockRewardButton, luckyBlockDropChanceButton, npcExperienceButton,
+                itemDropChanceButton);
+
             if (openOnPlay)
             {
                 shopPanel?.SetActive(false);
@@ -59,6 +69,23 @@ namespace MiningSimulator.Ores
             {
                 upgradePanel?.SetActive(false);
                 shopPanel?.SetActive(true);
+            }
+        }
+
+        private static void StripGenericClickSfx(params Button[] purchaseButtons)
+        {
+            foreach (Button button in purchaseButtons)
+            {
+                if (button == null)
+                {
+                    continue;
+                }
+
+                MiningButtonSfx genericSfx = button.GetComponent<MiningButtonSfx>();
+                if (genericSfx != null)
+                {
+                    Destroy(genericSfx);
+                }
             }
         }
 
