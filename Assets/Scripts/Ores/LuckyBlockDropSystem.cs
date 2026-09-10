@@ -440,24 +440,17 @@ namespace MiningSimulator.Ores
 
             Unsubscribe(block);
             activeBlocks.Remove(block);
-            if (pooledBlocks.Count >= data.MaximumPooledBlocks)
-            {
-                Destroy(block.gameObject);
-                return;
-            }
 
-            if (!pooledBlocks.Add(block))
-            {
-                return;
-            }
-
-            block.gameObject.SetActive(false);
-            if (!pools.TryGetValue(block.Type, out Queue<LuckyBlock> pool))
-            {
-                pool = new Queue<LuckyBlock>();
-                pools.Add(block.Type, pool);
-            }
-            pool.Enqueue(block);
+            // Broken/expired Lucky Blocks are destroyed immediately instead of being kept
+            // alive in a reuse pool. Keeping the old instance around held onto its already
+            // instantiated variant model, so the next drop kept dequeuing that same old
+            // instance for its type and TryDropOne() could not build a different Lucky
+            // Block type until it happened to roll that exact type again (e.g. two Gold
+            // blocks stayed in rotation and Diamond/Rainbow never appeared). Destroying it
+            // guarantees the next successful roll always creates a brand-new block that
+            // matches the variant that was actually chosen.
+            pooledBlocks.Remove(block);
+            Destroy(block.gameObject);
         }
 
         private void Subscribe(LuckyBlock block)
