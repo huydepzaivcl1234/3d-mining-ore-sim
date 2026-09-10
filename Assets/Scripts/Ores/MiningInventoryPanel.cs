@@ -47,6 +47,8 @@ namespace MiningSimulator.Ores
 
         private void OnEnable()
         {
+            MiningLocalization.LanguageChanged -= HandleLanguageChanged;
+            MiningLocalization.LanguageChanged += HandleLanguageChanged;
             openButton?.onClick.RemoveListener(OpenPanel);
             openButton?.onClick.AddListener(OpenPanel);
             closeButton?.onClick.RemoveListener(ClosePanel);
@@ -61,6 +63,7 @@ namespace MiningSimulator.Ores
 
         private void OnDisable()
         {
+            MiningLocalization.LanguageChanged -= HandleLanguageChanged;
             openButton?.onClick.RemoveListener(OpenPanel);
             closeButton?.onClick.RemoveListener(ClosePanel);
             if (itemSystem != null)
@@ -143,7 +146,9 @@ namespace MiningSimulator.Ores
             if (titleLabel != null)
             {
                 int occupied = itemSystem != null ? itemSystem.OccupiedSlotCount : 0;
-                titleLabel.text = $"TÚI ĐỒ  •  {occupied}/{MiningItemDatabase.InventoryCapacity} Ô";
+                titleLabel.text = MiningLocalization.Text(
+                    $"INVENTORY  •  {occupied}/{MiningItemDatabase.InventoryCapacity} SLOTS",
+                    $"TÚI ĐỒ  •  {occupied}/{MiningItemDatabase.InventoryCapacity} Ô");
             }
 
             for (int index = 0; index < slotViews.Length; index++)
@@ -176,13 +181,18 @@ namespace MiningSimulator.Ores
                 {
                     view.nameLabel.text = occupied
                         ? $"{slot.Item.DisplayName}\n{slot.Item.ShortEffectName} +{slot.Item.EffectPercent:0.##}%"
-                        : "TRỐNG";
+                        : MiningLocalization.Text("EMPTY", "TRỐNG");
                 }
                 if (view.countLabel != null)
                 {
                     view.countLabel.text = occupied ? $"x{slot.Count}" : string.Empty;
                 }
             }
+        }
+
+        private void HandleLanguageChanged()
+        {
+            Refresh();
         }
     }
 }

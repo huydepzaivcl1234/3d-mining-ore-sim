@@ -64,6 +64,8 @@ namespace MiningSimulator.Ores
 
         private void OnEnable()
         {
+            MiningLocalization.LanguageChanged -= HandleLanguageChanged;
+            MiningLocalization.LanguageChanged += HandleLanguageChanged;
             AddListeners();
             if (upgradeSystem != null)
             {
@@ -80,6 +82,7 @@ namespace MiningSimulator.Ores
 
         private void OnDisable()
         {
+            MiningLocalization.LanguageChanged -= HandleLanguageChanged;
             RemoveListeners();
             if (upgradeSystem != null)
             {
@@ -209,8 +212,14 @@ namespace MiningSimulator.Ores
             bool maximum = upgradeSystem.IsMaximum(MiningUpgradeType.NpcCapacity);
             if (npcCapacityLabel != null)
             {
-                npcCapacityLabel.text = string.Format(maximum ? capacityMaximumFormat : capacityFormat,
-                    definition.DisplayName, definition.ValuePerStack, stacks,
+                string format = maximum
+                    ? MiningLocalization.Text(
+                        "{0}\n+{1:0} miners  [{2}/{3}]  -  MAX", capacityMaximumFormat)
+                    : MiningLocalization.Text(
+                        "{0}\n+{1:0} miners  [{2}/{3}]  -  {4} money", capacityFormat);
+                npcCapacityLabel.text = string.Format(format,
+                    MiningLocalization.GetUpgradeName(MiningUpgradeType.NpcCapacity,
+                        definition.DisplayName), definition.ValuePerStack, stacks,
                     definition.MaximumStacks, MiningMoneyFormatter.Format(
                         upgradeSystem.GetCost(MiningUpgradeType.NpcCapacity)));
             }
@@ -234,8 +243,14 @@ namespace MiningSimulator.Ores
             bool maximum = upgradeSystem.IsMaximum(type);
             if (label != null)
             {
-                label.text = string.Format(maximum ? maximumFormat : upgradeFormat,
-                    definition.DisplayName, definition.PercentPerStack, stacks,
+                string format = maximum
+                    ? MiningLocalization.Text(
+                        "{0}\n+{1:0.##}%  [{2}/{3}]  -  MAX", maximumFormat)
+                    : MiningLocalization.Text(
+                        "{0}\n+{1:0.##}%  [{2}/{3}]  -  {4} money", upgradeFormat);
+                label.text = string.Format(format,
+                    MiningLocalization.GetUpgradeName(type, definition.DisplayName),
+                    definition.PercentPerStack, stacks,
                     definition.MaximumStacks, MiningMoneyFormatter.Format(
                         upgradeSystem.GetCost(type)));
             }
@@ -243,6 +258,11 @@ namespace MiningSimulator.Ores
             {
                 button.interactable = upgradeSystem.CanPurchase(type);
             }
+        }
+
+        private void HandleLanguageChanged()
+        {
+            Refresh();
         }
     }
 }

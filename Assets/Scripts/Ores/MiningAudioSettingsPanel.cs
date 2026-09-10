@@ -25,6 +25,8 @@ namespace MiningSimulator.Ores
         [SerializeField] private MiningRebirthSystem rebirthSystem;
         [SerializeField] private Button resetDataButton;
         [SerializeField] private TextMeshProUGUI resetDataLabel;
+        [SerializeField] private Button languageButton;
+        [SerializeField] private TextMeshProUGUI languageLabel;
 
         private Coroutine resetStateCoroutine;
         private bool resetConfirmationArmed;
@@ -40,7 +42,14 @@ namespace MiningSimulator.Ores
             }
             FindResetDependenciesIfMissing();
             EnsureResetDataButton();
+            EnsureLanguageButton();
+            ApplyLanguage();
             settingsPanel?.SetActive(false);
+        }
+
+        private void Start()
+        {
+            ApplyLanguage();
         }
 
         private void OnEnable()
@@ -52,6 +61,10 @@ namespace MiningSimulator.Ores
             sfxSlider?.onValueChanged.AddListener(SetSfxVolume);
             resetDataButton?.onClick.RemoveListener(HandleResetDataClicked);
             resetDataButton?.onClick.AddListener(HandleResetDataClicked);
+            languageButton?.onClick.RemoveListener(HandleLanguageClicked);
+            languageButton?.onClick.AddListener(HandleLanguageClicked);
+            MiningLocalization.LanguageChanged -= HandleLanguageChanged;
+            MiningLocalization.LanguageChanged += HandleLanguageChanged;
             ResetButtonState();
             RefreshFromManager();
         }
@@ -64,6 +77,8 @@ namespace MiningSimulator.Ores
             musicSlider?.onValueChanged.RemoveListener(SetMusicVolume);
             sfxSlider?.onValueChanged.RemoveListener(SetSfxVolume);
             resetDataButton?.onClick.RemoveListener(HandleResetDataClicked);
+            languageButton?.onClick.RemoveListener(HandleLanguageClicked);
+            MiningLocalization.LanguageChanged -= HandleLanguageChanged;
             if (resetStateCoroutine != null)
             {
                 StopCoroutine(resetStateCoroutine);
@@ -74,6 +89,7 @@ namespace MiningSimulator.Ores
 
         private void OpenPanel()
         {
+            ApplyLanguage();
             RefreshFromManager();
             if (panelCoordinator != null)
             {
@@ -158,7 +174,8 @@ namespace MiningSimulator.Ores
             if (!resetConfirmationArmed)
             {
                 resetConfirmationArmed = true;
-                SetResetButtonVisual("BẤM LẦN NỮA ĐỂ XÓA",
+                SetResetButtonVisual(MiningLocalization.Text(
+                        "CLICK AGAIN TO DELETE", "BẤM LẦN NỮA ĐỂ XÓA"),
                     uiData != null ? uiData.ResetDataArmedColor : new Color(1f, 0.36f, 0.08f));
                 if (resetStateCoroutine != null)
                 {
@@ -175,7 +192,8 @@ namespace MiningSimulator.Ores
             resetStateCoroutine = null;
             resetConfirmationArmed = false;
             rebirthSystem?.ResetAllProgress();
-            SetResetButtonVisual("ĐÃ RESET DỮ LIỆU",
+            SetResetButtonVisual(MiningLocalization.Text(
+                    "DATA RESET", "ĐÃ RESET DỮ LIỆU"),
                 uiData != null ? uiData.ResetDataButtonColor : new Color(0.88f, 0.12f, 0.18f));
             resetStateCoroutine = StartCoroutine(RestoreResetButtonAfterDelay());
         }
@@ -198,7 +216,8 @@ namespace MiningSimulator.Ores
         private void ResetButtonState()
         {
             resetConfirmationArmed = false;
-            SetResetButtonVisual("RESET DỮ LIỆU",
+            SetResetButtonVisual(MiningLocalization.Text(
+                    "RESET DATA", "RESET DỮ LIỆU"),
                 uiData != null ? uiData.ResetDataButtonColor : new Color(0.88f, 0.12f, 0.18f));
         }
 
@@ -232,9 +251,9 @@ namespace MiningSimulator.Ores
 
             TextMeshProUGUI title = settingsPanel.transform.Find("Header/Title")
                 ?.GetComponent<TextMeshProUGUI>();
-            if (title != null && title.text == "CÀI ĐẶT ÂM THANH")
+            if (title != null)
             {
-                title.text = "CÀI ĐẶT";
+                title.text = MiningLocalization.Text("SETTINGS", "CÀI ĐẶT");
             }
 
             Transform existing = settingsPanel.transform.Find("Reset Data");
@@ -302,6 +321,98 @@ namespace MiningSimulator.Ores
                 {
                     resetDataLabel.font = fontTemplate.font;
                 }
+            }
+        }
+
+        private void EnsureLanguageButton()
+        {
+            if (settingsPanel == null)
+            {
+                return;
+            }
+
+            Transform existing = settingsPanel.transform.Find("Language Toggle");
+            bool created = existing == null;
+            if (existing == null)
+            {
+                GameObject buttonObject = new("Language Toggle", typeof(RectTransform),
+                    typeof(CanvasRenderer), typeof(Image), typeof(Button));
+                buttonObject.transform.SetParent(settingsPanel.transform, false);
+                existing = buttonObject.transform;
+            }
+
+            languageButton = existing.GetComponent<Button>() ??
+                             existing.gameObject.AddComponent<Button>();
+            Image image = existing.GetComponent<Image>() ?? existing.gameObject.AddComponent<Image>();
+            image.color = uiData != null ? uiData.LanguageButtonColor : new Color(0.2f, 0.65f, 0.94f);
+            languageButton.targetGraphic = image;
+
+            if (created)
+            {
+                RectTransform rect = existing.GetComponent<RectTransform>();
+                rect.anchorMin = new Vector2(0f, 1f);
+                rect.anchorMax = new Vector2(0f, 1f);
+                rect.pivot = new Vector2(0f, 1f);
+                rect.anchoredPosition = uiData != null
+                    ? uiData.LanguageButtonPosition
+                    : new Vector2(20f, -354f);
+                rect.sizeDelta = uiData != null
+                    ? uiData.LanguageButtonSize
+                    : new Vector2(100f, 46f);
+            }
+
+            Transform labelTransform = existing.Find("Label");
+            if (labelTransform == null)
+            {
+                GameObject labelObject = new("Label", typeof(RectTransform),
+                    typeof(CanvasRenderer), typeof(TextMeshProUGUI));
+                labelObject.transform.SetParent(existing, false);
+                labelTransform = labelObject.transform;
+            }
+            languageLabel = labelTransform.GetComponent<TextMeshProUGUI>();
+            RectTransform labelRect = languageLabel.rectTransform;
+            labelRect.anchorMin = Vector2.zero;
+            labelRect.anchorMax = Vector2.one;
+            labelRect.offsetMin = Vector2.zero;
+            labelRect.offsetMax = Vector2.zero;
+            languageLabel.alignment = TextAlignmentOptions.Center;
+            languageLabel.color = Color.white;
+            languageLabel.fontSize = uiData != null ? uiData.LanguageButtonFontSize : 14f;
+            languageLabel.raycastTarget = false;
+
+            TextMeshProUGUI fontTemplate = closeButton != null
+                ? closeButton.GetComponentInChildren<TextMeshProUGUI>(true)
+                : null;
+            if (fontTemplate != null && languageLabel.font == null)
+            {
+                languageLabel.font = fontTemplate.font;
+            }
+        }
+
+        private void HandleLanguageClicked()
+        {
+            MiningLocalization.ToggleLanguage();
+        }
+
+        private void HandleLanguageChanged()
+        {
+            ApplyLanguage();
+            ResetButtonState();
+        }
+
+        private void ApplyLanguage()
+        {
+            MiningLocalization.ApplyToHierarchy(transform.root);
+            TextMeshProUGUI title = settingsPanel != null
+                ? settingsPanel.transform.Find("Header/Title")?.GetComponent<TextMeshProUGUI>()
+                : null;
+            if (title != null)
+            {
+                title.text = MiningLocalization.Text("SETTINGS", "CÀI ĐẶT");
+            }
+            if (languageLabel != null)
+            {
+                languageLabel.text = MiningLocalization.IsEnglish ? "EN ✓" : "VI ✓";
             }
         }
     }

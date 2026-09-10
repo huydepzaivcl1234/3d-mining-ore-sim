@@ -50,8 +50,8 @@ namespace MiningSimulator.Ores
         [Min(0.1f), SerializeField] private float effectDurationSeconds = 30f;
 
         public string ItemId => itemId;
-        public string DisplayName => displayName;
-        public string Description => description;
+        public string DisplayName => MiningLocalization.GetItemName(itemId, displayName);
+        public string Description => MiningLocalization.GetItemDescription(itemId, description);
         public MiningItemRarity Rarity => rarity;
         public GameObject WorldModel => worldModel;
         public Sprite InventoryIcon => inventoryIcon;
@@ -66,20 +66,8 @@ namespace MiningSimulator.Ores
         public float EffectPercent => effectPercent;
         public float EffectDurationSeconds => effectDurationSeconds;
 
-        public string EffectName => effectType switch
-        {
-            MiningItemEffectType.NpcDamage => "Sát thương NPC",
-            MiningItemEffectType.MoneyReward => "Vàng nhận được",
-            MiningItemEffectType.NpcMoveSpeed => "Tốc chạy NPC",
-            _ => "Hiệu ứng"
-        };
-        public string ShortEffectName => effectType switch
-        {
-            MiningItemEffectType.NpcDamage => "DMG NPC",
-            MiningItemEffectType.MoneyReward => "VÀNG",
-            MiningItemEffectType.NpcMoveSpeed => "TỐC NPC",
-            _ => "BUFF"
-        };
+        public string EffectName => MiningLocalization.GetEffectName(effectType, false);
+        public string ShortEffectName => MiningLocalization.GetEffectName(effectType, true);
 
         public string GetEffectSummary()
         {

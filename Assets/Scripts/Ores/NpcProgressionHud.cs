@@ -31,6 +31,8 @@ namespace MiningSimulator.Ores
 
         private void OnEnable()
         {
+            MiningLocalization.LanguageChanged -= HandleLanguageChanged;
+            MiningLocalization.LanguageChanged += HandleLanguageChanged;
             if (progressionSystem != null)
             {
                 progressionSystem.ProgressionChanged -= Refresh;
@@ -48,6 +50,7 @@ namespace MiningSimulator.Ores
 
         private void OnDisable()
         {
+            MiningLocalization.LanguageChanged -= HandleLanguageChanged;
             if (progressionSystem != null)
             {
                 progressionSystem.ProgressionChanged -= Refresh;
@@ -83,11 +86,14 @@ namespace MiningSimulator.Ores
 
             if (levelLabel != null)
             {
-                levelLabel.text = string.Format(levelFormat, level);
+                levelLabel.text = string.Format(MiningLocalization.Text(
+                    "MINER LEVEL: {0}", levelFormat), level);
             }
             if (powerLabel != null)
             {
-                powerLabel.text = string.Format(powerFormat, npcCount, power, totalDamage);
+                powerLabel.text = string.Format(MiningLocalization.Text(
+                    "NPC: {0}  •  POWER: {1}  •  TOTAL DMG: {2:0.##}", powerFormat),
+                    npcCount, power, totalDamage);
             }
             if (experienceLabel != null)
             {
@@ -147,6 +153,11 @@ namespace MiningSimulator.Ores
         }
 
         private void HandleNpcCountChanged(int count)
+        {
+            Refresh();
+        }
+
+        private void HandleLanguageChanged()
         {
             Refresh();
         }

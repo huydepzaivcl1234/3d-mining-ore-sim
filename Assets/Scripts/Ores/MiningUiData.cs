@@ -140,6 +140,12 @@ namespace MiningSimulator.Ores
         [SerializeField] private Color resetDataButtonColor = new(0.88f, 0.12f, 0.18f, 1f);
         [SerializeField] private Color resetDataArmedColor = new(1f, 0.36f, 0.08f, 1f);
 
+        [Header("Language Button")]
+        [SerializeField] private Vector2 languageButtonPosition = new(20f, -354f);
+        [SerializeField] private Vector2 languageButtonSize = new(100f, 46f);
+        [Min(8f), SerializeField] private float languageButtonFontSize = 14f;
+        [SerializeField] private Color languageButtonColor = new(0.2f, 0.65f, 0.94f, 1f);
+
         [Header("Inventory Layout")]
         [SerializeField] private Vector2 inventoryMenuButtonPosition = new(-24f, -278f);
         [SerializeField] private Vector2 inventoryMenuButtonSize = new(180f, 48f);
@@ -404,6 +410,10 @@ namespace MiningSimulator.Ores
         public float ResetDataConfirmationDuration => resetDataConfirmationDuration;
         public Color ResetDataButtonColor => resetDataButtonColor;
         public Color ResetDataArmedColor => resetDataArmedColor;
+        public Vector2 LanguageButtonPosition => languageButtonPosition;
+        public Vector2 LanguageButtonSize => languageButtonSize;
+        public float LanguageButtonFontSize => languageButtonFontSize;
+        public Color LanguageButtonColor => languageButtonColor;
         public Vector2 InventoryMenuButtonPosition => inventoryMenuButtonPosition;
         public Vector2 InventoryMenuButtonSize => inventoryMenuButtonSize;
         public Vector2 InventoryPanelSize => inventoryPanelSize;

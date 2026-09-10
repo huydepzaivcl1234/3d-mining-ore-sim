@@ -130,6 +130,10 @@ MonoBehaviour:
   resetDataConfirmationDuration: 3
   resetDataButtonColor: {r: 0.88, g: 0.12, b: 0.18, a: 1}
   resetDataArmedColor: {r: 1, g: 0.36, b: 0.08, a: 1}
+  languageButtonPosition: {x: 20, y: -354}
+  languageButtonSize: {x: 100, y: 46}
+  languageButtonFontSize: 14
+  languageButtonColor: {r: 0.2, g: 0.65, b: 0.94, a: 1}
   inventoryMenuButtonPosition: {x: -24, y: -278}
   inventoryMenuButtonSize: {x: 180, y: 48}
   inventoryPanelSize: {x: 930, y: 590}

@@ -33,6 +33,8 @@ namespace MiningSimulator.Ores
 
         private void OnEnable()
         {
+            MiningLocalization.LanguageChanged -= HandleLanguageChanged;
+            MiningLocalization.LanguageChanged += HandleLanguageChanged;
             if (wallet != null)
             {
                 wallet.MoneyChanged -= HandleMoneyChanged;
@@ -59,6 +61,7 @@ namespace MiningSimulator.Ores
 
         private void OnDisable()
         {
+            MiningLocalization.LanguageChanged -= HandleLanguageChanged;
             if (wallet != null)
             {
                 wallet.MoneyChanged -= HandleMoneyChanged;
@@ -92,7 +95,11 @@ namespace MiningSimulator.Ores
             bool purchased = npcShop != null && npcShop.TryBuyNpc();
             if (statusText != null)
             {
-                statusText.text = purchased ? purchasedMessage : purchaseFailedMessage;
+                statusText.text = purchased
+                    ? MiningLocalization.Text("Miner purchased!", purchasedMessage)
+                    : MiningLocalization.Text(
+                        "Not enough money or the miner limit has been reached.",
+                        purchaseFailedMessage);
             }
             RefreshOtherText();
         }
@@ -125,7 +132,8 @@ namespace MiningSimulator.Ores
         {
             if (moneyText != null)
             {
-                moneyText.text = string.Format(moneyFormat,
+                moneyText.text = string.Format(
+                    MiningLocalization.Text("Money: {0}", moneyFormat),
                     MiningMoneyFormatter.Format(displayedMoney));
             }
         }
@@ -136,13 +144,15 @@ namespace MiningSimulator.Ores
             {
                 int count = npcShop != null ? npcShop.PurchasedCount : 0;
                 int maximum = npcShop != null ? npcShop.MaximumMiners : 0;
-                npcCountText.text = string.Format(npcCountFormat, count, maximum);
+                npcCountText.text = string.Format(MiningLocalization.Text(
+                    "Mining NPCs: {0}/{1}", npcCountFormat), count, maximum);
             }
 
             if (buyButtonLabel != null)
             {
                 int cost = npcShop != null ? npcShop.NpcCost : 0;
-                buyButtonLabel.text = string.Format(buyButtonFormat,
+                buyButtonLabel.text = string.Format(MiningLocalization.Text(
+                        "Buy miner ({0})", buyButtonFormat),
                     MiningMoneyFormatter.Format(cost));
             }
 
@@ -150,6 +160,18 @@ namespace MiningSimulator.Ores
             {
                 buyButton.interactable = npcShop != null && npcShop.CanBuy;
             }
+        }
+
+        private void HandleLanguageChanged()
+        {
+            if (statusText != null)
+            {
+                statusText.text = MiningLocalization.Text(
+                    "Right mouse: rotate • WASD: move",
+                    "Chuột phải: xoay • WASD: di chuyển");
+            }
+            RefreshMoneyText();
+            RefreshOtherText();
         }
     }
 }

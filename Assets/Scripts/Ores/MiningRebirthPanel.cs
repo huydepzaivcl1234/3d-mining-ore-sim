@@ -59,6 +59,8 @@ namespace MiningSimulator.Ores
 
         private void OnEnable()
         {
+            MiningLocalization.LanguageChanged -= HandleLanguageChanged;
+            MiningLocalization.LanguageChanged += HandleLanguageChanged;
             AddListeners();
             if (rebirthSystem != null)
             {
@@ -72,6 +74,7 @@ namespace MiningSimulator.Ores
 
         private void OnDisable()
         {
+            MiningLocalization.LanguageChanged -= HandleLanguageChanged;
             if (rebirthSequence != null)
             {
                 StopCoroutine(rebirthSequence);
@@ -275,7 +278,8 @@ namespace MiningSimulator.Ores
 
             if (progressLabel != null)
             {
-                progressLabel.text = string.Format(progressFormat,
+                progressLabel.text = string.Format(MiningLocalization.Text(
+                        "{0:N0} / {1:N0} MONEY", progressFormat),
                     MiningMoneyFormatter.Format(money),
                     MiningMoneyFormatter.Format(requirement));
             }
@@ -283,16 +287,21 @@ namespace MiningSimulator.Ores
             {
                 int count = rebirthSystem != null ? rebirthSystem.CompletedRebirths : 0;
                 float multiplier = rebirthSystem != null ? rebirthSystem.PermanentMoneyMultiplier : 1f;
-                boostLabel.text = string.Format(boostFormat, count, multiplier);
+                boostLabel.text = string.Format(MiningLocalization.Text(
+                    "REBIRTH {0}  •  x{1:0.00} MONEY", boostFormat), count, multiplier);
             }
             if (warningLabel != null)
             {
-                warningLabel.text = warningText == LegacyWarning ? CompleteWarning : warningText;
+                warningLabel.text = MiningLocalization.IsEnglish
+                    ? "WARNING!\n\nRebirth resets money, every upgrade, miner level, and all NPCs on the field."
+                    : warningText == LegacyWarning ? CompleteWarning : warningText;
             }
             if (nextBoostLabel != null)
             {
                 float nextMultiplier = rebirthSystem != null ? rebirthSystem.NextMoneyMultiplier : 1f;
-                nextBoostLabel.text = string.Format(nextBoostFormat, nextMultiplier);
+                nextBoostLabel.text = string.Format(MiningLocalization.Text(
+                    "Permanent boost after Rebirth: x{0:0.00} money", nextBoostFormat),
+                    nextMultiplier);
             }
             if (confirmButton != null)
             {
@@ -301,6 +310,11 @@ namespace MiningSimulator.Ores
             }
 
             RefreshProgressBar(money, requirement);
+        }
+
+        private void HandleLanguageChanged()
+        {
+            Refresh();
         }
 
         private void RefreshProgressBar(float current, int maximum)
