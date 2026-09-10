@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d697d1ce92e7572c4046ac7b833d40b, type: 3}
+  m_Name: Rare Gift Box
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningItemData
+  itemId: rare_gift_box
+  displayName: "Hộp Quà Hiếm"
+  description: "Mở hộp để quay và nhận vàng hoặc vật phẩm theo tỉ lệ."
+  rarity: 2
+  worldModel: {fileID: 0}
+  inventoryIcon: {fileID: 0}
+  iconFallback: BOX
+  fallbackColor: {r: 0.62, g: 0.28, b: 0.92, a: 1}
+  worldScale: 0.52
+  modelLocalPosition: {x: 0, y: 0, z: 0}
+  modelLocalEulerAngles: {x: 0, y: 0, z: 0}
+  selectionChancePercent: 5
+  maximumStack: 64
+  useType: 1
+  effectType: 0
+  effectPercent: 0
+  effectDurationSeconds: 1
+  giftRewards:
+  - rewardType: 0
+    chancePercent: 45
+    moneyAmount: 1000
+    item: {fileID: 0}
+    itemAmount: 1
+    wheelColor: {r: 0.92, g: 0.55, b: 0.08, a: 1}
+  - rewardType: 0
+    chancePercent: 20
+    moneyAmount: 5000
+    item: {fileID: 0}
+    itemAmount: 1
+    wheelColor: {r: 0.98, g: 0.78, b: 0.12, a: 1}
+  - rewardType: 1
+    chancePercent: 15
+    moneyAmount: 0
+    item: {fileID: 11400000, guid: 6556e39ad099f9f4aafb234d4eec3f75, type: 2}
+    itemAmount: 1
+    wheelColor: {r: 0.88, g: 0.12, b: 0.12, a: 1}
+  - rewardType: 1
+    chancePercent: 12
+    moneyAmount: 0
+    item: {fileID: 11400000, guid: d4439c8d4fb6e8c4cb8932645ca7aa8b, type: 2}
+    itemAmount: 1
+    wheelColor: {r: 0.95, g: 0.72, b: 0.08, a: 1}
+  - rewardType: 1
+    chancePercent: 8
+    moneyAmount: 0
+    item: {fileID: 11400000, guid: c1a7e2ced9de9bf42b9f38b6cf7528e1, type: 2}
+    itemAmount: 1
+    wheelColor: {r: 0.42, g: 0.18, b: 0.72, a: 1}
+  giftSpinDurationSeconds: 3.5
+  giftSpinRotations: 6

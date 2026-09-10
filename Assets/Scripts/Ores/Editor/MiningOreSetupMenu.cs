@@ -40,6 +40,7 @@ namespace MiningSimulator.Editor
         private const string AppleItemPath = ItemDataFolder + "/Apple.asset";
         private const string BananaItemPath = ItemDataFolder + "/Banana.asset";
         private const string GreenAppleItemPath = ItemDataFolder + "/Green Apple.asset";
+        private const string RareGiftBoxItemPath = ItemDataFolder + "/Rare Gift Box.asset";
         private const string AppleItemIconPath = "Assets/Ores/Icons/AppleIcon.png";
         private const string BananaItemIconPath = "Assets/Ores/Icons/BananaIcon.png";
         private const string DataFolder = "Assets/GameData/Ores";
@@ -771,6 +772,7 @@ namespace MiningSimulator.Editor
                 MiningItemEffectType.NpcMoveSpeed, "G", new Color(0.26f, 0.82f, 0.18f), 33.33f);
             AssignItemIconIfMissing(apple, AppleItemIconPath);
             AssignItemIconIfMissing(banana, BananaItemIconPath);
+            MiningItemData rareGiftBox = CreateRareGiftBox(apple, banana, greenApple);
 
             MiningItemDatabase database =
                 AssetDatabase.LoadAssetAtPath<MiningItemDatabase>(ItemDatabasePath);
@@ -782,7 +784,7 @@ namespace MiningSimulator.Editor
 
             var serialized = new SerializedObject(database);
             SerializedProperty items = serialized.FindProperty("items");
-            MiningItemData[] defaults = { apple, banana, greenApple };
+            MiningItemData[] defaults = { apple, banana, greenApple, rareGiftBox };
             foreach (MiningItemData item in defaults)
             {
                 bool found = false;
@@ -833,6 +835,62 @@ namespace MiningSimulator.Editor
             serialized.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(item);
             return item;
+        }
+
+        private static MiningItemData CreateRareGiftBox(MiningItemData apple,
+            MiningItemData banana, MiningItemData grape)
+        {
+            MiningItemData item = AssetDatabase.LoadAssetAtPath<MiningItemData>(
+                RareGiftBoxItemPath);
+            if (item != null)
+            {
+                return item;
+            }
+
+            item = ScriptableObject.CreateInstance<MiningItemData>();
+            AssetDatabase.CreateAsset(item, RareGiftBoxItemPath);
+            var serialized = new SerializedObject(item);
+            serialized.FindProperty("itemId").stringValue = "rare_gift_box";
+            serialized.FindProperty("displayName").stringValue = "Hộp Quà Hiếm";
+            serialized.FindProperty("description").stringValue =
+                "Mở hộp để quay và nhận vàng hoặc vật phẩm theo tỉ lệ.";
+            serialized.FindProperty("rarity").enumValueIndex = (int)MiningItemRarity.Rare;
+            serialized.FindProperty("useType").enumValueIndex = (int)MiningItemUseType.GiftBox;
+            serialized.FindProperty("iconFallback").stringValue = "BOX";
+            serialized.FindProperty("fallbackColor").colorValue =
+                new Color(0.62f, 0.28f, 0.92f);
+            serialized.FindProperty("selectionChancePercent").floatValue = 5f;
+            serialized.FindProperty("maximumStack").intValue = 64;
+            serialized.FindProperty("giftSpinDurationSeconds").floatValue = 3.5f;
+            serialized.FindProperty("giftSpinRotations").intValue = 6;
+
+            SerializedProperty rewards = serialized.FindProperty("giftRewards");
+            rewards.arraySize = 5;
+            ConfigureGiftReward(rewards.GetArrayElementAtIndex(0),
+                MiningGiftRewardType.Money, 45f, 1000f, null, new Color(0.92f, 0.55f, 0.08f));
+            ConfigureGiftReward(rewards.GetArrayElementAtIndex(1),
+                MiningGiftRewardType.Money, 20f, 5000f, null, new Color(0.98f, 0.78f, 0.12f));
+            ConfigureGiftReward(rewards.GetArrayElementAtIndex(2),
+                MiningGiftRewardType.Item, 15f, 0f, apple, new Color(0.88f, 0.12f, 0.12f));
+            ConfigureGiftReward(rewards.GetArrayElementAtIndex(3),
+                MiningGiftRewardType.Item, 12f, 0f, banana, new Color(0.95f, 0.72f, 0.08f));
+            ConfigureGiftReward(rewards.GetArrayElementAtIndex(4),
+                MiningGiftRewardType.Item, 8f, 0f, grape, new Color(0.42f, 0.18f, 0.72f));
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(item);
+            return item;
+        }
+
+        private static void ConfigureGiftReward(SerializedProperty reward,
+            MiningGiftRewardType type, float chance, float money, MiningItemData item,
+            Color color)
+        {
+            reward.FindPropertyRelative("rewardType").enumValueIndex = (int)type;
+            reward.FindPropertyRelative("chancePercent").floatValue = chance;
+            reward.FindPropertyRelative("moneyAmount").floatValue = money;
+            reward.FindPropertyRelative("item").objectReferenceValue = item;
+            reward.FindPropertyRelative("itemAmount").intValue = 1;
+            reward.FindPropertyRelative("wheelColor").colorValue = color;
         }
 
         private static void AssignItemIconIfMissing(MiningItemData item, string iconPath)

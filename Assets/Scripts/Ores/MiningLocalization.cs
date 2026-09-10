@@ -130,6 +130,7 @@ namespace MiningSimulator.Ores
                 "apple" => Text("Apple", "Táo"),
                 "banana" => Text("Banana", "Chuối"),
                 "grape" => Text("Grape", "Nho"),
+                "rare_gift_box" => Text("Rare Gift Box", "Hộp Quà Hiếm"),
                 _ => fallback
             };
         }
@@ -141,6 +142,8 @@ namespace MiningSimulator.Ores
                 "apple" => Text("Increases NPC damage for a limited time.", fallback),
                 "banana" => Text("Increases money earned from ores and Lucky Blocks for a limited time.", fallback),
                 "grape" => Text("Increases NPC move speed for a limited time.", fallback),
+                "rare_gift_box" => Text(
+                    "Open it to spin for a weighted money or item reward.", fallback),
                 _ => fallback
             };
         }

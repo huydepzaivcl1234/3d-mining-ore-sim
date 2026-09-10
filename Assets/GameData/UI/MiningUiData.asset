@@ -148,6 +148,15 @@ MonoBehaviour:
   inventoryPanelColor: {r: 0.93, g: 0.96, b: 0.98, a: 1}
   inventoryHeaderColor: {r: 0.48, g: 0.24, b: 0.75, a: 1}
   inventorySlotColor: {r: 0.12, g: 0.15, b: 0.2, a: 1}
+  giftWheelPanelSize: {x: 720, y: 620}
+  giftWheelHeaderSize: {x: 720, y: 72}
+  giftWheelSize: {x: 360, y: 360}
+  giftWheelRewardSize: {x: 150, y: 58}
+  giftWheelRewardRadius: 142
+  giftWheelSpinButtonSize: {x: 260, y: 56}
+  giftWheelPanelColor: {r: 0.06, g: 0.075, b: 0.11, a: 0.98}
+  giftWheelHeaderColor: {r: 0.48, g: 0.24, b: 0.75, a: 1}
+  giftWheelSpinButtonColor: {r: 1, g: 0.62, b: 0.08, a: 1}
   effectToastPosition: {x: 0, y: -190}
   effectToastSize: {x: 620, y: 120}
   effectToastFontSize: 19

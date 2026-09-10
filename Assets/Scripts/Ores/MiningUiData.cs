@@ -162,6 +162,17 @@ namespace MiningSimulator.Ores
         [SerializeField] private Color inventoryHeaderColor = new(0.48f, 0.24f, 0.75f, 1f);
         [SerializeField] private Color inventorySlotColor = new(0.12f, 0.15f, 0.20f, 1f);
 
+        [Header("Gift Box Wheel")]
+        [SerializeField] private Vector2 giftWheelPanelSize = new(720f, 620f);
+        [SerializeField] private Vector2 giftWheelHeaderSize = new(720f, 72f);
+        [SerializeField] private Vector2 giftWheelSize = new(360f, 360f);
+        [SerializeField] private Vector2 giftWheelRewardSize = new(150f, 58f);
+        [Min(1f), SerializeField] private float giftWheelRewardRadius = 142f;
+        [SerializeField] private Vector2 giftWheelSpinButtonSize = new(260f, 56f);
+        [SerializeField] private Color giftWheelPanelColor = new(0.06f, 0.075f, 0.11f, 0.98f);
+        [SerializeField] private Color giftWheelHeaderColor = new(0.48f, 0.24f, 0.75f, 1f);
+        [SerializeField] private Color giftWheelSpinButtonColor = new(1f, 0.62f, 0.08f, 1f);
+
         [Header("Active Effect Toast")]
         [SerializeField] private Vector2 effectToastPosition = new(0f, -190f);
         [SerializeField] private Vector2 effectToastSize = new(620f, 120f);
@@ -428,6 +439,15 @@ namespace MiningSimulator.Ores
         public Color InventoryPanelColor => inventoryPanelColor;
         public Color InventoryHeaderColor => inventoryHeaderColor;
         public Color InventorySlotColor => inventorySlotColor;
+        public Vector2 GiftWheelPanelSize => giftWheelPanelSize;
+        public Vector2 GiftWheelHeaderSize => giftWheelHeaderSize;
+        public Vector2 GiftWheelSize => giftWheelSize;
+        public Vector2 GiftWheelRewardSize => giftWheelRewardSize;
+        public float GiftWheelRewardRadius => giftWheelRewardRadius;
+        public Vector2 GiftWheelSpinButtonSize => giftWheelSpinButtonSize;
+        public Color GiftWheelPanelColor => giftWheelPanelColor;
+        public Color GiftWheelHeaderColor => giftWheelHeaderColor;
+        public Color GiftWheelSpinButtonColor => giftWheelSpinButtonColor;
         public Vector2 EffectToastPosition => effectToastPosition;
         public Vector2 EffectToastSize => effectToastSize;
         public float EffectToastFontSize => effectToastFontSize;
@@ -625,6 +645,17 @@ namespace MiningSimulator.Ores
             inventorySlotSpacing.y = Mathf.Max(1f, inventorySlotSpacing.y);
             inventoryItemFontSize = Mathf.Max(1f, inventoryItemFontSize);
             inventoryCountFontSize = Mathf.Max(1f, inventoryCountFontSize);
+            giftWheelPanelSize.x = Mathf.Max(1f, giftWheelPanelSize.x);
+            giftWheelPanelSize.y = Mathf.Max(1f, giftWheelPanelSize.y);
+            giftWheelHeaderSize.x = Mathf.Max(1f, giftWheelHeaderSize.x);
+            giftWheelHeaderSize.y = Mathf.Max(1f, giftWheelHeaderSize.y);
+            giftWheelSize.x = Mathf.Max(1f, giftWheelSize.x);
+            giftWheelSize.y = Mathf.Max(1f, giftWheelSize.y);
+            giftWheelRewardSize.x = Mathf.Max(1f, giftWheelRewardSize.x);
+            giftWheelRewardSize.y = Mathf.Max(1f, giftWheelRewardSize.y);
+            giftWheelRewardRadius = Mathf.Max(1f, giftWheelRewardRadius);
+            giftWheelSpinButtonSize.x = Mathf.Max(1f, giftWheelSpinButtonSize.x);
+            giftWheelSpinButtonSize.y = Mathf.Max(1f, giftWheelSpinButtonSize.y);
             effectToastSize.x = Mathf.Max(1f, effectToastSize.x);
             effectToastSize.y = Mathf.Max(1f, effectToastSize.y);
             effectToastFontSize = Mathf.Max(1f, effectToastFontSize);

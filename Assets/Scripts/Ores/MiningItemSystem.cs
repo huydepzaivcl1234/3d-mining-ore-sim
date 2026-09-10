@@ -199,6 +199,12 @@ namespace MiningSimulator.Ores
             return true;
         }
 
+        public bool CanAddItem(MiningItemData item, int amount = 1)
+        {
+            EnsureRuntimeSlots();
+            return item != null && amount > 0 && GetAvailableSpace(item) >= amount;
+        }
+
         public bool TryUseSlot(int index)
         {
             EnsureRuntimeSlots();
@@ -213,15 +219,37 @@ namespace MiningSimulator.Ores
             }
 
             MiningItemData item = slot.item;
-            slot.count--;
-            if (slot.count == 0)
+            if (item.UseType != MiningItemUseType.TimedEffect)
             {
-                slot.item = null;
+                return false;
             }
+            ConsumeOne(slot);
             ActivateEffect(item);
             SaveInventory();
             InventoryChanged?.Invoke();
             ItemUsed?.Invoke(item);
+            return true;
+        }
+
+        public bool TryConsumeGiftBox(int index, MiningItemData expectedItem)
+        {
+            EnsureRuntimeSlots();
+            if (index < 0 || index >= slots.Length || expectedItem == null ||
+                expectedItem.UseType != MiningItemUseType.GiftBox)
+            {
+                return false;
+            }
+
+            RuntimeSlot slot = slots[index];
+            if (slot.item != expectedItem || slot.count <= 0)
+            {
+                return false;
+            }
+
+            ConsumeOne(slot);
+            SaveInventory();
+            InventoryChanged?.Invoke();
+            ItemUsed?.Invoke(expectedItem);
             return true;
         }
 
@@ -284,6 +312,16 @@ namespace MiningSimulator.Ores
                 endTime = startTime + item.EffectDurationSeconds
             };
             EffectsChanged?.Invoke();
+        }
+
+        private static void ConsumeOne(RuntimeSlot slot)
+        {
+            slot.count--;
+            if (slot.count <= 0)
+            {
+                slot.item = null;
+                slot.count = 0;
+            }
         }
 
         private float GetEffectMultiplier(MiningItemEffectType type)

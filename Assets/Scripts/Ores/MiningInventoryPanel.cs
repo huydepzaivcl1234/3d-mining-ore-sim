@@ -28,6 +28,7 @@ namespace MiningSimulator.Ores
 
         private readonly SlotView[] slotViews =
             new SlotView[MiningItemDatabase.InventoryCapacity];
+        private MiningGiftBoxWheelPanel giftBoxWheelPanel;
 
         public event Action PanelOpened;
         public event Action PanelClosed;
@@ -42,6 +43,7 @@ namespace MiningSimulator.Ores
                 openButton != null ? openButton.GetComponent<RectTransform>() : null,
                 inventoryPanel != null ? inventoryPanel.GetComponent<RectTransform>() : null);
             CacheSlotViews();
+            EnsureGiftBoxWheelPanel();
             inventoryPanel?.SetActive(false);
         }
 
@@ -74,7 +76,19 @@ namespace MiningSimulator.Ores
 
         public void UseSlot(int index)
         {
-            itemSystem?.TryUseSlot(index);
+            if (itemSystem == null)
+            {
+                return;
+            }
+
+            MiningItemSystem.InventorySlotView slot = itemSystem.GetSlot(index);
+            if (!slot.IsEmpty && slot.Item.UseType == MiningItemUseType.GiftBox)
+            {
+                EnsureGiftBoxWheelPanel();
+                giftBoxWheelPanel?.Show(index, slot.Item);
+                return;
+            }
+            itemSystem.TryUseSlot(index);
         }
 
         private void OpenPanel()
@@ -180,7 +194,7 @@ namespace MiningSimulator.Ores
                 if (view.nameLabel != null)
                 {
                     view.nameLabel.text = occupied
-                        ? $"{slot.Item.DisplayName}\n{slot.Item.ShortEffectName} +{slot.Item.EffectPercent:0.##}%"
+                        ? $"{slot.Item.DisplayName}\n{slot.Item.GetInventorySummary()}"
                         : MiningLocalization.Text("EMPTY", "TRỐNG");
                 }
                 if (view.countLabel != null)
@@ -193,6 +207,33 @@ namespace MiningSimulator.Ores
         private void HandleLanguageChanged()
         {
             Refresh();
+        }
+
+        private void EnsureGiftBoxWheelPanel()
+        {
+            if (giftBoxWheelPanel != null || inventoryPanel == null ||
+                inventoryPanel.transform.parent == null)
+            {
+                return;
+            }
+
+            Transform parent = inventoryPanel.transform.parent;
+            Transform existing = parent.Find("Gift Box Wheel Panel");
+            if (existing == null)
+            {
+                GameObject giftObject = new("Gift Box Wheel Panel", typeof(RectTransform),
+                    typeof(CanvasRenderer), typeof(Image), typeof(CanvasGroup));
+                giftObject.transform.SetParent(parent, false);
+                giftObject.SetActive(false);
+                existing = giftObject.transform;
+            }
+
+            giftBoxWheelPanel = existing.GetComponent<MiningGiftBoxWheelPanel>() ??
+                                existing.gameObject.AddComponent<MiningGiftBoxWheelPanel>();
+            PlayerWallet wallet = FindFirstObjectByType<PlayerWallet>(FindObjectsInactive.Include);
+            giftBoxWheelPanel.Configure(itemSystem, wallet, panelCoordinator, uiData,
+                inventoryPanel.GetComponent<RectTransform>());
+            giftBoxWheelPanel.gameObject.SetActive(false);
         }
     }
 }
