@@ -24,6 +24,7 @@ namespace MiningSimulator.Ores
         private readonly Dictionary<Ore, OreData> poolOwnedOres = new();
         private readonly HashSet<Ore> inactivePooledOres = new();
         private readonly HashSet<Ore> pendingPoolReturns = new();
+        private readonly Queue<OreData> guaranteedOreQueue = new();
         private Coroutine spawnRoutine;
         private bool initialSpawnCompleted;
 
@@ -157,6 +158,22 @@ namespace MiningSimulator.Ores
             activeOres.Clear();
         }
 
+        /// <summary>
+        /// Queues a specific ore so the very next spawn (right now if there's room, otherwise
+        /// the next opening) uses it instead of the normal weighted roll. Used to guarantee
+        /// a freshly power-unlocked ore is the first one players see.
+        /// </summary>
+        public bool SpawnGuaranteedOre(OreData oreData)
+        {
+            if (oreData == null || oreData.Prefab == null)
+            {
+                return false;
+            }
+
+            guaranteedOreQueue.Enqueue(oreData);
+            return SpawnOne();
+        }
+
         public bool SpawnOne()
         {
             if (spawnData == null || spawnData.MaximumAliveOres <= 0 ||
@@ -165,7 +182,7 @@ namespace MiningSimulator.Ores
                 return false;
             }
 
-            OreData data = ChooseOre();
+            OreData data = guaranteedOreQueue.Count > 0 ? guaranteedOreQueue.Dequeue() : ChooseOre();
             if (data == null || data.Prefab == null)
             {
                 return false;

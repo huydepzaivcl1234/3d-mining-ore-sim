@@ -219,6 +219,17 @@ namespace MiningSimulator.Ores
         [SerializeField] private Color rewardPopupOutlineColor = new(0.08f, 0.04f, 0.01f, 1f);
         [Range(0f, 1f), SerializeField] private float rewardPopupOutlineWidth = 0.2f;
 
+        [Header("Unlock Toast")]
+        [SerializeField] private string oreUnlockToastFormat = "Đã mở khóa quặng: {0}!";
+        [SerializeField] private string luckyBlockUnlockToastFormat = "Đã mở khóa Lucky Block: {0}!";
+        [SerializeField] private Vector2 unlockToastPosition = new(0f, -140f);
+        [SerializeField] private Vector2 unlockToastSize = new(460f, 64f);
+        [Min(1f), SerializeField] private float unlockToastFontSize = 24f;
+        [Min(0.1f), SerializeField] private float unlockToastHoldDuration = 2.2f;
+        [Min(0.01f), SerializeField] private float unlockToastFadeDuration = 0.25f;
+        [SerializeField] private Color unlockToastBackgroundColor = new(0.08f, 0.09f, 0.11f, 0.95f);
+        [SerializeField] private Color unlockToastTextColor = new(1f, 0.86f, 0.32f, 1f);
+
         [Header("Upgrade Panel Layout")]
         [SerializeField] private bool upgradePanelFullscreen = true;
         [Min(1), SerializeField] private int upgradeCardColumns = 2;
@@ -480,6 +491,15 @@ namespace MiningSimulator.Ores
         public Color RewardPopupColor => rewardPopupColor;
         public Color RewardPopupOutlineColor => rewardPopupOutlineColor;
         public float RewardPopupOutlineWidth => rewardPopupOutlineWidth;
+        public string OreUnlockToastFormat => oreUnlockToastFormat;
+        public string LuckyBlockUnlockToastFormat => luckyBlockUnlockToastFormat;
+        public Vector2 UnlockToastPosition => unlockToastPosition;
+        public Vector2 UnlockToastSize => unlockToastSize;
+        public float UnlockToastFontSize => unlockToastFontSize;
+        public float UnlockToastHoldDuration => unlockToastHoldDuration;
+        public float UnlockToastFadeDuration => unlockToastFadeDuration;
+        public Color UnlockToastBackgroundColor => unlockToastBackgroundColor;
+        public Color UnlockToastTextColor => unlockToastTextColor;
         public Vector2 PanelSize => panelSize;
         public bool UpgradePanelFullscreen => upgradePanelFullscreen;
         public int UpgradeCardColumns => Mathf.Max(1, upgradeCardColumns);
@@ -676,6 +696,11 @@ namespace MiningSimulator.Ores
             rewardPopupRiseDistance = Mathf.Max(0f, rewardPopupRiseDistance);
             rewardPopupWorldScale = Mathf.Max(0.001f, rewardPopupWorldScale);
             rewardPopupFontSize = Mathf.Max(1f, rewardPopupFontSize);
+            unlockToastSize.x = Mathf.Max(1f, unlockToastSize.x);
+            unlockToastSize.y = Mathf.Max(1f, unlockToastSize.y);
+            unlockToastFontSize = Mathf.Max(1f, unlockToastFontSize);
+            unlockToastHoldDuration = Mathf.Max(0.1f, unlockToastHoldDuration);
+            unlockToastFadeDuration = Mathf.Max(0.01f, unlockToastFadeDuration);
             rebirthHudSize.x = Mathf.Max(1f, rebirthHudSize.x);
             rebirthHudSize.y = Mathf.Max(1f, rebirthHudSize.y);
             rebirthHudHeaderSize.x = Mathf.Max(1f, rebirthHudHeaderSize.x);

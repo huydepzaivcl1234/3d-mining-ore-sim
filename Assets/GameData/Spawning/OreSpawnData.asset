@@ -31,24 +31,24 @@ MonoBehaviour:
     affectedByRareUpgrade: 0
     zeroChanceUnlockAtOneHundredPercentBonus: 0
   - rarity: 1
-    baseChanceMultiplier: 1
+    baseChanceMultiplier: 0.8
     affectedByRareUpgrade: 0
     zeroChanceUnlockAtOneHundredPercentBonus: 0
   - rarity: 2
-    baseChanceMultiplier: 1
+    baseChanceMultiplier: 0.5
     affectedByRareUpgrade: 1
     zeroChanceUnlockAtOneHundredPercentBonus: 20
   - rarity: 3
-    baseChanceMultiplier: 1
+    baseChanceMultiplier: 0.1
     affectedByRareUpgrade: 1
     zeroChanceUnlockAtOneHundredPercentBonus: 4
   - rarity: 4
-    baseChanceMultiplier: 1
+    baseChanceMultiplier: 0.05
     affectedByRareUpgrade: 1
     zeroChanceUnlockAtOneHundredPercentBonus: 1
   spawnOnEnable: 1
   initialSpawnCount: 8
-  maximumAliveOres: 12
+  maximumAliveOres: 14
   maximumPooledOres: 12
   secondsPerSpawn: 2
   areaCenter: {x: 0, y: 0, z: 0}

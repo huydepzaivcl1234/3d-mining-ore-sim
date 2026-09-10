@@ -32,6 +32,7 @@ namespace MiningSimulator.Ores
 
         public int ActiveCount => activeBlocks.Count;
         public int PooledCount => pooledBlocks.Count;
+        public LuckyBlockData Data => data;
         public event System.Action<LuckyBlock, float> LuckyBlockRewardGranted;
 
         private void Awake()
@@ -147,13 +148,23 @@ namespace MiningSimulator.Ores
         [ContextMenu("Drop Lucky Block Now")]
         public bool TryDropOne()
         {
+            return TryDropOne(null);
+        }
+
+        /// <summary>
+        /// Drops a Lucky Block. Pass a specific variant to force that exact type (used to
+        /// guarantee a freshly power-unlocked variant drops right away); pass null for the
+        /// normal weighted roll.
+        /// </summary>
+        public bool TryDropOne(LuckyBlockVariantData forcedVariant)
+        {
             if (data == null || wallet == null || oreSpawnData == null || spawnAreaOrigin == null ||
                 activeBlocks.Count >= data.MaximumActiveBlocks)
             {
                 return false;
             }
 
-            LuckyBlockVariantData variant = ChooseVariant();
+            LuckyBlockVariantData variant = forcedVariant != null ? forcedVariant : ChooseVariant();
             if (variant == null || variant.Model == null ||
                 !TryChooseLandingPosition(variant, out Vector3 landingPosition))
             {
