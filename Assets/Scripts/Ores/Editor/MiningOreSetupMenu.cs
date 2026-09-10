@@ -43,6 +43,7 @@ namespace MiningSimulator.Editor
         private const string RareGiftBoxItemPath = ItemDataFolder + "/Rare Gift Box.asset";
         private const string AppleItemIconPath = "Assets/Ores/Icons/AppleIcon.png";
         private const string BananaItemIconPath = "Assets/Ores/Icons/BananaIcon.png";
+        private const string RareGiftBoxIconPath = "Assets/Ores/Icons/RareGiftBoxIcon.png";
         private const string DataFolder = "Assets/GameData/Ores";
         private const string PrefabFolder = "Assets/Prefabs/Ores";
         private const string NpcPrefabFolder = "Assets/Prefabs/NPC";
@@ -773,6 +774,7 @@ namespace MiningSimulator.Editor
             AssignItemIconIfMissing(apple, AppleItemIconPath);
             AssignItemIconIfMissing(banana, BananaItemIconPath);
             MiningItemData rareGiftBox = CreateRareGiftBox(apple, banana, greenApple);
+            AssignItemIconIfMissing(rareGiftBox, RareGiftBoxIconPath);
 
             MiningItemDatabase database =
                 AssetDatabase.LoadAssetAtPath<MiningItemDatabase>(ItemDatabasePath);
