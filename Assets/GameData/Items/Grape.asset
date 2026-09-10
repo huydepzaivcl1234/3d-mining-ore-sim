@@ -28,4 +28,4 @@ MonoBehaviour:
   maximumStack: 64
   effectType: 2
   effectPercent: 25
-  effectDurationSeconds: 30
+  effectDurationSeconds: 180
