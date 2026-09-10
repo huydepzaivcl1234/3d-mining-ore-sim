@@ -19,6 +19,17 @@ MonoBehaviour:
   - {fileID: 11400000, guid: d4439c8d4fb6e8c4cb8932645ca7aa8b, type: 2}
   - {fileID: 11400000, guid: c1a7e2ced9de9bf42b9f38b6cf7528e1, type: 2}
   - {fileID: 11400000, guid: f18a9bc3efc342d4b64dde59a7745142, type: 2}
+  rarityRules:
+  - rarity: 0
+    dropChanceMultiplier: 1
+  - rarity: 1
+    dropChanceMultiplier: 1
+  - rarity: 2
+    dropChanceMultiplier: 1
+  - rarity: 3
+    dropChanceMultiplier: 1
+  - rarity: 4
+    dropChanceMultiplier: 1
   spawnHeight: 0.65
   horizontalImpulseRange: {x: 0.5, y: 1.25}
   upwardImpulseRange: {x: 2.2, y: 3.2}

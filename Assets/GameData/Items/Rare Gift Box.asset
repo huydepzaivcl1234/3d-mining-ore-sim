@@ -13,17 +13,18 @@ MonoBehaviour:
   m_Name: Rare Gift Box
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningItemData
   itemId: rare_gift_box
-  displayName: "Hộp Quà Hiếm"
-  description: "Mở hộp để quay và nhận vàng hoặc vật phẩm theo tỉ lệ."
+  displayName: "H\u1ED9p Qu\xE0 Hi\u1EBFm"
+  description: "M\u1EDF h\u1ED9p \u0111\u1EC3 quay v\xE0 nh\u1EADn v\xE0ng ho\u1EB7c
+    v\u1EADt ph\u1EA9m theo t\u1EC9 l\u1EC7."
   rarity: 2
-  worldModel: {fileID: 0}
+  worldModel: {fileID: 176482, guid: fe1bac696975c4932b5f99db90ec1396, type: 3}
   inventoryIcon: {fileID: 21300000, guid: a4d44f5cb6e14a2f8d3d78eea1b7c4f0, type: 3}
   iconFallback: BOX
   fallbackColor: {r: 0.62, g: 0.28, b: 0.92, a: 1}
-  worldScale: 0.52
+  worldScale: 5
   modelLocalPosition: {x: 0, y: 0, z: 0}
   modelLocalEulerAngles: {x: 0, y: 0, z: 0}
-  selectionChancePercent: 5
+  selectionChancePercent: 100
   maximumStack: 64
   useType: 1
   effectType: 0
@@ -31,34 +32,40 @@ MonoBehaviour:
   effectDurationSeconds: 1
   giftRewards:
   - rewardType: 0
-    chancePercent: 45
+    chancePercent: 65
     moneyAmount: 1000
     item: {fileID: 0}
     itemAmount: 1
     wheelColor: {r: 0.92, g: 0.55, b: 0.08, a: 1}
   - rewardType: 0
-    chancePercent: 20
+    chancePercent: 35
     moneyAmount: 5000
     item: {fileID: 0}
     itemAmount: 1
     wheelColor: {r: 0.98, g: 0.78, b: 0.12, a: 1}
   - rewardType: 1
-    chancePercent: 15
+    chancePercent: 5
     moneyAmount: 0
     item: {fileID: 11400000, guid: 6556e39ad099f9f4aafb234d4eec3f75, type: 2}
     itemAmount: 1
     wheelColor: {r: 0.88, g: 0.12, b: 0.12, a: 1}
   - rewardType: 1
-    chancePercent: 12
+    chancePercent: 5
     moneyAmount: 0
     item: {fileID: 11400000, guid: d4439c8d4fb6e8c4cb8932645ca7aa8b, type: 2}
     itemAmount: 1
     wheelColor: {r: 0.95, g: 0.72, b: 0.08, a: 1}
   - rewardType: 1
-    chancePercent: 8
+    chancePercent: 5
     moneyAmount: 0
     item: {fileID: 11400000, guid: c1a7e2ced9de9bf42b9f38b6cf7528e1, type: 2}
     itemAmount: 1
     wheelColor: {r: 0.42, g: 0.18, b: 0.72, a: 1}
+  - rewardType: 1
+    chancePercent: 0.5
+    moneyAmount: 0
+    item: {fileID: 11400000, guid: 6556e39ad099f9f4aafb234d4eec3f75, type: 2}
+    itemAmount: 5
+    wheelColor: {r: 1, g: 0, b: 0.03070271, a: 1}
   giftSpinDurationSeconds: 3.5
   giftSpinRotations: 6
