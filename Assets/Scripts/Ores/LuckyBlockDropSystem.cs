@@ -25,6 +25,7 @@ namespace MiningSimulator.Ores
         private readonly HashSet<LuckyBlock> activeBlocks = new();
         private readonly Dictionary<LuckyBlockType, Queue<LuckyBlock>> pools = new();
         private readonly HashSet<LuckyBlock> pooledBlocks = new();
+        private readonly Queue<LuckyBlockVariantData> guaranteedVariantQueue = new();
         private readonly Collider[] overlapResults = new Collider[64];
         private Coroutine dropRoutine;
 
@@ -130,19 +131,49 @@ namespace MiningSimulator.Ores
             while (enabled)
             {
                 yield return new WaitForSeconds(data.DropCheckIntervalSeconds);
+                if (activeBlocks.Count >= data.MaximumActiveBlocks)
+                {
+                    continue;
+                }
+
+                if (guaranteedVariantQueue.Count > 0)
+                {
+                    // A power-unlocked variant is waiting for a free slot — skip the random
+                    // chance gate below so it drops the moment room opens up instead of
+                    // waiting on a lucky roll that might not come for a while.
+                    TryDropOne();
+                    continue;
+                }
+
                 float chanceMultiplier = upgradeSystem != null
                     ? upgradeSystem.GetMultiplier(MiningUpgradeType.LuckyBlockDropChance)
                     : 1f;
                 float chance = Mathf.Clamp(data.DropChancePerCheckPercent * chanceMultiplier,
                     0f, 100f);
-                if (activeBlocks.Count >= data.MaximumActiveBlocks || chance <= 0f ||
-                    (chance < 100f && Random.value >= chance * 0.01f))
+                if (chance <= 0f || (chance < 100f && Random.value >= chance * 0.01f))
                 {
                     continue;
                 }
 
                 TryDropOne();
             }
+        }
+
+        /// <summary>
+        /// Queues a specific Lucky Block variant so the very next drop (right now if there's
+        /// room, otherwise as soon as a slot frees up) uses it instead of the normal weighted
+        /// roll. Used to guarantee a freshly power-unlocked variant is the first one to drop,
+        /// even if <see cref="data"/>'s active-block slots are full at the moment it unlocks.
+        /// </summary>
+        public bool SpawnGuaranteedLuckyBlock(LuckyBlockVariantData variant)
+        {
+            if (variant == null || variant.Model == null)
+            {
+                return false;
+            }
+
+            guaranteedVariantQueue.Enqueue(variant);
+            return TryDropOne();
         }
 
         [ContextMenu("Drop Lucky Block Now")]
@@ -152,9 +183,10 @@ namespace MiningSimulator.Ores
         }
 
         /// <summary>
-        /// Drops a Lucky Block. Pass a specific variant to force that exact type (used to
-        /// guarantee a freshly power-unlocked variant drops right away); pass null for the
-        /// normal weighted roll.
+        /// Drops a Lucky Block. Pass a specific variant to force that exact type outright
+        /// (bypassing the guaranteed-variant queue); pass null to drain the queue first — see
+        /// <see cref="SpawnGuaranteedLuckyBlock"/> — and fall back to the normal weighted roll
+        /// only once the queue is empty.
         /// </summary>
         public bool TryDropOne(LuckyBlockVariantData forcedVariant)
         {
@@ -164,7 +196,10 @@ namespace MiningSimulator.Ores
                 return false;
             }
 
-            LuckyBlockVariantData variant = forcedVariant != null ? forcedVariant : ChooseVariant();
+            bool useQueuedVariant = forcedVariant == null && guaranteedVariantQueue.Count > 0;
+            LuckyBlockVariantData variant = forcedVariant != null
+                ? forcedVariant
+                : useQueuedVariant ? guaranteedVariantQueue.Peek() : ChooseVariant();
             if (variant == null || variant.Model == null ||
                 !TryChooseLandingPosition(variant, out Vector3 landingPosition))
             {
@@ -175,6 +210,14 @@ namespace MiningSimulator.Ores
             if (block == null)
             {
                 return false;
+            }
+
+            // Only consume the queued entry once the block is actually about to drop — a
+            // failed landing-position search or pool/create failure above leaves it queued
+            // so it's retried on a later tick instead of being silently lost.
+            if (useQueuedVariant)
+            {
+                guaranteedVariantQueue.Dequeue();
             }
 
             float sizeMultiplier = data.BlockSize * variant.SizeMultiplier;

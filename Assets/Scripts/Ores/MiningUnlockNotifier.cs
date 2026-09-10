@@ -1,5 +1,5 @@
-using System.Collections;
 using System.Collections.Generic;
+using PrimeTween;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -33,7 +33,9 @@ namespace MiningSimulator.Ores
         private Image toastBackground;
         private CanvasGroup toastGroup;
         private TextMeshProUGUI toastLabel;
-        private Coroutine toastRoutine;
+        private Sequence toastSequence;
+        private Vector2 toastRestPosition;
+        private Vector2 toastJumpFromPosition;
         private int lastKnownPower = int.MinValue;
 
         private void Awake()
@@ -80,10 +82,9 @@ namespace MiningSimulator.Ores
             {
                 progressionSystem.LevelChanged -= HandleLevelChanged;
             }
-            if (toastRoutine != null)
+            if (toastSequence.isAlive)
             {
-                StopCoroutine(toastRoutine);
-                toastRoutine = null;
+                toastSequence.Stop();
             }
             pendingMessages.Clear();
         }
@@ -160,7 +161,7 @@ namespace MiningSimulator.Ores
                     ? uiData.LuckyBlockUnlockToastFormat
                     : "Đã mở khóa Lucky Block: {0}!";
                 ShowToast(string.Format(format, variant.DisplayName));
-                luckyBlockDropSystem.TryDropOne(variant);
+                luckyBlockDropSystem.SpawnGuaranteedLuckyBlock(variant);
             }
         }
 
@@ -173,40 +174,50 @@ namespace MiningSimulator.Ores
 
             EnsureToastUi();
             pendingMessages.Enqueue(message);
-            toastRoutine ??= StartCoroutine(ProcessToastQueue());
+            if (!toastSequence.isAlive)
+            {
+                PlayNextToast();
+            }
         }
 
-        private IEnumerator ProcessToastQueue()
+        private void PlayNextToast()
         {
+            if (pendingMessages.Count == 0)
+            {
+                return;
+            }
+
+            toastLabel.text = pendingMessages.Dequeue();
+
+            if (toastSequence.isAlive)
+            {
+                toastSequence.Stop();
+            }
+
             float fadeDuration = uiData != null ? uiData.UnlockToastFadeDuration : 0.25f;
             float holdDuration = uiData != null ? uiData.UnlockToastHoldDuration : 2.2f;
-            while (pendingMessages.Count > 0)
-            {
-                toastLabel.text = pendingMessages.Dequeue();
-                yield return Fade(0f, 1f, fadeDuration);
-                yield return new WaitForSecondsRealtime(holdDuration);
-                yield return Fade(1f, 0f, fadeDuration);
-            }
-            toastRoutine = null;
-        }
 
-        private IEnumerator Fade(float from, float to, float duration)
-        {
-            toastGroup.alpha = from;
-            if (duration <= 0f)
-            {
-                toastGroup.alpha = to;
-                yield break;
-            }
+            toastRect.anchoredPosition = toastJumpFromPosition;
+            toastRect.localScale = Vector3.one * 0.5f;
+            toastGroup.alpha = 0f;
 
-            float elapsed = 0f;
-            while (elapsed < duration)
-            {
-                elapsed += Time.unscaledDeltaTime;
-                toastGroup.alpha = Mathf.Lerp(from, to, elapsed / duration);
-                yield return null;
-            }
-            toastGroup.alpha = to;
+            // Entrance: the toast jumps up into place (Ease.OutBack overshoots past full size,
+            // giving the "nhảy lên" pop) while it slides up and fades in together, then eases
+            // back down to its normal scale — the zoom-settle. Exit mirrors it in reverse.
+            // Everything runs on unscaled time so pausing/time-scale changes don't freeze it.
+            toastSequence = Sequence.Create(useUnscaledTime: true)
+                .Group(Tween.Custom(this, toastJumpFromPosition, toastRestPosition, fadeDuration,
+                    static (toast, pos) => toast.toastRect.anchoredPosition = pos, Ease.OutCubic))
+                .Group(Tween.Custom(this, 0f, 1f, fadeDuration,
+                    static (toast, alpha) => toast.toastGroup.alpha = alpha, Ease.OutCubic))
+                .Group(Tween.Scale(toastRect, Vector3.one, fadeDuration, Ease.OutBack))
+                .ChainDelay(holdDuration)
+                .Chain(Tween.Custom(this, toastRestPosition, toastJumpFromPosition, fadeDuration,
+                    static (toast, pos) => toast.toastRect.anchoredPosition = pos, Ease.InCubic))
+                .Group(Tween.Custom(this, 1f, 0f, fadeDuration,
+                    static (toast, alpha) => toast.toastGroup.alpha = alpha, Ease.InCubic))
+                .Group(Tween.Scale(toastRect, Vector3.one * 0.7f, fadeDuration, Ease.InCubic))
+                .OnComplete(this, static toast => toast.PlayNextToast());
         }
 
         private void EnsureToastUi()
@@ -235,7 +246,10 @@ namespace MiningSimulator.Ores
             toastRect.anchorMax = new Vector2(0.5f, 1f);
             toastRect.pivot = new Vector2(0.5f, 1f);
             toastRect.sizeDelta = uiData != null ? uiData.UnlockToastSize : new Vector2(460f, 64f);
-            toastRect.anchoredPosition = uiData != null ? uiData.UnlockToastPosition : new Vector2(0f, -140f);
+            toastRestPosition = uiData != null ? uiData.UnlockToastPosition : new Vector2(0f, -140f);
+            toastJumpFromPosition = toastRestPosition + new Vector2(0f, -36f);
+            toastRect.anchoredPosition = toastJumpFromPosition;
+            toastRect.localScale = Vector3.one * 0.5f;
 
             toastBackground = panelObject.GetComponent<Image>();
             toastBackground.color = uiData != null
