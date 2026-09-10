@@ -26,6 +26,10 @@ MonoBehaviour:
   modelLocalEulerAngles: {x: 0, y: 0, z: 0}
   selectionChancePercent: 33.33
   maximumStack: 64
+  useType: 0
   effectType: 1
   effectPercent: 25
   effectDurationSeconds: 180
+  giftRewards: []
+  giftSpinDurationSeconds: 3.5
+  giftSpinRotations: 6
