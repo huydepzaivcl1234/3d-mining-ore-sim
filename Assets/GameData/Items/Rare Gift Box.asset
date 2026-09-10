@@ -24,7 +24,7 @@ MonoBehaviour:
   worldScale: 5
   modelLocalPosition: {x: 0, y: 0, z: 0}
   modelLocalEulerAngles: {x: 0, y: 0, z: 0}
-  selectionChancePercent: 100
+  selectionChancePercent: 15
   maximumStack: 64
   useType: 1
   effectType: 0

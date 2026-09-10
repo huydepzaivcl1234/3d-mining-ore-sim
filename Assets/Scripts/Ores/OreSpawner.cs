@@ -16,6 +16,8 @@ namespace MiningSimulator.Ores
         [SerializeField] private MiningUiData uiData;
         [SerializeField] private OreRewardPopup rewardPopupPrefab;
         [SerializeField] private DayNightSystem dayNightSystem;
+        [Tooltip("Gates ore spawning by the shared mining power. Auto-found in Awake when left empty.")]
+        [SerializeField] private NpcProgressionSystem progressionSystem;
 
         private readonly HashSet<Ore> activeOres = new();
         private readonly Dictionary<OreData, Queue<Ore>> orePools = new();
@@ -31,6 +33,15 @@ namespace MiningSimulator.Ores
         public MiningUpgradeSystem UpgradeSystem => upgradeSystem;
         public event System.Action<Ore> OreDamaged;
         public event System.Action<Ore, float> OreRewardGranted;
+
+        private void Awake()
+        {
+            if (progressionSystem == null)
+            {
+                progressionSystem = FindFirstObjectByType<NpcProgressionSystem>(
+                    FindObjectsInactive.Include);
+            }
+        }
 
         public bool TryReserveClosestOre(MiningNpc miner, Vector3 origin, int miningPower,
             out Ore reservedOre, out int slotIndex)
@@ -283,6 +294,7 @@ namespace MiningSimulator.Ores
             if (dayNightSystem != null &&
                 dayNightSystem.TryChooseSpecialOre(UnityEngine.Random.value * 100f,
                     out OreData specialOre) && specialOre != null && specialOre.Prefab != null &&
+                HasSufficientPower(specialOre.MiningPowerRequired) &&
                 CanSpawnSpecialOre(specialOre))
             {
                 return specialOre;
@@ -296,9 +308,21 @@ namespace MiningSimulator.Ores
             return selectedEntry?.Ore;
         }
 
-        private static bool IsSpawnableOreEntry(OreSpawnEntry entry)
+        private bool IsSpawnableOreEntry(OreSpawnEntry entry)
         {
-            return entry.Ore != null && entry.Ore.Prefab != null;
+            return entry.Ore != null && entry.Ore.Prefab != null &&
+                   HasSufficientPower(entry.Ore.MiningPowerRequired);
+        }
+
+        /// <summary>
+        /// True when the shared mining power (from <see cref="NpcProgressionSystem"/>) meets
+        /// the ore's required power, so under-powered ores never enter the spawn roll.
+        /// When no progression system is assigned or found, every power requirement passes
+        /// so existing scenes keep spawning exactly as before.
+        /// </summary>
+        private bool HasSufficientPower(int requiredPower)
+        {
+            return progressionSystem == null || progressionSystem.CurrentMiningPower >= requiredPower;
         }
 
         private bool CanSpawnSpecialOre(OreData specialOre)

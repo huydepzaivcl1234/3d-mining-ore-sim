@@ -19,6 +19,8 @@ namespace MiningSimulator.Ores
         [SerializeField] private MiningUiData uiData;
         [SerializeField] private OreRewardPopup rewardPopupPrefab;
         [SerializeField] private GameObject healthBarPrefab;
+        [Tooltip("Gates Lucky Block variants by the shared mining power. Auto-found in Awake when left empty.")]
+        [SerializeField] private NpcProgressionSystem progressionSystem;
 
         private readonly HashSet<LuckyBlock> activeBlocks = new();
         private readonly Dictionary<LuckyBlockType, Queue<LuckyBlock>> pools = new();
@@ -37,6 +39,12 @@ namespace MiningSimulator.Ores
             if (upgradeSystem == null)
             {
                 upgradeSystem = FindFirstObjectByType<MiningUpgradeSystem>(
+                    FindObjectsInactive.Include);
+            }
+
+            if (progressionSystem == null)
+            {
+                progressionSystem = FindFirstObjectByType<NpcProgressionSystem>(
                     FindObjectsInactive.Include);
             }
         }
@@ -195,9 +203,20 @@ namespace MiningSimulator.Ores
             return variant.SelectionChancePercent;
         }
 
-        private static bool IsSelectableVariant(LuckyBlockVariantData variant)
+        private bool IsSelectableVariant(LuckyBlockVariantData variant)
         {
-            return variant.Model != null;
+            return variant.Model != null && HasSufficientPower(variant.MiningPowerRequired);
+        }
+
+        /// <summary>
+        /// True when the shared mining power (from <see cref="NpcProgressionSystem"/>) meets
+        /// the variant's required power, so under-powered Lucky Blocks never enter the drop
+        /// roll. When no progression system is assigned or found, every power requirement
+        /// passes so existing scenes keep dropping exactly as before.
+        /// </summary>
+        private bool HasSufficientPower(int requiredPower)
+        {
+            return progressionSystem == null || progressionSystem.CurrentMiningPower >= requiredPower;
         }
 
         private bool TryChooseLandingPosition(LuckyBlockVariantData variant,

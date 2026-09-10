@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6af8fb44d650df570b1d289823007298, type: 3}
   m_Name: MiningItemDatabase
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningItemDatabase
-  oreDropChancePercent: 0.05
+  oreDropChancePercent: 0.5
   luckyBlockDropChancePercent: 5
   items:
   - {fileID: 11400000, guid: 6556e39ad099f9f4aafb234d4eec3f75, type: 2}
@@ -23,13 +23,13 @@ MonoBehaviour:
   - rarity: 0
     dropChanceMultiplier: 1
   - rarity: 1
-    dropChanceMultiplier: 1
+    dropChanceMultiplier: 0.8
   - rarity: 2
-    dropChanceMultiplier: 1
+    dropChanceMultiplier: 0.5
   - rarity: 3
-    dropChanceMultiplier: 1
+    dropChanceMultiplier: 0.2
   - rarity: 4
-    dropChanceMultiplier: 1
+    dropChanceMultiplier: 0.05
   spawnHeight: 0.65
   horizontalImpulseRange: {x: 0.5, y: 1.25}
   upwardImpulseRange: {x: 2.2, y: 3.2}
