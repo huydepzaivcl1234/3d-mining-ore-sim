@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d697d1ce92e7572c4046ac7b833d40b, type: 3}
+  m_Name: Green Apple
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningItemData
+  itemId: green_apple
+  displayName: "T\xE1o xanh"
+  description: "T\u0103ng t\u1ED1c ch\u1EA1y c\u1EE7a NPC trong m\u1ED9t kho\u1EA3ng
+    th\u1EDDi gian."
+  rarity: 0
+  worldModel: {fileID: 0}
+  inventoryIcon: {fileID: 0}
+  iconFallback: G
+  fallbackColor: {r: 0.26, g: 0.82, b: 0.18, a: 1}
+  worldScale: 0.42
+  modelLocalPosition: {x: 0, y: 0, z: 0}
+  modelLocalEulerAngles: {x: 0, y: 0, z: 0}
+  selectionChancePercent: 33.33
+  maximumStack: 64
+  useType: 0
+  effectType: 2
+  effectPercent: 25
+  effectDurationSeconds: 30
+  giftRewards: []
+  giftSpinDurationSeconds: 3.5
+  giftSpinRotations: 6

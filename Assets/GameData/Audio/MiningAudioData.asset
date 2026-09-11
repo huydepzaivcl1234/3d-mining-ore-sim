@@ -21,6 +21,7 @@ MonoBehaviour:
   oreBreakSfx: {fileID: 8300000, guid: 7e9ae525bc06a984cab34bcad20ca10a, type: 3}
   npcPurchasedSfx: {fileID: 8300000, guid: c062f16ffb3abca46b7717172158c05e, type: 3}
   upgradePurchasedSfx: {fileID: 8300000, guid: c062f16ffb3abca46b7717172158c05e, type: 3}
+  levelUpSfx: {fileID: 8300000, guid: 2bb7fc75a2a230749bf1420d3a056191, type: 3}
   rebirthSfx: {fileID: 0}
   buttonClickSfx: {fileID: 8300000, guid: c827175ac1520f24193f96c9f3a3f753, type: 3}
   panelOpenSfx: {fileID: 0}
