@@ -41,7 +41,7 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  daySunRotation: {x: 45, y: -30, z: 0}
+  daySunRotation: {x: 15, y: -30, z: 0}
   nightSunRotation: {x: 210, y: -30, z: 0}
   daySunColor: {r: 1, g: 0.94, b: 0.78, a: 1}
   nightSunColor: {r: 0.42, g: 0.5, b: 0.85, a: 1}

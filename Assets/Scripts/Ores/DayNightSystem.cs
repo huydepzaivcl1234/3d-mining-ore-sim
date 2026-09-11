@@ -270,12 +270,14 @@ namespace MiningSimulator.Ores
                     Quaternion.Euler(data.DaySunRotation), daylightAmount);
 
                 // Continuous arc: instead of snapping to a fixed pose for the whole period,
-                // the sun (or moon) keeps drifting across the sky as the period progresses.
+                // the sun (or moon) climbs from the horizon at the start of the period, peaks
+                // directly overhead at the midpoint (solar noon), and sinks back down by the
+                // end — so shadows are long at sunrise/sunset and short/flat at midday.
                 float arcDegrees = currentPeriod == MiningTimePeriod.Day
                     ? data.DaySunArcDegrees
                     : data.NightSunArcDegrees;
-                float arcProgress = CurrentPeriodProgress - 0.5f; // -0.5..0.5 across the period
-                sun.transform.rotation = baseRotation * Quaternion.Euler(arcProgress * arcDegrees, 0f, 0f);
+                float elevationCurve = Mathf.Sin(CurrentPeriodProgress * Mathf.PI); // 0..1..0
+                sun.transform.rotation = baseRotation * Quaternion.Euler(elevationCurve * arcDegrees, 0f, 0f);
 
                 float intensityShimmer = 1f + (Mathf.PerlinNoise(Time.time * data.ShimmerSpeed, 0.37f) - 0.5f) *
                     2f * data.SunShimmerAmount;

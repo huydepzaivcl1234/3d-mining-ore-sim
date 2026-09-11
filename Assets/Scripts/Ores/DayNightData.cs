@@ -23,7 +23,11 @@ namespace MiningSimulator.Ores
             AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
         [Header("Sun And Ambient Light")]
-        [SerializeField] private Vector3 daySunRotation = new(45f, -30f, 0f);
+        [Tooltip("Sun pose at the start/end of the Day period (sunrise/sunset) — low to the " +
+                 "horizon so shadows read long. It climbs toward overhead by Day Sun Arc " +
+                 "Degrees as the day progresses; see the Sun Arc section below.")]
+        [SerializeField] private Vector3 daySunRotation = new(15f, -30f, 0f);
+        [Tooltip("Moon pose at the start/end of the Night period, same idea as Day Sun Rotation.")]
         [SerializeField] private Vector3 nightSunRotation = new(210f, -30f, 0f);
         [SerializeField] private Color daySunColor = new(1f, 0.94f, 0.78f, 1f);
         [SerializeField] private Color nightSunColor = new(0.42f, 0.5f, 0.85f, 1f);
@@ -33,10 +37,13 @@ namespace MiningSimulator.Ores
         [SerializeField] private Color nightAmbientColor = new(0.12f, 0.16f, 0.28f, 1f);
 
         [Header("Sun Arc And Shimmer")]
-        [Tooltip("Extra degrees the sun keeps drifting across (X-axis) over the full Day " +
-                 "period, instead of freezing in place between transitions.")]
-        [Min(0f), SerializeField] private float daySunArcDegrees = 18f;
-        [Tooltip("Same drift, but for the moon's arc across the Night period.")]
+        [Tooltip("Degrees the sun climbs above Day Sun Rotation as the Day period progresses, " +
+                 "peaking (Day Sun Rotation X + this value) at solar noon — the period's " +
+                 "midpoint — then sinking back down by sunset. Higher values (e.g. 70-80, so " +
+                 "the peak lands near 90) make midday shadows go short and flat under objects, " +
+                 "matching real sunlight; lower values keep a shallower, more even arc.")]
+        [Min(0f), SerializeField] private float daySunArcDegrees = 72f;
+        [Tooltip("Same climb-to-overhead-then-back-down arc, but for the moon across the Night period.")]
         [Min(0f), SerializeField] private float nightSunArcDegrees = 10f;
         [Tooltip("How much the sun's intensity gently breathes up and down, as a fraction " +
                  "of its base intensity (0 = perfectly steady).")]
