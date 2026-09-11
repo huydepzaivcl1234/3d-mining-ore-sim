@@ -23,11 +23,13 @@ namespace MiningSimulator.Ores
         [SerializeField, Min(0)] private int itemDropChanceStacks;
 
         private float permanentMoneyMultiplier = 1f;
+        private float permanentExperienceMultiplier = 1f;
 
         public MiningUpgradeData UpgradeData => upgradeData;
         public event Action UpgradesChanged;
         public event Action<MiningUpgradeType> UpgradePurchased;
         public float PermanentMoneyMultiplier => permanentMoneyMultiplier;
+        public float PermanentExperienceMultiplier => permanentExperienceMultiplier;
 
         private void Awake()
         {
@@ -174,6 +176,13 @@ namespace MiningSimulator.Ores
         public void SetPermanentMoneyMultiplier(float multiplier)
         {
             permanentMoneyMultiplier = Mathf.Max(1f, multiplier);
+        }
+
+        /// <summary>Permanent, Rebirth-granted multiplier applied to NPC experience gains,
+        /// on top of the purchasable NPC Experience upgrade.</summary>
+        public void SetPermanentExperienceMultiplier(float multiplier)
+        {
+            permanentExperienceMultiplier = Mathf.Max(1f, multiplier);
         }
 
         public void ResetAllUpgrades()

@@ -16,11 +16,11 @@ MonoBehaviour:
   displayName: Light Stone
   description: A radiant stone that can appear only during the day.
   tier: 8
-  miningPowerRequired: 50
-  durability: 220
-  clickDamage: 7
+  miningPowerRequired: 20
+  durability: 250
+  clickDamage: 1
   baseSellValue: 500
-  experienceReward: 20
+  experienceReward: 50
   destroyDelay: 0
   maximumMiningNpcs: 5
   npcStandDistance: 1.75

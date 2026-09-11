@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningRebirthData
   startingMoneyRequirement: 5000
   requirementGrowthMultiplier: 2.5
-  moneyBoostPercentPerRebirth: 10
+  moneyBoostPercentPerRebirth: 25
   rebirthCountSaveKey: MiningSimulator.RebirthCount.v1

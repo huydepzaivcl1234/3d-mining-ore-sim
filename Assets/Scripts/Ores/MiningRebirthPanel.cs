@@ -33,10 +33,11 @@ namespace MiningSimulator.Ores
 
         [Header("Editable Text")]
         [SerializeField] private string progressFormat = "{0:N0} / {1:N0} TIỀN";
-        [SerializeField] private string boostFormat = "REBIRTH {0}  •  x{1:0.00} TIỀN";
-        [SerializeField] private string warningText =
+        [SerializeField] private string boostFormat = "REBIRTH {0}  •  x{1:0.00} TIỀN & XP";
+        [SerializeField]
+        private string warningText =
             "CẢNH BÁO!\n\nRebirth sẽ xóa tiền, mọi nâng cấp, cấp thợ mỏ và toàn bộ NPC trên sân.";
-        [SerializeField] private string nextBoostFormat = "Boost vĩnh viễn sau Rebirth: x{0:0.00} tiền";
+        [SerializeField] private string nextBoostFormat = "Boost vĩnh viễn sau Rebirth: x{0:0.00} tiền & XP";
 
         private bool barInitialized;
         private int initializedRequirement;
@@ -288,7 +289,7 @@ namespace MiningSimulator.Ores
                 int count = rebirthSystem != null ? rebirthSystem.CompletedRebirths : 0;
                 float multiplier = rebirthSystem != null ? rebirthSystem.PermanentMoneyMultiplier : 1f;
                 boostLabel.text = string.Format(MiningLocalization.Text(
-                    "REBIRTH {0}  •  x{1:0.00} MONEY", boostFormat), count, multiplier);
+                    "REBIRTH {0}  •  x{1:0.00} MONEY & XP", boostFormat), count, multiplier);
             }
             if (warningLabel != null)
             {
@@ -300,7 +301,7 @@ namespace MiningSimulator.Ores
             {
                 float nextMultiplier = rebirthSystem != null ? rebirthSystem.NextMoneyMultiplier : 1f;
                 nextBoostLabel.text = string.Format(MiningLocalization.Text(
-                    "Permanent boost after Rebirth: x{0:0.00} money", nextBoostFormat),
+                    "Permanent boost after Rebirth: x{0:0.00} money & XP", nextBoostFormat),
                     nextMultiplier);
             }
             if (confirmButton != null)

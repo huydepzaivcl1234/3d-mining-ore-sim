@@ -25,6 +25,10 @@ namespace MiningSimulator.Ores
         public float NextMoneyMultiplier => rebirthData != null
             ? rebirthData.GetMoneyMultiplier(completedRebirths + 1)
             : 1f;
+        // Rebirth's permanent boost now applies to both money and NPC experience, at the
+        // same multiplier value.
+        public float PermanentExperienceMultiplier => PermanentMoneyMultiplier;
+        public float NextExperienceMultiplier => NextMoneyMultiplier;
         public bool CanRebirth => wallet != null && rebirthData != null &&
                                   wallet.CurrentMoney >= CurrentRequirement;
         public float Progress01 => wallet == null || rebirthData == null
@@ -118,6 +122,7 @@ namespace MiningSimulator.Ores
         private void ApplyPermanentBoost()
         {
             upgradeSystem?.SetPermanentMoneyMultiplier(PermanentMoneyMultiplier);
+            upgradeSystem?.SetPermanentExperienceMultiplier(PermanentExperienceMultiplier);
         }
 
         private void FindResetTargetsIfMissing()

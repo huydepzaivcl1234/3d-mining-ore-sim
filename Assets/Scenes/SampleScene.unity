@@ -9092,7 +9092,7 @@ MonoBehaviour:
   uiData: {fileID: 11400000, guid: 0fc641ac29720e2837d73e6212818c58, type: 2}
   rewardPopupPrefab: {fileID: 595523728496385370, guid: 60732089bc3d5a74cac36ef83399977d, type: 3}
   healthBarPrefab: {fileID: 4657497537876699430, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
-  progressionSystem: {fileID: 0}
+  progressionSystem: {fileID: 655586588}
 --- !u!1 &729581766
 GameObject:
   m_ObjectHideFlags: 0
@@ -13492,7 +13492,7 @@ MonoBehaviour:
   upgradeSystem: {fileID: 1144114548}
   rebirthData: {fileID: 11400000, guid: e4bc10a8240fb92b2a3fc866d38e6f13, type: 2}
   npcProgressionSystem: {fileID: 655586588}
-  npcShop: {fileID: 0}
+  npcShop: {fileID: 655586586}
   itemSystem: {fileID: 1388648154}
 --- !u!1 &1044932565
 GameObject:
@@ -19294,7 +19294,7 @@ MonoBehaviour:
   database: {fileID: 11400000, guid: d893fd2ede181f645b6252921531fd70, type: 2}
   oreSpawner: {fileID: 1828941534}
   luckyBlockSystem: {fileID: 725887964}
-  upgradeSystem: {fileID: 0}
+  upgradeSystem: {fileID: 1144114548}
   droppedItemParent: {fileID: 1211773275}
 --- !u!1 &1389254988
 GameObject:

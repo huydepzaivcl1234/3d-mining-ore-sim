@@ -117,7 +117,8 @@ namespace MiningSimulator.Ores
             }
 
             float multiplier = upgradeSystem != null
-                ? upgradeSystem.GetMultiplier(MiningUpgradeType.NpcExperience)
+                ? upgradeSystem.GetMultiplier(MiningUpgradeType.NpcExperience) *
+                  upgradeSystem.PermanentExperienceMultiplier
                 : 1f;
             currentExperience += baseExperience * Mathf.Max(1f, multiplier);
 
