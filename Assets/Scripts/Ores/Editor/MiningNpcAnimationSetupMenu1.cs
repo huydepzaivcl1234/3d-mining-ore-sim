@@ -23,6 +23,16 @@ namespace MiningSimulator.Editor
         private const string IsMiningParam = "IsMining";
         private const string IsMovingParam = "IsMoving";
 
+        // Name of the Animator/relay method that applies ore damage AND plays the hit SFX in
+        // the same call (see MiningNpc.OnMiningImpact) - both were already wired to fire
+        // together in code, but nothing was ever raising this event, so neither happened.
+        private const string MiningImpactEventFunctionName = "OnMiningImpact";
+
+        // Normalized position (0-1) inside the swing where the tool visually strikes the ore.
+        // Tweak this and re-run the menu command if the hit/SFX timing looks early or late for
+        // your clip - it only ever touches this one event, so re-running is always safe.
+        private const float MiningImpactNormalizedTime = 0.5f;
+
         [MenuItem("Mining Simulator/Setup/Create NPC Animator Controller")]
         public static void CreateNpcAnimatorController()
         {
@@ -42,6 +52,8 @@ namespace MiningSimulator.Editor
             AnimationClipSettings settings = AnimationUtility.GetAnimationClipSettings(miningClip);
             settings.loopTime = true;
             AnimationUtility.SetAnimationClipSettings(miningClip, settings);
+
+            bool addedImpactEvent = EnsureMiningImpactEvent(miningClip);
 
             AnimatorController controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(ControllerPath);
             if (controller == null)
@@ -75,11 +87,19 @@ namespace MiningSimulator.Editor
             EditorUtility.SetDirty(controller);
             AssetDatabase.SaveAssets();
 
+            string impactNote = addedImpactEvent
+                ? "\n\nAdded the missing '" + MiningImpactEventFunctionName + "' animation event " +
+                  "at " + (MiningImpactNormalizedTime * 100f).ToString("0") + "% through the swing - " +
+                  "this is what makes the NPC damage the ore and play the hit SFX at the same time. " +
+                  "Open the clip in the Animation window if you want to nudge its exact frame."
+                : "\n\nThe '" + MiningImpactEventFunctionName + "' animation event was already " +
+                  "present on the clip, so it was left untouched.";
+
             EditorUtility.DisplayDialog("NPC Animator Setup",
                 "Created/updated HumanM_Animator.controller with Idle <-> Mine states driven " +
-                "by the IsMining bool.\n\nLast step (manual): select your NPC model's Animator " +
-                "component and drag this controller into its Controller field — see the chat " +
-                "reply for the rest of the setup.", "OK");
+                "by the IsMining bool." + impactNote + "\n\nLast step (manual): select your NPC " +
+                "model's Animator component and drag this controller into its Controller field — " +
+                "see the chat reply for the rest of the setup.", "OK");
         }
 
         private static AnimationClip LoadMiningClip()
@@ -87,6 +107,38 @@ namespace MiningSimulator.Editor
             Object[] assets = AssetDatabase.LoadAllAssetsAtPath(MiningClipFbxPath);
             return assets.OfType<AnimationClip>()
                 .FirstOrDefault(clip => !clip.name.StartsWith("__preview__"));
+        }
+
+        /// <summary>
+        /// Idempotently makes sure the mining clip raises <see cref="MiningImpactEventFunctionName"/>
+        /// once per swing. MiningNpc.OnMiningImpact (relayed via MiningNpcAnimationEventRelay)
+        /// already applies ore damage and plays the hit SFX back-to-back in a single call, so the
+        /// only reason they were ever out of sync is that nothing was raising this event - never
+        /// touches unrelated events already authored on the clip.
+        /// </summary>
+        private static bool EnsureMiningImpactEvent(AnimationClip clip)
+        {
+            AnimationEvent[] existingEvents = AnimationUtility.GetAnimationEvents(clip);
+            bool alreadyPresent = existingEvents.Any(
+                animationEvent => animationEvent.functionName == MiningImpactEventFunctionName);
+            if (alreadyPresent)
+            {
+                return false;
+            }
+
+            AnimationEvent impactEvent = new()
+            {
+                time = clip.length * MiningImpactNormalizedTime,
+                functionName = MiningImpactEventFunctionName
+            };
+
+            AnimationEvent[] updatedEvents = existingEvents
+                .Append(impactEvent)
+                .OrderBy(animationEvent => animationEvent.time)
+                .ToArray();
+            AnimationUtility.SetAnimationEvents(clip, updatedEvents);
+            EditorUtility.SetDirty(clip);
+            return true;
         }
 
         private static AnimatorState FindOrAddState(AnimatorStateMachine stateMachine,

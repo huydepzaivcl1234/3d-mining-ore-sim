@@ -57,9 +57,9 @@ MonoBehaviour:
   stuckTimeout: 1.25
   stuckProgressDistance: 0.08
   ignoredTargetDuration: 1.5
-  toolSwingSpeed: 12
-  toolSwingAngle: 42
-  toolReturnSpeed: 14
+  toolSwingSpeed: 0
+  toolSwingAngle: 90
+  toolReturnSpeed: 0
   bodyScale: {x: 0.8, y: 0.9, z: 0.8}
   helmetLocalPosition: {x: 0, y: 0.86, z: 0.08}
   helmetLocalScale: {x: 0.9, y: 0.18, z: 0.92}
