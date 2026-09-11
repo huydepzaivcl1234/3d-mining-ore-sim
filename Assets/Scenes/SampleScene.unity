@@ -8202,7 +8202,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.NpcShop
   wallet: {fileID: 5319940143687006134}
   oreSpawner: {fileID: 1828941534}
-  npcPrefab: {fileID: 5455108049695910532, guid: 3b9fc0d6232590649bdd95a4ecb5a7cc, type: 3}
+  npcPrefab: {fileID: 6456789610439645049, guid: 3b9fc0d6232590649bdd95a4ecb5a7cc, type: 3}
   spawnPoint: {fileID: 0}
   npcData: {fileID: 11400000, guid: c48d624e49324697a2ff1f170be6b3c0, type: 2}
   progressionSystem: {fileID: 655586588}
@@ -35304,7 +35304,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b684b75a86fb4654fbe50f4aad7c0ce1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.PlayerWallet
-  currentMoney: 0
+  currentMoney: 25
 --- !u!114 &5345239619755833584
 MonoBehaviour:
   m_ObjectHideFlags: 0
