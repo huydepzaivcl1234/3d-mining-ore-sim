@@ -109,6 +109,14 @@ namespace MiningSimulator.Ores
                 animator = GetComponentInChildren<Animator>(true);
             }
 
+            if (animator != null)
+            {
+                if (animator.GetComponent<MiningNpcAnimationEventRelay>() == null)
+                {
+                    animator.gameObject.AddComponent<MiningNpcAnimationEventRelay>();
+                }
+            }
+
             if (audioManager == null)
             {
                 audioManager = FindFirstObjectByType<MiningAudioManager>(FindObjectsInactive.Include);
