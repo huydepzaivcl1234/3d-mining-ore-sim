@@ -22,6 +22,8 @@ namespace MiningSimulator.Ores
         [SerializeField] private Animator animator;
         [Tooltip("Bool parameter set on the Animator while the NPC is actively mining (swinging).")]
         [SerializeField] private string miningAnimatorBoolParameter = "IsMining";
+        [Tooltip("Bool parameter set on the Animator while the NPC is walking toward a target.")]
+        [SerializeField] private string movingAnimatorBoolParameter = "IsMoving";
         [Tooltip("Name of the Animator state that plays the mining swing (the 'Mine' box in the controller graph). Once fully inside this state (after any Idle->Mine blend finishes), its playback SPEED is adjusted every frame so exactly one loop of the clip takes the same time as one hit (SecondsPerHit) - so the swing and the mining SFX stay roughly in step without ever forcing the pose/time directly (which can distort the rig).")]
         [SerializeField] private string mineAnimatorStateName = "Mine";
 
@@ -58,8 +60,10 @@ namespace MiningSimulator.Ores
         private Vector3 detourDirection;
         private bool hasMoveTarget;
         private bool isMining;
+        private bool isMoving;
         private CapsuleCollider capsule;
         private bool hasMiningBoolParameter;
+        private bool hasMovingBoolParameter;
         private float visualModelBaseLocalY;
         private int mineStateHash;
 
@@ -129,6 +133,8 @@ namespace MiningSimulator.Ores
                 animator.applyRootMotion = false;
                 hasMiningBoolParameter = HasParameter(
                     animator, miningAnimatorBoolParameter, AnimatorControllerParameterType.Bool);
+                hasMovingBoolParameter = HasParameter(
+                    animator, movingAnimatorBoolParameter, AnimatorControllerParameterType.Bool);
             }
 
             mineStateHash = Animator.StringToHash(mineAnimatorStateName);
@@ -156,6 +162,7 @@ namespace MiningSimulator.Ores
             smoothedSeparation = Vector3.zero;
             detourDirection = Vector3.zero;
             detourDirectionUntil = 0f;
+            SetMovingAnimationState(false);
             StopHorizontalMovement();
         }
 
@@ -244,6 +251,7 @@ namespace MiningSimulator.Ores
         {
             if (npcData == null || body == null)
             {
+                SetMovingAnimationState(false);
                 return;
             }
 
@@ -253,6 +261,7 @@ namespace MiningSimulator.Ores
             if (!hasMoveTarget || movementOffset.sqrMagnitude <=
                 npcData.StoppingDistance * npcData.StoppingDistance)
             {
+                SetMovingAnimationState(false);
                 smoothedSeparation = Vector3.MoveTowards(smoothedSeparation, Vector3.zero,
                     npcData.NpcSeparationResponsiveness * Time.fixedDeltaTime);
                 ApplyHorizontalVelocity(Vector3.zero, npcData.BrakingAcceleration);
@@ -270,6 +279,7 @@ namespace MiningSimulator.Ores
                     TrySwitchTarget(blockingOre))
                 {
                     RotateTowards(movementDirection);
+                    SetMovingAnimationState(true);
                     return;
                 }
 
@@ -302,6 +312,7 @@ namespace MiningSimulator.Ores
                     : 1f;
             Vector3 desiredVelocity = movementDirection * (npcData.MoveSpeed * speedMultiplier);
             ApplyHorizontalVelocity(desiredVelocity, npcData.MovementAcceleration);
+            SetMovingAnimationState(true);
             RotateTowards(movementDirection);
         }
 
@@ -337,6 +348,10 @@ namespace MiningSimulator.Ores
         {
             if (isMining == mining)
             {
+                if (mining)
+                {
+                    SetMovingAnimationState(false);
+                }
                 return;
             }
 
@@ -344,6 +359,26 @@ namespace MiningSimulator.Ores
             if (animator != null && hasMiningBoolParameter)
             {
                 animator.SetBool(miningAnimatorBoolParameter, mining);
+            }
+
+            if (mining)
+            {
+                SetMovingAnimationState(false);
+            }
+        }
+
+        private void SetMovingAnimationState(bool moving)
+        {
+            moving &= !isMining;
+            if (isMoving == moving)
+            {
+                return;
+            }
+
+            isMoving = moving;
+            if (animator != null && hasMovingBoolParameter)
+            {
+                animator.SetBool(movingAnimatorBoolParameter, moving);
             }
         }
 
