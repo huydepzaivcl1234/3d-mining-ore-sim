@@ -37,7 +37,7 @@ MonoBehaviour:
   oreSightProbeRadius: 0.35
   oreSightDistance: 2.2
   oreSightOriginHeight: 0.7
-  colliderRadius: 0.4
+  colliderRadius: 0.5
   colliderHeight: 1.8
   mass: 1
   collisionLayers:

@@ -23,8 +23,10 @@ namespace MiningSimulator.Ores
         [SerializeField] private string miningAnimatorBoolParameter = "IsMining";
         [Tooltip("Trigger parameter fired on the Animator exactly when a hit registers, in sync with the mining SFX.")]
         [SerializeField] private string hitAnimatorTriggerParameter = "Hit";
-        [Tooltip("Name of the Animator state that plays the mining swing (the 'Mine' box in the controller graph). Once fully inside this state (after any Idle->Mine blend finishes), its playback time is force-locked every frame to the same hit cadence that drives damage and the mining SFX, so the swing pose and the sound always land together regardless of the clip's own length/speed.")]
+        [Tooltip("Name of the Animator state that plays the mining swing (the 'Mine' box in the controller graph). Once fully inside this state (after any Idle->Mine blend finishes), its playback SPEED is adjusted every frame so exactly one loop of the clip takes the same time as one hit (SecondsPerHit) - so the swing and the mining SFX stay roughly in step without ever forcing the pose/time directly (which can distort the rig).")]
         [SerializeField] private string mineAnimatorStateName = "Mine";
+        [Tooltip("Normalized phase (0-1) added before computing the tool swing. The swing math assumes the tool is at its 'strike' extreme exactly when the hit/SFX fires (phase 0) - if your rig's actual strike pose is the OPPOSITE extreme, the pickaxe will visually connect half a swing late/early. Set this to 0.5 to flip it, or nudge it in Play Mode until the pickaxe visually touches the ore at the same instant as the hit SFX.")]
+        [SerializeField, Range(0f, 1f)] private float toolSwingPhaseOffset01 = 0f;
 
         [Header("Ground Clamp (floating-feet safety net)")]
         [Tooltip("Assign the visual model's root (the object holding the Animator/skeleton) to enable the runtime fix below. Leave empty to disable.")]
@@ -32,7 +34,7 @@ namespace MiningSimulator.Ores
         [Tooltip("Left foot bone. With Right Foot Bone below, the model is pulled down each frame until the lowest foot touches the ground - this compensates for an animation clip that is not baked correctly (Root Transform Position Y / Bake Into Pose), which is the real fix and should still be done on the clip.")]
         [SerializeField] private Transform leftFootBone;
         [SerializeField] private Transform rightFootBone;
-        [Tooltip("How far a foot may sit above (or now below) the NPC's local ground (Y = 0) before it is treated as floating/clipping and corrected.")]
+        [Tooltip("How far a foot may sit above or below the NPC's true local ground level (bottom of the Capsule Collider, not local Y = 0) before it is treated as floating/clipping and corrected.")]
         [SerializeField, Min(0f)] private float groundClampEpsilon = 0.01f;
 
         private readonly RaycastHit[] obstacleHits = new RaycastHit[32];
@@ -314,31 +316,48 @@ namespace MiningSimulator.Ores
 
             if (toolPivot != null && npcData != null)
             {
-                Quaternion targetRotation = toolRestRotation;
                 if (hasHitPhase)
                 {
                     // Phase-lock the swing to the same hit cadence that drives ApplyDamageToTarget()
-                    // and the mining SFX (see MiningAudioManager.HandleOreDamaged/HandleOreRewardGranted),
-                    // so the strike pose lands exactly when the hit (and its sound) actually fires.
-                    float swing = Mathf.Cos(hitPhase01 * Mathf.PI * 2f) * npcData.ToolSwingAngle;
-                    targetRotation *= Quaternion.Euler(0f, 0f, swing);
+                    // and the mining SFX (see MiningAudioManager.HandleOreDamaged/HandleOreRewardGranted).
+                    // toolSwingPhaseOffset01 lets you calibrate WHICH extreme of the swing counts
+                    // as "strike" for your specific rig (see its tooltip).
+                    float swingPhase = Mathf.Repeat(hitPhase01 + toolSwingPhaseOffset01, 1f);
+                    float swing = Mathf.Cos(swingPhase * Mathf.PI * 2f) * npcData.ToolSwingAngle;
+                    // Snap straight to the computed pose instead of Slerping toward it - the
+                    // cosine wave is already smooth/continuous on its own, so Slerping on top of
+                    // a moving target only adds lag, which is exactly why the visible swing was
+                    // arriving late (after the hit/SFX already fired). Slerp is still used below,
+                    // but only to ease back to rest once mining stops.
+                    toolPivot.localRotation = toolRestRotation * Quaternion.Euler(0f, 0f, swing);
                 }
-
-                toolPivot.localRotation = Quaternion.Slerp(
-                    toolPivot.localRotation, targetRotation, npcData.ToolReturnSpeed * Time.deltaTime);
+                else
+                {
+                    toolPivot.localRotation = Quaternion.Slerp(toolPivot.localRotation,
+                        toolRestRotation, npcData.ToolReturnSpeed * Time.deltaTime);
+                }
             }
 
-            if (hasHitPhase && animator != null && hasMiningBoolParameter)
+            if (animator != null && hasMiningBoolParameter)
             {
-                AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
-                if (stateInfo.shortNameHash == mineStateHash && !animator.IsInTransition(0))
+                if (isMining && npcData != null)
                 {
-                    // Force-scrub the whole-body swing animation to the exact same phase used
-                    // above for the tool, and evaluate it immediately so the ground clamp below
-                    // reads this frame's real (hit-synced) pose instead of a stale one. Only done
-                    // once fully inside the Mine state so the Idle<->Mine blend still plays normally.
-                    animator.Play(mineStateHash, 0, hitPhase01);
-                    animator.Update(0f);
+                    AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
+                    if (stateInfo.shortNameHash == mineStateHash && !animator.IsInTransition(0) &&
+                        stateInfo.length > 0.0001f)
+                    {
+                        // Stretch/compress the clip's own playback speed so exactly one loop
+                        // takes the same time as one hit (SecondsPerHit). This keeps Unity's
+                        // normal Animator update (blending, any IK, avatar masks) completely
+                        // intact - unlike forcing the normalized time directly, which can snap
+                        // the rig into a broken pose if the state relies on more than a single
+                        // plain clip.
+                        animator.speed = stateInfo.length / Mathf.Max(0.0001f, npcData.SecondsPerHit);
+                    }
+                }
+                else if (!Mathf.Approximately(animator.speed, 1f))
+                {
+                    animator.speed = 1f;
                 }
             }
 
@@ -370,11 +389,12 @@ namespace MiningSimulator.Ores
         /// <summary>
         /// Runtime safety net for floating or clipping feet: pulls the visual model up or down
         /// each frame until the lower of the two assigned foot bones sits exactly on the NPC's
-        /// local ground plane (Y = 0). This does NOT replace the proper fix - baking "Root
-        /// Transform Position (Y)" into the animation clip's pose on the FBX import settings
-        /// (Based Upon: Original) - it only masks the symptom for clips that were not baked
-        /// correctly, or as an extra safeguard. Runs after the Mine-state phase lock above, so it
-        /// always reads this frame's real, hit-synced pose rather than a stale one.
+        /// true local ground level - the bottom of the Capsule Collider, NOT local Y = 0 (the
+        /// capsule's center sits at its middle by default, so the ground is half the capsule's
+        /// height below the transform's origin; see localGroundY below). This does NOT replace
+        /// the proper fix - baking "Root Transform Position (Y)" into the animation clip's pose
+        /// on the FBX import settings (Based Upon: Original) - it only masks the symptom for
+        /// clips that were not baked correctly, or as an extra safeguard.
         /// </summary>
         private void ApplyGroundClamp()
         {
@@ -383,6 +403,13 @@ namespace MiningSimulator.Ores
                 return;
             }
 
+            // The capsule's center sits at the middle of its height (Unity default), not at the
+            // NPC transform's local origin - so local Y = 0 is NOT the ground. The true ground,
+            // in the same local space as the foot bones below, is the bottom of the capsule
+            // (this is exactly the offset NpcData.SpawnHeightOffset lifts the NPC by at spawn so
+            // the capsule's bottom touches the real ground).
+            float localGroundY = capsule != null ? capsule.center.y - capsule.height * 0.5f : 0f;
+
             Vector3 localPosition = visualModelRoot.localPosition;
             localPosition.y = visualModelBaseLocalY;
             visualModelRoot.localPosition = localPosition;
@@ -390,9 +417,10 @@ namespace MiningSimulator.Ores
             float leftFootY = transform.InverseTransformPoint(leftFootBone.position).y;
             float rightFootY = transform.InverseTransformPoint(rightFootBone.position).y;
             float lowestFootY = Mathf.Min(leftFootY, rightFootY);
-            if (Mathf.Abs(lowestFootY) > groundClampEpsilon)
+            float offsetFromGround = lowestFootY - localGroundY;
+            if (Mathf.Abs(offsetFromGround) > groundClampEpsilon)
             {
-                localPosition.y = visualModelBaseLocalY - lowestFootY;
+                localPosition.y = visualModelBaseLocalY - offsetFromGround;
                 visualModelRoot.localPosition = localPosition;
             }
         }
