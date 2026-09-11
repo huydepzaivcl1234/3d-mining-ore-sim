@@ -192,6 +192,12 @@ MonoBehaviour:
   progressionSystem: {fileID: 0}
   toolPivot: {fileID: 7375554733236698209}
   animator: {fileID: 1436926075863195294}
+  miningAnimatorBoolParameter: IsMining
+  hitAnimatorTriggerParameter: Hit
+  visualModelRoot: {fileID: 4976706783355569380}
+  leftFootBone: {fileID: 3267681156373942097}
+  rightFootBone: {fileID: 6467379190988483298}
+  groundClampEpsilon: 0.01
 --- !u!1 &6420975508720734577
 GameObject:
   m_ObjectHideFlags: 0
@@ -356,9 +362,19 @@ Animator:
   m_CorrespondingSourceObject: {fileID: 5866666021909216657, guid: 2faa610713d3b3c439473daa55e8c60a, type: 3}
   m_PrefabInstance: {fileID: 4799263865450980111}
   m_PrefabAsset: {fileID: 0}
+--- !u!4 &3267681156373942097 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 8053363830559534174, guid: 2faa610713d3b3c439473daa55e8c60a, type: 3}
+  m_PrefabInstance: {fileID: 4799263865450980111}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &4976706783355569380 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 2faa610713d3b3c439473daa55e8c60a, type: 3}
+  m_PrefabInstance: {fileID: 4799263865450980111}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &6467379190988483298 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -7252248863957988883, guid: 2faa610713d3b3c439473daa55e8c60a, type: 3}
   m_PrefabInstance: {fileID: 4799263865450980111}
   m_PrefabAsset: {fileID: 0}
 --- !u!4 &7375554733236698209 stripped

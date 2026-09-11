@@ -16,6 +16,23 @@ namespace MiningSimulator.Ores
         [SerializeField] private NpcProgressionSystem progressionSystem;
         [SerializeField] private Transform toolPivot;
 
+        [Header("Animator")]
+        [Tooltip("Auto-resolved from a child object if left empty (GetComponentInChildren).")]
+        [SerializeField] private Animator animator;
+        [Tooltip("Bool parameter set on the Animator while the NPC is actively mining (swinging).")]
+        [SerializeField] private string miningAnimatorBoolParameter = "IsMining";
+        [Tooltip("Trigger parameter fired on the Animator exactly when a hit registers, in sync with the mining SFX.")]
+        [SerializeField] private string hitAnimatorTriggerParameter = "Hit";
+
+        [Header("Ground Clamp (floating-feet safety net)")]
+        [Tooltip("Assign the visual model's root (the object holding the Animator/skeleton) to enable the runtime fix below. Leave empty to disable.")]
+        [SerializeField] private Transform visualModelRoot;
+        [Tooltip("Left foot bone. With Right Foot Bone below, the model is pulled down each frame until the lowest foot touches the ground - this compensates for an animation clip that is not baked correctly (Root Transform Position Y / Bake Into Pose), which is the real fix and should still be done on the clip.")]
+        [SerializeField] private Transform leftFootBone;
+        [SerializeField] private Transform rightFootBone;
+        [Tooltip("How far a foot may sit above the NPC's local ground (Y = 0) before it is treated as floating and corrected.")]
+        [SerializeField, Min(0f)] private float groundClampEpsilon = 0.01f;
+
         private readonly RaycastHit[] obstacleHits = new RaycastHit[32];
         private readonly Collider[] separationHits = new Collider[24];
         private Ore targetOre;
@@ -43,6 +60,9 @@ namespace MiningSimulator.Ores
         private bool hasMoveTarget;
         private bool isMining;
         private CapsuleCollider capsule;
+        private bool hasMiningBoolParameter;
+        private bool hasHitTriggerParameter;
+        private float visualModelBaseLocalY;
 
         public void ConfigureTool(Transform targetToolPivot)
         {
@@ -88,6 +108,27 @@ namespace MiningSimulator.Ores
             if (toolPivot != null)
             {
                 toolRestRotation = toolPivot.localRotation;
+            }
+
+            if (animator == null)
+            {
+                animator = GetComponentInChildren<Animator>(true);
+            }
+
+            if (animator != null)
+            {
+                // Physics/script (this component) drives movement, not the animation clip -
+                // keeping this off avoids the Animator fighting the Rigidbody every frame.
+                animator.applyRootMotion = false;
+                hasMiningBoolParameter = HasParameter(
+                    animator, miningAnimatorBoolParameter, AnimatorControllerParameterType.Bool);
+                hasHitTriggerParameter = HasParameter(
+                    animator, hitAnimatorTriggerParameter, AnimatorControllerParameterType.Trigger);
+            }
+
+            if (visualModelRoot != null)
+            {
+                visualModelBaseLocalY = visualModelRoot.localPosition.y;
             }
 
             ConfigurePhysics();
@@ -165,7 +206,7 @@ namespace MiningSimulator.Ores
 
             if (!isWithinMiningRange)
             {
-                isMining = false;
+                SetMiningAnimationState(false);
                 desiredMoveTarget = standPosition;
                 hasMoveTarget = true;
                 TrackMovementProgress(currentPosition);
@@ -173,7 +214,7 @@ namespace MiningSimulator.Ores
             }
 
             ResetProgressTracking();
-            isMining = true;
+            SetMiningAnimationState(true);
             if (Time.time < nextHitTime)
             {
                 return;
@@ -181,6 +222,7 @@ namespace MiningSimulator.Ores
 
             nextHitTime = Time.time + npcData.SecondsPerHit;
             ApplyDamageToTarget();
+            TriggerHitAnimation();
             if (!IsTargetValid())
             {
                 ReleaseTarget();
@@ -255,26 +297,95 @@ namespace MiningSimulator.Ores
 
         private void LateUpdate()
         {
-            if (toolPivot == null || npcData == null)
+            if (toolPivot != null && npcData != null)
+            {
+                Quaternion targetRotation = toolRestRotation;
+                if (isMining)
+                {
+                    // Phase-lock the swing to the same hit cadence that drives ApplyDamageToTarget()
+                    // and the mining SFX (see MiningAudioManager.HandleOreDamaged/HandleOreRewardGranted),
+                    // so the strike pose lands exactly when the hit (and its sound) actually fires.
+                    float cadence = Mathf.Max(0.0001f, npcData.SecondsPerHit);
+                    float sinceLastHit = cadence - Mathf.Max(0f, nextHitTime - Time.time);
+                    float hitPhase01 = Mathf.Clamp01(sinceLastHit / cadence);
+                    float swing = Mathf.Cos(hitPhase01 * Mathf.PI * 2f) * npcData.ToolSwingAngle;
+                    targetRotation *= Quaternion.Euler(0f, 0f, swing);
+                }
+
+                toolPivot.localRotation = Quaternion.Slerp(
+                    toolPivot.localRotation, targetRotation, npcData.ToolReturnSpeed * Time.deltaTime);
+            }
+
+            ApplyGroundClamp();
+        }
+
+        private void SetMiningAnimationState(bool mining)
+        {
+            if (isMining == mining)
             {
                 return;
             }
 
-            Quaternion targetRotation = toolRestRotation;
-            if (isMining)
+            isMining = mining;
+            if (animator != null && hasMiningBoolParameter)
             {
-                // Phase-lock the swing to the same hit cadence that drives ApplyDamageToTarget()
-                // and the mining SFX (see MiningAudioManager.HandleOreDamaged/HandleOreRewardGranted),
-                // so the strike pose lands exactly when the hit (and its sound) actually fires.
-                float cadence = Mathf.Max(0.0001f, npcData.SecondsPerHit);
-                float sinceLastHit = cadence - Mathf.Max(0f, nextHitTime - Time.time);
-                float hitPhase01 = Mathf.Clamp01(sinceLastHit / cadence);
-                float swing = Mathf.Cos(hitPhase01 * Mathf.PI * 2f) * npcData.ToolSwingAngle;
-                targetRotation *= Quaternion.Euler(0f, 0f, swing);
+                animator.SetBool(miningAnimatorBoolParameter, mining);
+            }
+        }
+
+        private void TriggerHitAnimation()
+        {
+            if (animator != null && hasHitTriggerParameter)
+            {
+                animator.SetTrigger(hitAnimatorTriggerParameter);
+            }
+        }
+
+        /// <summary>
+        /// Runtime safety net for floating feet: pulls the visual model down until the lower of
+        /// the two assigned foot bones sits on the NPC's local ground plane (Y = 0). This does
+        /// NOT replace the proper fix - baking "Root Transform Position (Y)" into the animation
+        /// clip's pose on the FBX import settings (Based Upon: Original) - it only masks the
+        /// symptom for clips that were not baked correctly, or as an extra safeguard.
+        /// </summary>
+        private void ApplyGroundClamp()
+        {
+            if (visualModelRoot == null || leftFootBone == null || rightFootBone == null)
+            {
+                return;
             }
 
-            toolPivot.localRotation = Quaternion.Slerp(
-                toolPivot.localRotation, targetRotation, npcData.ToolReturnSpeed * Time.deltaTime);
+            Vector3 localPosition = visualModelRoot.localPosition;
+            localPosition.y = visualModelBaseLocalY;
+            visualModelRoot.localPosition = localPosition;
+
+            float leftFootY = transform.InverseTransformPoint(leftFootBone.position).y;
+            float rightFootY = transform.InverseTransformPoint(rightFootBone.position).y;
+            float lowestFootY = Mathf.Min(leftFootY, rightFootY);
+            if (lowestFootY > groundClampEpsilon)
+            {
+                localPosition.y = visualModelBaseLocalY - lowestFootY;
+                visualModelRoot.localPosition = localPosition;
+            }
+        }
+
+        private static bool HasParameter(Animator target, string parameterName,
+            AnimatorControllerParameterType parameterType)
+        {
+            if (target == null || string.IsNullOrEmpty(parameterName))
+            {
+                return false;
+            }
+
+            foreach (AnimatorControllerParameter parameter in target.parameters)
+            {
+                if (parameter.type == parameterType && parameter.name == parameterName)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private void TryAcquireTarget(Vector3 currentPosition)
@@ -347,7 +458,7 @@ namespace MiningSimulator.Ores
                 ignoredOreUntil = Time.time + npcData.IgnoredTargetDuration;
             }
 
-            isMining = false;
+            SetMiningAnimationState(false);
             nextHitTime = 0f;
             nextTargetSwitchTime = Time.time + npcData.TargetSwitchCooldown;
             ClearDetour();
@@ -369,7 +480,7 @@ namespace MiningSimulator.Ores
                 ignoredLuckyBlockUntil = Time.time + npcData.IgnoredTargetDuration;
             }
 
-            isMining = false;
+            SetMiningAnimationState(false);
             nextHitTime = 0f;
             nextTargetSwitchTime = Time.time + npcData.TargetSwitchCooldown;
             ClearDetour();
@@ -506,7 +617,7 @@ namespace MiningSimulator.Ores
             targetLuckyBlock = null;
             reservedSlot = -1;
             hasMoveTarget = false;
-            isMining = false;
+            SetMiningAnimationState(false);
             ClearDetour();
         }
 
