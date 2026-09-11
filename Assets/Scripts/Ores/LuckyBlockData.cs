@@ -89,6 +89,17 @@ namespace MiningSimulator.Ores
         [SerializeField] private Vector3 healthBarWorldOffset = new(0f, 0.25f, 0f);
         [Min(0.01f), SerializeField] private float healthBarScale = 0.65f;
 
+        [Header("Countdown Label")]
+        [Tooltip("Shows a live 'time left' readout above the block until it expires and despawns.")]
+        [SerializeField] private bool showCountdownLabel = true;
+        [SerializeField] private Vector3 countdownLabelWorldOffset = new(0f, 0.55f, 0f);
+        [Min(0.01f), SerializeField] private float countdownLabelScale = 0.5f;
+        [Min(1f), SerializeField] private float countdownLabelFontSize = 6f;
+        [SerializeField] private Color countdownLabelColor = new(1f, 0.92f, 0.35f, 1f);
+        [Tooltip("At or below this many seconds remaining, the label switches to Countdown Urgent Color.")]
+        [Min(0f), SerializeField] private float countdownUrgentThresholdSeconds = 5f;
+        [SerializeField] private Color countdownUrgentColor = new(1f, 0.28f, 0.24f, 1f);
+
         [Header("Pooling")]
         [Min(0), SerializeField] private int maximumPooledBlocks = 6;
 
@@ -116,6 +127,13 @@ namespace MiningSimulator.Ores
         public float HitPunchDuration => hitPunchDuration;
         public Vector3 HealthBarWorldOffset => healthBarWorldOffset;
         public float HealthBarScale => healthBarScale;
+        public bool ShowCountdownLabel => showCountdownLabel;
+        public Vector3 CountdownLabelWorldOffset => countdownLabelWorldOffset;
+        public float CountdownLabelScale => countdownLabelScale;
+        public float CountdownLabelFontSize => countdownLabelFontSize;
+        public Color CountdownLabelColor => countdownLabelColor;
+        public float CountdownUrgentThresholdSeconds => countdownUrgentThresholdSeconds;
+        public Color CountdownUrgentColor => countdownUrgentColor;
         public int MaximumPooledBlocks => maximumPooledBlocks;
         public IReadOnlyList<LuckyBlockVariantData> Variants => variants;
 
@@ -136,6 +154,9 @@ namespace MiningSimulator.Ores
             hitPunchLift = Mathf.Max(0f, hitPunchLift);
             hitPunchDuration = Mathf.Max(0.01f, hitPunchDuration);
             healthBarScale = Mathf.Max(0.01f, healthBarScale);
+            countdownLabelScale = Mathf.Max(0.01f, countdownLabelScale);
+            countdownLabelFontSize = Mathf.Max(1f, countdownLabelFontSize);
+            countdownUrgentThresholdSeconds = Mathf.Max(0f, countdownUrgentThresholdSeconds);
             maximumPooledBlocks = Mathf.Max(0, maximumPooledBlocks);
             if (variants == null)
             {

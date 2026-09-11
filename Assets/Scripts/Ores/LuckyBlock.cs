@@ -40,6 +40,9 @@ namespace MiningSimulator.Ores
         public event Action<LuckyBlock> Broken;
         public event Action<LuckyBlock> Expired;
 
+        public float TimeRemainingSeconds => settings != null
+            ? Mathf.Max(0f, settings.MaximumLifetimeSeconds - lifetime)
+            : 0f;
         public bool CanAcceptMiner(MiningNpc miner, int miningPower)
         {
             RemoveMissingReservations();

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Microlight.MicroBar;
+using TMPro;
 using UnityEngine;
 
 namespace MiningSimulator.Ores
@@ -348,6 +349,7 @@ namespace MiningSimulator.Ores
             LuckyBlock block = root.AddComponent<LuckyBlock>();
             block.ConfigureVisualRoot(visual.transform);
             AddHealthBar(root, block);
+            AddCountdownLabel(root, block);
             return block;
         }
 
@@ -395,6 +397,31 @@ namespace MiningSimulator.Ores
             MicroBar bar = barObject.GetComponent<MicroBar>();
             LuckyBlockHealthBar binding = barObject.AddComponent<LuckyBlockHealthBar>();
             binding.Configure(block, bar, barObject.transform);
+        }
+
+        /// <summary>
+        /// Builds its own small world-space TextMeshPro label at runtime (no prefab needed)
+        /// showing time left until the block despawns, positioned above the health bar.
+        /// </summary>
+        private void AddCountdownLabel(GameObject root, LuckyBlock block)
+        {
+            GameObject labelObject = new("Lucky Block Countdown");
+            labelObject.transform.SetParent(root.transform, false);
+            TextMeshPro label = labelObject.AddComponent<TextMeshPro>();
+            label.alignment = TextAlignmentOptions.Center;
+            label.fontStyle = FontStyles.Bold;
+            label.fontSize = data != null ? data.CountdownLabelFontSize : 6f;
+            label.color = data != null ? data.CountdownLabelColor : new Color(1f, 0.92f, 0.35f, 1f);
+            label.enableWordWrapping = false;
+            label.text = string.Empty;
+            RectTransform labelRect = labelObject.GetComponent<RectTransform>();
+            if (labelRect != null)
+            {
+                labelRect.sizeDelta = new Vector2(3f, 1f);
+            }
+
+            LuckyBlockCountdownLabel binding = labelObject.AddComponent<LuckyBlockCountdownLabel>();
+            binding.Configure(block, label);
         }
 
         private static void NormalizeVisualAndCollider(LuckyBlock block, float targetWorldSize)

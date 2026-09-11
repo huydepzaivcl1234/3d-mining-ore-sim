@@ -32,6 +32,13 @@ MonoBehaviour:
   hitPunchDuration: 0.16
   healthBarWorldOffset: {x: 0, y: 0.25, z: 0}
   healthBarScale: 0.65
+  showCountdownLabel: 1
+  countdownLabelWorldOffset: {x: 0, y: 0.55, z: 0}
+  countdownLabelScale: 0.5
+  countdownLabelFontSize: 6
+  countdownLabelColor: {r: 1, g: 0.92, b: 0.35, a: 1}
+  countdownUrgentThresholdSeconds: 5
+  countdownUrgentColor: {r: 1, g: 0.28, b: 0.24, a: 1}
   maximumPooledBlocks: 6
   variants:
   - type: 0
