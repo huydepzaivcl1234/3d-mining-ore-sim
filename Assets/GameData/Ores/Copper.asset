@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Copper
   description: Valuable metallic ore used for stronger upgrades.
   tier: 3
-  miningPowerRequired: 6
+  miningPowerRequired: 7
   durability: 35
   clickDamage: 3
   baseSellValue: 9

@@ -2159,6 +2159,7 @@ GameObject:
   - component: {fileID: 193955306}
   - component: {fileID: 193955305}
   - component: {fileID: 193955309}
+  - component: {fileID: 193955310}
   m_Layer: 5
   m_Name: Inventory Menu Button
   m_TagString: Untagged
@@ -2317,6 +2318,19 @@ CanvasGroup:
   m_Interactable: 1
   m_BlocksRaycasts: 1
   m_IgnoreParentGroups: 0
+--- !u!114 &193955310
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 193955302}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0070ec9617d249bd810d206cdbb58840, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningButtonSfx
+  audioManager: {fileID: 2127211622}
 --- !u!1 &195677453
 GameObject:
   m_ObjectHideFlags: 0
@@ -5602,7 +5616,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!108 &410087040
 Light:
   m_ObjectHideFlags: 0
@@ -6109,6 +6123,8 @@ MonoBehaviour:
   rebirthSystem: {fileID: 0}
   resetDataButton: {fileID: 0}
   resetDataLabel: {fileID: 0}
+  languageButton: {fileID: 0}
+  languageLabel: {fileID: 0}
 --- !u!114 &450512002
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6280,7 +6296,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningEffectToast
   itemSystem: {fileID: 1388648154}
-  uiData: {fileID: 0}
+  uiData: {fileID: 11400000, guid: 0fc641ac29720e2837d73e6212818c58, type: 2}
   toastRoot: {fileID: 573600082}
   effectLabel: {fileID: 519501956}
 --- !u!1 &453467933
@@ -9076,6 +9092,7 @@ MonoBehaviour:
   uiData: {fileID: 11400000, guid: 0fc641ac29720e2837d73e6212818c58, type: 2}
   rewardPopupPrefab: {fileID: 595523728496385370, guid: 60732089bc3d5a74cac36ef83399977d, type: 3}
   healthBarPrefab: {fileID: 4657497537876699430, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
+  progressionSystem: {fileID: 0}
 --- !u!1 &729581766
 GameObject:
   m_ObjectHideFlags: 0
@@ -20110,6 +20127,58 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1481863356}
   m_CullTransparentMesh: 1
+--- !u!1 &1491607849
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1491607850}
+  - component: {fileID: 1491607851}
+  m_Layer: 5
+  m_Name: Mining Unlock Notifier
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1491607850
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1491607849}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4462853031970875118}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 15.000007, y: -190}
+  m_SizeDelta: {x: 590, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1491607851
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1491607849}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cf1eabd979d841a46a83a0f9dc26a835, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningUnlockNotifier
+  progressionSystem: {fileID: 655586588}
+  oreSpawner: {fileID: 1828941534}
+  luckyBlockDropSystem: {fileID: 725887964}
+  uiData: {fileID: 11400000, guid: 0fc641ac29720e2837d73e6212818c58, type: 2}
 --- !u!1 &1497640124
 GameObject:
   m_ObjectHideFlags: 0
@@ -24701,6 +24770,7 @@ MonoBehaviour:
   uiData: {fileID: 11400000, guid: 0fc641ac29720e2837d73e6212818c58, type: 2}
   rewardPopupPrefab: {fileID: 595523728496385370, guid: 60732089bc3d5a74cac36ef83399977d, type: 3}
   dayNightSystem: {fileID: 1889411264}
+  progressionSystem: {fileID: 0}
 --- !u!114 &1828941535
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -26171,6 +26241,7 @@ GameObject:
   - component: {fileID: 1941688032}
   - component: {fileID: 1941688035}
   - component: {fileID: 1941688034}
+  - component: {fileID: 1941688038}
   m_Layer: 5
   m_Name: Close
   m_TagString: Untagged
@@ -26317,6 +26388,19 @@ RectTransform:
   m_AnchoredPosition: {x: 896, y: -32}
   m_SizeDelta: {x: 48, y: 48}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1941688038
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1941688031}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0070ec9617d249bd810d206cdbb58840, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningButtonSfx
+  audioManager: {fileID: 2127211622}
 --- !u!1 &1945029938
 GameObject:
   m_ObjectHideFlags: 0
@@ -28692,6 +28776,7 @@ MonoBehaviour:
   audioData: {fileID: 11400000, guid: 7ed2996916474886baa255d4535b8a51, type: 2}
   oreSpawner: {fileID: 1828941534}
   npcShop: {fileID: 655586586}
+  progressionSystem: {fileID: 0}
   upgradeSystem: {fileID: 1144114548}
   upgradePanel: {fileID: 450512005}
   rebirthSystem: {fileID: 1044407942}
@@ -33848,6 +33933,7 @@ RectTransform:
   - {fileID: 1818660670}
   - {fileID: 193955308}
   - {fileID: 1246904593}
+  - {fileID: 1491607850}
   - {fileID: 573600083}
   m_Father: {fileID: 996078877246501140}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

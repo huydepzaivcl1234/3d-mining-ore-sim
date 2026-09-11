@@ -18,7 +18,8 @@ namespace MiningSimulator.Ores
         [Min(1f), SerializeField] private float dayDurationSeconds = 120f;
         [Min(1f), SerializeField] private float nightDurationSeconds = 90f;
         [Min(0f), SerializeField] private float transitionDurationSeconds = 8f;
-        [SerializeField] private AnimationCurve transitionCurve =
+        [SerializeField]
+        private AnimationCurve transitionCurve =
             AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
         [Header("Sun And Ambient Light")]
@@ -31,7 +32,39 @@ namespace MiningSimulator.Ores
         [SerializeField] private Color dayAmbientColor = new(0.72f, 0.78f, 0.86f, 1f);
         [SerializeField] private Color nightAmbientColor = new(0.12f, 0.16f, 0.28f, 1f);
 
-        [Header("Skybox")]
+        [Header("Sun Arc And Shimmer")]
+        [Tooltip("Extra degrees the sun keeps drifting across (X-axis) over the full Day " +
+                 "period, instead of freezing in place between transitions.")]
+        [Min(0f), SerializeField] private float daySunArcDegrees = 18f;
+        [Tooltip("Same drift, but for the moon's arc across the Night period.")]
+        [Min(0f), SerializeField] private float nightSunArcDegrees = 10f;
+        [Tooltip("How much the sun's intensity gently breathes up and down, as a fraction " +
+                 "of its base intensity (0 = perfectly steady).")]
+        [Range(0f, 0.3f), SerializeField] private float sunShimmerAmount = 0.06f;
+        [Tooltip("How fast the intensity/ambient shimmer cycles.")]
+        [Min(0f), SerializeField] private float shimmerSpeed = 0.15f;
+        [Tooltip("Same breathing effect applied to the ambient light color.")]
+        [Range(0f, 0.3f), SerializeField] private float ambientShimmerAmount = 0.04f;
+
+        [Header("Golden Hour")]
+        [Tooltip("Warm tint blended in only while a Day<->Night transition is in progress, " +
+                 "peaking halfway through it — gives sunrise/sunset an actual glow instead " +
+                 "of just crossfading between the day and night colors.")]
+        [SerializeField] private Color goldenHourColor = new(1f, 0.55f, 0.24f, 1f);
+        [Tooltip("0 disables the effect. Around 0.5-0.8 looks like a proper sunset/sunrise.")]
+        [Range(0f, 2f), SerializeField] private float goldenHourStrength = 0.6f;
+
+        [Header("Celestial Disc (Sun & Moon)")]
+        [Tooltip("Adds a soft glowing sun/moon disc in the sky, generated at runtime — no " +
+                 "art asset needed. Disable if you already have a sun/moon visual.")]
+        [SerializeField] private bool showCelestialDisc = true;
+        [SerializeField] private Color sunDiscColor = new(1f, 0.86f, 0.58f, 1f);
+        [SerializeField] private Color moonDiscColor = new(0.78f, 0.85f, 1f, 1f);
+        [Min(0f), SerializeField] private float sunDiscIntensity = 1.5f;
+        [Min(0f), SerializeField] private float moonDiscIntensity = 0.85f;
+        [Min(0.1f), SerializeField] private float sunDiscScale = 16f;
+        [Min(0.1f), SerializeField] private float moonDiscScale = 8f;
+        [Min(1f), SerializeField] private float celestialDiscDistance = 480f;
         [SerializeField] private bool controlSkybox = true;
         [SerializeField] private Material skyboxMaterial;
         [SerializeField] private Color daySkyTint = new(0.52f, 0.72f, 1f, 1f);
@@ -112,6 +145,21 @@ namespace MiningSimulator.Ores
         public float NightSunIntensity => nightSunIntensity;
         public Color DayAmbientColor => dayAmbientColor;
         public Color NightAmbientColor => nightAmbientColor;
+        public float DaySunArcDegrees => daySunArcDegrees;
+        public float NightSunArcDegrees => nightSunArcDegrees;
+        public float SunShimmerAmount => sunShimmerAmount;
+        public float ShimmerSpeed => shimmerSpeed;
+        public float AmbientShimmerAmount => ambientShimmerAmount;
+        public Color GoldenHourColor => goldenHourColor;
+        public float GoldenHourStrength => goldenHourStrength;
+        public bool ShowCelestialDisc => showCelestialDisc;
+        public Color SunDiscColor => sunDiscColor;
+        public Color MoonDiscColor => moonDiscColor;
+        public float SunDiscIntensity => sunDiscIntensity;
+        public float MoonDiscIntensity => moonDiscIntensity;
+        public float SunDiscScale => sunDiscScale;
+        public float MoonDiscScale => moonDiscScale;
+        public float CelestialDiscDistance => celestialDiscDistance;
         public bool ControlSkybox => controlSkybox;
         public Material SkyboxMaterial => skyboxMaterial;
         public Color DaySkyTint => daySkyTint;

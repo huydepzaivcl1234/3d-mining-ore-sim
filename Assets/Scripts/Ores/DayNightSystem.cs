@@ -30,10 +30,14 @@ namespace MiningSimulator.Ores
         private float daylight;
         private float transitionFromDaylight;
         private float transitionToDaylight;
+        private float transitionBellCurve;
         private bool initialized;
         private Material originalSkybox;
         private Material runtimeSkybox;
         private Tween lightingTween;
+        private SpriteRenderer celestialRenderer;
+        private Transform celestialTransform;
+        private Camera billboardCamera;
 
         public MiningTimePeriod CurrentPeriod => currentPeriod;
 
@@ -67,6 +71,7 @@ namespace MiningSimulator.Ores
         {
             InitializeIfNeeded();
             PrepareRuntimeSkybox();
+            EnsureCelestialDisc();
             ApplyLighting(daylight);
         }
 
@@ -112,6 +117,39 @@ namespace MiningSimulator.Ores
                     PeriodChanged?.Invoke(currentPeriod);
                 }
             }
+
+            // Re-apply every frame instead of only during the ~few-second transition tween,
+            // so the sun keeps drifting across the sky and gently shimmering for the whole
+            // ~1-2 minute period instead of freezing in place once the transition ends.
+            ApplyLighting(daylight);
+        }
+
+        private void LateUpdate()
+        {
+            if (celestialTransform == null || sun == null)
+            {
+                return;
+            }
+
+            if (billboardCamera == null)
+            {
+                billboardCamera = Camera.main;
+                if (billboardCamera == null)
+                {
+                    return;
+                }
+            }
+
+            Transform cameraTransform = billboardCamera.transform;
+            celestialTransform.position = cameraTransform.position -
+                sun.transform.forward * data.CelestialDiscDistance;
+            celestialTransform.rotation = cameraTransform.rotation;
+            celestialTransform.localScale =
+                Vector3.one * Mathf.Lerp(data.MoonDiscScale, data.SunDiscScale, daylight);
+
+            Color tint = Color.Lerp(data.MoonDiscColor, data.SunDiscColor, daylight);
+            float intensity = Mathf.Lerp(data.MoonDiscIntensity, data.SunDiscIntensity, daylight);
+            celestialRenderer.color = tint * intensity;
         }
 
         public bool TryChooseSpecialOre(float rollPercent, out OreData ore)
@@ -189,18 +227,23 @@ namespace MiningSimulator.Ores
             if (duration <= 0f || Mathf.Approximately(transitionFromDaylight, transitionToDaylight))
             {
                 daylight = transitionToDaylight;
+                transitionBellCurve = 0f;
                 ApplyLighting(daylight);
                 return;
             }
 
             lightingTween = Tween.Custom(this, 0f, 1f, duration,
-                static (target, progress) => target.ApplyTransitionProgress(progress), Ease.Linear);
+                static (target, progress) => target.ApplyTransitionProgress(progress), Ease.Linear)
+                .OnComplete(this, static target => target.transitionBellCurve = 0f);
         }
 
         private void ApplyTransitionProgress(float progress)
         {
             daylight = Mathf.Lerp(transitionFromDaylight, transitionToDaylight,
                 data.EvaluateTransition(progress));
+            // Peaks at the midpoint of the transition and fades back to 0 at either end —
+            // drives the golden-hour warm tint in ApplyLighting.
+            transitionBellCurve = Mathf.Sin(Mathf.Clamp01(progress) * Mathf.PI);
             ApplyLighting(daylight);
         }
 
@@ -222,24 +265,112 @@ namespace MiningSimulator.Ores
             if (sun != null)
             {
                 RenderSettings.sun = sun;
-                sun.transform.rotation = Quaternion.Slerp(
+                Quaternion baseRotation = Quaternion.Slerp(
                     Quaternion.Euler(data.NightSunRotation),
                     Quaternion.Euler(data.DaySunRotation), daylightAmount);
+
+                // Continuous arc: instead of snapping to a fixed pose for the whole period,
+                // the sun (or moon) keeps drifting across the sky as the period progresses.
+                float arcDegrees = currentPeriod == MiningTimePeriod.Day
+                    ? data.DaySunArcDegrees
+                    : data.NightSunArcDegrees;
+                float arcProgress = CurrentPeriodProgress - 0.5f; // -0.5..0.5 across the period
+                sun.transform.rotation = baseRotation * Quaternion.Euler(arcProgress * arcDegrees, 0f, 0f);
+
+                float intensityShimmer = 1f + (Mathf.PerlinNoise(Time.time * data.ShimmerSpeed, 0.37f) - 0.5f) *
+                    2f * data.SunShimmerAmount;
                 sun.color = Color.Lerp(data.NightSunColor, data.DaySunColor, daylightAmount);
-                sun.intensity = Mathf.Lerp(data.NightSunIntensity, data.DaySunIntensity, daylightAmount);
+                sun.intensity = Mathf.Lerp(data.NightSunIntensity, data.DaySunIntensity, daylightAmount) *
+                    intensityShimmer;
             }
 
             RenderSettings.ambientMode = AmbientMode.Flat;
-            RenderSettings.ambientLight = Color.Lerp(
-                data.NightAmbientColor, data.DayAmbientColor, daylightAmount);
+            float ambientShimmer = 1f + (Mathf.PerlinNoise(Time.time * data.ShimmerSpeed * 0.6f, 8.21f) - 0.5f) *
+                2f * data.AmbientShimmerAmount;
+            Color ambient = Color.Lerp(data.NightAmbientColor, data.DayAmbientColor, daylightAmount);
+            Color fogColor = Color.Lerp(data.NightFogColor, data.DayFogColor, daylightAmount);
+
+            // Golden hour: only present while a transition is actually in progress (see
+            // transitionBellCurve), peaking halfway through it so sunrise/sunset get a warm
+            // glow instead of just crossfading straight between the day and night colors.
+            float goldenAmount = transitionBellCurve * data.GoldenHourStrength;
+            if (goldenAmount > 0f)
+            {
+                if (sun != null)
+                {
+                    sun.color = Color.Lerp(sun.color, data.GoldenHourColor, Mathf.Clamp01(goldenAmount));
+                    sun.intensity *= 1f + Mathf.Clamp01(goldenAmount) * 0.35f;
+                }
+                ambient = Color.Lerp(ambient, data.GoldenHourColor, Mathf.Clamp01(goldenAmount * 0.5f));
+                fogColor = Color.Lerp(fogColor, data.GoldenHourColor, Mathf.Clamp01(goldenAmount * 0.4f));
+            }
+
+            RenderSettings.ambientLight = ambient * ambientShimmer;
             ApplySkybox(daylightAmount);
             if (data.ControlFog)
             {
                 RenderSettings.fog = true;
-                RenderSettings.fogColor = Color.Lerp(data.NightFogColor, data.DayFogColor, daylightAmount);
+                RenderSettings.fogColor = fogColor;
                 RenderSettings.fogDensity = Mathf.Lerp(
                     data.NightFogDensity, data.DayFogDensity, daylightAmount);
             }
+        }
+
+        /// <summary>
+        /// Builds a soft glowing sun/moon disc in the sky at runtime — no art asset needed.
+        /// It billboards to the camera every frame in LateUpdate and cross-fades between a
+        /// warm sun look and a cool moon look based on <see cref="daylight"/>.
+        /// </summary>
+        private void EnsureCelestialDisc()
+        {
+            if (data == null || !data.ShowCelestialDisc || celestialRenderer != null)
+            {
+                return;
+            }
+
+            GameObject discObject = new("Celestial Disc (Sun & Moon)", typeof(SpriteRenderer));
+            discObject.transform.SetParent(transform, false);
+            celestialTransform = discObject.transform;
+
+            celestialRenderer = discObject.GetComponent<SpriteRenderer>();
+            celestialRenderer.sprite = GenerateGlowSprite();
+            celestialRenderer.sortingOrder = -100;
+
+            // Additive blending gives a genuine glow (brightens whatever's behind it, no
+            // dark quad edge); fall back gracefully if the built-in shader isn't available.
+            Shader glowShader = Shader.Find("Particles/Additive") ?? Shader.Find("Sprites/Default");
+            if (glowShader != null)
+            {
+                celestialRenderer.material = new Material(glowShader) { name = "Celestial Glow (Runtime)" };
+            }
+        }
+
+        private static Sprite GenerateGlowSprite()
+        {
+            const int size = 128;
+            var texture = new Texture2D(size, size, TextureFormat.RGBA32, false)
+            {
+                wrapMode = TextureWrapMode.Clamp,
+                filterMode = FilterMode.Bilinear,
+                name = "CelestialGlow"
+            };
+
+            Vector2 center = new(size * 0.5f, size * 0.5f);
+            float maxDistance = size * 0.5f;
+            var pixels = new Color32[size * size];
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float distance = Vector2.Distance(new Vector2(x + 0.5f, y + 0.5f), center) / maxDistance;
+                    float alpha = Mathf.Pow(Mathf.Clamp01(1f - distance), 2.2f);
+                    pixels[y * size + x] = new Color(1f, 1f, 1f, alpha);
+                }
+            }
+
+            texture.SetPixels32(pixels);
+            texture.Apply();
+            return Sprite.Create(texture, new Rect(0f, 0f, size, size), new Vector2(0.5f, 0.5f), 100f);
         }
 
         private void PrepareRuntimeSkybox()
