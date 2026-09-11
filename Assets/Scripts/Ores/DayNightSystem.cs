@@ -282,6 +282,21 @@ namespace MiningSimulator.Ores
                 sun.color = Color.Lerp(data.NightSunColor, data.DaySunColor, daylightAmount);
                 sun.intensity = Mathf.Lerp(data.NightSunIntensity, data.DaySunIntensity, daylightAmount) *
                     intensityShimmer;
+
+                if (data.ControlShadows)
+                {
+                    // Shadows already lengthen/shorten on their own from the sun's elevation
+                    // changing above — this adds the crisp/soft type switch, faint-but-visible
+                    // moonlight shadows instead of none, and a shorter render distance at
+                    // night (cheaper, and night shadows barely read past a few meters anyway).
+                    sun.shadows = daylightAmount >= 0.5f ? data.DayShadowType : data.NightShadowType;
+                    sun.shadowStrength = Mathf.Lerp(
+                        data.NightShadowStrength, data.DayShadowStrength, daylightAmount);
+                    sun.shadowBias = data.ShadowBias;
+                    sun.shadowNormalBias = data.ShadowNormalBias;
+                    QualitySettings.shadowDistance = Mathf.Lerp(
+                        data.NightShadowDistance, data.DayShadowDistance, daylightAmount);
+                }
             }
 
             RenderSettings.ambientMode = AmbientMode.Flat;

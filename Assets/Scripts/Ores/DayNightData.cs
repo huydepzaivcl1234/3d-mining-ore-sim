@@ -65,6 +65,24 @@ namespace MiningSimulator.Ores
         [Min(0.1f), SerializeField] private float sunDiscScale = 16f;
         [Min(0.1f), SerializeField] private float moonDiscScale = 8f;
         [Min(1f), SerializeField] private float celestialDiscDistance = 480f;
+
+        [Header("Shadows")]
+        [Tooltip("Lets this system drive the sun's shadow type/strength/bias instead of " +
+                 "leaving them fixed. Shadow length already changes on its own from the sun " +
+                 "arc rotation added above — this adds crisp day shadows, faint dim ones at " +
+                 "night, and no jarring pop when the Light component's own settings differ.")]
+        [SerializeField] private bool controlShadows = true;
+        [SerializeField] private LightShadows dayShadowType = LightShadows.Soft;
+        [SerializeField] private LightShadows nightShadowType = LightShadows.Soft;
+        [Range(0f, 1f), SerializeField] private float dayShadowStrength = 1f;
+        [Tooltip("Kept above 0 so moonlit shadows stay faintly visible instead of vanishing.")]
+        [Range(0f, 1f), SerializeField] private float nightShadowStrength = 0.45f;
+        [Min(0f), SerializeField] private float shadowBias = 0.05f;
+        [Min(0f), SerializeField] private float shadowNormalBias = 0.4f;
+        [Min(0f), SerializeField] private float dayShadowDistance = 120f;
+        [Min(0f), SerializeField] private float nightShadowDistance = 70f;
+
+        [Header("Skybox")]
         [SerializeField] private bool controlSkybox = true;
         [SerializeField] private Material skyboxMaterial;
         [SerializeField] private Color daySkyTint = new(0.52f, 0.72f, 1f, 1f);
@@ -160,6 +178,15 @@ namespace MiningSimulator.Ores
         public float SunDiscScale => sunDiscScale;
         public float MoonDiscScale => moonDiscScale;
         public float CelestialDiscDistance => celestialDiscDistance;
+        public bool ControlShadows => controlShadows;
+        public LightShadows DayShadowType => dayShadowType;
+        public LightShadows NightShadowType => nightShadowType;
+        public float DayShadowStrength => dayShadowStrength;
+        public float NightShadowStrength => nightShadowStrength;
+        public float ShadowBias => shadowBias;
+        public float ShadowNormalBias => shadowNormalBias;
+        public float DayShadowDistance => dayShadowDistance;
+        public float NightShadowDistance => nightShadowDistance;
         public bool ControlSkybox => controlSkybox;
         public Material SkyboxMaterial => skyboxMaterial;
         public Color DaySkyTint => daySkyTint;
