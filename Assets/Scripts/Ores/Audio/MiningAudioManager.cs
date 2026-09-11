@@ -23,7 +23,6 @@ namespace MiningSimulator.Ores
         [SerializeField] private AudioSource musicSource;
         [SerializeField] private AudioSource sfxSource;
 
-        private float nextOreHitSfxTime;
         private bool musicMuted;
         private bool sfxMuted;
         private float masterVolume = 1f;
@@ -85,8 +84,6 @@ namespace MiningSimulator.Ores
         {
             if (oreSpawner != null)
             {
-                oreSpawner.OreDamaged -= HandleOreDamaged;
-                oreSpawner.OreDamaged += HandleOreDamaged;
                 oreSpawner.OreRewardGranted -= HandleOreRewardGranted;
                 oreSpawner.OreRewardGranted += HandleOreRewardGranted;
             }
@@ -155,7 +152,6 @@ namespace MiningSimulator.Ores
         {
             if (oreSpawner != null)
             {
-                oreSpawner.OreDamaged -= HandleOreDamaged;
                 oreSpawner.OreRewardGranted -= HandleOreRewardGranted;
             }
 
@@ -291,6 +287,14 @@ namespace MiningSimulator.Ores
             }
         }
 
+        public void PlayMiningImpactSfx(bool oreBroken)
+        {
+            if (audioData != null)
+            {
+                PlaySfx(oreBroken ? audioData.OreBreakSfx : audioData.OreHitSfx);
+            }
+        }
+
         private void ConfigureSources()
         {
             if (audioData == null)
@@ -391,20 +395,9 @@ namespace MiningSimulator.Ores
             return clip.loadState != AudioDataLoadState.Unloaded || clip.LoadAudioData();
         }
 
-        private void HandleOreDamaged(Ore ore)
-        {
-            if (audioData == null || Time.unscaledTime < nextOreHitSfxTime)
-            {
-                return;
-            }
-
-            nextOreHitSfxTime = Time.unscaledTime + audioData.OreHitMinimumInterval;
-            PlaySfx(audioData.OreHitSfx);
-        }
-
         private void HandleOreRewardGranted(Ore ore, float reward)
         {
-            if (audioData != null)
+            if (audioData != null && (ore == null || !ore.LastDamageWasNpc))
             {
                 PlaySfx(audioData.OreBreakSfx);
             }

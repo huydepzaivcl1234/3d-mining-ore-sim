@@ -32,7 +32,6 @@ namespace MiningSimulator.Ores
         [SerializeField] private AudioMixerGroup sfxMixerGroup;
         [Range(0.1f, 3f), SerializeField] private float minimumPitch = 0.96f;
         [Range(0.1f, 3f), SerializeField] private float maximumPitch = 1.04f;
-        [Min(0f), SerializeField] private float oreHitMinimumInterval = 0.06f;
 
         public AudioClip BackgroundMusic => backgroundMusic;
         public bool PlayMusicOnStart => playMusicOnStart;
@@ -52,7 +51,6 @@ namespace MiningSimulator.Ores
         public AudioMixerGroup SfxMixerGroup => sfxMixerGroup;
         public float MinimumPitch => minimumPitch;
         public float MaximumPitch => maximumPitch;
-        public float OreHitMinimumInterval => oreHitMinimumInterval;
 
         private void OnValidate()
         {
@@ -60,7 +58,6 @@ namespace MiningSimulator.Ores
             sfxVolume = Mathf.Clamp01(sfxVolume);
             minimumPitch = Mathf.Clamp(minimumPitch, 0.1f, 3f);
             maximumPitch = Mathf.Clamp(maximumPitch, minimumPitch, 3f);
-            oreHitMinimumInterval = Mathf.Max(0f, oreHitMinimumInterval);
         }
     }
 }

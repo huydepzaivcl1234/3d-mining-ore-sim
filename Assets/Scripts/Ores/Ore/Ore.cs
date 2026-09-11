@@ -27,6 +27,7 @@ namespace MiningSimulator.Ores
         public int CurrentDurability => currentDurability;
         public int MaxDurability => data != null ? data.Durability : 0;
         public bool IsDepleted => currentDurability <= 0;
+        public bool LastDamageWasNpc { get; private set; }
         public event Action<Ore> Depleted;
         public event Action<Ore> Damaged;
         public event Action<Ore, float> RewardGranted;
@@ -234,16 +235,17 @@ namespace MiningSimulator.Ores
             float multiplier = upgradeSystem != null
                 ? upgradeSystem.GetMultiplier(MiningUpgradeType.OreDamage)
                 : 1f;
-            return ApplyExactDamage(damage * multiplier);
+            return ApplyExactDamage(damage * multiplier, false);
         }
 
         public bool ApplyNpcDamage(float damage)
         {
-            return data != null && !IsDepleted && damage > 0f && ApplyExactDamage(damage);
+            return data != null && !IsDepleted && damage > 0f && ApplyExactDamage(damage, true);
         }
 
-        private bool ApplyExactDamage(float damage)
+        private bool ApplyExactDamage(float damage, bool fromNpc)
         {
+            LastDamageWasNpc = false;
             float accumulatedDamage = damage + damageRemainder;
             int appliedDamage = Mathf.FloorToInt(accumulatedDamage);
             if (appliedDamage <= 0)
@@ -252,16 +254,14 @@ namespace MiningSimulator.Ores
                 return true;
             }
             damageRemainder = accumulatedDamage - appliedDamage;
+            LastDamageWasNpc = fromNpc;
             currentDurability = Mathf.Max(0, currentDurability - appliedDamage);
             hitPunch?.Play();
+            Damaged?.Invoke(this);
             DurabilityChanged?.Invoke(currentDurability, MaxDurability);
             if (currentDurability == 0)
             {
                 Deplete();
-            }
-            else
-            {
-                Damaged?.Invoke(this);
             }
 
             return true;

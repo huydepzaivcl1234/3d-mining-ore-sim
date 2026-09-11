@@ -34,6 +34,7 @@ namespace MiningSimulator.Ores
         public int MaximumDurability => variant != null ? variant.Durability : 0;
         public LuckyBlockData Settings => settings;
         public bool IsResolved => resolved;
+        public bool LastDamageWasNpc { get; private set; }
         public event Action<LuckyBlock> Damaged;
         public event Action<int, int> DurabilityChanged;
         public event Action<LuckyBlock, float> RewardGranted;
@@ -225,16 +226,17 @@ namespace MiningSimulator.Ores
                 return false;
             }
 
-            return ApplyExactDamage(damage);
+            return ApplyExactDamage(damage, false);
         }
 
         public bool ApplyNpcDamage(float damage)
         {
-            return !resolved && variant != null && damage > 0f && ApplyExactDamage(damage);
+            return !resolved && variant != null && damage > 0f && ApplyExactDamage(damage, true);
         }
 
-        private bool ApplyExactDamage(float damage)
+        private bool ApplyExactDamage(float damage, bool fromNpc)
         {
+            LastDamageWasNpc = false;
             float accumulatedDamage = damage + damageRemainder;
             int appliedDamage = Mathf.FloorToInt(accumulatedDamage);
             if (appliedDamage <= 0)
@@ -243,6 +245,7 @@ namespace MiningSimulator.Ores
                 return true;
             }
             damageRemainder = accumulatedDamage - appliedDamage;
+            LastDamageWasNpc = fromNpc;
             currentDurability = Mathf.Max(0, currentDurability - appliedDamage);
             hitPunch?.Play();
             DurabilityChanged?.Invoke(currentDurability, MaximumDurability);

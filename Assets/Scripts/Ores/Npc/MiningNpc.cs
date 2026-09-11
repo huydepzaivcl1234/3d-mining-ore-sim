@@ -14,6 +14,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private OreSpawner oreSpawner;
         [SerializeField] private NpcData npcData;
         [SerializeField] private NpcProgressionSystem progressionSystem;
+        [SerializeField] private MiningAudioManager audioManager;
         [SerializeField] private Transform toolPivot;
 
         [Header("Animator")]
@@ -21,12 +22,8 @@ namespace MiningSimulator.Ores
         [SerializeField] private Animator animator;
         [Tooltip("Bool parameter set on the Animator while the NPC is actively mining (swinging).")]
         [SerializeField] private string miningAnimatorBoolParameter = "IsMining";
-        [Tooltip("Trigger parameter fired on the Animator exactly when a hit registers, in sync with the mining SFX.")]
-        [SerializeField] private string hitAnimatorTriggerParameter = "Hit";
         [Tooltip("Name of the Animator state that plays the mining swing (the 'Mine' box in the controller graph). Once fully inside this state (after any Idle->Mine blend finishes), its playback SPEED is adjusted every frame so exactly one loop of the clip takes the same time as one hit (SecondsPerHit) - so the swing and the mining SFX stay roughly in step without ever forcing the pose/time directly (which can distort the rig).")]
         [SerializeField] private string mineAnimatorStateName = "Mine";
-        [Tooltip("Normalized phase (0-1) added before computing the tool swing. The swing math assumes the tool is at its 'strike' extreme exactly when the hit/SFX fires (phase 0) - if your rig's actual strike pose is the OPPOSITE extreme, the pickaxe will visually connect half a swing late/early. Set this to 0.5 to flip it, or nudge it in Play Mode until the pickaxe visually touches the ore at the same instant as the hit SFX.")]
-        [SerializeField, Range(0f, 1f)] private float toolSwingPhaseOffset01 = 0f;
 
         [Header("Ground Clamp (floating-feet safety net)")]
         [Tooltip("Assign the visual model's root (the object holding the Animator/skeleton) to enable the runtime fix below. Leave empty to disable.")]
@@ -46,7 +43,6 @@ namespace MiningSimulator.Ores
         private Ore avoidanceOre;
         private LuckyBlockDropSystem luckyBlockSystem;
         private Rigidbody body;
-        private float nextHitTime;
         private float nextTargetRefreshTime;
         private float nextTargetSwitchTime;
         private float ignoredOreUntil;
@@ -55,7 +51,6 @@ namespace MiningSimulator.Ores
         private float avoidanceSide = 1f;
         private float detourDirectionUntil;
         private int reservedSlot = -1;
-        private Quaternion toolRestRotation;
         private Vector3 desiredMoveTarget;
         private Vector3 desiredFacingDirection;
         private Vector3 lastProgressPosition;
@@ -65,7 +60,6 @@ namespace MiningSimulator.Ores
         private bool isMining;
         private CapsuleCollider capsule;
         private bool hasMiningBoolParameter;
-        private bool hasHitTriggerParameter;
         private float visualModelBaseLocalY;
         private int mineStateHash;
 
@@ -110,14 +104,14 @@ namespace MiningSimulator.Ores
         {
             body = GetComponent<Rigidbody>();
             capsule = GetComponent<CapsuleCollider>();
-            if (toolPivot != null)
-            {
-                toolRestRotation = toolPivot.localRotation;
-            }
-
             if (animator == null)
             {
                 animator = GetComponentInChildren<Animator>(true);
+            }
+
+            if (audioManager == null)
+            {
+                audioManager = FindFirstObjectByType<MiningAudioManager>(FindObjectsInactive.Include);
             }
 
             if (animator != null)
@@ -127,8 +121,6 @@ namespace MiningSimulator.Ores
                 animator.applyRootMotion = false;
                 hasMiningBoolParameter = HasParameter(
                     animator, miningAnimatorBoolParameter, AnimatorControllerParameterType.Bool);
-                hasHitTriggerParameter = HasParameter(
-                    animator, hitAnimatorTriggerParameter, AnimatorControllerParameterType.Trigger);
             }
 
             mineStateHash = Animator.StringToHash(mineAnimatorStateName);
@@ -222,14 +214,17 @@ namespace MiningSimulator.Ores
 
             ResetProgressTracking();
             SetMiningAnimationState(true);
-            if (Time.time < nextHitTime)
+        }
+
+        public void OnMiningImpact()
+        {
+            if (!isMining || !IsTargetValid())
             {
                 return;
             }
 
-            nextHitTime = Time.time + npcData.SecondsPerHit;
             ApplyDamageToTarget();
-            TriggerHitAnimation();
+            PlayMiningImpactAudio();
             if (!IsTargetValid())
             {
                 ReleaseTarget();
@@ -304,40 +299,6 @@ namespace MiningSimulator.Ores
 
         private void LateUpdate()
         {
-            float hitPhase01 = 0f;
-            bool hasHitPhase = false;
-            if (isMining && npcData != null)
-            {
-                float cadence = Mathf.Max(0.0001f, npcData.SecondsPerHit);
-                float sinceLastHit = cadence - Mathf.Max(0f, nextHitTime - Time.time);
-                hitPhase01 = Mathf.Clamp01(sinceLastHit / cadence);
-                hasHitPhase = true;
-            }
-
-            if (toolPivot != null && npcData != null)
-            {
-                if (hasHitPhase)
-                {
-                    // Phase-lock the swing to the same hit cadence that drives ApplyDamageToTarget()
-                    // and the mining SFX (see MiningAudioManager.HandleOreDamaged/HandleOreRewardGranted).
-                    // toolSwingPhaseOffset01 lets you calibrate WHICH extreme of the swing counts
-                    // as "strike" for your specific rig (see its tooltip).
-                    float swingPhase = Mathf.Repeat(hitPhase01 + toolSwingPhaseOffset01, 1f);
-                    float swing = Mathf.Cos(swingPhase * Mathf.PI * 2f) * npcData.ToolSwingAngle;
-                    // Snap straight to the computed pose instead of Slerping toward it - the
-                    // cosine wave is already smooth/continuous on its own, so Slerping on top of
-                    // a moving target only adds lag, which is exactly why the visible swing was
-                    // arriving late (after the hit/SFX already fired). Slerp is still used below,
-                    // but only to ease back to rest once mining stops.
-                    toolPivot.localRotation = toolRestRotation * Quaternion.Euler(0f, 0f, swing);
-                }
-                else
-                {
-                    toolPivot.localRotation = Quaternion.Slerp(toolPivot.localRotation,
-                        toolRestRotation, npcData.ToolReturnSpeed * Time.deltaTime);
-                }
-            }
-
             if (animator != null && hasMiningBoolParameter)
             {
                 if (isMining && npcData != null)
@@ -375,14 +336,6 @@ namespace MiningSimulator.Ores
             if (animator != null && hasMiningBoolParameter)
             {
                 animator.SetBool(miningAnimatorBoolParameter, mining);
-            }
-        }
-
-        private void TriggerHitAnimation()
-        {
-            if (animator != null && hasHitTriggerParameter)
-            {
-                animator.SetTrigger(hitAnimatorTriggerParameter);
             }
         }
 
@@ -515,7 +468,6 @@ namespace MiningSimulator.Ores
             }
 
             SetMiningAnimationState(false);
-            nextHitTime = 0f;
             nextTargetSwitchTime = Time.time + npcData.TargetSwitchCooldown;
             ClearDetour();
             ResetProgressTracking();
@@ -537,7 +489,6 @@ namespace MiningSimulator.Ores
             }
 
             SetMiningAnimationState(false);
-            nextHitTime = 0f;
             nextTargetSwitchTime = Time.time + npcData.TargetSwitchCooldown;
             ClearDetour();
             ResetProgressTracking();
@@ -608,6 +559,25 @@ namespace MiningSimulator.Ores
                     ? progressionSystem.CurrentDamagePerHit
                     : npcData.DamagePerHit;
                 targetOre?.ApplyNpcDamage(damage);
+            }
+        }
+
+        private void PlayMiningImpactAudio()
+        {
+            if (audioManager == null)
+            {
+                return;
+            }
+
+            if (targetOre != null && targetOre.LastDamageWasNpc)
+            {
+                audioManager.PlayMiningImpactSfx(targetOre.IsDepleted);
+                return;
+            }
+
+            if (targetLuckyBlock != null && targetLuckyBlock.LastDamageWasNpc)
+            {
+                audioManager.PlayMiningImpactSfx(targetLuckyBlock.IsResolved);
             }
         }
 

@@ -102,6 +102,7 @@ GameObject:
   - component: {fileID: 8149645977320992436}
   - component: {fileID: 3362057275201503121}
   - component: {fileID: 6456789610439645049}
+  - component: {fileID: 9063359376741394101}
   m_Layer: 0
   m_Name: MiningNpc
   m_TagString: Untagged
@@ -190,16 +191,27 @@ MonoBehaviour:
   oreSpawner: {fileID: 0}
   npcData: {fileID: 11400000, guid: c48d624e49324697a2ff1f170be6b3c0, type: 2}
   progressionSystem: {fileID: 0}
+  audioManager: {fileID: 0}
   toolPivot: {fileID: 7375554733236698209}
   animator: {fileID: 1436926075863195294}
   miningAnimatorBoolParameter: IsMining
-  hitAnimatorTriggerParameter: Hit
   mineAnimatorStateName: Mine
-  toolSwingPhaseOffset01: 0.5
   visualModelRoot: {fileID: 4976706783355569380}
   leftFootBone: {fileID: 8323151205542282700}
   rightFootBone: {fileID: 7143922415596964074}
   groundClampEpsilon: 0.01
+--- !u!114 &9063359376741394101
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2496966258743808721}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 83c237431ea02dd4ca01aed1657e54da, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningNpcAnimationEventRelay
 --- !u!1 &6420975508720734577
 GameObject:
   m_ObjectHideFlags: 0
