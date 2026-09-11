@@ -15,6 +15,14 @@ namespace MiningSimulator.Ores
         [SerializeField] private NpcData npcData;
         [SerializeField] private NpcProgressionSystem progressionSystem;
         [SerializeField] private Transform toolPivot;
+        [Tooltip("Optional. When assigned, mining/movement state drives this Animator's " +
+                 "IsMining/IsMoving bools instead of the procedural pickaxe-swing fallback " +
+                 "below, and the tool prop is expected to follow a hand bone via the rig " +
+                 "instead of being rotated by code.")]
+        [SerializeField] private Animator animator;
+
+        private static readonly int IsMiningParam = Animator.StringToHash("IsMining");
+        private static readonly int IsMovingParam = Animator.StringToHash("IsMoving");
 
         private readonly RaycastHit[] obstacleHits = new RaycastHit[32];
         private readonly Collider[] separationHits = new Collider[24];
@@ -85,6 +93,10 @@ namespace MiningSimulator.Ores
         {
             body = GetComponent<Rigidbody>();
             capsule = GetComponent<CapsuleCollider>();
+            if (animator == null)
+            {
+                animator = GetComponentInChildren<Animator>();
+            }
             if (toolPivot != null)
             {
                 toolRestRotation = toolPivot.localRotation;
@@ -255,6 +267,15 @@ namespace MiningSimulator.Ores
 
         private void LateUpdate()
         {
+            if (animator != null)
+            {
+                // Rigged model path: the mining/walk clips already animate the hand and tool
+                // prop (parented to a hand bone), so no procedural rotation is needed here.
+                animator.SetBool(IsMiningParam, isMining);
+                animator.SetBool(IsMovingParam, hasMoveTarget && !isMining);
+                return;
+            }
+
             if (toolPivot == null || npcData == null)
             {
                 return;
