@@ -42,6 +42,43 @@ namespace MiningSimulator.Ores
             LoadVolumeSettings();
             ResolveSources();
             ConfigureSources();
+            FindReferencesIfMissing();
+        }
+
+        private void FindReferencesIfMissing()
+        {
+            if (oreSpawner == null)
+            {
+                oreSpawner = FindFirstObjectByType<OreSpawner>(FindObjectsInactive.Include);
+            }
+            if (npcShop == null)
+            {
+                npcShop = FindFirstObjectByType<NpcShop>(FindObjectsInactive.Include);
+            }
+            if (progressionSystem == null)
+            {
+                progressionSystem = FindFirstObjectByType<NpcProgressionSystem>(FindObjectsInactive.Include);
+            }
+            if (upgradeSystem == null)
+            {
+                upgradeSystem = FindFirstObjectByType<MiningUpgradeSystem>(FindObjectsInactive.Include);
+            }
+            if (upgradePanel == null)
+            {
+                upgradePanel = FindFirstObjectByType<MiningUpgradePanel>(FindObjectsInactive.Include);
+            }
+            if (rebirthSystem == null)
+            {
+                rebirthSystem = FindFirstObjectByType<MiningRebirthSystem>(FindObjectsInactive.Include);
+            }
+            if (rebirthPanel == null)
+            {
+                rebirthPanel = FindFirstObjectByType<MiningRebirthPanel>(FindObjectsInactive.Include);
+            }
+            if (audioSettingsPanel == null)
+            {
+                audioSettingsPanel = FindFirstObjectByType<MiningAudioSettingsPanel>(FindObjectsInactive.Include);
+            }
         }
 
         private void OnEnable()
