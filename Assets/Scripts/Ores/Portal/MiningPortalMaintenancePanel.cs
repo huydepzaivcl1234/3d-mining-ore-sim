@@ -27,6 +27,23 @@ namespace MiningSimulator.Ores
         private RectTransform card;
         private Coroutine activeFade;
 
+        private void Awake()
+        {
+            // Self-healing safety net: no matter how this object ends up active (Show(), a
+            // stray Inspector toggle while debugging, a scene re-save, etc.), it must never sit
+            // there blocking clicks while invisible. Show() re-enables raycasts right after.
+            if (canvasGroup == null)
+            {
+                canvasGroup = GetComponent<CanvasGroup>();
+            }
+
+            if (canvasGroup != null)
+            {
+                canvasGroup.blocksRaycasts = false;
+                canvasGroup.interactable = false;
+            }
+        }
+
         /// <summary>Idempotent: reuses the existing panel object under this canvas if one was
         /// already built by a previous run instead of creating a duplicate.</summary>
         public static MiningPortalMaintenancePanel EnsureRuntime(Canvas canvas)
@@ -50,8 +67,15 @@ namespace MiningSimulator.Ores
             blocker.color = new Color(0f, 0f, 0f, 0.72f);
             blocker.raycastTarget = true;
 
+            // CanvasGroup must be added before the script component: Awake() (which runs
+            // immediately here since the object is still active at this point) reads it to
+            // force raycasts off by default.
+            CanvasGroup group = root.gameObject.AddComponent<CanvasGroup>();
+            group.blocksRaycasts = false;
+            group.interactable = false;
+
             MiningPortalMaintenancePanel panel = root.gameObject.AddComponent<MiningPortalMaintenancePanel>();
-            panel.canvasGroup = root.gameObject.AddComponent<CanvasGroup>();
+            panel.canvasGroup = group;
             panel.Build(root, blocker);
             root.gameObject.SetActive(false);
             return panel;
