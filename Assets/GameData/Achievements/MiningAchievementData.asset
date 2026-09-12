@@ -81,3 +81,14 @@ MonoBehaviour:
     - {fileID: 11400000, guid: 3982179b3238eaf4ebcf9c0a2f198d7e, type: 2}
     moneyMultiplierPercent: 0
     experienceMultiplierPercent: 0
+  - achievementId: spender
+    englishTitle: Spender
+    vietnameseTitle: "\u0110\u1EA1i Gia Ti\xEAu Ti\u1EC1n"
+    englishDescription: Spend a total of 10,000 money.
+    vietnameseDescription: "Ti\xEAu t\u1ED5ng c\u1ED9ng 10.000 ti\u1EC1n."
+    trigger: 4
+    oreKind: 0
+    targetAmount: 10000
+    requiredOres: []
+    moneyMultiplierPercent: 1
+    experienceMultiplierPercent: 1

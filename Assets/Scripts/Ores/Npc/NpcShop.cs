@@ -69,7 +69,7 @@ namespace MiningSimulator.Ores
         public bool TryBuyNpc()
         {
             if (!CanBuy || wallet == null || oreSpawner == null || npcPrefab == null ||
-                npcData == null || !wallet.TrySpend(NpcCost))
+                npcData == null)
             {
                 return false;
             }
@@ -77,7 +77,11 @@ namespace MiningSimulator.Ores
             Vector3 origin = spawnPoint != null ? spawnPoint.position : transform.position;
             if (!TryFindAvailableSpawnPosition(origin, out Vector3 position))
             {
-                wallet.AddMoney(NpcCost);
+                return false;
+            }
+
+            if (!wallet.TrySpend(NpcCost))
+            {
                 return false;
             }
 

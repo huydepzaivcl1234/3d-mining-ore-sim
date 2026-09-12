@@ -78,3 +78,5 @@ A New Beginning = Khởi Đầu Mới
 Complete your first Rebirth. = Hoàn thành Rebirth lần đầu tiên.
 Ore unlocked: {0}! = Đã mở khóa quặng: {0}!
 Lucky Block unlocked: {0}! = Đã mở khóa Lucky Block: {0}!
+Spender = Đại Gia Tiêu Tiền
+Spend a total of 10,000 money. = Tiêu tổng cộng 10.000 tiền.

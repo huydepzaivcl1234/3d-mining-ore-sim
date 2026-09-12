@@ -78,3 +78,5 @@ A New Beginning = A New Beginning
 Complete your first Rebirth. = Complete your first Rebirth.
 Ore unlocked: {0}! = Ore unlocked: {0}!
 Lucky Block unlocked: {0}! = Lucky Block unlocked: {0}!
+Spender = Spender
+Spend a total of 10,000 money. = Spend a total of 10,000 money.

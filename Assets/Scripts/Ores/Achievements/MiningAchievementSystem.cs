@@ -31,6 +31,7 @@ namespace MiningSimulator.Ores
 
         [Header("References")]
         [SerializeField] private MiningAchievementData achievementData;
+        [SerializeField] private PlayerWallet wallet;
         [SerializeField] private OreSpawner oreSpawner;
         [SerializeField] private NpcShop npcShop;
         [SerializeField] private NpcProgressionSystem progressionSystem;
@@ -60,6 +61,11 @@ namespace MiningSimulator.Ores
             {
                 oreSpawner.OreRewardGranted -= HandleOreRewardGranted;
                 oreSpawner.OreRewardGranted += HandleOreRewardGranted;
+            }
+            if (wallet != null)
+            {
+                wallet.MoneySpent -= HandleMoneySpent;
+                wallet.MoneySpent += HandleMoneySpent;
             }
             if (npcShop != null)
             {
@@ -92,6 +98,10 @@ namespace MiningSimulator.Ores
             if (oreSpawner != null)
             {
                 oreSpawner.OreRewardGranted -= HandleOreRewardGranted;
+            }
+            if (wallet != null)
+            {
+                wallet.MoneySpent -= HandleMoneySpent;
             }
             if (npcShop != null)
             {
@@ -166,6 +176,36 @@ namespace MiningSimulator.Ores
         {
             bool changed = SetGoalProgress(MiningAchievementTrigger.ConcurrentNpcCount,
                 Math.Max(0, count), true);
+            if (changed)
+            {
+                SaveProgress();
+                ProgressChanged?.Invoke();
+            }
+        }
+
+        private void HandleMoneySpent(float amount)
+        {
+            if (achievementData == null || amount < 1f)
+            {
+                return;
+            }
+
+            long spent = amount >= long.MaxValue
+                ? long.MaxValue
+                : (long)Math.Floor(amount);
+            bool changed = false;
+            foreach (MiningAchievementDefinition achievement in achievementData.Achievements)
+            {
+                if (achievement == null ||
+                    achievement.Trigger != MiningAchievementTrigger.MoneySpent ||
+                    IsCompleted(achievement.AchievementId))
+                {
+                    continue;
+                }
+
+                changed |= AddProgress(achievement, spent, true);
+            }
+
             if (changed)
             {
                 SaveProgress();
@@ -479,6 +519,10 @@ namespace MiningSimulator.Ores
 
         private void ResolveReferences()
         {
+            if (wallet == null)
+            {
+                wallet = FindFirstObjectByType<PlayerWallet>(FindObjectsInactive.Include);
+            }
             if (oreSpawner == null)
             {
                 oreSpawner = FindFirstObjectByType<OreSpawner>(FindObjectsInactive.Include);

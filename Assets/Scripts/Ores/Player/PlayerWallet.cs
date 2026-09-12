@@ -13,6 +13,7 @@ namespace MiningSimulator.Ores
 
         public float CurrentMoney => currentMoney;
         public event Action<float> MoneyChanged;
+        public event Action<float> MoneySpent;
 
         private void Awake()
         {
@@ -49,6 +50,10 @@ namespace MiningSimulator.Ores
 
             currentMoney -= amount;
             MoneyChanged?.Invoke(currentMoney);
+            if (amount > 0f)
+            {
+                MoneySpent?.Invoke(amount);
+            }
             return true;
         }
 

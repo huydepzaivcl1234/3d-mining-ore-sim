@@ -9,7 +9,8 @@ namespace MiningSimulator.Ores
         MinedOreKind = 0,
         ConcurrentNpcCount = 1,
         AllConfiguredOresUnlocked = 2,
-        RebirthCount = 3
+        RebirthCount = 3,
+        MoneySpent = 4
     }
 
     [Serializable]
