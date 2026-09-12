@@ -46,6 +46,13 @@ namespace MiningSimulator.Ores
                 return;
             }
 
+            MiningPortalGate portalGate = hit.collider.GetComponentInParent<MiningPortalGate>();
+            if (portalGate != null)
+            {
+                portalGate.Interact();
+                return;
+            }
+
             Ore ore = hit.collider.GetComponentInParent<Ore>();
             ore?.MineOnce();
         }
