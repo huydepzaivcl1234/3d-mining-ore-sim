@@ -1,4 +1,5 @@
 using Microlight.MicroBar;
+using TMPro;
 using UnityEngine;
 
 namespace MiningSimulator.Ores
@@ -9,6 +10,7 @@ namespace MiningSimulator.Ores
     {
         [SerializeField] private LuckyBlock luckyBlock;
         [SerializeField] private MicroBar healthBar;
+        [SerializeField] private TextMeshPro healthText;
         [SerializeField] private Transform visualRoot;
         [SerializeField] private Camera targetCamera;
 
@@ -26,6 +28,7 @@ namespace MiningSimulator.Ores
         {
             luckyBlock ??= GetComponentInParent<LuckyBlock>();
             healthBar ??= GetComponent<MicroBar>();
+            healthText ??= GetComponentInChildren<TextMeshPro>(true);
             visualRoot ??= transform;
             targetCamera ??= Camera.main;
         }
@@ -81,6 +84,7 @@ namespace MiningSimulator.Ores
 
         private void HandleDurabilityChanged(int current, int maximum)
         {
+            RefreshHealthText(current, maximum);
             if (healthBar == null || maximum <= 0)
             {
                 return;
@@ -99,6 +103,19 @@ namespace MiningSimulator.Ores
             }
 
             healthBar.UpdateBar(Mathf.Clamp(current, 0, initializedMaximum), true);
+        }
+
+        private void RefreshHealthText(int current, int maximum)
+        {
+            if (healthText == null)
+            {
+                return;
+            }
+
+            int safeMaximum = Mathf.Max(0, maximum);
+            int safeCurrent = Mathf.Clamp(current, 0, safeMaximum);
+            healthText.text = $"{MiningMoneyFormatter.Format(safeCurrent)} / " +
+                              MiningMoneyFormatter.Format(safeMaximum);
         }
 
         private void SetWorldScale(float uniformScale)

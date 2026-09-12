@@ -16,59 +16,69 @@ MonoBehaviour:
     displayName: "T\u0103ng ti\u1EC1n nh\u1EADn \u0111\u01B0\u1EE3c th\xEAm"
     percentPerStack: 5
     maximumStacks: 100
-    startingCost: 25
+    startingCost: 20
+    costGrowthMultiplier: 1.2
     costIncreasePerPurchase: 50
   rareOreSpawn:
     displayName: "T\u0103ng t\u1EC9 l\u1EC7 qu\u1EB7ng hi\u1EBFm"
     percentPerStack: 2
     maximumStacks: 100
-    startingCost: 25
+    startingCost: 20
+    costGrowthMultiplier: 1.2
     costIncreasePerPurchase: 100
   oreDamage:
     displayName: "T\u0103ng s\xE1t th\u01B0\u01A1ng l\xEAn qu\u1EB7ng"
     percentPerStack: 5
     maximumStacks: 100
-    startingCost: 25
+    startingCost: 15
+    costGrowthMultiplier: 1.2
     costIncreasePerPurchase: 30
   oreSpawnSpeed:
     displayName: "T\u0103ng t\u1ED1c \u0111\u1ED9 spawn qu\u1EB7ng"
     percentPerStack: 5
     maximumStacks: 100
-    startingCost: 25
+    startingCost: 15
+    costGrowthMultiplier: 1.2
     costIncreasePerPurchase: 10
   npcMoveSpeed:
     displayName: "T\u0103ng t\u1ED1c \u0111\u1ED9 di chuy\u1EC3n NPC"
     percentPerStack: 5
     maximumStacks: 100
-    startingCost: 25
+    startingCost: 10
+    costGrowthMultiplier: 1.2
     costIncreasePerPurchase: 10
   npcCapacity:
     displayName: "T\u0103ng gi\u1EDBi h\u1EA1n th\u1EE3 m\u1ECF"
     percentPerStack: 1
     maximumStacks: 4
     startingCost: 700
+    costGrowthMultiplier: 1.75
     costIncreasePerPurchase: 1500
   luckyBlockReward:
     displayName: "T\u0103ng ti\u1EC1n Lucky Block"
     percentPerStack: 5
     maximumStacks: 100
-    startingCost: 25
+    startingCost: 20
+    costGrowthMultiplier: 1.2
     costIncreasePerPurchase: 10
   luckyBlockDropChance:
     displayName: "T\u0103ng t\u1EC9 l\u1EC7 Lucky Block"
     percentPerStack: 10
     maximumStacks: 100
-    startingCost: 25
+    startingCost: 20
+    costGrowthMultiplier: 1.2
     costIncreasePerPurchase: 10
   npcExperience:
     displayName: "T\u0103ng kinh nghi\u1EC7m NPC"
     percentPerStack: 5
     maximumStacks: 100
-    startingCost: 25
+    startingCost: 20
+    costGrowthMultiplier: 1.2
     costIncreasePerPurchase: 10
   itemDropChance:
     displayName: "T\u0103ng t\u1EC9 l\u1EC7 r\u01A1i v\u1EADt ph\u1EA9m"
     percentPerStack: 1
     maximumStacks: 100
-    startingCost: 75
+    startingCost: 50
+    costGrowthMultiplier: 1.2
     costIncreasePerPurchase: 50

@@ -1,4 +1,5 @@
 using Microlight.MicroBar;
+using TMPro;
 using UnityEngine;
 
 namespace MiningSimulator.Ores
@@ -9,6 +10,7 @@ namespace MiningSimulator.Ores
     {
         [SerializeField] private Ore ore;
         [SerializeField] private MicroBar healthBar;
+        [SerializeField] private TextMeshPro healthText;
         [SerializeField] private Transform visualRoot;
         [SerializeField] private Camera targetCamera;
 
@@ -28,6 +30,7 @@ namespace MiningSimulator.Ores
         {
             ore ??= GetComponentInParent<Ore>();
             healthBar ??= GetComponent<MicroBar>();
+            healthText ??= GetComponentInChildren<TextMeshPro>(true);
             visualRoot ??= transform;
             targetCamera ??= Camera.main;
             CacheOreColliders();
@@ -147,6 +150,7 @@ namespace MiningSimulator.Ores
 
         private void HandleDurabilityChanged(int current, int maximum)
         {
+            RefreshHealthText(current, maximum);
             InitializeBarIfNeeded();
             if (!initialized)
             {
@@ -162,6 +166,19 @@ namespace MiningSimulator.Ores
             healthBar.UpdateBar(current);
         }
 
+        private void RefreshHealthText(int current, int maximum)
+        {
+            if (healthText == null)
+            {
+                return;
+            }
+
+            int safeMaximum = Mathf.Max(0, maximum);
+            int safeCurrent = Mathf.Clamp(current, 0, safeMaximum);
+            healthText.text = $"{MiningMoneyFormatter.Format(safeCurrent)} / " +
+                              MiningMoneyFormatter.Format(safeMaximum);
+        }
+
         private void InitializeBarIfNeeded()
         {
             if (initialized || ore == null || ore.Data == null || healthBar == null)
@@ -172,6 +189,7 @@ namespace MiningSimulator.Ores
             initializedMaxHealth = Mathf.Max(1, ore.MaxDurability);
             healthBar.Initialize(initializedMaxHealth);
             healthBar.UpdateBar(ore.CurrentDurability, true);
+            RefreshHealthText(ore.CurrentDurability, ore.MaxDurability);
             initialized = true;
         }
     }
