@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 843973bc8cbf63540f8017ff1741afd9, type: 3}
+  m_Name: MiningComputerData
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningComputerData
+  purchaseCost: 500
+  baseCoinsPerTick: 10
+  secondsPerTick: 2
+  purchaseSaveKey: MiningSimulator.ComputerCoinMachine.Purchased.v1
+  ghostColor: {r: 0.1, g: 0.85, b: 1, a: 0.28}
+  focusedGhostColor: {r: 0.35, g: 1, b: 0.75, a: 0.48}
+  ghostEmissionIntensity: 1.25
+  partDropHeight: 2.5
+  partDropDuration: 0.55
+  delayBetweenParts: 0.09
+  punchScaleAmount: 0.08
+  punchDropAmount: 0.08
+  punchDuration: 0.18

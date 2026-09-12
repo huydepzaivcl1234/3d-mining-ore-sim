@@ -98,6 +98,7 @@ namespace MiningSimulator.Ores
             npcShop?.ResetAllNpcs();
             itemSystem?.ResetAllData();
             achievementSystem?.ResetAllData();
+            MiningComputerStation.ResetAllLoadedStations();
             wallet?.ResetMoney();
             ApplyPermanentBoost();
             StateChanged?.Invoke();

@@ -103,5 +103,53 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 4333cf8ae35704145978b1bbb5dfc1ec, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 159693195483064968}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 4333cf8ae35704145978b1bbb5dfc1ec, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5331976150568237006}
   m_SourcePrefab: {fileID: 100100000, guid: 4333cf8ae35704145978b1bbb5dfc1ec, type: 3}
+--- !u!1 &8000340881168542097 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 4333cf8ae35704145978b1bbb5dfc1ec, type: 3}
+  m_PrefabInstance: {fileID: 7189858770017260736}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &159693195483064968
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8000340881168542097}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bdd3a22d0072c8bbe61bce05125ee2a7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningComputerStation
+  stationId: Computer1
+  data: {fileID: 11400000, guid: 5166baa2c5555df409a154559d98513a, type: 2}
+  rewardPopupPrefab: {fileID: 595523728496385370, guid: 60732089bc3d5a74cac36ef83399977d, type: 3}
+  uiData: {fileID: 11400000, guid: 0fc641ac29720e2837d73e6212818c58, type: 2}
+--- !u!65 &5331976150568237006
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8000340881168542097}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1.0631547, y: 0.8075788, z: 1.0852021}
+  m_Center: {x: 0.18295121, y: 1.1446689, z: 0.15667886}
