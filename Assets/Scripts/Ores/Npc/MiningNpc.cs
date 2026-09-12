@@ -38,9 +38,6 @@ namespace MiningSimulator.Ores
 
         private readonly RaycastHit[] obstacleHits = new RaycastHit[32];
         private readonly Collider[] separationHits = new Collider[24];
-        private readonly Collider[] miningAreaHits = new Collider[24];
-        private readonly HashSet<Ore> hitOresThisSwing = new();
-        private readonly HashSet<LuckyBlock> hitLuckyBlocksThisSwing = new();
         private Ore targetOre;
         private LuckyBlock targetLuckyBlock;
         private Ore ignoredOre;
@@ -592,43 +589,19 @@ namespace MiningSimulator.Ores
 
         private void ApplyDamageToTarget()
         {
-            if (npcData == null)
+            if (targetLuckyBlock != null)
             {
-                return;
+                float damage = progressionSystem != null
+                    ? progressionSystem.CurrentDamagePerHit
+                    : npcData.DamagePerHit;
+                targetLuckyBlock.ApplyNpcDamage(damage);
             }
-
-            float damage = progressionSystem != null
-                ? progressionSystem.CurrentDamagePerHit
-                : npcData.DamagePerHit;
-
-            // Splash every hit to ALL ores/Lucky Blocks within MiningRange of the NPC's current
-            // position (not just the single reserved target) - movement/reservation/targeting
-            // above is unchanged, this only widens what a single swing actually damages.
-            Vector3 currentPosition = body != null ? body.position : transform.position;
-            int hitCount = Physics.OverlapSphereNonAlloc(currentPosition, npcData.MiningRange,
-                miningAreaHits, npcData.CollisionLayers, QueryTriggerInteraction.Ignore);
-            hitOresThisSwing.Clear();
-            hitLuckyBlocksThisSwing.Clear();
-            for (int index = 0; index < hitCount; index++)
+            else
             {
-                Collider hit = miningAreaHits[index];
-                if (hit == null)
-                {
-                    continue;
-                }
-
-                Ore ore = hit.GetComponentInParent<Ore>();
-                if (ore != null && CanMine(ore) && hitOresThisSwing.Add(ore))
-                {
-                    ore.ApplyNpcDamage(damage);
-                    continue;
-                }
-
-                LuckyBlock block = hit.GetComponentInParent<LuckyBlock>();
-                if (block != null && CanMine(block) && hitLuckyBlocksThisSwing.Add(block))
-                {
-                    block.ApplyNpcDamage(damage);
-                }
+                float damage = progressionSystem != null
+                    ? progressionSystem.CurrentDamagePerHit
+                    : npcData.DamagePerHit;
+                targetOre?.ApplyNpcDamage(damage);
             }
         }
 

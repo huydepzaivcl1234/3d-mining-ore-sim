@@ -67,7 +67,6 @@ namespace MiningSimulator.Ores
         [Min(0.1f), SerializeField] private float ignoredTargetDuration = 1.5f;
 
         [Header("Tool Animation")]
-        [Min(0f), SerializeField] private float toolSwingSpeed = 12f;
         [Min(0f), SerializeField] private float toolSwingAngle = 42f;
         [Min(0f), SerializeField] private float toolReturnSpeed = 14f;
 
@@ -124,7 +123,6 @@ namespace MiningSimulator.Ores
         public float StuckTimeout => stuckTimeout;
         public float StuckProgressDistance => stuckProgressDistance;
         public float IgnoredTargetDuration => ignoredTargetDuration;
-        public float ToolSwingSpeed => toolSwingSpeed;
         public float ToolSwingAngle => toolSwingAngle;
         public float ToolReturnSpeed => toolReturnSpeed;
         public Vector3 BodyScale => bodyScale;
@@ -187,7 +185,6 @@ namespace MiningSimulator.Ores
             stuckTimeout = Mathf.Max(0.1f, stuckTimeout);
             stuckProgressDistance = Mathf.Max(0.001f, stuckProgressDistance);
             ignoredTargetDuration = Mathf.Max(0.1f, ignoredTargetDuration);
-            toolSwingSpeed = Mathf.Max(0f, toolSwingSpeed);
             toolSwingAngle = Mathf.Max(0f, toolSwingAngle);
             toolReturnSpeed = Mathf.Max(0f, toolReturnSpeed);
         }
