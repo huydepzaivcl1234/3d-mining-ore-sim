@@ -2099,6 +2099,8 @@ namespace MiningSimulator.Editor
                 canvas.Find("Inventory Menu Button")?.GetComponent<RectTransform>());
             SetReferenceIfMissing(serialized.FindProperty("inventoryPanel"),
                 canvas.Find("Inventory Panel")?.GetComponent<RectTransform>());
+            SetReferenceIfMissing(serialized.FindProperty("effectToast"),
+                canvas.Find("Active Item Effects")?.GetComponent<RectTransform>());
             serialized.ApplyModifiedPropertiesWithoutUndo();
         }
 
@@ -2891,6 +2893,7 @@ namespace MiningSimulator.Editor
 
             var replacements = new Dictionary<UnityEngine.Object, UnityEngine.Object>();
             var oldComponents = new List<Component>();
+            bool selectionCleared = false;
             bool changed = false;
 
             foreach (Component component in root.GetComponents<Component>())
@@ -2911,6 +2914,12 @@ namespace MiningSimulator.Editor
                         Undo.RegisterCreatedObjectUndo(groupObject, $"Create {groupName}");
                     }
                     group = groupObject.transform;
+                }
+
+                if (!selectionCleared && SelectionContainsHierarchy(root))
+                {
+                    Selection.objects = Array.Empty<UnityEngine.Object>();
+                    selectionCleared = true;
                 }
 
                 Component replacement = registerUndo
@@ -2942,7 +2951,41 @@ namespace MiningSimulator.Editor
 
             GameObjectUtility.RemoveMonoBehavioursWithMissingScript(root);
             EditorUtility.SetDirty(root);
+            if (selectionCleared && root != null)
+            {
+                Selection.activeGameObject = root;
+            }
             return true;
+        }
+
+        private static bool SelectionContainsHierarchy(GameObject root)
+        {
+            if (root == null)
+            {
+                return false;
+            }
+
+            foreach (UnityEngine.Object selected in Selection.objects)
+            {
+                if (selected == null)
+                {
+                    continue;
+                }
+
+                Transform selectedTransform = selected switch
+                {
+                    GameObject gameObject => gameObject.transform,
+                    Component component => component.transform,
+                    _ => null
+                };
+                if (selectedTransform == root.transform ||
+                    (selectedTransform != null && selectedTransform.IsChildOf(root.transform)))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static void RemapSceneReferences(Scene scene,

@@ -19,6 +19,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private RectTransform npcProgressHud;
         [SerializeField] private RectTransform inventoryMenuButton;
         [SerializeField] private RectTransform inventoryPanel;
+        [SerializeField] private RectTransform effectToast;
 
         private Vector2 shopHome;
         private Vector2 rebirthHome;
@@ -28,6 +29,7 @@ namespace MiningSimulator.Ores
         private Vector2 audioSettingsHome;
         private Vector2 inventoryMenuHome;
         private Vector2 inventoryPanelHome;
+        private Vector2 effectToastHome;
 
         private Vector2 npcProgressHome;
         private RectTransform activeModal;
@@ -56,6 +58,7 @@ namespace MiningSimulator.Ores
             uiData != null ? uiData.InventoryMenuSlideDirection : Vector2.right, Vector2.right);
         private Vector2 NpcProgressHudSlideDirection => GetDirection(
             uiData != null ? uiData.NpcProgressHudSlideDirection : Vector2.up, Vector2.up);
+        private Vector2 EffectToastSlideDirection => Vector2.left;
         private Vector2 ModalSlideDirection => GetDirection(
             uiData != null ? uiData.ModalSlideDirection : Vector2.down, Vector2.down);
 
@@ -143,6 +146,7 @@ namespace MiningSimulator.Ores
             audioSettingsHome = GetPosition(audioSettingsPanel);
             inventoryMenuHome = GetPosition(inventoryMenuButton);
             inventoryPanelHome = GetPosition(inventoryPanel);
+            effectToastHome = GetPosition(effectToast);
             npcProgressHome = GetPosition(npcProgressHud);
             initialized = true;
         }
@@ -174,6 +178,7 @@ namespace MiningSimulator.Ores
             AnimateBasePanel(npcProgressHud, npcProgressHome, NpcProgressHudSlideDirection, visible);
             AnimateBasePanel(inventoryMenuButton, inventoryMenuHome, InventoryMenuSlideDirection,
                 visible);
+            AnimateBasePanel(effectToast, effectToastHome, EffectToastSlideDirection, visible);
         }
 
         private void AnimateBasePanel(RectTransform panel, Vector2 home, Vector2 direction,
@@ -201,6 +206,8 @@ namespace MiningSimulator.Ores
                 NpcProgressHudSlideDirection, visible);
             SetBasePanelImmediately(inventoryMenuButton, inventoryMenuHome,
                 InventoryMenuSlideDirection, visible);
+            SetBasePanelImmediately(effectToast, effectToastHome, EffectToastSlideDirection,
+                visible);
         }
 
         private void SetBasePanelImmediately(RectTransform panel, Vector2 home, Vector2 direction,

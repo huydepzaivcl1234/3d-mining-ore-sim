@@ -6284,6 +6284,7 @@ MonoBehaviour:
   npcProgressHud: {fileID: 1818660670}
   inventoryMenuButton: {fileID: 193955308}
   inventoryPanel: {fileID: 1246904593}
+  effectToast: {fileID: 573600083}
 --- !u!114 &450512003
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6334,7 +6335,7 @@ MonoBehaviour:
   warningLabel: {fileID: 6048314759010656449}
   nextBoostLabel: {fileID: 8623546325252415170}
   progressBar: {fileID: 5838252675639487085}
-  uiData: {fileID: 0}
+  uiData: {fileID: 11400000, guid: 0fc641ac29720e2837d73e6212818c58, type: 2}
   rebirthFlashImage: {fileID: 0}
   progressFormat: "{0:N0} / {1:N0} TI\u1EC0N"
   boostFormat: "REBIRTH {0}  \u2022  x{1:0.00} TI\u1EC0N"
@@ -7816,6 +7817,7 @@ GameObject:
   - component: {fileID: 573600086}
   - component: {fileID: 573600085}
   - component: {fileID: 573600084}
+  - component: {fileID: 573600087}
   m_Layer: 5
   m_Name: Active Item Effects
   m_TagString: Untagged
@@ -7896,6 +7898,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 573600082}
   m_CullTransparentMesh: 1
+--- !u!225 &573600087
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 573600082}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &607155427
 GameObject:
   m_ObjectHideFlags: 0

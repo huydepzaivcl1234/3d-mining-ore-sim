@@ -17,15 +17,10 @@ namespace MiningSimulator.Editor
         private const string MiningClipFbxPath =
             "Assets/Prefabs/NPC/Mining/HumanM@MiningOneHand01_R - Ground.fbx";
 
-        // Forward walk clip used while the NPC is traveling to an ore.
-        private const string WalkClipFbxPath =
-            "Assets/Kevin Iglesias/Human Animations/Animations/Male/Movement/Walk/HumanM@Walk01_Forward.fbx";
-
         // Output location for the generated controller.
         private const string ControllerPath = "Assets/Prefabs/NPC/HumanM_Animator.controller";
 
         private const string IsMiningParam = "IsMining";
-        private const string IsMovingParam = "IsMoving";
 
         // Name of the Animator/relay method that applies ore damage AND plays the hit SFX in
         // the same call (see MiningNpc.OnMiningImpact) - both were already wired to fire
@@ -51,27 +46,11 @@ namespace MiningSimulator.Editor
                 return;
             }
 
-            AnimationClip walkClip = LoadWalkClip();
-            if (walkClip == null)
-            {
-                EditorUtility.DisplayDialog("NPC Animator Setup",
-                    $"Couldn't find an AnimationClip inside:\n{WalkClipFbxPath}\n\n" +
-                    "Import the FBX there first (or edit WalkClipFbxPath at the top of " +
-                    "MiningNpcAnimationSetupMenu.cs to match where you put it), then run this again.",
-                    "OK");
-                return;
-            }
-
             // The clip is a single mining swing — make sure it loops seamlessly instead of
             // popping back to frame 0 every cycle.
             AnimationClipSettings settings = AnimationUtility.GetAnimationClipSettings(miningClip);
             settings.loopTime = true;
             AnimationUtility.SetAnimationClipSettings(miningClip, settings);
-
-            // Ensure the forward walk cycle loops for movement playback.
-            AnimationClipSettings walkSettings = AnimationUtility.GetAnimationClipSettings(walkClip);
-            walkSettings.loopTime = true;
-            AnimationUtility.SetAnimationClipSettings(walkClip, walkSettings);
 
             bool addedImpactEvent = EnsureMiningImpactEvent(miningClip);
 
@@ -91,20 +70,12 @@ namespace MiningSimulator.Editor
             {
                 controller.AddParameter(IsMiningParam, AnimatorControllerParameterType.Bool);
             }
-            if (!controller.parameters.Any(p => p.name == IsMovingParam))
-            {
-                controller.AddParameter(IsMovingParam, AnimatorControllerParameterType.Bool);
-            }
 
             AnimatorStateMachine stateMachine = controller.layers[0].stateMachine;
             AnimatorState idleState = FindOrAddState(stateMachine, "Idle", null);
-            AnimatorState walkState = FindOrAddState(stateMachine, "Walk", walkClip);
             AnimatorState mineState = FindOrAddState(stateMachine, "Mine", miningClip);
             stateMachine.defaultState = idleState;
 
-            EnsureTransition(idleState, walkState, IsMovingParam, true);
-            EnsureTransition(walkState, idleState, IsMovingParam, false);
-            EnsureTransition(walkState, mineState, IsMiningParam, true);
             EnsureTransition(idleState, mineState, IsMiningParam, true);
             EnsureTransition(mineState, idleState, IsMiningParam, false);
 
@@ -120,8 +91,8 @@ namespace MiningSimulator.Editor
                   "present on the clip, so it was left untouched.";
 
             EditorUtility.DisplayDialog("NPC Animator Setup",
-                "Created/updated HumanM_Animator.controller with Idle <-> Walk states driven " +
-                "by IsMoving and the existing Idle <-> Mine states driven by IsMining." +
+                "Created/updated HumanM_Animator.controller with Idle <-> Mine states driven " +
+                "by the IsMining bool." +
                 impactNote + "\n\nLast step (manual): select your NPC " +
                 "model's Animator component and drag this controller into its Controller field — " +
                 "see the chat reply for the rest of the setup.", "OK");
@@ -130,13 +101,6 @@ namespace MiningSimulator.Editor
         private static AnimationClip LoadMiningClip()
         {
             Object[] assets = AssetDatabase.LoadAllAssetsAtPath(MiningClipFbxPath);
-            return assets.OfType<AnimationClip>()
-                .FirstOrDefault(clip => !clip.name.StartsWith("__preview__"));
-        }
-
-        private static AnimationClip LoadWalkClip()
-        {
-            Object[] assets = AssetDatabase.LoadAllAssetsAtPath(WalkClipFbxPath);
             return assets.OfType<AnimationClip>()
                 .FirstOrDefault(clip => !clip.name.StartsWith("__preview__"));
         }
