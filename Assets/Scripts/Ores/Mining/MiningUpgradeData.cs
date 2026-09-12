@@ -25,16 +25,20 @@ namespace MiningSimulator.Ores
         private float percentPerStack = 1f;
         [Min(1), SerializeField] private int maximumStacks = 100;
         [Min(0), SerializeField] private int startingCost = 25;
-        [Min(0), SerializeField] private int costIncreasePerPurchase = 10;
+        [Tooltip("Exponential price growth. Cost = Starting Cost × Growth^Current Stacks.")]
+        [Min(1.01f), SerializeField] private float costGrowthMultiplier = 1.20f;
+        // Kept serialized so existing assets do not lose their old authoring value when opened.
+        // The exponential formula intentionally no longer uses this linear increment.
+        [HideInInspector, SerializeField] private int costIncreasePerPurchase = 10;
 
         public MiningUpgradeDefinition(string name = "Nâng cấp", float percent = 1f,
-            int maxStacks = 100, int baseCost = 25, int addedCost = 10)
+            int maxStacks = 100, int baseCost = 25, float growthMultiplier = 1.20f)
         {
             displayName = name;
             percentPerStack = percent;
             maximumStacks = maxStacks;
             startingCost = baseCost;
-            costIncreasePerPurchase = addedCost;
+            costGrowthMultiplier = growthMultiplier;
         }
 
         public string DisplayName => displayName;
@@ -42,12 +46,27 @@ namespace MiningSimulator.Ores
         public float ValuePerStack => percentPerStack;
         public int MaximumStacks => maximumStacks;
         public int StartingCost => startingCost;
+        public float CostGrowthMultiplier => costGrowthMultiplier;
+        [Obsolete("Linear upgrade pricing was replaced by CostGrowthMultiplier.")]
         public int CostIncreasePerPurchase => costIncreasePerPurchase;
 
-        public int GetCost(int currentStacks)
+        public float GetCost(int currentStacks)
         {
-            long cost = startingCost + (long)costIncreasePerPurchase * Mathf.Max(0, currentStacks);
-            return (int)Math.Min(int.MaxValue, cost);
+            int safeStacks = Mathf.Max(0, currentStacks);
+            double growth = float.IsNaN(costGrowthMultiplier) ||
+                            float.IsInfinity(costGrowthMultiplier) ||
+                            costGrowthMultiplier < 1.01f
+                ? 1.20d
+                : costGrowthMultiplier;
+            double cost = startingCost * Math.Pow(growth, safeStacks);
+            if (double.IsNaN(cost) || cost <= 0d)
+            {
+                return 0f;
+            }
+
+            return cost >= float.MaxValue
+                ? float.MaxValue
+                : (float)Math.Ceiling(cost);
         }
 
         public void Validate()
@@ -56,6 +75,11 @@ namespace MiningSimulator.Ores
             maximumStacks = Mathf.Max(1, maximumStacks);
             startingCost = Mathf.Max(0, startingCost);
             costIncreasePerPurchase = Mathf.Max(0, costIncreasePerPurchase);
+            if (float.IsNaN(costGrowthMultiplier) || float.IsInfinity(costGrowthMultiplier) ||
+                costGrowthMultiplier < 1.01f)
+            {
+                costGrowthMultiplier = 1.20f;
+            }
         }
     }
 
@@ -85,7 +109,7 @@ namespace MiningSimulator.Ores
 
         [Header("NPC Capacity")]
         [SerializeField] private MiningUpgradeDefinition npcCapacity =
-            new("Tăng giới hạn thợ mỏ", 1f, 25, 50, 25);
+            new("Tăng giới hạn thợ mỏ", 1f, 25, 50, 1.75f);
 
         [Header("Lucky Block Reward")]
         [SerializeField] private MiningUpgradeDefinition luckyBlockReward =

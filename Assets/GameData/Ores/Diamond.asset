@@ -19,7 +19,7 @@ MonoBehaviour:
   miningPowerRequired: 25
   durability: 350
   clickDamage: 1
-  baseSellValue: 100
+  baseSellValue: 150
   experienceReward: 100
   destroyDelay: 0
   maximumMiningNpcs: 5

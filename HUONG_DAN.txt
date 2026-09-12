@@ -1,16 +1,36 @@
-MINING PORTAL PANEL FIX
+UPGRADE COST + HOVER/F INTERACTION
 
-1. Giai nen vao thu muc goc project "3d mining sim" va cho phep ghi de 2 file script.
-2. Mo Unity, cho compile xong.
+1. Giai nen goi nay vao thu muc goc project "3d mining sim".
+2. Mo Unity va cho compile xong.
 3. Mo SampleScene.
-4. Chon menu: Mining Simulator > Setup > Create Portal Gate.
-   - Neu portal da co, tool se tai su dung va KHONG doi vi tri cua no.
-   - Panel PortalMaintenancePanel se hien trong Mining HUD Canvas va duoc chon san.
-5. Neu chi muon mo panel de sua giao dien:
-   Mining Simulator > Setup > Show Portal Panel For Editing.
-6. Sua Card, Title, Message, CloseButton truc tiep trong Scene/Inspector, sau do Save Scene.
+4. Chon menu:
+   Mining Simulator > Setup > Create or Update Interaction System
+5. Tool se them duy nhat:
+   - Mining Interaction System trong UI Systems.
+   - Interaction Hover Prompt trong Mining HUD Canvas.
+   - Assets/GameData/Interaction/MiningInteractionData.asset.
+6. Save Scene sau khi kiem tra vi tri/giao dien prompt.
 
-Khi Play: panel tu an. Khi bam portal: panel hien. Nut dong va nen toi deu dong panel.
-Panel tu dong hien tieng Anh khi game chon English, va tieng Viet khi chon Vietnamese.
+PORTAL
+- Re chuot vao portal: hien [F] INTERACT / [F] TUONG TAC.
+- Bam F: mo panel Under Maintenance.
+- Bam chuot vao portal khong con mo panel.
+- Chay lai menu Create Portal Gate van tai su dung portal cu va khong doi vi tri.
 
-Goi nay khong chua Scene, prefab, GameData hay icon nen khong ghi de cac tuy chinh da co.
+NPC HOI THOAI SAU NAY
+- Gan MiningInteractionTarget vao NPC co Collider.
+- Dien English Label va Vietnamese Label.
+- Noi su kien On Interact vao ham mo panel hoi thoai.
+- Co the dung On Focus Entered/Exited cho Outline hoac hieu ung hover.
+
+GIA NANG CAP
+- Cong thuc moi: Starting Cost x Cost Growth Multiplier ^ Current Stacks.
+- Cost Growth Multiplier nam trong tung muc cua MiningUpgradeData.
+- Mac dinh moi la 1.20; NPC Capacity tao moi mac dinh 1.75.
+- Gia tri costIncreasePerPurchase cu duoc giu an de khong mat du lieu, nhung khong con duoc dung.
+- Goi nay KHONG chua MiningUpgradeData.asset, vi vay khong ghi de cac gia tri ban da chinh.
+
+NGON NGU
+- Prompt va ten Portal tu dong doi English/Vietnamese theo MiningLocalization.
+
+Goi nay khong chua Scene, prefab, icon hoac GameData asset va khong commit/push.

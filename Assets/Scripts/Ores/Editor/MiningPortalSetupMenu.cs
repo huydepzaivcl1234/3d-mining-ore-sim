@@ -9,8 +9,8 @@ namespace MiningSimulator.Editor
     /// <summary>
     /// Places the Portal visual (copied from the Tower Defense project's
     /// Assets/Art/Models/Portal.prefab, materials, shader graph, and textures unchanged) as a
-    /// clickable gate in the open scene. Reuses the existing OreClickInput raycast for the click
-    /// and the existing HUD Canvas for the notice panel - creates only the two new objects below,
+    /// interactable gate in the open scene. Uses the shared hover/F interaction system and the
+    /// existing HUD Canvas for the notice panel - creates only the new portal-owned objects below,
     /// and re-running this is always safe (it reuses the same named objects instead of
     /// duplicating them or touching anything else in the scene).
     /// </summary>
@@ -36,6 +36,7 @@ namespace MiningSimulator.Editor
 
             MiningPortalMaintenancePanel panel = EnsureMaintenancePanelExists();
             bool panelReady = panel != null;
+            MiningInteractionSetupMenu.EnsureInOpenScene(false);
 
             GameObject gate = GameObject.Find(GateObjectName);
             bool isNewGate = gate == null;
@@ -48,9 +49,8 @@ namespace MiningSimulator.Editor
 
             SphereCollider gateCollider = gate.GetComponent<SphereCollider>() ??
                                           gate.AddComponent<SphereCollider>();
-            // Must stay a non-trigger collider - OreClickInput's raycast uses
-            // QueryTriggerInteraction.Ignore, the same as every Ore collider, so a trigger here
-            // would silently make the gate unclickable.
+            // Must stay a non-trigger collider because the shared interaction raycast ignores
+            // triggers, matching the ore click rules.
             gateCollider.isTrigger = false;
             gateCollider.radius = GateColliderRadius;
 
@@ -67,7 +67,7 @@ namespace MiningSimulator.Editor
                   "the gate in the scene; re-running this tool will not move it again."
                 : $"\n\nReused the existing '{GateObjectName}' object already in the scene.";
             string panelNote = panelReady
-                ? "The 'ĐANG SỬA CHỮA' notice panel is ready on the HUD canvas."
+                ? "The localized 'UNDER MAINTENANCE' notice is ready on the HUD canvas."
                 : "Couldn't find a Canvas in the open scene yet to add the notice panel to - " +
                   "run the scene's gameplay setup first, then re-run this command.";
 

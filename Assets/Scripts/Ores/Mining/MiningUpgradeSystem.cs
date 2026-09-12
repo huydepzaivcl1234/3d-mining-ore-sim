@@ -62,7 +62,7 @@ namespace MiningSimulator.Ores
             };
         }
 
-        public int GetCost(MiningUpgradeType type)
+        public float GetCost(MiningUpgradeType type)
         {
             MiningUpgradeDefinition definition = upgradeData != null
                 ? upgradeData.GetDefinition(type)

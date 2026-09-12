@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 676181e52d934d4a8483c00ee221453a, type: 3}
+  m_Name: MiningInteractionData
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningInteractionData
+  interactionLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  maximumDistance: 500
+  interactionKey: 20
+  promptSize: {x: 270, y: 72}
+  cursorOffset: {x: 22, y: -18}
+  fontSize: 20
+  backgroundColor: {r: 0.035, g: 0.045, b: 0.06, a: 0.94}
+  textColor: {r: 1, g: 1, b: 1, a: 1}
+  englishPromptFormat: '[{0}] INTERACT
+
+    {1}'
+  vietnamesePromptFormat: "[{0}] T\u01AF\u01A0NG T\xC1C\n{1}"
