@@ -175,9 +175,9 @@ namespace MiningSimulator.Ores
 
             if (granted)
             {
-                statusLabel.text = MiningLocalization.Text(
-                    $"YOU WON: {selectedReward.GetDisplayName()}",
-                    $"BẠN NHẬN ĐƯỢC: {selectedReward.GetDisplayName()}");
+                statusLabel.text = string.Format(MiningLocalization.Text(
+                        "YOU WON: {0}", "BẠN NHẬN ĐƯỢC: {0}"),
+                    selectedReward.GetDisplayName());
                 spinLabel.text = MiningLocalization.Text("REWARD RECEIVED", "ĐÃ NHẬN THƯỞNG");
             }
             else

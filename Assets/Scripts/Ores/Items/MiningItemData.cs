@@ -57,9 +57,8 @@ namespace MiningSimulator.Ores
         public string GetDisplayName()
         {
             return rewardType == MiningGiftRewardType.Money
-                ? MiningLocalization.Text(
-                    $"{MiningMoneyFormatter.Format(moneyAmount)} GOLD",
-                    $"{MiningMoneyFormatter.Format(moneyAmount)} VÀNG")
+                ? string.Format(MiningLocalization.Text("{0} GOLD", "{0} VÀNG"),
+                    MiningMoneyFormatter.Format(moneyAmount))
                 : item != null ? $"{item.DisplayName} x{ItemAmount}" : string.Empty;
         }
     }

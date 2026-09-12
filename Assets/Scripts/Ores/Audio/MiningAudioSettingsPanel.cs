@@ -412,7 +412,12 @@ namespace MiningSimulator.Ores
             }
             if (languageLabel != null)
             {
-                languageLabel.text = MiningLocalization.IsEnglish ? "EN ✓" : "VI ✓";
+                languageLabel.text = MiningLocalization.CurrentLanguageName switch
+                {
+                    MiningLocalization.EnglishLanguageName => "EN ✓",
+                    MiningLocalization.VietnameseLanguageName => "VI ✓",
+                    string languageName => $"{languageName.ToUpperInvariant()} ✓"
+                };
             }
         }
     }

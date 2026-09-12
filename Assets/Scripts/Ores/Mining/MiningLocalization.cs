@@ -1,4 +1,5 @@
 using System;
+using Lean.Localization;
 using TMPro;
 using UnityEngine;
 
@@ -14,6 +15,9 @@ namespace MiningSimulator.Ores
     public static class MiningLocalization
     {
         private const string LanguageSaveKey = "Mining.Language";
+        private const string LanguageNameSaveKey = "Mining.LanguageName";
+        public const string EnglishLanguageName = "English";
+        public const string VietnameseLanguageName = "Vietnamese";
 
         private readonly struct TranslationPair
         {
@@ -41,6 +45,7 @@ namespace MiningSimulator.Ores
         };
 
         private static MiningLanguage currentLanguage;
+        private static string currentLanguageName;
         private static bool initialized;
 
         public static event Action LanguageChanged;
@@ -54,19 +59,39 @@ namespace MiningSimulator.Ores
             }
         }
 
-        public static bool IsEnglish => CurrentLanguage == MiningLanguage.English;
+        public static bool IsEnglish => string.Equals(CurrentLanguageName, EnglishLanguageName,
+            StringComparison.OrdinalIgnoreCase);
+
+        /// <summary>The Lean Localization language name. New languages can use this without changing the legacy enum.</summary>
+        public static string CurrentLanguageName
+        {
+            get
+            {
+                EnsureInitialized();
+                return currentLanguageName;
+            }
+        }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
         {
             currentLanguage = MiningLanguage.English;
+            currentLanguageName = EnglishLanguageName;
             initialized = false;
             LanguageChanged = null;
+            LeanLocalization.OnLocalizationChanged -= HandleLeanLocalizationChanged;
+            LeanLocalization.OnLocalizationChanged += HandleLeanLocalizationChanged;
         }
 
         public static string Text(string english, string vietnamese)
         {
-            return IsEnglish ? english : vietnamese;
+            EnsureInitialized();
+            string fallback = string.Equals(currentLanguageName, VietnameseLanguageName,
+                StringComparison.OrdinalIgnoreCase)
+                ? vietnamese
+                : english;
+            return LeanLocalization.GetTranslationText(GetPhraseName(english), fallback,
+                replaceTokens: false) ?? fallback;
         }
 
         public static void ToggleLanguage()
@@ -76,15 +101,30 @@ namespace MiningSimulator.Ores
 
         public static void SetLanguage(MiningLanguage language)
         {
+            SetLanguage(language == MiningLanguage.Vietnamese
+                ? VietnameseLanguageName
+                : EnglishLanguageName);
+        }
+
+        /// <summary>Changes language by Lean language name so additional languages can be added later.</summary>
+        public static void SetLanguage(string languageName)
+        {
             EnsureInitialized();
-            if (currentLanguage == language)
+            languageName = string.IsNullOrWhiteSpace(languageName)
+                ? EnglishLanguageName
+                : languageName.Trim();
+            if (string.Equals(currentLanguageName, languageName,
+                StringComparison.OrdinalIgnoreCase))
             {
                 return;
             }
 
-            currentLanguage = language;
+            currentLanguageName = languageName;
+            currentLanguage = ToLegacyLanguage(languageName);
+            PlayerPrefs.SetString(LanguageNameSaveKey, currentLanguageName);
             PlayerPrefs.SetInt(LanguageSaveKey, (int)currentLanguage);
             PlayerPrefs.Save();
+            LeanLocalization.SetCurrentLanguageAll(currentLanguageName);
             LanguageChanged?.Invoke();
         }
 
@@ -177,11 +217,22 @@ namespace MiningSimulator.Ores
                 return;
             }
 
-            int saved = PlayerPrefs.GetInt(LanguageSaveKey, (int)MiningLanguage.English);
-            currentLanguage = saved == (int)MiningLanguage.Vietnamese
-                ? MiningLanguage.Vietnamese
-                : MiningLanguage.English;
+            string savedName = PlayerPrefs.GetString(LanguageNameSaveKey, string.Empty);
+            if (string.IsNullOrWhiteSpace(savedName))
+            {
+                int legacyValue = PlayerPrefs.GetInt(LanguageSaveKey,
+                    (int)MiningLanguage.English);
+                savedName = legacyValue == (int)MiningLanguage.Vietnamese
+                    ? VietnameseLanguageName
+                    : EnglishLanguageName;
+                PlayerPrefs.SetString(LanguageNameSaveKey, savedName);
+                PlayerPrefs.Save();
+            }
+
+            currentLanguageName = savedName.Trim();
+            currentLanguage = ToLegacyLanguage(currentLanguageName);
             initialized = true;
+            LeanLocalization.SetCurrentLanguageAll(currentLanguageName);
         }
 
         private static string TranslateStaticText(string value)
@@ -202,11 +253,49 @@ namespace MiningSimulator.Ores
                 if (string.Equals(value, translation.English, StringComparison.Ordinal) ||
                     string.Equals(value, translation.Vietnamese, StringComparison.Ordinal))
                 {
-                    return IsEnglish ? translation.English : translation.Vietnamese;
+                    return Text(translation.English, translation.Vietnamese);
                 }
             }
 
             return value;
+        }
+
+        private static string GetPhraseName(string english)
+        {
+            return string.IsNullOrEmpty(english)
+                ? english
+                : english.Replace("\r\n", "\n").Replace("\n", "\\n");
+        }
+
+        private static MiningLanguage ToLegacyLanguage(string languageName)
+        {
+            return string.Equals(languageName, VietnameseLanguageName,
+                StringComparison.OrdinalIgnoreCase)
+                ? MiningLanguage.Vietnamese
+                : MiningLanguage.English;
+        }
+
+        private static void HandleLeanLocalizationChanged()
+        {
+            if (!initialized)
+            {
+                return;
+            }
+
+            string leanLanguage = LeanLocalization.GetFirstCurrentLanguage();
+            if (string.IsNullOrWhiteSpace(leanLanguage) ||
+                string.Equals(currentLanguageName, leanLanguage,
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            currentLanguageName = leanLanguage;
+            currentLanguage = ToLegacyLanguage(leanLanguage);
+            PlayerPrefs.SetString(LanguageNameSaveKey, currentLanguageName);
+            PlayerPrefs.SetInt(LanguageSaveKey, (int)currentLanguage);
+            PlayerPrefs.Save();
+            LanguageChanged?.Invoke();
         }
     }
 }

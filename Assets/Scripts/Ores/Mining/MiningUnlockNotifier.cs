@@ -131,7 +131,8 @@ namespace MiningSimulator.Ores
                     continue;
                 }
 
-                string format = uiData != null ? uiData.OreUnlockToastFormat : "Đã mở khóa quặng: {0}!";
+                string format = MiningLocalization.Text("Ore unlocked: {0}!",
+                    uiData != null ? uiData.OreUnlockToastFormat : "Đã mở khóa quặng: {0}!");
                 ShowToast(string.Format(format, ore.DisplayName));
                 oreSpawner.SpawnGuaranteedOre(ore);
             }
@@ -157,9 +158,10 @@ namespace MiningSimulator.Ores
                     continue;
                 }
 
-                string format = uiData != null
-                    ? uiData.LuckyBlockUnlockToastFormat
-                    : "Đã mở khóa Lucky Block: {0}!";
+                string format = MiningLocalization.Text("Lucky Block unlocked: {0}!",
+                    uiData != null
+                        ? uiData.LuckyBlockUnlockToastFormat
+                        : "Đã mở khóa Lucky Block: {0}!");
                 ShowToast(string.Format(format, variant.DisplayName));
                 luckyBlockDropSystem.SpawnGuaranteedLuckyBlock(variant);
             }

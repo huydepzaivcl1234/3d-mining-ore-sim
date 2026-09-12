@@ -22,14 +22,16 @@ MonoBehaviour:
     trigger: 0
     oreKind: 5
     targetAmount: 1000
-    requiredOres: []
+    requiredOres:
+    - {fileID: 11400000, guid: 6ce1f29ef4520f9de60df99934688572, type: 2}
     moneyMultiplierPercent: 1
     experienceMultiplierPercent: 1
   - achievementId: own_50_npcs
     englishTitle: Miner Army
     vietnameseTitle: "\u0110\u1ED9i Qu\xE2n Th\u1EE3 M\u1ECF"
     englishDescription: Own 50 mining NPCs at the same time.
-    vietnameseDescription: "S\u1EDF h\u1EEFu 50 NPC \u0111\xE0o qu\u1EB7ng c\xF9ng l\xFAc."
+    vietnameseDescription: "S\u1EDF h\u1EEFu 50 NPC \u0111\xE0o qu\u1EB7ng c\xF9ng
+      l\xFAc."
     trigger: 1
     oreKind: 0
     targetAmount: 50
@@ -40,7 +42,8 @@ MonoBehaviour:
     englishTitle: Ore Master
     vietnameseTitle: "B\u1EADc Th\u1EA7y Qu\u1EB7ng"
     englishDescription: Reach enough mining power to unlock every configured ore.
-    vietnameseDescription: "\u0110\u1EA1t \u0111\u1EE7 s\u1EE9c m\u1EA1nh \u0111\u1EC3 m\u1EDF kh\xF3a t\u1EA5t c\u1EA3 lo\u1EA1i qu\u1EB7ng."
+    vietnameseDescription: "\u0110\u1EA1t \u0111\u1EE7 s\u1EE9c m\u1EA1nh \u0111\u1EC3
+      m\u1EDF kh\xF3a t\u1EA5t c\u1EA3 lo\u1EA1i qu\u1EB7ng."
     trigger: 2
     oreKind: 0
     targetAmount: 1
@@ -66,3 +69,15 @@ MonoBehaviour:
     requiredOres: []
     moneyMultiplierPercent: 1
     experienceMultiplierPercent: 1
+  - achievementId: "\u0110\u1EA5"
+    englishTitle: "\u0110\xE1"
+    vietnameseTitle: Stone
+    englishDescription: Break stone
+    vietnameseDescription: "Ph\xE1 \u0111\xE1"
+    trigger: 0
+    oreKind: 0
+    targetAmount: 1
+    requiredOres:
+    - {fileID: 11400000, guid: 3982179b3238eaf4ebcf9c0a2f198d7e, type: 2}
+    moneyMultiplierPercent: 0
+    experienceMultiplierPercent: 0

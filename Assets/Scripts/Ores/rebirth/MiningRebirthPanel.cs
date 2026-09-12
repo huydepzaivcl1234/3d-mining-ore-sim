@@ -15,6 +15,8 @@ namespace MiningSimulator.Ores
             "CẢNH BÁO!\n\nBạn sắp Rebirth! Toàn bộ tiền và mọi nâng cấp hiện tại sẽ bị xóa.";
         private const string CompleteWarning =
             "CẢNH BÁO!\n\nRebirth sẽ xóa tiền, mọi nâng cấp, cấp thợ mỏ và toàn bộ NPC trên sân.";
+        private const string CompleteWarningEnglish =
+            "WARNING!\n\nRebirth resets money, every upgrade, miner level, and all NPCs on the field.";
 
         [SerializeField] private MiningRebirthSystem rebirthSystem;
         [SerializeField] private PlayerWallet wallet;
@@ -293,9 +295,8 @@ namespace MiningSimulator.Ores
             }
             if (warningLabel != null)
             {
-                warningLabel.text = MiningLocalization.IsEnglish
-                    ? "WARNING!\n\nRebirth resets money, every upgrade, miner level, and all NPCs on the field."
-                    : warningText == LegacyWarning ? CompleteWarning : warningText;
+                warningLabel.text = MiningLocalization.Text(CompleteWarningEnglish,
+                    warningText == LegacyWarning ? CompleteWarning : warningText);
             }
             if (nextBoostLabel != null)
             {
