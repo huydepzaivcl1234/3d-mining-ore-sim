@@ -189,6 +189,18 @@ MonoBehaviour:
   rewardPopupColor: {r: 1, g: 0.82, b: 0.16, a: 1}
   rewardPopupOutlineColor: {r: 0.08, g: 0.04, b: 0.01, a: 1}
   rewardPopupOutlineWidth: 0.2
+  rewardPopupIconLocalPosition: {x: 0, y: 0, z: -0.02}
+  rewardPopupIconScale: 0.5
+  rewardPopupIconColor: {r: 1, g: 1, b: 1, a: 1}
+  oreUnlockToastFormat: "\u0110\xE3 m\u1EDF kh\xF3a qu\u1EB7ng: {0}!"
+  luckyBlockUnlockToastFormat: "\u0110\xE3 m\u1EDF kh\xF3a Lucky Block: {0}!"
+  unlockToastPosition: {x: 0, y: -140}
+  unlockToastSize: {x: 460, y: 64}
+  unlockToastFontSize: 24
+  unlockToastHoldDuration: 2.2
+  unlockToastFadeDuration: 0.25
+  unlockToastBackgroundColor: {r: 0.08, g: 0.09, b: 0.11, a: 0.95}
+  unlockToastTextColor: {r: 1, g: 0.86, b: 0.32, a: 1}
   upgradePanelFullscreen: 1
   upgradeCardColumns: 2
   upgradeCardColumnSpacing: 920
@@ -201,9 +213,9 @@ MonoBehaviour:
   closeButtonPosition: {x: 1848, y: -12}
   backButtonSize: {x: 220, y: 54}
   backButtonPosition: {x: 850, y: -990}
-  expandedUpgradePanelMinimumHeight: 960
+  expandedUpgradePanelMinimumHeight: 1080
   expandedUpgradeBackButtonY: -878
-  experienceUpgradePanelMinimumHeight: 1060
+  experienceUpgradePanelMinimumHeight: 1080
   experienceUpgradeBackButtonY: -978
   openButtonSize: {x: 294, y: 46}
   openButtonPosition: {x: 18, y: -266}

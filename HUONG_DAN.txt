@@ -1,36 +1,32 @@
-UPGRADE COST + HOVER/F INTERACTION
+FIX THANH MAU NAM XUONG DAT + ICON POPUP TIEN
+Nen code: origin/main 69d738c
 
-1. Giai nen goi nay vao thu muc goc project "3d mining sim".
-2. Mo Unity va cho compile xong.
-3. Mo SampleScene.
-4. Chon menu:
-   Mining Simulator > Setup > Create or Update Interaction System
-5. Tool se them duy nhat:
-   - Mining Interaction System trong UI Systems.
-   - Interaction Hover Prompt trong Mining HUD Canvas.
-   - Assets/GameData/Interaction/MiningInteractionData.asset.
-6. Save Scene sau khi kiem tra vi tri/giao dien prompt.
+QUAN TRONG:
+1. Tat han Unity truoc khi chep file.
+2. Giai nen ZIP truc tiep vao thu muc goc "3d mining sim".
+3. Chon Merge/Replace thu muc Assets khi Windows hoi.
+4. Goi nay co kem .meta dung. Khong xoa cac file .meta.
 
-PORTAL
-- Re chuot vao portal: hien [F] INTERACT / [F] TUONG TAC.
-- Bam F: mo panel Under Maintenance.
-- Bam chuot vao portal khong con mo panel.
-- Chay lai menu Create Portal Gate van tai su dung portal cu va khong doi vi tri.
+FIX THANH MAU:
+- Khoi phuc GUID cu cua OreHealthBar va LuckyBlockHealthBar.
+- Mo Unity, doi compile xong.
+- Canh bao "The referenced script ... is missing" tren Ore Health Bar phai bien mat.
+- Vao Play Mode: thanh mau se lai xoay huong camera nhu code cu, khong nam bep duoi dat.
+- So mau hien tai / toi da van nam giua thanh va giam theo mau.
 
-NPC HOI THOAI SAU NAY
-- Gan MiningInteractionTarget vao NPC co Collider.
-- Dien English Label va Vietnamese Label.
-- Noi su kien On Interact vao ham mo panel hoi thoai.
-- Co the dung On Focus Entered/Exited cho Outline hoac hieu ung hover.
+THEM ICON DONG XU CHO POPUP TIEN:
+1. Trong Unity chay menu:
+   Mining Simulator > Setup > Add Coin Icon Slot To Reward Popup
+2. Mo prefab:
+   Assets/Prefabs/UI/OreRewardPopup.prefab
+3. Chon child "Coin Icon".
+4. Keo Sprite dong xu cua ban vao o Sprite cua SpriteRenderer.
 
-GIA NANG CAP
-- Cong thuc moi: Starting Cost x Cost Growth Multiplier ^ Current Stacks.
-- Cost Growth Multiplier nam trong tung muc cua MiningUpgradeData.
-- Mac dinh moi la 1.20; NPC Capacity tao moi mac dinh 1.75.
-- Gia tri costIncreasePerPurchase cu duoc giu an de khong mat du lieu, nhung khong con duoc dung.
-- Goi nay KHONG chua MiningUpgradeData.asset, vi vay khong ghi de cac gia tri ban da chinh.
+Co the chinh trong:
+Assets/GameData/UI/MiningUiData.asset > Ore Reward Popup
+- Reward Popup Icon Local Position: vi tri icon ben canh so tien.
+- Reward Popup Icon Scale: kich thuoc icon.
+- Reward Popup Icon Color: mau icon.
 
-NGON NGU
-- Prompt va ten Portal tu dong doi English/Vietnamese theo MiningLocalization.
-
-Goi nay khong chua Scene, prefab, icon hoac GameData asset va khong commit/push.
+Icon va chu cung bay len, cung mo dan. Neu chua gan Sprite thi popup van hien so tien binh thuong.
+Khong sua Scene, khong doi vi tri UI khac, khong commit va khong push.

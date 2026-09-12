@@ -218,6 +218,11 @@ namespace MiningSimulator.Ores
         [SerializeField] private Color rewardPopupColor = new(1f, 0.82f, 0.16f, 1f);
         [SerializeField] private Color rewardPopupOutlineColor = new(0.08f, 0.04f, 0.01f, 1f);
         [Range(0f, 1f), SerializeField] private float rewardPopupOutlineWidth = 0.2f;
+        [Tooltip("Local position of the optional coin icon beside the popup amount.")]
+        [SerializeField] private Vector3 rewardPopupIconLocalPosition = new(-4f, 0f, -0.02f);
+        [Tooltip("Local scale of the optional coin icon beside the popup amount.")]
+        [Min(0.001f), SerializeField] private float rewardPopupIconScale = 1.25f;
+        [SerializeField] private Color rewardPopupIconColor = Color.white;
 
         [Header("Unlock Toast")]
         [SerializeField] private string oreUnlockToastFormat = "Đã mở khóa quặng: {0}!";
@@ -491,6 +496,9 @@ namespace MiningSimulator.Ores
         public Color RewardPopupColor => rewardPopupColor;
         public Color RewardPopupOutlineColor => rewardPopupOutlineColor;
         public float RewardPopupOutlineWidth => rewardPopupOutlineWidth;
+        public Vector3 RewardPopupIconLocalPosition => rewardPopupIconLocalPosition;
+        public float RewardPopupIconScale => rewardPopupIconScale;
+        public Color RewardPopupIconColor => rewardPopupIconColor;
         public string OreUnlockToastFormat => oreUnlockToastFormat;
         public string LuckyBlockUnlockToastFormat => luckyBlockUnlockToastFormat;
         public Vector2 UnlockToastPosition => unlockToastPosition;
@@ -696,6 +704,7 @@ namespace MiningSimulator.Ores
             rewardPopupRiseDistance = Mathf.Max(0f, rewardPopupRiseDistance);
             rewardPopupWorldScale = Mathf.Max(0.001f, rewardPopupWorldScale);
             rewardPopupFontSize = Mathf.Max(1f, rewardPopupFontSize);
+            rewardPopupIconScale = Mathf.Max(0.001f, rewardPopupIconScale);
             unlockToastSize.x = Mathf.Max(1f, unlockToastSize.x);
             unlockToastSize.y = Mathf.Max(1f, unlockToastSize.y);
             unlockToastFontSize = Mathf.Max(1f, unlockToastFontSize);

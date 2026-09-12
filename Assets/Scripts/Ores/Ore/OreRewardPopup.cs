@@ -9,17 +9,21 @@ namespace MiningSimulator.Ores
     public sealed class OreRewardPopup : MonoBehaviour
     {
         [SerializeField] private TextMeshPro label;
+        [Tooltip("Optional coin icon shown beside the reward amount. Assign its Sprite in the prefab.")]
+        [SerializeField] private SpriteRenderer coinIcon;
 
         private MiningUiData uiData;
         private Camera targetCamera;
         private Vector3 startPosition;
         private Color startColor;
+        private Color iconStartColor;
         private float elapsed;
 
         public void Initialize(float amount, Vector3 worldPosition, MiningUiData targetUiData)
         {
             uiData = targetUiData;
             label ??= GetComponent<TextMeshPro>();
+            coinIcon ??= transform.Find("Coin Icon")?.GetComponent<SpriteRenderer>();
             targetCamera = Camera.main;
             startPosition = worldPosition + uiData.RewardPopupWorldOffset;
             transform.SetPositionAndRotation(startPosition, Quaternion.identity);
@@ -31,6 +35,13 @@ namespace MiningSimulator.Ores
             label.outlineColor = uiData.RewardPopupOutlineColor;
             label.outlineWidth = uiData.RewardPopupOutlineWidth;
             startColor = label.color;
+            if (coinIcon != null)
+            {
+                coinIcon.transform.localPosition = uiData.RewardPopupIconLocalPosition;
+                coinIcon.transform.localScale = Vector3.one * uiData.RewardPopupIconScale;
+                coinIcon.color = uiData.RewardPopupIconColor;
+                iconStartColor = coinIcon.color;
+            }
             elapsed = 0f;
         }
 
@@ -51,6 +62,12 @@ namespace MiningSimulator.Ores
             Color color = startColor;
             color.a = 1f - progress;
             label.color = color;
+            if (coinIcon != null)
+            {
+                Color iconColor = iconStartColor;
+                iconColor.a *= 1f - progress;
+                coinIcon.color = iconColor;
+            }
 
             targetCamera ??= Camera.main;
             if (targetCamera != null)
