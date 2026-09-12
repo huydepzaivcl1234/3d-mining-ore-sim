@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningUpgradeData
   moneyReward:
     displayName: "T\u0103ng ti\u1EC1n nh\u1EADn \u0111\u01B0\u1EE3c th\xEAm"
-    percentPerStack: 50
+    percentPerStack: 5
     maximumStacks: 100
     startingCost: 25
     costIncreasePerPurchase: 50
@@ -26,13 +26,13 @@ MonoBehaviour:
     costIncreasePerPurchase: 100
   oreDamage:
     displayName: "T\u0103ng s\xE1t th\u01B0\u01A1ng l\xEAn qu\u1EB7ng"
-    percentPerStack: 25
+    percentPerStack: 5
     maximumStacks: 100
     startingCost: 25
     costIncreasePerPurchase: 30
   oreSpawnSpeed:
     displayName: "T\u0103ng t\u1ED1c \u0111\u1ED9 spawn qu\u1EB7ng"
-    percentPerStack: 15
+    percentPerStack: 5
     maximumStacks: 100
     startingCost: 25
     costIncreasePerPurchase: 10
@@ -50,7 +50,7 @@ MonoBehaviour:
     costIncreasePerPurchase: 1500
   luckyBlockReward:
     displayName: "T\u0103ng ti\u1EC1n Lucky Block"
-    percentPerStack: 25
+    percentPerStack: 5
     maximumStacks: 100
     startingCost: 25
     costIncreasePerPurchase: 10
@@ -62,7 +62,7 @@ MonoBehaviour:
     costIncreasePerPurchase: 10
   npcExperience:
     displayName: "T\u0103ng kinh nghi\u1EC7m NPC"
-    percentPerStack: 25
+    percentPerStack: 5
     maximumStacks: 100
     startingCost: 25
     costIncreasePerPurchase: 10

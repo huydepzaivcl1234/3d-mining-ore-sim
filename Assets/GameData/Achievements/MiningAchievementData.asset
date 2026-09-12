@@ -26,15 +26,15 @@ MonoBehaviour:
     - {fileID: 11400000, guid: 6ce1f29ef4520f9de60df99934688572, type: 2}
     moneyMultiplierPercent: 1
     experienceMultiplierPercent: 1
-  - achievementId: own_50_npcs
+  - achievementId: own_5_npcs
     englishTitle: Miner Army
     vietnameseTitle: "\u0110\u1ED9i Qu\xE2n Th\u1EE3 M\u1ECF"
-    englishDescription: Own 50 mining NPCs at the same time.
-    vietnameseDescription: "S\u1EDF h\u1EEFu 50 NPC \u0111\xE0o qu\u1EB7ng c\xF9ng
+    englishDescription: Own 5mining NPCs at the same time.
+    vietnameseDescription: "S\u1EDF h\u1EEFu 5 NPC \u0111\xE0o qu\u1EB7ng c\xF9ng
       l\xFAc."
     trigger: 1
     oreKind: 0
-    targetAmount: 50
+    targetAmount: 5
     requiredOres: []
     moneyMultiplierPercent: 1
     experienceMultiplierPercent: 1

@@ -1,46 +1,87 @@
 using System.Collections;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace MiningSimulator.Ores
 {
     /// <summary>
     /// "Đang sửa chữa" (under maintenance) notice shown when the player clicks a portal gate
-    /// that has no destination wired up yet. Builds and owns its own small UI the first time
-    /// EnsureRuntime runs, as a new child under the existing HUD canvas - it does not touch,
-    /// resize, or reposition any existing panel, icon, or HUD element.
+    /// that has no destination wired up yet. The setup menu authors the UI under the existing
+    /// HUD canvas and deliberately keeps it visible in Edit Mode so designers can edit it.
+    /// Runtime starts hidden and never touches another panel, icon, or HUD element.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class MiningPortalMaintenancePanel : MonoBehaviour
     {
         private const string PanelObjectName = "PortalMaintenancePanel";
-        private const string DefaultTitle = "ĐANG SỬA CHỮA";
-        private const string DefaultMessage = "Cổng này đang được xây dựng.\nQuay lại sau nhé!";
-        private const string CloseButtonLabel = "ĐÃ HIỂU";
+        private const string DefaultEnglishTitle = "UNDER MAINTENANCE";
+        private const string DefaultVietnameseTitle = "ĐANG SỬA CHỮA";
+        private const string DefaultEnglishMessage =
+            "This portal is under construction.\nPlease come back later!";
+        private const string DefaultVietnameseMessage =
+            "Cổng này đang được xây dựng.\nQuay lại sau nhé!";
+        private const string DefaultEnglishCloseButton = "GOT IT";
+        private const string DefaultVietnameseCloseButton = "ĐÃ HIỂU";
         private const float FadeDuration = 0.15f;
 
-        [SerializeField] private string title = DefaultTitle;
-        [SerializeField, TextArea] private string message = DefaultMessage;
+        [Header("English")]
+        [SerializeField] private string englishTitle = DefaultEnglishTitle;
+        [SerializeField, TextArea] private string englishMessage = DefaultEnglishMessage;
+        [SerializeField] private string englishCloseButton = DefaultEnglishCloseButton;
+
+        [Header("Vietnamese")]
+        [FormerlySerializedAs("title")]
+        [SerializeField] private string vietnameseTitle = DefaultVietnameseTitle;
+        [FormerlySerializedAs("message")]
+        [SerializeField, TextArea] private string vietnameseMessage = DefaultVietnameseMessage;
+        [SerializeField] private string vietnameseCloseButton = DefaultVietnameseCloseButton;
+
+        [SerializeField] private Button blockerButton;
+        [SerializeField] private Button closeButton;
+        [SerializeField] private TMP_Text titleText;
+        [SerializeField] private TMP_Text messageText;
+        [SerializeField] private TMP_Text closeButtonText;
 
         private CanvasGroup canvasGroup;
         private RectTransform card;
         private Coroutine activeFade;
+        private bool runtimeInitialized;
+        private bool showRequested;
 
         private void Awake()
         {
-            // Self-healing safety net: no matter how this object ends up active (Show(), a
-            // stray Inspector toggle while debugging, a scene re-save, etc.), it must never sit
-            // there blocking clicks while invisible. Show() re-enables raycasts right after.
-            if (canvasGroup == null)
-            {
-                canvasGroup = GetComponent<CanvasGroup>();
-            }
+            InitializeRuntimeHiddenState();
+            WireButtons();
+            RefreshLocalizedText();
+        }
 
-            if (canvasGroup != null)
+        private void OnEnable()
+        {
+            MiningLocalization.LanguageChanged -= RefreshLocalizedText;
+            MiningLocalization.LanguageChanged += RefreshLocalizedText;
+            RefreshLocalizedText();
+        }
+
+        private void OnDisable()
+        {
+            MiningLocalization.LanguageChanged -= RefreshLocalizedText;
+        }
+
+        private void OnDestroy()
+        {
+            blockerButton?.onClick.RemoveListener(Hide);
+            closeButton?.onClick.RemoveListener(Hide);
+        }
+
+        private void Start()
+        {
+            // The panel is saved active so it remains visible and editable in Scene view.
+            // Hide it only after runtime initialization; Show() can reactivate it later.
+            if (runtimeInitialized && !showRequested)
             {
-                canvasGroup.blocksRaycasts = false;
-                canvasGroup.interactable = false;
+                gameObject.SetActive(false);
             }
         }
 
@@ -56,7 +97,15 @@ namespace MiningSimulator.Ores
             Transform existing = canvas.transform.Find(PanelObjectName);
             if (existing != null)
             {
-                return existing.GetComponent<MiningPortalMaintenancePanel>();
+                MiningPortalMaintenancePanel existingPanel =
+                    existing.GetComponent<MiningPortalMaintenancePanel>();
+#if UNITY_EDITOR
+                if (!Application.isPlaying && existingPanel != null)
+                {
+                    existingPanel.SetEditorPreviewVisible(true);
+                }
+#endif
+                return existingPanel;
             }
 
             RectTransform root = CreateRect(PanelObjectName, canvas.transform);
@@ -77,13 +126,31 @@ namespace MiningSimulator.Ores
             MiningPortalMaintenancePanel panel = root.gameObject.AddComponent<MiningPortalMaintenancePanel>();
             panel.canvasGroup = group;
             panel.Build(root, blocker);
-            root.gameObject.SetActive(false);
+#if UNITY_EDITOR
+            if (!Application.isPlaying)
+            {
+                panel.SetEditorPreviewVisible(true);
+            }
+            else
+#endif
+            {
+                root.gameObject.SetActive(false);
+            }
             return panel;
         }
 
         public void Show()
         {
+            // Set this before activation: on an older scene where the object was saved inactive,
+            // activation invokes Awake/Start and must not be mistaken for the initial startup hide.
+            showRequested = true;
             gameObject.SetActive(true);
+            ResolveReferences();
+            if (canvasGroup == null)
+            {
+                return;
+            }
+
             canvasGroup.blocksRaycasts = true;
             canvasGroup.interactable = true;
             if (activeFade != null)
@@ -95,6 +162,14 @@ namespace MiningSimulator.Ores
 
         public void Hide()
         {
+            showRequested = false;
+            ResolveReferences();
+            if (canvasGroup == null)
+            {
+                gameObject.SetActive(false);
+                return;
+            }
+
             canvasGroup.blocksRaycasts = false;
             canvasGroup.interactable = false;
             if (activeFade != null)
@@ -109,10 +184,9 @@ namespace MiningSimulator.Ores
         {
             canvasGroup.alpha = 0f;
 
-            Button blockerButton = root.gameObject.AddComponent<Button>();
+            blockerButton = root.gameObject.AddComponent<Button>();
             blockerButton.transition = Selectable.Transition.None;
             blockerButton.targetGraphic = blocker;
-            blockerButton.onClick.AddListener(Hide);
 
             card = CreateRect("Card", root);
             SetCentered(card, new Vector2(560f, 340f));
@@ -120,19 +194,127 @@ namespace MiningSimulator.Ores
             cardImage.color = new Color(0.05f, 0.05f, 0.07f, 0.98f);
             cardImage.raycastTarget = true;
 
-            TMP_Text titleText = CreateText("Title", card, title, 34f, FontStyles.Bold);
+            titleText = CreateText("Title", card, DefaultEnglishTitle, 34f, FontStyles.Bold);
             titleText.color = new Color(1f, 0.78f, 0.2f, 1f);
             SetRect(titleText.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -70f),
                 new Vector2(480f, 56f));
 
-            TMP_Text messageText = CreateText("Message", card, message, 22f, FontStyles.Normal);
+            messageText = CreateText("Message", card, DefaultEnglishMessage, 22f,
+                FontStyles.Normal);
             messageText.color = new Color(0.9f, 0.9f, 0.92f, 1f);
             SetRect(messageText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0f, 10f),
                 new Vector2(480f, 120f));
 
-            Button closeButton = CreateButton("CloseButton", card, CloseButtonLabel,
+            closeButton = CreateButton("CloseButton", card, DefaultEnglishCloseButton,
                 new Vector2(0f, -125f));
-            closeButton.onClick.AddListener(Hide);
+            closeButtonText = closeButton.transform.Find("Label")?.GetComponent<TMP_Text>();
+            RefreshLocalizedText();
+        }
+
+        /// <summary>Makes the authored panel visible for Scene-view editing without allowing it
+        /// to intercept editor UI input. This method is ignored while the game is running.</summary>
+        public void SetEditorPreviewVisible(bool visible)
+        {
+#if UNITY_EDITOR
+            if (Application.isPlaying)
+            {
+                return;
+            }
+
+            gameObject.SetActive(visible);
+            ResolveReferences();
+            if (canvasGroup != null)
+            {
+                canvasGroup.alpha = visible ? 1f : 0f;
+                canvasGroup.blocksRaycasts = false;
+                canvasGroup.interactable = false;
+            }
+
+            if (visible)
+            {
+                RefreshLocalizedText();
+            }
+#endif
+        }
+
+        private void InitializeRuntimeHiddenState()
+        {
+            ResolveReferences();
+            if (canvasGroup != null)
+            {
+                canvasGroup.alpha = 0f;
+                canvasGroup.blocksRaycasts = false;
+                canvasGroup.interactable = false;
+            }
+
+            runtimeInitialized = true;
+        }
+
+        private void ResolveReferences()
+        {
+            if (canvasGroup == null)
+            {
+                canvasGroup = GetComponent<CanvasGroup>();
+            }
+
+            if (card == null)
+            {
+                card = transform.Find("Card") as RectTransform;
+            }
+
+            if (blockerButton == null)
+            {
+                blockerButton = GetComponent<Button>();
+            }
+
+            if (closeButton == null && card != null)
+            {
+                closeButton = card.Find("CloseButton")?.GetComponent<Button>();
+            }
+
+            if (titleText == null && card != null)
+            {
+                titleText = card.Find("Title")?.GetComponent<TMP_Text>();
+            }
+
+            if (messageText == null && card != null)
+            {
+                messageText = card.Find("Message")?.GetComponent<TMP_Text>();
+            }
+
+            if (closeButtonText == null && closeButton != null)
+            {
+                closeButtonText = closeButton.transform.Find("Label")?.GetComponent<TMP_Text>();
+            }
+        }
+
+        private void WireButtons()
+        {
+            ResolveReferences();
+            blockerButton?.onClick.RemoveListener(Hide);
+            blockerButton?.onClick.AddListener(Hide);
+            closeButton?.onClick.RemoveListener(Hide);
+            closeButton?.onClick.AddListener(Hide);
+        }
+
+        private void RefreshLocalizedText()
+        {
+            ResolveReferences();
+            if (titleText != null)
+            {
+                titleText.text = MiningLocalization.Text(englishTitle, vietnameseTitle);
+            }
+
+            if (messageText != null)
+            {
+                messageText.text = MiningLocalization.Text(englishMessage, vietnameseMessage);
+            }
+
+            if (closeButtonText != null)
+            {
+                closeButtonText.text = MiningLocalization.Text(englishCloseButton,
+                    vietnameseCloseButton);
+            }
         }
 
         private IEnumerator Fade(float from, float to, float duration, System.Action completed)

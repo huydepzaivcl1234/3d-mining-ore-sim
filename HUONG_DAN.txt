@@ -1,0 +1,16 @@
+MINING PORTAL PANEL FIX
+
+1. Giai nen vao thu muc goc project "3d mining sim" va cho phep ghi de 2 file script.
+2. Mo Unity, cho compile xong.
+3. Mo SampleScene.
+4. Chon menu: Mining Simulator > Setup > Create Portal Gate.
+   - Neu portal da co, tool se tai su dung va KHONG doi vi tri cua no.
+   - Panel PortalMaintenancePanel se hien trong Mining HUD Canvas va duoc chon san.
+5. Neu chi muon mo panel de sua giao dien:
+   Mining Simulator > Setup > Show Portal Panel For Editing.
+6. Sua Card, Title, Message, CloseButton truc tiep trong Scene/Inspector, sau do Save Scene.
+
+Khi Play: panel tu an. Khi bam portal: panel hien. Nut dong va nen toi deu dong panel.
+Panel tu dong hien tieng Anh khi game chon English, va tieng Viet khi chon Vietnamese.
+
+Goi nay khong chua Scene, prefab, GameData hay icon nen khong ghi de cac tuy chinh da co.

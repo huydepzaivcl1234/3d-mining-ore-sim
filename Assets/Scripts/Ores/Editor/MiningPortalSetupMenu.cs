@@ -34,7 +34,8 @@ namespace MiningSimulator.Editor
                 return;
             }
 
-            bool panelReady = EnsureMaintenancePanelExists();
+            MiningPortalMaintenancePanel panel = EnsureMaintenancePanelExists();
+            bool panelReady = panel != null;
 
             GameObject gate = GameObject.Find(GateObjectName);
             bool isNewGate = gate == null;
@@ -72,23 +73,53 @@ namespace MiningSimulator.Editor
 
             EditorUtility.DisplayDialog("Portal Gate Setup",
                 $"Created the clickable Portal gate. {panelNote}{positionNote}", "OK");
+
+            if (panel != null)
+            {
+                // Select the real Scene object so the designer can immediately edit its
+                // RectTransforms, Images and TMP labels in the Inspector.
+                Selection.activeGameObject = panel.gameObject;
+                EditorGUIUtility.PingObject(panel.gameObject);
+            }
         }
 
-        private static bool EnsureMaintenancePanelExists()
+        [MenuItem("Mining Simulator/Setup/Show Portal Panel For Editing")]
+        public static void ShowPortalPanelForEditing()
+        {
+            MiningPortalMaintenancePanel panel = EnsureMaintenancePanelExists();
+            if (panel == null)
+            {
+                EditorUtility.DisplayDialog("Portal Gate Setup",
+                    "Couldn't find the Mining HUD Canvas in the open scene.", "OK");
+                return;
+            }
+
+            panel.SetEditorPreviewVisible(true);
+            EditorUtility.SetDirty(panel.gameObject);
+            EditorSceneManager.MarkSceneDirty(panel.gameObject.scene);
+            Selection.activeGameObject = panel.gameObject;
+            EditorGUIUtility.PingObject(panel.gameObject);
+            SceneView.lastActiveSceneView?.FrameSelected();
+        }
+
+        private static MiningPortalMaintenancePanel EnsureMaintenancePanelExists()
         {
             Canvas canvas = FindHudCanvas();
             if (canvas == null)
             {
-                return false;
+                return null;
             }
 
             MiningPortalMaintenancePanel panel = MiningPortalMaintenancePanel.EnsureRuntime(canvas);
             if (panel != null)
             {
+                panel.SetEditorPreviewVisible(true);
+                EditorUtility.SetDirty(panel);
+                EditorUtility.SetDirty(panel.gameObject);
                 EditorSceneManager.MarkSceneDirty(canvas.gameObject.scene);
             }
 
-            return panel != null;
+            return panel;
         }
 
         private static Canvas FindHudCanvas()

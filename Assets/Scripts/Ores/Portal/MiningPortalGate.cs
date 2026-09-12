@@ -22,6 +22,16 @@ namespace MiningSimulator.Ores
                     FindObjectsInactive.Include);
             }
 
+            if (maintenancePanel == null)
+            {
+                // Self-healing fallback: the panel is normally scaffolded once via the Editor
+                // menu (Mining Simulator/Setup/Create Portal Gate), but if that was never run,
+                // or the saved panel object was deleted, build it fresh right here instead of
+                // silently doing nothing on click.
+                Canvas canvas = FindFirstObjectByType<Canvas>(FindObjectsInactive.Include);
+                maintenancePanel = MiningPortalMaintenancePanel.EnsureRuntime(canvas);
+            }
+
             maintenancePanel?.Show();
         }
     }
