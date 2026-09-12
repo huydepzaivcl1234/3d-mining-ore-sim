@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 4f7eb01515f272f42ab719f3f1758f8b
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 257362
+  packageName: Bro Audio
+  packageVersion: 3.2.3
+  assetPath: Assets/BroAudio/Samples/Demo/AudioAssets/Demo/Footsteps_Sand.asset
+  uploadId: 979632

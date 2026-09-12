@@ -1,0 +1,10 @@
+fileFormatVersion: 2
+guid: f9818b01873147b3ba076798ec8c2a95
+timeCreated: 1758726614
+AssetOrigin:
+  serializedVersion: 1
+  productId: 257362
+  packageName: Bro Audio
+  packageVersion: 3.2.3
+  assetPath: Assets/BroAudio/Runtime/Interface/IReadOnlyAudioEntity.cs
+  uploadId: 979632

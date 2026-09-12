@@ -165,7 +165,8 @@ namespace MiningSimulator.Ores
             }
         }
 
-        private void ShowToast(string message)
+        /// <summary>Queues a message through the existing unlock-toast presentation.</summary>
+        public void ShowToast(string message)
         {
             if (string.IsNullOrEmpty(message))
             {

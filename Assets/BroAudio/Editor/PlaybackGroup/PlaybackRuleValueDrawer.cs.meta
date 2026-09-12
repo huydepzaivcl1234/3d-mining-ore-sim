@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: aaf03cd9f1042984ca12ff7a754c079d
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 257362
+  packageName: Bro Audio
+  packageVersion: 3.2.3
+  assetPath: Assets/BroAudio/Editor/PlaybackGroup/PlaybackRuleValueDrawer.cs
+  uploadId: 979632

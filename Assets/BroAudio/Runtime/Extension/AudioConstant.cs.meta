@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 557bb8e541129db40be2a7370612592c
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 257362
+  packageName: Bro Audio
+  packageVersion: 3.2.3
+  assetPath: Assets/BroAudio/Runtime/Extension/AudioConstant.cs
+  uploadId: 979632

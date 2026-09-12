@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 789b9b25c10d56e4f9953348f334ccfa
+AssetOrigin:
+  serializedVersion: 1
+  productId: 257362
+  packageName: Bro Audio
+  packageVersion: 3.2.3
+  assetPath: Assets/BroAudio/Runtime/Player/PlaybackHandoverData.cs
+  uploadId: 979632

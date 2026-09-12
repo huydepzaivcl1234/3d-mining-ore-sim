@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 1fb00677c5274bf48867e1402459086d
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 257362
+  packageName: Bro Audio
+  packageVersion: 3.2.3
+  assetPath: Assets/BroAudio/Samples/Demo/Prefabs/InteractiveZone.prefab
+  uploadId: 979632

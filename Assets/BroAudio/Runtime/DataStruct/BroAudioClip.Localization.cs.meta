@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 677338ded1c48e14783f4d9d9b9c2352
+AssetOrigin:
+  serializedVersion: 1
+  productId: 257362
+  packageName: Bro Audio
+  packageVersion: 3.2.3
+  assetPath: Assets/BroAudio/Runtime/DataStruct/BroAudioClip.Localization.cs
+  uploadId: 979632

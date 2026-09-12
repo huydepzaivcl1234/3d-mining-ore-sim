@@ -24,12 +24,17 @@ namespace MiningSimulator.Ores
 
         private float permanentMoneyMultiplier = 1f;
         private float permanentExperienceMultiplier = 1f;
+        private float achievementMoneyMultiplier = 1f;
+        private float achievementExperienceMultiplier = 1f;
 
         public MiningUpgradeData UpgradeData => upgradeData;
         public event Action UpgradesChanged;
         public event Action<MiningUpgradeType> UpgradePurchased;
-        public float PermanentMoneyMultiplier => permanentMoneyMultiplier;
-        public float PermanentExperienceMultiplier => permanentExperienceMultiplier;
+        public float PermanentMoneyMultiplier => permanentMoneyMultiplier * achievementMoneyMultiplier;
+        public float PermanentExperienceMultiplier =>
+            permanentExperienceMultiplier * achievementExperienceMultiplier;
+        public float AchievementMoneyMultiplier => achievementMoneyMultiplier;
+        public float AchievementExperienceMultiplier => achievementExperienceMultiplier;
 
         private void Awake()
         {
@@ -157,7 +162,7 @@ namespace MiningSimulator.Ores
             }
 
             return baseReward * GetMultiplier(MiningUpgradeType.MoneyReward) *
-                   permanentMoneyMultiplier *
+                   PermanentMoneyMultiplier *
                    (itemSystem != null ? itemSystem.MoneyRewardMultiplier : 1f);
         }
 
@@ -169,7 +174,7 @@ namespace MiningSimulator.Ores
             }
 
             return baseReward * GetMultiplier(MiningUpgradeType.LuckyBlockReward) *
-                   permanentMoneyMultiplier *
+                   PermanentMoneyMultiplier *
                    (itemSystem != null ? itemSystem.MoneyRewardMultiplier : 1f);
         }
 
@@ -183,6 +188,15 @@ namespace MiningSimulator.Ores
         public void SetPermanentExperienceMultiplier(float multiplier)
         {
             permanentExperienceMultiplier = Mathf.Max(1f, multiplier);
+        }
+
+        /// <summary>Applies the cumulative permanent rewards earned from achievements.</summary>
+        public void SetAchievementRewardMultipliers(float moneyMultiplier,
+            float experienceMultiplier)
+        {
+            achievementMoneyMultiplier = Mathf.Max(1f, moneyMultiplier);
+            achievementExperienceMultiplier = Mathf.Max(1f, experienceMultiplier);
+            UpgradesChanged?.Invoke();
         }
 
         public void ResetAllUpgrades()

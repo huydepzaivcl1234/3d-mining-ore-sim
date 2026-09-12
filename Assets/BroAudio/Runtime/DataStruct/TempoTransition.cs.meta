@@ -1,0 +1,10 @@
+fileFormatVersion: 2
+guid: c531d926fc5044e4ab30c598471e3e9d
+timeCreated: 1748677807
+AssetOrigin:
+  serializedVersion: 1
+  productId: 257362
+  packageName: Bro Audio
+  packageVersion: 3.2.3
+  assetPath: Assets/BroAudio/Runtime/DataStruct/TempoTransition.cs
+  uploadId: 979632

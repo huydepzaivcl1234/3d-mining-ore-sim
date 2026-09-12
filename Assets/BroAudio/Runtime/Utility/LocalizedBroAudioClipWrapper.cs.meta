@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 674c1b1a3d8bf814a8b8af5efdad3ea1
+AssetOrigin:
+  serializedVersion: 1
+  productId: 257362
+  packageName: Bro Audio
+  packageVersion: 3.2.3
+  assetPath: Assets/BroAudio/Runtime/Utility/LocalizedBroAudioClipWrapper.cs
+  uploadId: 979632

@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: a94c108d232a65446811909dc58e66e1
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 257362
+  packageName: Bro Audio
+  packageVersion: 3.2.3
+  assetPath: Assets/BroAudio/Editor/Utility/SoundIDUpgrader.cs
+  uploadId: 979632

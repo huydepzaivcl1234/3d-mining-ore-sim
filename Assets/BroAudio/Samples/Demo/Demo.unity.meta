@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 05a9e41d79251594aad6850fbdf49b6f
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 257362
+  packageName: Bro Audio
+  packageVersion: 3.2.3
+  assetPath: Assets/BroAudio/Samples/Demo/Demo.unity
+  uploadId: 979632

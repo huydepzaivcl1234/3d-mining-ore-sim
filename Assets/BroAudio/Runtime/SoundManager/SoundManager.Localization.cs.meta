@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: c3699678a601d304ca3ad5d891df35e3
+AssetOrigin:
+  serializedVersion: 1
+  productId: 257362
+  packageName: Bro Audio
+  packageVersion: 3.2.3
+  assetPath: Assets/BroAudio/Runtime/SoundManager/SoundManager.Localization.cs
+  uploadId: 979632

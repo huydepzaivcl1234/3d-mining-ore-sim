@@ -1,0 +1,10 @@
+fileFormatVersion: 2
+guid: 34c529459b9c444a98cd2d06b914baeb
+timeCreated: 1751815245
+AssetOrigin:
+  serializedVersion: 1
+  productId: 257362
+  packageName: Bro Audio
+  packageVersion: 3.2.3
+  assetPath: Assets/BroAudio/Editor/Utility/PreviewStrategyType.cs
+  uploadId: 979632

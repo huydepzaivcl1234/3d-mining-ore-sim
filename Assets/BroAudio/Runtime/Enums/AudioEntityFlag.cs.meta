@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 6bf52bf15dbfcb845adeefd6c8e59015
+AssetOrigin:
+  serializedVersion: 1
+  productId: 257362
+  packageName: Bro Audio
+  packageVersion: 3.2.3
+  assetPath: Assets/BroAudio/Runtime/Enums/AudioEntityFlag.cs
+  uploadId: 979632

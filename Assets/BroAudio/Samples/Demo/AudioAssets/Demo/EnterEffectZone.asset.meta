@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 899df350afaa9384c99ca8a340472e62
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 257362
+  packageName: Bro Audio
+  packageVersion: 3.2.3
+  assetPath: Assets/BroAudio/Samples/Demo/AudioAssets/Demo/EnterEffectZone.asset
+  uploadId: 979632

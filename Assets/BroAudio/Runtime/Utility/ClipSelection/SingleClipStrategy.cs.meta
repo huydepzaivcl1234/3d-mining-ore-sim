@@ -1,0 +1,10 @@
+﻿fileFormatVersion: 2
+guid: a4a2b0a7f10c4d88af7c672374c40311
+timeCreated: 1752056505
+AssetOrigin:
+  serializedVersion: 1
+  productId: 257362
+  packageName: Bro Audio
+  packageVersion: 3.2.3
+  assetPath: Assets/BroAudio/Runtime/Utility/ClipSelection/SingleClipStrategy.cs
+  uploadId: 979632

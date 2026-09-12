@@ -1,0 +1,10 @@
+﻿fileFormatVersion: 2
+guid: 9a9a124d501b1c44b831cc79239ffcaf
+timeCreated: 1753685395
+AssetOrigin:
+  serializedVersion: 1
+  productId: 257362
+  packageName: Bro Audio
+  packageVersion: 3.2.3
+  assetPath: Assets/BroAudio/Editor/SetupWizard/Pages/ChainedPlayModePage.cs
+  uploadId: 979632

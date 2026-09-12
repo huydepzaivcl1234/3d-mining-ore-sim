@@ -20363,6 +20363,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1491607850}
   - component: {fileID: 1491607851}
+  - component: {fileID: 1491607852}
   m_Layer: 5
   m_Name: Mining Unlock Notifier
   m_TagString: Untagged
@@ -20405,6 +20406,25 @@ MonoBehaviour:
   oreSpawner: {fileID: 1828941534}
   luckyBlockDropSystem: {fileID: 725887964}
   uiData: {fileID: 11400000, guid: 0fc641ac29720e2837d73e6212818c58, type: 2}
+--- !u!114 &1491607852
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1491607849}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 96fed79a27f29bf40b3b880afb1bd27f, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningAchievementSystem
+  achievementData: {fileID: 11400000, guid: d6e1c640048a367c6901e0bb2c59aef9, type: 2}
+  oreSpawner: {fileID: 1828941534}
+  npcShop: {fileID: 655586586}
+  progressionSystem: {fileID: 655586588}
+  rebirthSystem: {fileID: 1044407942}
+  upgradeSystem: {fileID: 1144114548}
+  unlockNotifier: {fileID: 1491607851}
 --- !u!1 &1497640124
 GameObject:
   m_ObjectHideFlags: 0

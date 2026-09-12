@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 111d4e39aeddad44898002abada9c174
+AssemblyDefinitionImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 257362
+  packageName: Bro Audio
+  packageVersion: 3.2.3
+  assetPath: Assets/BroAudio/Runtime/BroAudio.asmdef
+  uploadId: 979632

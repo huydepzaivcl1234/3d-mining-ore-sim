@@ -1,0 +1,10 @@
+﻿fileFormatVersion: 2
+guid: 8a2dd8d5c6c44f619d2ed836079d4a45
+timeCreated: 1752056505
+AssetOrigin:
+  serializedVersion: 1
+  productId: 257362
+  packageName: Bro Audio
+  packageVersion: 3.2.3
+  assetPath: Assets/BroAudio/Runtime/Utility/ClipSelection/ShuffleClipStrategy.cs
+  uploadId: 979632
