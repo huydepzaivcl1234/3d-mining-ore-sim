@@ -36,11 +36,14 @@ namespace MiningSimulator.Ores.Editor
             bool created = existing == null;
             GameObject root = created ? CreateRoot(canvas, data) : existing.gameObject;
             EnsureModernStructure(root, data, gemSprite);
+            EnsureExitConfirmation(root, data);
+            EnsurePlayTransition(root, data);
 
             MiningMainMenu mainMenu = root.GetComponent<MiningMainMenu>() ??
                                       Undo.AddComponent<MiningMainMenu>(root);
             CanvasGroup rootGroup = root.GetComponent<CanvasGroup>() ??
                                     Undo.AddComponent<CanvasGroup>(root);
+            EnsureGameplayReturnButton(data, mainMenu);
             Transform card = FindDescendant(root.transform, "Main Menu Card");
             Transform mainView = FindDescendant(root.transform, "Main View");
             Transform settingsView = FindDescendant(root.transform, "Settings View");
@@ -55,6 +58,20 @@ namespace MiningSimulator.Ores.Editor
             SetReference(serialized, "settingsView", settingsView?.gameObject);
             SetReference(serialized, "mainViewGroup", mainView?.GetComponent<CanvasGroup>());
             SetReference(serialized, "settingsViewGroup", settingsView?.GetComponent<CanvasGroup>());
+            SetReference(serialized, "transitionBar",
+                FindComponent<Image>(root.transform, "Aqua Transition Bar"));
+            SetReference(serialized, "transitionFlash",
+                FindComponent<Image>(root.transform, "Transition Flash"));
+            Transform exitConfirmation = FindDescendant(root.transform, "Exit Confirmation");
+            SetReference(serialized, "exitConfirmation", exitConfirmation?.gameObject);
+            SetReference(serialized, "exitConfirmationGroup",
+                exitConfirmation?.GetComponent<CanvasGroup>());
+            SetReference(serialized, "exitConfirmationDialog",
+                FindComponent<RectTransform>(root.transform, "Exit Confirmation Dialog"));
+            SetReference(serialized, "confirmExitButton",
+                FindComponent<Button>(root.transform, "Confirm Exit Button"));
+            SetReference(serialized, "cancelExitButton",
+                FindComponent<Button>(root.transform, "Cancel Exit Button"));
             SetReference(serialized, "playButton", FindComponent<Button>(root.transform, "Play Button"));
             SetReference(serialized, "settingsButton", FindComponent<Button>(root.transform, "Settings Button"));
             SetReference(serialized, "exitButton", FindComponent<Button>(root.transform, "Exit Button"));
@@ -70,6 +87,7 @@ namespace MiningSimulator.Ores.Editor
             mainView?.gameObject.SetActive(true);
             settingsView?.gameObject.SetActive(false);
             root.transform.SetAsLastSibling();
+            MiningButtonSfxSetupMenu.AssignAllButtonSfx(false);
             EditorUtility.SetDirty(mainMenu);
             EditorSceneManager.MarkSceneDirty(root.scene);
             Selection.activeGameObject = root;
@@ -117,6 +135,121 @@ namespace MiningSimulator.Ores.Editor
                 Undo.DestroyObjectImmediate(card.gameObject);
             }
             CreateModernCard(root.transform, data, gemSprite);
+        }
+
+        private static void EnsurePlayTransition(GameObject root, MiningMainMenuData data)
+        {
+            Transform barTransform = root.transform.Find("Aqua Transition Bar");
+            if (barTransform == null)
+            {
+                GameObject barObject = CreateImage(root.transform, "Aqua Transition Bar",
+                    data.TransitionBarColor);
+                barTransform = barObject.transform;
+                RectTransform barRect = barObject.GetComponent<RectTransform>();
+                barRect.anchorMin = new Vector2(0f, 0f);
+                barRect.anchorMax = new Vector2(0f, 1f);
+                barRect.pivot = new Vector2(0f, 0.5f);
+                barRect.anchoredPosition = Vector2.zero;
+                barRect.sizeDelta = new Vector2(data.TransitionBarWidth, 0f);
+            }
+
+            Transform flashTransform = root.transform.Find("Transition Flash");
+            if (flashTransform == null)
+            {
+                GameObject flashObject = CreateImage(root.transform, "Transition Flash",
+                    data.TransitionFlashColor);
+                flashTransform = flashObject.transform;
+                Stretch(flashObject.GetComponent<RectTransform>());
+            }
+
+            barTransform.SetAsLastSibling();
+            flashTransform.SetAsLastSibling();
+            barTransform.gameObject.SetActive(false);
+            flashTransform.gameObject.SetActive(false);
+        }
+
+        private static void EnsureExitConfirmation(GameObject root, MiningMainMenuData data)
+        {
+            if (root.transform.Find("Exit Confirmation") != null)
+            {
+                return;
+            }
+
+            GameObject overlay = CreateImage(root.transform, "Exit Confirmation",
+                new Color(0f, 0f, 0f, 0.72f));
+            Stretch(overlay.GetComponent<RectTransform>());
+            overlay.AddComponent<CanvasGroup>();
+
+            GameObject dialog = CreateImage(overlay.transform, "Exit Confirmation Dialog",
+                data.CardColor);
+            Center(dialog.GetComponent<RectTransform>(), Vector2.zero,
+                data.ExitConfirmationSize);
+            CreateLabel(dialog.transform, "Exit Confirmation Title",
+                data.EnglishExitConfirmationTitle, new Vector2(0f, 80f),
+                new Vector2(data.ExitConfirmationSize.x - 60f, 70f), data.TitleFontSize,
+                data.TitleColor, FontStyles.Bold);
+            CreateLabel(dialog.transform, "Exit Confirmation Message",
+                data.EnglishExitConfirmationMessage, new Vector2(0f, 15f),
+                new Vector2(data.ExitConfirmationSize.x - 80f, 54f), data.SettingsFontSize,
+                data.SubtitleColor, FontStyles.Normal);
+            CreateButton(dialog.transform, "Confirm Exit Button", "Confirm Exit Label",
+                data.EnglishConfirmLabel, new Vector2(-130f, -95f),
+                data.ExitConfirmationButtonSize, data.ExitButtonColor, data.PlayTextColor,
+                data.SettingsFontSize);
+            CreateButton(dialog.transform, "Cancel Exit Button", "Cancel Exit Label",
+                data.EnglishCancelLabel, new Vector2(130f, -95f),
+                data.ExitConfirmationButtonSize, data.SettingsButtonColor, data.PlayTextColor,
+                data.SettingsFontSize);
+            overlay.SetActive(false);
+        }
+
+        private static void EnsureGameplayReturnButton(MiningMainMenuData data,
+            MiningMainMenu mainMenu)
+        {
+            MiningAudioSettingsPanel audioPanel = Object.FindFirstObjectByType<
+                MiningAudioSettingsPanel>(FindObjectsInactive.Include);
+            if (audioPanel == null)
+            {
+                Debug.LogWarning("Main Menu setup could not find the gameplay Audio Settings Panel.");
+                return;
+            }
+
+            SerializedObject audioSerialized = new(audioPanel);
+            GameObject settingsPanelObject = audioSerialized.FindProperty("settingsPanel")
+                ?.objectReferenceValue as GameObject;
+            Transform panel = settingsPanelObject != null
+                ? settingsPanelObject.transform
+                : audioPanel.transform;
+            Transform existing = panel.Find("Return To Main Menu");
+            GameObject buttonObject;
+            if (existing == null)
+            {
+                buttonObject = CreateImage(panel, "Return To Main Menu",
+                    data.SettingsButtonColor);
+                RectTransform rect = buttonObject.GetComponent<RectTransform>();
+                rect.anchorMin = rect.anchorMax = new Vector2(0f, 1f);
+                rect.pivot = new Vector2(0f, 1f);
+                rect.anchoredPosition = data.GameplayReturnButtonPosition;
+                rect.sizeDelta = data.GameplayReturnButtonSize;
+                Button button = buttonObject.AddComponent<Button>();
+                button.targetGraphic = buttonObject.GetComponent<Image>();
+                SmoothButtonPunch punch = buttonObject.AddComponent<SmoothButtonPunch>();
+                punch.SetTarget(rect);
+                CreateLabel(rect, "Return To Menu Label", data.EnglishReturnToMenuLabel,
+                    Vector2.zero, data.GameplayReturnButtonSize, data.SettingsFontSize * 0.72f,
+                    data.PlayTextColor, FontStyles.Bold);
+            }
+            else
+            {
+                buttonObject = existing.gameObject;
+            }
+
+            SetReference(audioSerialized, "mainMenu", mainMenu);
+            SetReference(audioSerialized, "returnToMenuButton", buttonObject.GetComponent<Button>());
+            SetReference(audioSerialized, "returnToMenuLabel",
+                FindComponent<TextMeshProUGUI>(buttonObject.transform, "Return To Menu Label"));
+            audioSerialized.ApplyModifiedProperties();
+            EditorUtility.SetDirty(audioPanel);
         }
 
         private static void CreateModernCard(Transform parent, MiningMainMenuData data,
@@ -291,6 +424,14 @@ namespace MiningSimulator.Ores.Editor
             SetReference(serialized, "sfxValueLabel", FindComponent<TextMeshProUGUI>(root, "SFX Value"));
             SetReference(serialized, "languageLabel", FindComponent<TextMeshProUGUI>(root, "Language Label"));
             SetReference(serialized, "backLabel", FindComponent<TextMeshProUGUI>(root, "Back Label"));
+            SetReference(serialized, "exitConfirmationTitleLabel",
+                FindComponent<TextMeshProUGUI>(root, "Exit Confirmation Title"));
+            SetReference(serialized, "exitConfirmationMessageLabel",
+                FindComponent<TextMeshProUGUI>(root, "Exit Confirmation Message"));
+            SetReference(serialized, "confirmExitLabel",
+                FindComponent<TextMeshProUGUI>(root, "Confirm Exit Label"));
+            SetReference(serialized, "cancelExitLabel",
+                FindComponent<TextMeshProUGUI>(root, "Cancel Exit Label"));
         }
 
         private static void AssignGemIcon(Sprite gemSprite)

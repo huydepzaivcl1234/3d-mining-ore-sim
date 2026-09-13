@@ -8,7 +8,7 @@ namespace MiningSimulator.Ores.Editor
     {
         private const string NpcPrefabPath = "Assets/Prefabs/NPC/MiningNpc.prefab";
 
-        [MenuItem("Mining Simulator/Fixes/Repair NPC Shop Prefab Reference")]
+        // Kept as a callable fallback, but hidden because the prefab reference is repaired on main.
         public static void RepairNpcShopPrefabReference()
         {
             if (Application.isPlaying)

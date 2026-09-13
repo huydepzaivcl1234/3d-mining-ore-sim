@@ -12,7 +12,7 @@ namespace MiningSimulator.Editor
             "Assets/Microlight/MicroBar/Prefabs/SimpleBars/Sprite_SimpleMicroBarSRP.prefab";
         private const string HealthTextName = "Health Value";
 
-        [MenuItem("Mining Simulator/Setup/Add Health Numbers To Ore And Lucky Bars")]
+        // One-time migration is already applied to the shared health-bar prefab.
         public static void AddHealthNumbers()
         {
             GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(HealthBarPrefabPath);

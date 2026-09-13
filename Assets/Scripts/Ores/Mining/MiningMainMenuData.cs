@@ -32,6 +32,12 @@ namespace MiningSimulator.Ores
         [SerializeField] private Vector2 settingsLanguagePosition = new(-145f, -185f);
         [SerializeField] private Vector2 settingsBackPosition = new(210f, -185f);
         [SerializeField] private Vector2 settingsSmallButtonSize = new(300f, 64f);
+        [SerializeField] private Vector2 gameplayReturnButtonPosition = new(330f, -15f);
+        [SerializeField] private Vector2 gameplayReturnButtonSize = new(160f, 44f);
+
+        [Header("Exit Confirmation")]
+        [SerializeField] private Vector2 exitConfirmationSize = new(620f, 330f);
+        [SerializeField] private Vector2 exitConfirmationButtonSize = new(230f, 64f);
 
         [Header("Text")]
         [SerializeField] private string englishTitle = "MINING SIMULATOR";
@@ -48,6 +54,18 @@ namespace MiningSimulator.Ores
         [SerializeField] private string vietnameseBackLabel = "QUAY LẠI";
         [SerializeField] private string englishLanguageLabel = "LANGUAGE: ENGLISH";
         [SerializeField] private string vietnameseLanguageLabel = "NGÔN NGỮ: TIẾNG VIỆT";
+        [SerializeField] private string englishReturnToMenuLabel = "MAIN MENU";
+        [SerializeField] private string vietnameseReturnToMenuLabel = "MENU CHÍNH";
+        [SerializeField] private string englishExitConfirmationTitle = "EXIT GAME?";
+        [SerializeField] private string vietnameseExitConfirmationTitle = "THOÁT GAME?";
+        [SerializeField] private string englishExitConfirmationMessage =
+            "Are you sure you want to exit?";
+        [SerializeField] private string vietnameseExitConfirmationMessage =
+            "Bạn có chắc muốn thoát không?";
+        [SerializeField] private string englishConfirmLabel = "YES, EXIT";
+        [SerializeField] private string vietnameseConfirmLabel = "CÓ, THOÁT";
+        [SerializeField] private string englishCancelLabel = "CANCEL";
+        [SerializeField] private string vietnameseCancelLabel = "HỦY";
         [Min(1f), SerializeField] private float titleFontSize = 54f;
         [Min(1f), SerializeField] private float subtitleFontSize = 24f;
         [Min(1f), SerializeField] private float playFontSize = 32f;
@@ -64,6 +82,15 @@ namespace MiningSimulator.Ores
         [SerializeField] private Color sliderBackgroundColor = new(0.09f, 0.12f, 0.19f, 1f);
         [SerializeField] private Color sliderFillColor = new(0.12f, 0.75f, 0.95f, 1f);
         [SerializeField] private Color playTextColor = Color.white;
+
+        [Header("Play Transition")]
+        [Min(100f), SerializeField] private float playSlideDistance = 1400f;
+        [Range(0.01f, 0.5f), SerializeField] private float playCollapseScaleX = 0.06f;
+        [Min(0.05f), SerializeField] private float playSlideDuration = 0.55f;
+        [Min(1f), SerializeField] private float transitionBarWidth = 42f;
+        [SerializeField] private Color transitionBarColor = new(0.05f, 0.78f, 0.92f, 1f);
+        [SerializeField] private Color transitionFlashColor = new(0.45f, 0.95f, 1f, 1f);
+        [Min(0.01f), SerializeField] private float transitionFlashDuration = 0.10f;
 
         [Header("PrimeTween Animation")]
         [Range(0.1f, 1f), SerializeField] private float entranceStartScale = 0.72f;
@@ -93,6 +120,10 @@ namespace MiningSimulator.Ores
         public Vector2 SettingsLanguagePosition => settingsLanguagePosition;
         public Vector2 SettingsBackPosition => settingsBackPosition;
         public Vector2 SettingsSmallButtonSize => settingsSmallButtonSize;
+        public Vector2 GameplayReturnButtonPosition => gameplayReturnButtonPosition;
+        public Vector2 GameplayReturnButtonSize => gameplayReturnButtonSize;
+        public Vector2 ExitConfirmationSize => exitConfirmationSize;
+        public Vector2 ExitConfirmationButtonSize => exitConfirmationButtonSize;
         public string EnglishTitle => englishTitle;
         public string VietnameseTitle => vietnameseTitle;
         public string EnglishSubtitle => englishSubtitle;
@@ -107,6 +138,16 @@ namespace MiningSimulator.Ores
         public string VietnameseBackLabel => vietnameseBackLabel;
         public string EnglishLanguageLabel => englishLanguageLabel;
         public string VietnameseLanguageLabel => vietnameseLanguageLabel;
+        public string EnglishReturnToMenuLabel => englishReturnToMenuLabel;
+        public string VietnameseReturnToMenuLabel => vietnameseReturnToMenuLabel;
+        public string EnglishExitConfirmationTitle => englishExitConfirmationTitle;
+        public string VietnameseExitConfirmationTitle => vietnameseExitConfirmationTitle;
+        public string EnglishExitConfirmationMessage => englishExitConfirmationMessage;
+        public string VietnameseExitConfirmationMessage => vietnameseExitConfirmationMessage;
+        public string EnglishConfirmLabel => englishConfirmLabel;
+        public string VietnameseConfirmLabel => vietnameseConfirmLabel;
+        public string EnglishCancelLabel => englishCancelLabel;
+        public string VietnameseCancelLabel => vietnameseCancelLabel;
         public float TitleFontSize => titleFontSize;
         public float SubtitleFontSize => subtitleFontSize;
         public float PlayFontSize => playFontSize;
@@ -121,6 +162,17 @@ namespace MiningSimulator.Ores
         public Color SliderBackgroundColor => sliderBackgroundColor;
         public Color SliderFillColor => sliderFillColor;
         public Color PlayTextColor => playTextColor;
+        public float PlaySlideDistance => Mathf.Max(100f, playSlideDistance);
+        public float PlayCollapseScaleX => Mathf.Clamp(playCollapseScaleX, 0.01f, 0.5f);
+        public float PlaySlideDuration => Mathf.Max(0.05f, playSlideDuration);
+        public float TransitionBarWidth => Mathf.Max(1f, transitionBarWidth);
+        public Color TransitionBarColor => transitionBarColor.a > 0f
+            ? transitionBarColor
+            : new Color(0.05f, 0.78f, 0.92f, 1f);
+        public Color TransitionFlashColor => transitionFlashColor.a > 0f
+            ? transitionFlashColor
+            : new Color(0.45f, 0.95f, 1f, 1f);
+        public float TransitionFlashDuration => Mathf.Max(0.01f, transitionFlashDuration);
         public float EntranceStartScale => entranceStartScale;
         public float EntranceDuration => entranceDuration;
         public float ExitScale => exitScale;
@@ -137,11 +189,19 @@ namespace MiningSimulator.Ores
             settingsSliderSize = MaxSize(settingsSliderSize);
             settingsLabelSize = MaxSize(settingsLabelSize);
             settingsSmallButtonSize = MaxSize(settingsSmallButtonSize);
+            gameplayReturnButtonSize = MaxSize(gameplayReturnButtonSize);
+            exitConfirmationSize = MaxSize(exitConfirmationSize);
+            exitConfirmationButtonSize = MaxSize(exitConfirmationButtonSize);
             settingsRowSpacing = Mathf.Max(1f, settingsRowSpacing);
             titleFontSize = Mathf.Max(1f, titleFontSize);
             subtitleFontSize = Mathf.Max(1f, subtitleFontSize);
             playFontSize = Mathf.Max(1f, playFontSize);
             settingsFontSize = Mathf.Max(1f, settingsFontSize);
+            playSlideDistance = Mathf.Max(100f, playSlideDistance);
+            playCollapseScaleX = Mathf.Clamp(playCollapseScaleX, 0.01f, 0.5f);
+            playSlideDuration = Mathf.Max(0.05f, playSlideDuration);
+            transitionBarWidth = Mathf.Max(1f, transitionBarWidth);
+            transitionFlashDuration = Mathf.Max(0.01f, transitionFlashDuration);
             entranceStartScale = Mathf.Clamp(entranceStartScale, 0.1f, 1f);
             entranceDuration = Mathf.Max(0.01f, entranceDuration);
             exitScale = Mathf.Clamp(exitScale, 0.1f, 1f);

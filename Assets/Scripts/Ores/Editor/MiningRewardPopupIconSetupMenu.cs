@@ -12,7 +12,7 @@ namespace MiningSimulator.Editor
         private const string UiDataPath = "Assets/GameData/UI/MiningUiData.asset";
         private const string IconObjectName = "Coin Icon";
 
-        [MenuItem("Mining Simulator/Setup/Add Coin Icon Slot To Reward Popup")]
+        // One-time migration is already applied to the shared popup prefab; keep only as fallback code.
         public static void AddCoinIconSlot()
         {
             GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PopupPrefabPath);

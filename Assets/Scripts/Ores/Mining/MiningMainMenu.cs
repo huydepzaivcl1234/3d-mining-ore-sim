@@ -20,6 +20,17 @@ namespace MiningSimulator.Ores
         [SerializeField] private CanvasGroup mainViewGroup;
         [SerializeField] private CanvasGroup settingsViewGroup;
 
+        [Header("Play transition")]
+        [SerializeField] private Image transitionBar;
+        [SerializeField] private Image transitionFlash;
+
+        [Header("Exit confirmation")]
+        [SerializeField] private GameObject exitConfirmation;
+        [SerializeField] private CanvasGroup exitConfirmationGroup;
+        [SerializeField] private RectTransform exitConfirmationDialog;
+        [SerializeField] private Button confirmExitButton;
+        [SerializeField] private Button cancelExitButton;
+
         [Header("Main buttons")]
         [SerializeField] private Button playButton;
         [SerializeField] private Button settingsButton;
@@ -47,12 +58,17 @@ namespace MiningSimulator.Ores
         [SerializeField] private TextMeshProUGUI sfxValueLabel;
         [SerializeField] private TextMeshProUGUI languageLabel;
         [SerializeField] private TextMeshProUGUI backLabel;
+        [SerializeField] private TextMeshProUGUI exitConfirmationTitleLabel;
+        [SerializeField] private TextMeshProUGUI exitConfirmationMessageLabel;
+        [SerializeField] private TextMeshProUGUI confirmExitLabel;
+        [SerializeField] private TextMeshProUGUI cancelExitLabel;
 
         private Sequence transition;
         private Sequence pageTransition;
         private float timeScaleBeforeMenu = 1f;
         private bool ownsGameplayPause;
         private bool closing;
+        private Vector2 cardHomePosition;
 
         private void Awake()
         {
@@ -70,15 +86,13 @@ namespace MiningSimulator.Ores
                 return;
             }
 
-            if (data.PauseGameplay)
-            {
-                timeScaleBeforeMenu = Time.timeScale > 0f ? Time.timeScale : 1f;
-                Time.timeScale = 0f;
-                ownsGameplayPause = true;
-            }
+            cardHomePosition = card.anchoredPosition;
+            PauseGameplay();
 
             mainView.SetActive(true);
             settingsView.SetActive(false);
+            exitConfirmation.SetActive(false);
+            ResetPlayTransition();
             ShowImmediately();
         }
 
@@ -126,12 +140,44 @@ namespace MiningSimulator.Ores
             closing = true;
             SetMainButtonsInteractable(false);
             StopTransition(ref transition);
+            transitionBar.gameObject.SetActive(true);
+            transitionFlash.gameObject.SetActive(true);
+            SetGraphicAlpha(transitionBar, 0f);
+            SetGraphicAlpha(transitionFlash, 0f);
+            Vector2 slideDestination = cardHomePosition +
+                                       Vector2.left * data.PlaySlideDistance;
             transition = Sequence.Create(useUnscaledTime: true)
-                .Group(Tween.Custom(this, canvasGroup.alpha, 0f, data.ExitDuration,
-                    static (menu, alpha) => menu.canvasGroup.alpha = alpha, Ease.InCubic))
-                .Group(Tween.Scale(card, Vector3.one * data.ExitScale,
-                    data.ExitDuration, Ease.InBack))
+                .Group(Tween.Custom(card, card.anchoredPosition, slideDestination,
+                    data.PlaySlideDuration,
+                    static (rect, position) => rect.anchoredPosition = position, Ease.InBack))
+                .Group(Tween.Scale(card, new Vector3(data.PlayCollapseScaleX, 1f, 1f),
+                    data.PlaySlideDuration, Ease.InCubic))
+                .Group(Tween.Custom(transitionBar, 0f, 1f,
+                    Mathf.Min(0.18f, data.PlaySlideDuration),
+                    static (image, alpha) => SetGraphicAlpha(image, alpha), Ease.OutCubic))
+                .Chain(Tween.Custom(transitionFlash, 0f, 1f,
+                    data.TransitionFlashDuration,
+                    static (image, alpha) => SetGraphicAlpha(image, alpha), Ease.Linear))
                 .OnComplete(this, static menu => menu.FinishPlay());
+        }
+
+        public void OpenFromGameplay()
+        {
+            if (gameObject.activeSelf)
+            {
+                return;
+            }
+
+            gameObject.SetActive(true);
+            PauseGameplay();
+            mainView.SetActive(true);
+            settingsView.SetActive(false);
+            exitConfirmation.SetActive(false);
+            ResetPlayTransition();
+            ShowImmediately();
+            RefreshAudioControls();
+            PlayEntrance();
+            SelectButton(playButton);
         }
 
         public void OpenSettings()
@@ -153,6 +199,42 @@ namespace MiningSimulator.Ores
         }
 
         public void ExitGame()
+        {
+            if (closing)
+            {
+                return;
+            }
+
+            mainViewGroup.interactable = false;
+            exitConfirmation.SetActive(true);
+            exitConfirmationGroup.alpha = 0f;
+            exitConfirmationGroup.interactable = true;
+            exitConfirmationGroup.blocksRaycasts = true;
+            exitConfirmationDialog.localScale = Vector3.one * 0.78f;
+            StopTransition(ref pageTransition);
+            pageTransition = Sequence.Create(useUnscaledTime: true)
+                .Group(Tween.Custom(exitConfirmationGroup, 0f, 1f, data.ExitDuration,
+                    static (group, alpha) => group.alpha = alpha, Ease.OutCubic))
+                .Group(Tween.Scale(exitConfirmationDialog, Vector3.one,
+                    data.ExitDuration, Ease.OutBack));
+            SelectButton(cancelExitButton);
+        }
+
+        public void CancelExit()
+        {
+            StopTransition(ref pageTransition);
+            exitConfirmationGroup.interactable = false;
+            exitConfirmationGroup.blocksRaycasts = false;
+            pageTransition = Sequence.Create(useUnscaledTime: true)
+                .Group(Tween.Custom(exitConfirmationGroup, exitConfirmationGroup.alpha, 0f,
+                    data.ExitDuration,
+                    static (group, alpha) => group.alpha = alpha, Ease.InCubic))
+                .Group(Tween.Scale(exitConfirmationDialog, Vector3.one * 0.85f,
+                    data.ExitDuration, Ease.InBack))
+                .OnComplete(this, static menu => menu.FinishCancelExit());
+        }
+
+        public void ConfirmExit()
         {
             audioManager?.SaveVolumeSettings();
 #if UNITY_EDITOR
@@ -189,6 +271,14 @@ namespace MiningSimulator.Ores
         {
             ReleaseGameplayPause();
             gameObject.SetActive(false);
+        }
+
+        private void FinishCancelExit()
+        {
+            exitConfirmation.SetActive(false);
+            mainViewGroup.interactable = true;
+            mainViewGroup.blocksRaycasts = true;
+            SelectButton(exitButton);
         }
 
         private void PlayEntrance()
@@ -232,6 +322,7 @@ namespace MiningSimulator.Ores
             canvasGroup.interactable = true;
             canvasGroup.blocksRaycasts = true;
             card.localScale = Vector3.one;
+            card.anchoredPosition = cardHomePosition;
             SetMainButtonsInteractable(true);
         }
 
@@ -263,6 +354,12 @@ namespace MiningSimulator.Ores
             SetText(sfxLabel, "SOUND EFFECTS", "HIỆU ỨNG");
             SetText(languageLabel, data.EnglishLanguageLabel, data.VietnameseLanguageLabel);
             SetText(backLabel, data.EnglishBackLabel, data.VietnameseBackLabel);
+            SetText(exitConfirmationTitleLabel, data.EnglishExitConfirmationTitle,
+                data.VietnameseExitConfirmationTitle);
+            SetText(exitConfirmationMessageLabel, data.EnglishExitConfirmationMessage,
+                data.VietnameseExitConfirmationMessage);
+            SetText(confirmExitLabel, data.EnglishConfirmLabel, data.VietnameseConfirmLabel);
+            SetText(cancelExitLabel, data.EnglishCancelLabel, data.VietnameseCancelLabel);
         }
 
         private void AddListeners()
@@ -271,6 +368,8 @@ namespace MiningSimulator.Ores
             playButton?.onClick.AddListener(Play);
             settingsButton?.onClick.AddListener(OpenSettings);
             exitButton?.onClick.AddListener(ExitGame);
+            confirmExitButton?.onClick.AddListener(ConfirmExit);
+            cancelExitButton?.onClick.AddListener(CancelExit);
             backButton?.onClick.AddListener(CloseSettings);
             languageButton?.onClick.AddListener(ToggleLanguage);
             masterSlider?.onValueChanged.AddListener(SetMasterVolume);
@@ -283,6 +382,8 @@ namespace MiningSimulator.Ores
             playButton?.onClick.RemoveListener(Play);
             settingsButton?.onClick.RemoveListener(OpenSettings);
             exitButton?.onClick.RemoveListener(ExitGame);
+            confirmExitButton?.onClick.RemoveListener(ConfirmExit);
+            cancelExitButton?.onClick.RemoveListener(CancelExit);
             backButton?.onClick.RemoveListener(CloseSettings);
             languageButton?.onClick.RemoveListener(ToggleLanguage);
             masterSlider?.onValueChanged.RemoveListener(SetMasterVolume);
@@ -304,7 +405,34 @@ namespace MiningSimulator.Ores
             return data != null && canvasGroup != null && card != null &&
                    mainView != null && settingsView != null && mainViewGroup != null &&
                    settingsViewGroup != null && playButton != null && settingsButton != null &&
-                   exitButton != null && backButton != null && languageButton != null;
+                   exitButton != null && backButton != null && languageButton != null &&
+                   transitionBar != null && transitionFlash != null &&
+                   exitConfirmation != null && exitConfirmationGroup != null &&
+                   exitConfirmationDialog != null && confirmExitButton != null &&
+                   cancelExitButton != null;
+        }
+
+        private void PauseGameplay()
+        {
+            if (data == null || !data.PauseGameplay || ownsGameplayPause)
+            {
+                return;
+            }
+            timeScaleBeforeMenu = Time.timeScale > 0f ? Time.timeScale : 1f;
+            Time.timeScale = 0f;
+            ownsGameplayPause = true;
+        }
+
+        private void ResetPlayTransition()
+        {
+            card.anchoredPosition = cardHomePosition;
+            card.localScale = Vector3.one;
+            transitionBar.color = data.TransitionBarColor;
+            transitionFlash.color = data.TransitionFlashColor;
+            SetGraphicAlpha(transitionBar, 0f);
+            SetGraphicAlpha(transitionFlash, 0f);
+            transitionBar.gameObject.SetActive(false);
+            transitionFlash.gameObject.SetActive(false);
         }
 
         private void SetMainButtonsInteractable(bool value)
@@ -358,6 +486,17 @@ namespace MiningSimulator.Ores
             {
                 label.text = $"{Mathf.RoundToInt(value * 100f)}%";
             }
+        }
+
+        private static void SetGraphicAlpha(Graphic graphic, float alpha)
+        {
+            if (graphic == null)
+            {
+                return;
+            }
+            Color color = graphic.color;
+            color.a = alpha;
+            graphic.color = color;
         }
 
         private static void SelectButton(Button button)

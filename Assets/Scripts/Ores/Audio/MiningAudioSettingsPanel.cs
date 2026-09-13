@@ -27,6 +27,9 @@ namespace MiningSimulator.Ores
         [SerializeField] private TextMeshProUGUI resetDataLabel;
         [SerializeField] private Button languageButton;
         [SerializeField] private TextMeshProUGUI languageLabel;
+        [SerializeField] private MiningMainMenu mainMenu;
+        [SerializeField] private Button returnToMenuButton;
+        [SerializeField] private TextMeshProUGUI returnToMenuLabel;
 
         private Coroutine resetStateCoroutine;
         private bool resetConfirmationArmed;
@@ -63,6 +66,8 @@ namespace MiningSimulator.Ores
             resetDataButton?.onClick.AddListener(HandleResetDataClicked);
             languageButton?.onClick.RemoveListener(HandleLanguageClicked);
             languageButton?.onClick.AddListener(HandleLanguageClicked);
+            returnToMenuButton?.onClick.RemoveListener(HandleReturnToMenuClicked);
+            returnToMenuButton?.onClick.AddListener(HandleReturnToMenuClicked);
             MiningLocalization.LanguageChanged -= HandleLanguageChanged;
             MiningLocalization.LanguageChanged += HandleLanguageChanged;
             ResetButtonState();
@@ -78,6 +83,7 @@ namespace MiningSimulator.Ores
             sfxSlider?.onValueChanged.RemoveListener(SetSfxVolume);
             resetDataButton?.onClick.RemoveListener(HandleResetDataClicked);
             languageButton?.onClick.RemoveListener(HandleLanguageClicked);
+            returnToMenuButton?.onClick.RemoveListener(HandleReturnToMenuClicked);
             MiningLocalization.LanguageChanged -= HandleLanguageChanged;
             if (resetStateCoroutine != null)
             {
@@ -394,6 +400,12 @@ namespace MiningSimulator.Ores
             MiningLocalization.ToggleLanguage();
         }
 
+        private void HandleReturnToMenuClicked()
+        {
+            ClosePanel();
+            mainMenu?.OpenFromGameplay();
+        }
+
         private void HandleLanguageChanged()
         {
             ApplyLanguage();
@@ -418,6 +430,10 @@ namespace MiningSimulator.Ores
                     MiningLocalization.VietnameseLanguageName => "VI ✓",
                     string languageName => $"{languageName.ToUpperInvariant()} ✓"
                 };
+            }
+            if (returnToMenuLabel != null)
+            {
+                returnToMenuLabel.text = MiningLocalization.Text("MAIN MENU", "MENU CHÍNH");
             }
         }
     }
