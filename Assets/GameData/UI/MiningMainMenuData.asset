@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00c1011d74d70f95f5b1c1d7070da022, type: 3}
+  m_Name: MiningMainMenuData
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningMainMenuData
+  showOnStart: 1
+  pauseGameplay: 1
+  cardSize: {x: 720, y: 520}
+  gemIconSize: {x: 126, y: 126}
+  gemIconPosition: {x: 0, y: 140}
+  titleSize: {x: 650, y: 80}
+  titlePosition: {x: 0, y: 42}
+  subtitleSize: {x: 620, y: 54}
+  subtitlePosition: {x: 0, y: -28}
+  playButtonSize: {x: 330, y: 78}
+  playButtonPosition: {x: 0, y: -145}
+  englishTitle: MINING SIMULATOR
+  vietnameseTitle: "M\xD4 PH\u1ECENG \u0110\xC0O M\u1ECE"
+  englishSubtitle: "Mine ores \u2022 Hire miners \u2022 Upgrade"
+  vietnameseSubtitle: "\u0110\xE0o qu\u1EB7ng \u2022 Thu\xEA th\u1EE3 m\u1ECF \u2022
+    N\xE2ng c\u1EA5p"
+  englishPlayLabel: PLAY
+  vietnamesePlayLabel: "CH\u01A0I"
+  titleFontSize: 54
+  subtitleFontSize: 24
+  playFontSize: 32
+  backdropColor: {r: 0.015, g: 0.025, b: 0.06, a: 0.96}
+  cardColor: {r: 0.055, g: 0.075, b: 0.14, a: 0.98}
+  titleColor: {r: 1, g: 1, b: 1, a: 1}
+  subtitleColor: {r: 0.7, g: 0.82, b: 1, a: 1}
+  playButtonColor: {r: 0.12, g: 0.78, b: 0.56, a: 1}
+  playTextColor: {r: 1, g: 1, b: 1, a: 1}
+  entranceStartScale: 0.72
+  entranceDuration: 0.42
+  exitScale: 0.88
+  exitDuration: 0.24

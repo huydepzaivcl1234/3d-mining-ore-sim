@@ -53,6 +53,18 @@ MonoBehaviour:
   npcIconFallback: N
   buyNpcIconFallback: +
   openUpgradeIconFallback: UP
+  gemHudPosition: {x: -24, y: -24}
+  gemHudSize: {x: 250, y: 64}
+  gemIconPosition: {x: 12, y: -11}
+  gemIconSize: {x: 42, y: 42}
+  gemTextPosition: {x: 64, y: -12}
+  gemTextSize: {x: 170, y: 40}
+  gemFontSize: 25
+  gemHudColor: {r: 0.11, g: 0.055, b: 0.18, a: 0.94}
+  gemTextColor: {r: 1, g: 1, b: 1, a: 1}
+  gemIconColor: {r: 0.55, g: 0.25, b: 1, a: 1}
+  gemIconSprite: {fileID: 21300000, guid: af4dd62c5913938a141c87c80c21e325, type: 3}
+  gemIconFallback: G
   upgradeCardIconSize: {x: 86, y: 86}
   upgradeCardIconPosition: {x: 22, y: -25}
   upgradeCardIconPadding: 1
@@ -185,6 +197,11 @@ MonoBehaviour:
   rewardPopupDuration: 1.1
   rewardPopupRiseDistance: 1.2
   rewardPopupWorldScale: 0.18
+  rewardPopupStartScale: 0.55
+  rewardPopupPopScale: 1.18
+  rewardPopupPopDuration: 0.18
+  rewardPopupSettleDuration: 0.12
+  rewardPopupFadeStart: 0.55
   rewardPopupFontSize: 50
   rewardPopupColor: {r: 1, g: 0.82, b: 0.16, a: 1}
   rewardPopupOutlineColor: {r: 0.08, g: 0.04, b: 0.01, a: 1}
