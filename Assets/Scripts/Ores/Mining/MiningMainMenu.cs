@@ -6,19 +6,50 @@ using UnityEngine.UI;
 
 namespace MiningSimulator.Ores
 {
-    /// <summary>Pauses the simulation behind the authored startup menu until Play is pressed.</summary>
+    /// <summary>Owns the startup menu, settings page, and gameplay pause.</summary>
     [DisallowMultipleComponent]
     public sealed class MiningMainMenu : MonoBehaviour
     {
+        [Header("Data and pages")]
         [SerializeField] private MiningMainMenuData data;
+        [SerializeField] private MiningAudioManager audioManager;
         [SerializeField] private CanvasGroup canvasGroup;
         [SerializeField] private RectTransform card;
+        [SerializeField] private GameObject mainView;
+        [SerializeField] private GameObject settingsView;
+        [SerializeField] private CanvasGroup mainViewGroup;
+        [SerializeField] private CanvasGroup settingsViewGroup;
+
+        [Header("Main buttons")]
         [SerializeField] private Button playButton;
+        [SerializeField] private Button settingsButton;
+        [SerializeField] private Button exitButton;
+
+        [Header("Settings controls")]
+        [SerializeField] private Button backButton;
+        [SerializeField] private Button languageButton;
+        [SerializeField] private Slider masterSlider;
+        [SerializeField] private Slider musicSlider;
+        [SerializeField] private Slider sfxSlider;
+
+        [Header("Localized labels")]
         [SerializeField] private TextMeshProUGUI titleLabel;
         [SerializeField] private TextMeshProUGUI subtitleLabel;
         [SerializeField] private TextMeshProUGUI playLabel;
+        [SerializeField] private TextMeshProUGUI settingsLabel;
+        [SerializeField] private TextMeshProUGUI exitLabel;
+        [SerializeField] private TextMeshProUGUI settingsTitleLabel;
+        [SerializeField] private TextMeshProUGUI masterLabel;
+        [SerializeField] private TextMeshProUGUI musicLabel;
+        [SerializeField] private TextMeshProUGUI sfxLabel;
+        [SerializeField] private TextMeshProUGUI masterValueLabel;
+        [SerializeField] private TextMeshProUGUI musicValueLabel;
+        [SerializeField] private TextMeshProUGUI sfxValueLabel;
+        [SerializeField] private TextMeshProUGUI languageLabel;
+        [SerializeField] private TextMeshProUGUI backLabel;
 
         private Sequence transition;
+        private Sequence pageTransition;
         private float timeScaleBeforeMenu = 1f;
         private bool ownsGameplayPause;
         private bool closing;
@@ -27,7 +58,7 @@ namespace MiningSimulator.Ores
         {
             if (!ResolveReferences())
             {
-                Debug.LogError("Main Menu is missing authored UI references. Run " +
+                Debug.LogError("Main Menu is missing authored references. Run " +
                     "Mining Simulator > Setup > Create Or Update Main Menu.", this);
                 enabled = false;
                 return;
@@ -46,41 +77,37 @@ namespace MiningSimulator.Ores
                 ownsGameplayPause = true;
             }
 
+            mainView.SetActive(true);
+            settingsView.SetActive(false);
             ShowImmediately();
         }
 
         private void OnEnable()
         {
+            AddListeners();
             MiningLocalization.LanguageChanged -= RefreshLocalization;
             MiningLocalization.LanguageChanged += RefreshLocalization;
-
-            if (playButton != null)
-            {
-                playButton.onClick.RemoveListener(Play);
-                playButton.onClick.AddListener(Play);
-            }
-
             RefreshLocalization();
         }
 
         private void Start()
         {
-            if (isActiveAndEnabled && data != null && data.ShowOnStart)
+            if (!isActiveAndEnabled || data == null || !data.ShowOnStart)
             {
-                PlayEntrance();
-                EventSystem.current?.SetSelectedGameObject(playButton.gameObject);
+                return;
             }
+
+            RefreshAudioControls();
+            PlayEntrance();
+            SelectButton(playButton);
         }
 
         private void OnDisable()
         {
+            RemoveListeners();
             MiningLocalization.LanguageChanged -= RefreshLocalization;
-            if (playButton != null)
-            {
-                playButton.onClick.RemoveListener(Play);
-            }
-
-            StopTransition();
+            audioManager?.SaveVolumeSettings();
+            StopTransitions();
             ReleaseGameplayPause();
         }
 
@@ -91,20 +118,71 @@ namespace MiningSimulator.Ores
 
         public void Play()
         {
-            if (closing || data == null || canvasGroup == null || card == null)
+            if (closing || data == null)
             {
                 return;
             }
 
             closing = true;
-            playButton.interactable = false;
-            StopTransition();
+            SetMainButtonsInteractable(false);
+            StopTransition(ref transition);
             transition = Sequence.Create(useUnscaledTime: true)
                 .Group(Tween.Custom(this, canvasGroup.alpha, 0f, data.ExitDuration,
                     static (menu, alpha) => menu.canvasGroup.alpha = alpha, Ease.InCubic))
                 .Group(Tween.Scale(card, Vector3.one * data.ExitScale,
                     data.ExitDuration, Ease.InBack))
                 .OnComplete(this, static menu => menu.FinishPlay());
+        }
+
+        public void OpenSettings()
+        {
+            if (closing)
+            {
+                return;
+            }
+            RefreshAudioControls();
+            SwitchPage(mainView, settingsView, settingsViewGroup);
+            SelectButton(backButton);
+        }
+
+        public void CloseSettings()
+        {
+            audioManager?.SaveVolumeSettings();
+            SwitchPage(settingsView, mainView, mainViewGroup);
+            SelectButton(settingsButton);
+        }
+
+        public void ExitGame()
+        {
+            audioManager?.SaveVolumeSettings();
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
+        }
+
+        private void ToggleLanguage()
+        {
+            MiningLocalization.ToggleLanguage();
+        }
+
+        private void SetMasterVolume(float value)
+        {
+            audioManager?.SetMasterVolume(value);
+            SetPercent(masterValueLabel, value);
+        }
+
+        private void SetMusicVolume(float value)
+        {
+            audioManager?.SetMusicVolume(value);
+            SetPercent(musicValueLabel, value);
+        }
+
+        private void SetSfxVolume(float value)
+        {
+            audioManager?.SetSfxVolume(value);
+            SetPercent(sfxValueLabel, value);
         }
 
         private void FinishPlay()
@@ -115,7 +193,7 @@ namespace MiningSimulator.Ores
 
         private void PlayEntrance()
         {
-            StopTransition();
+            StopTransition(ref transition);
             canvasGroup.alpha = 0f;
             canvasGroup.interactable = true;
             canvasGroup.blocksRaycasts = true;
@@ -126,6 +204,27 @@ namespace MiningSimulator.Ores
                 .Group(Tween.Scale(card, Vector3.one, data.EntranceDuration, Ease.OutBack));
         }
 
+        private void SwitchPage(GameObject from, GameObject to, CanvasGroup toGroup)
+        {
+            StopTransition(ref pageTransition);
+            from.SetActive(false);
+            to.SetActive(true);
+            toGroup.alpha = 0f;
+            toGroup.interactable = true;
+            toGroup.blocksRaycasts = true;
+
+            RectTransform pageRect = to.GetComponent<RectTransform>();
+            Vector2 restingPosition = pageRect.anchoredPosition;
+            Vector2 startPosition = restingPosition + new Vector2(55f, 0f);
+            pageRect.anchoredPosition = startPosition;
+            pageTransition = Sequence.Create(useUnscaledTime: true)
+                .Group(Tween.Custom(toGroup, 0f, 1f, data.ExitDuration,
+                    static (group, alpha) => group.alpha = alpha, Ease.OutCubic))
+                .Group(Tween.Custom(pageRect, startPosition, restingPosition,
+                    data.ExitDuration, static (rect, position) => rect.anchoredPosition = position,
+                    Ease.OutCubic));
+        }
+
         private void ShowImmediately()
         {
             closing = false;
@@ -133,7 +232,18 @@ namespace MiningSimulator.Ores
             canvasGroup.interactable = true;
             canvasGroup.blocksRaycasts = true;
             card.localScale = Vector3.one;
-            playButton.interactable = true;
+            SetMainButtonsInteractable(true);
+        }
+
+        private void RefreshAudioControls()
+        {
+            if (audioManager == null)
+            {
+                return;
+            }
+            SetSlider(masterSlider, audioManager.MasterVolume, masterValueLabel);
+            SetSlider(musicSlider, audioManager.MusicVolume, musicValueLabel);
+            SetSlider(sfxSlider, audioManager.SfxVolume, sfxValueLabel);
         }
 
         private void RefreshLocalization()
@@ -142,22 +252,42 @@ namespace MiningSimulator.Ores
             {
                 return;
             }
+            SetText(titleLabel, data.EnglishTitle, data.VietnameseTitle);
+            SetText(subtitleLabel, data.EnglishSubtitle, data.VietnameseSubtitle);
+            SetText(playLabel, data.EnglishPlayLabel, data.VietnamesePlayLabel);
+            SetText(settingsLabel, data.EnglishSettingsLabel, data.VietnameseSettingsLabel);
+            SetText(exitLabel, data.EnglishExitLabel, data.VietnameseExitLabel);
+            SetText(settingsTitleLabel, data.EnglishSettingsLabel, data.VietnameseSettingsLabel);
+            SetText(masterLabel, "MASTER VOLUME", "ÂM LƯỢNG TỔNG");
+            SetText(musicLabel, "MUSIC", "NHẠC");
+            SetText(sfxLabel, "SOUND EFFECTS", "HIỆU ỨNG");
+            SetText(languageLabel, data.EnglishLanguageLabel, data.VietnameseLanguageLabel);
+            SetText(backLabel, data.EnglishBackLabel, data.VietnameseBackLabel);
+        }
 
-            if (titleLabel != null)
-            {
-                titleLabel.text = MiningLocalization.Text(data.EnglishTitle,
-                    data.VietnameseTitle);
-            }
-            if (subtitleLabel != null)
-            {
-                subtitleLabel.text = MiningLocalization.Text(data.EnglishSubtitle,
-                    data.VietnameseSubtitle);
-            }
-            if (playLabel != null)
-            {
-                playLabel.text = MiningLocalization.Text(data.EnglishPlayLabel,
-                    data.VietnamesePlayLabel);
-            }
+        private void AddListeners()
+        {
+            RemoveListeners();
+            playButton?.onClick.AddListener(Play);
+            settingsButton?.onClick.AddListener(OpenSettings);
+            exitButton?.onClick.AddListener(ExitGame);
+            backButton?.onClick.AddListener(CloseSettings);
+            languageButton?.onClick.AddListener(ToggleLanguage);
+            masterSlider?.onValueChanged.AddListener(SetMasterVolume);
+            musicSlider?.onValueChanged.AddListener(SetMusicVolume);
+            sfxSlider?.onValueChanged.AddListener(SetSfxVolume);
+        }
+
+        private void RemoveListeners()
+        {
+            playButton?.onClick.RemoveListener(Play);
+            settingsButton?.onClick.RemoveListener(OpenSettings);
+            exitButton?.onClick.RemoveListener(ExitGame);
+            backButton?.onClick.RemoveListener(CloseSettings);
+            languageButton?.onClick.RemoveListener(ToggleLanguage);
+            masterSlider?.onValueChanged.RemoveListener(SetMasterVolume);
+            musicSlider?.onValueChanged.RemoveListener(SetMusicVolume);
+            sfxSlider?.onValueChanged.RemoveListener(SetSfxVolume);
         }
 
         private bool ResolveReferences()
@@ -166,14 +296,35 @@ namespace MiningSimulator.Ores
             {
                 canvasGroup = GetComponent<CanvasGroup>();
             }
-            return data != null && canvasGroup != null && card != null && playButton != null;
+            if (audioManager == null)
+            {
+                audioManager = FindFirstObjectByType<MiningAudioManager>(
+                    FindObjectsInactive.Include);
+            }
+            return data != null && canvasGroup != null && card != null &&
+                   mainView != null && settingsView != null && mainViewGroup != null &&
+                   settingsViewGroup != null && playButton != null && settingsButton != null &&
+                   exitButton != null && backButton != null && languageButton != null;
         }
 
-        private void StopTransition()
+        private void SetMainButtonsInteractable(bool value)
         {
-            if (transition.isAlive)
+            playButton.interactable = value;
+            settingsButton.interactable = value;
+            exitButton.interactable = value;
+        }
+
+        private void StopTransitions()
+        {
+            StopTransition(ref transition);
+            StopTransition(ref pageTransition);
+        }
+
+        private static void StopTransition(ref Sequence sequence)
+        {
+            if (sequence.isAlive)
             {
-                transition.Stop();
+                sequence.Stop();
             }
         }
 
@@ -183,9 +334,38 @@ namespace MiningSimulator.Ores
             {
                 return;
             }
-
             Time.timeScale = timeScaleBeforeMenu;
             ownsGameplayPause = false;
+        }
+
+        private static void SetText(TextMeshProUGUI label, string english, string vietnamese)
+        {
+            if (label != null)
+            {
+                label.text = MiningLocalization.Text(english, vietnamese);
+            }
+        }
+
+        private static void SetSlider(Slider slider, float value, TextMeshProUGUI valueLabel)
+        {
+            slider?.SetValueWithoutNotify(value);
+            SetPercent(valueLabel, value);
+        }
+
+        private static void SetPercent(TextMeshProUGUI label, float value)
+        {
+            if (label != null)
+            {
+                label.text = $"{Mathf.RoundToInt(value * 100f)}%";
+            }
+        }
+
+        private static void SelectButton(Button button)
+        {
+            if (button != null)
+            {
+                EventSystem.current?.SetSelectedGameObject(button.gameObject);
+            }
         }
     }
 }

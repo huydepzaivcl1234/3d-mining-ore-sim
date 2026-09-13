@@ -14,15 +14,26 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningMainMenuData
   showOnStart: 1
   pauseGameplay: 1
-  cardSize: {x: 720, y: 520}
-  gemIconSize: {x: 126, y: 126}
-  gemIconPosition: {x: 0, y: 140}
-  titleSize: {x: 650, y: 80}
-  titlePosition: {x: 0, y: 42}
-  subtitleSize: {x: 620, y: 54}
-  subtitlePosition: {x: 0, y: -28}
+  cardSize: {x: 1040, y: 620}
+  gemIconSize: {x: 220, y: 220}
+  gemIconPosition: {x: -250, y: 90}
+  titleSize: {x: 470, y: 80}
+  titlePosition: {x: -250, y: -65}
+  subtitleSize: {x: 460, y: 64}
+  subtitlePosition: {x: -250, y: -132}
   playButtonSize: {x: 330, y: 78}
-  playButtonPosition: {x: 0, y: -145}
+  playButtonPosition: {x: 250, y: 100}
+  settingsButtonPosition: {x: 250, y: 0}
+  exitButtonPosition: {x: 250, y: -100}
+  settingsTitlePosition: {x: 0, y: 225}
+  settingsTitleSize: {x: 760, y: 70}
+  settingsSliderSize: {x: 460, y: 34}
+  settingsFirstSliderPosition: {x: 80, y: 105}
+  settingsRowSpacing: 92
+  settingsLabelSize: {x: 240, y: 44}
+  settingsLanguagePosition: {x: -145, y: -185}
+  settingsBackPosition: {x: 210, y: -185}
+  settingsSmallButtonSize: {x: 300, y: 64}
   englishTitle: MINING SIMULATOR
   vietnameseTitle: "M\xD4 PH\u1ECENG \u0110\xC0O M\u1ECE"
   englishSubtitle: "Mine ores \u2022 Hire miners \u2022 Upgrade"
@@ -30,14 +41,27 @@ MonoBehaviour:
     N\xE2ng c\u1EA5p"
   englishPlayLabel: PLAY
   vietnamesePlayLabel: "CH\u01A0I"
+  englishSettingsLabel: SETTINGS
+  vietnameseSettingsLabel: "C\xC0I \u0110\u1EB6T"
+  englishExitLabel: EXIT
+  vietnameseExitLabel: "THO\xC1T"
+  englishBackLabel: BACK
+  vietnameseBackLabel: "QUAY L\u1EA0I"
+  englishLanguageLabel: 'LANGUAGE: ENGLISH'
+  vietnameseLanguageLabel: "NG\xD4N NG\u1EEE: TI\u1EBENG VI\u1EC6T"
   titleFontSize: 54
   subtitleFontSize: 24
   playFontSize: 32
-  backdropColor: {r: 0.015, g: 0.025, b: 0.06, a: 0.96}
+  settingsFontSize: 26
+  backdropColor: {r: 0.015, g: 0.025, b: 0.06, a: 1}
   cardColor: {r: 0.055, g: 0.075, b: 0.14, a: 0.98}
   titleColor: {r: 1, g: 1, b: 1, a: 1}
   subtitleColor: {r: 0.7, g: 0.82, b: 1, a: 1}
   playButtonColor: {r: 0.12, g: 0.78, b: 0.56, a: 1}
+  settingsButtonColor: {r: 0.1, g: 0.55, b: 0.88, a: 1}
+  exitButtonColor: {r: 0.82, g: 0.16, b: 0.24, a: 1}
+  sliderBackgroundColor: {r: 0.09, g: 0.12, b: 0.19, a: 1}
+  sliderFillColor: {r: 0.12, g: 0.75, b: 0.95, a: 1}
   playTextColor: {r: 1, g: 1, b: 1, a: 1}
   entranceStartScale: 0.72
   entranceDuration: 0.42
