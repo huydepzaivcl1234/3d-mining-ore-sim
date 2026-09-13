@@ -20,6 +20,8 @@ namespace MiningSimulator.Ores
         [SerializeField] private RectTransform inventoryMenuButton;
         [SerializeField] private RectTransform inventoryPanel;
         [SerializeField] private RectTransform effectToast;
+        [SerializeField] private RectTransform gemHud;
+        [SerializeField] private RectTransform shopMenuButton;
 
         private Vector2 shopHome;
         private Vector2 rebirthHome;
@@ -30,6 +32,8 @@ namespace MiningSimulator.Ores
         private Vector2 inventoryMenuHome;
         private Vector2 inventoryPanelHome;
         private Vector2 effectToastHome;
+        private Vector2 gemHudHome;
+        private Vector2 shopMenuButtonHome;
 
         private Vector2 npcProgressHome;
         private RectTransform activeModal;
@@ -46,6 +50,21 @@ namespace MiningSimulator.Ores
             inventoryPanelHome = GetPosition(panel);
         }
 
+        /// <summary>Registers optional HUD added by the Gem and Shop setup tools.</summary>
+        public void RegisterGemAndShopUi(RectTransform gem, RectTransform shopButton)
+        {
+            if (gem != null)
+            {
+                gemHud = gem;
+                gemHudHome = GetPosition(gemHud);
+            }
+            if (shopButton != null)
+            {
+                shopMenuButton = shopButton;
+                shopMenuButtonHome = GetPosition(shopMenuButton);
+            }
+        }
+
         private float TransitionDuration => uiData != null ? uiData.PanelTransitionDuration : 0.28f;
         private float SlideExtraDistance => uiData != null ? uiData.PanelSlideExtraDistance : 80f;
         private Vector2 ShopSlideDirection => GetDirection(
@@ -58,17 +77,23 @@ namespace MiningSimulator.Ores
             uiData != null ? uiData.InventoryMenuSlideDirection : Vector2.right, Vector2.right);
         private Vector2 NpcProgressHudSlideDirection => GetDirection(
             uiData != null ? uiData.NpcProgressHudSlideDirection : Vector2.up, Vector2.up);
+        private Vector2 GemHudSlideDirection => GetDirection(
+            uiData != null ? uiData.GemHudSlideDirection : Vector2.up, Vector2.up);
+        private Vector2 ShopMenuButtonSlideDirection => GetDirection(
+            uiData != null ? uiData.ShopMenuButtonSlideDirection : Vector2.right, Vector2.right);
         private Vector2 EffectToastSlideDirection => Vector2.left;
         private Vector2 ModalSlideDirection => GetDirection(
             uiData != null ? uiData.ModalSlideDirection : Vector2.down, Vector2.down);
 
         private void Awake()
         {
+            ResolveOptionalHudReferences();
             CacheHomePositions();
         }
 
         private void Start()
         {
+            ResolveOptionalHudReferences();
             CacheHomePositions();
             activeModal = FindActiveModal();
             if (activeModal != null)
@@ -148,6 +173,8 @@ namespace MiningSimulator.Ores
             inventoryPanelHome = GetPosition(inventoryPanel);
             effectToastHome = GetPosition(effectToast);
             npcProgressHome = GetPosition(npcProgressHud);
+            gemHudHome = GetPosition(gemHud);
+            shopMenuButtonHome = GetPosition(shopMenuButton);
             initialized = true;
         }
 
@@ -157,6 +184,35 @@ namespace MiningSimulator.Ores
             {
                 CacheHomePositions();
             }
+        }
+
+        private void ResolveOptionalHudReferences()
+        {
+            if (gemHud != null && shopMenuButton != null)
+            {
+                return;
+            }
+
+            Transform canvas = transform.Find("Mining HUD Canvas");
+            if (canvas == null)
+            {
+                Canvas[] canvases = GetComponentsInChildren<Canvas>(true);
+                foreach (Canvas candidate in canvases)
+                {
+                    if (candidate.name == "Mining HUD Canvas")
+                    {
+                        canvas = candidate.transform;
+                        break;
+                    }
+                }
+            }
+            if (canvas == null)
+            {
+                return;
+            }
+
+            gemHud ??= canvas.Find("Gem HUD") as RectTransform;
+            shopMenuButton ??= canvas.Find("Shop Menu Button") as RectTransform;
         }
 
         private RectTransform FindActiveModal()
@@ -179,6 +235,9 @@ namespace MiningSimulator.Ores
             AnimateBasePanel(inventoryMenuButton, inventoryMenuHome, InventoryMenuSlideDirection,
                 visible);
             AnimateBasePanel(effectToast, effectToastHome, EffectToastSlideDirection, visible);
+            AnimateBasePanel(gemHud, gemHudHome, GemHudSlideDirection, visible);
+            AnimateBasePanel(shopMenuButton, shopMenuButtonHome, ShopMenuButtonSlideDirection,
+                visible);
         }
 
         private void AnimateBasePanel(RectTransform panel, Vector2 home, Vector2 direction,
@@ -208,6 +267,9 @@ namespace MiningSimulator.Ores
                 InventoryMenuSlideDirection, visible);
             SetBasePanelImmediately(effectToast, effectToastHome, EffectToastSlideDirection,
                 visible);
+            SetBasePanelImmediately(gemHud, gemHudHome, GemHudSlideDirection, visible);
+            SetBasePanelImmediately(shopMenuButton, shopMenuButtonHome,
+                ShopMenuButtonSlideDirection, visible);
         }
 
         private void SetBasePanelImmediately(RectTransform panel, Vector2 home, Vector2 direction,

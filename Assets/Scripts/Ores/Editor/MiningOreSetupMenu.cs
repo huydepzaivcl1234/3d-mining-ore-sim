@@ -2101,6 +2101,10 @@ namespace MiningSimulator.Editor
                 canvas.Find("Inventory Panel")?.GetComponent<RectTransform>());
             SetReferenceIfMissing(serialized.FindProperty("effectToast"),
                 canvas.Find("Active Item Effects")?.GetComponent<RectTransform>());
+            SetReferenceIfMissing(serialized.FindProperty("gemHud"),
+                canvas.Find("Gem HUD")?.GetComponent<RectTransform>());
+            SetReferenceIfMissing(serialized.FindProperty("shopMenuButton"),
+                canvas.Find("Shop Menu Button")?.GetComponent<RectTransform>());
             serialized.ApplyModifiedPropertiesWithoutUndo();
         }
 

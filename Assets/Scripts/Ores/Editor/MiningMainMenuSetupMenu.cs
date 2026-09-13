@@ -14,6 +14,7 @@ namespace MiningSimulator.Ores.Editor
         private const string MenuName = "Main Menu";
         private const string DataFolder = "Assets/GameData/UI";
         private const string DataPath = DataFolder + "/MiningMainMenuData.asset";
+        // Keep the existing imported asset path so its GUID and user assignments remain intact.
         private const string GemIconPath = "Assets/Ores/Icons/GemCurrencyIcon.png";
 
         [MenuItem("Mining Simulator/Setup/Create Or Update Main Menu")]
@@ -534,7 +535,7 @@ namespace MiningSimulator.Ores.Editor
             Image image = iconTransform != null ? iconTransform.GetComponent<Image>() : null;
             if (image != null && image.sprite == null)
             {
-                Undo.RecordObject(image, "Assign Gem Currency Icon");
+                Undo.RecordObject(image, "Assign Gem Icon");
                 image.sprite = gemSprite;
                 image.color = Color.white;
                 image.preserveAspect = true;

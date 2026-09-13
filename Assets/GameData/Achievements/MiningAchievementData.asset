@@ -70,8 +70,8 @@ MonoBehaviour:
     moneyMultiplierPercent: 1
     experienceMultiplierPercent: 1
   - achievementId: "\u0110\u1EA5"
-    englishTitle: "\u0110\xE1"
-    vietnameseTitle: Stone
+    englishTitle: Stone
+    vietnameseTitle: "\u0110\u1EA5"
     englishDescription: Break stone
     vietnameseDescription: "Ph\xE1 \u0111\xE1"
     trigger: 0

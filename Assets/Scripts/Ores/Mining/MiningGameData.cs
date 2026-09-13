@@ -19,7 +19,7 @@ namespace MiningSimulator.Ores
         [FormerlySerializedAs("moneyCountMaximumDuration")]
         [Min(0.05f), SerializeField] private float currencyCountMaximumDuration = 1.25f;
 
-        [Header("Gem Currency")]
+        [Header("Gem")]
         [Tooltip("Gem balance used for a player who has no saved Gem data yet.")]
         [Min(0f), SerializeField] private float startingGems;
         [Tooltip("PlayerPrefs key used only by the Gem wallet.")]

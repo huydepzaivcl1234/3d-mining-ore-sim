@@ -28,6 +28,7 @@ namespace MiningSimulator.Ores
         [Header("Panel")]
         [SerializeField] private RectTransform panelRoot;
         [SerializeField] private Button gameplayOpenButton;
+        [SerializeField] private RectTransform gemHud;
         [SerializeField] private Button closeButton;
         [SerializeField] private Button buyRareGiftButton;
 
@@ -48,12 +49,14 @@ namespace MiningSimulator.Ores
 
         private void Awake()
         {
+            RegisterBaseHud();
             panelRoot?.gameObject.SetActive(false);
         }
 
         private void OnEnable()
         {
             gameData ??= wallet != null ? wallet.GameData : null;
+            RegisterBaseHud();
             RemoveListeners();
             gameplayOpenButton?.onClick.AddListener(Open);
             closeButton?.onClick.AddListener(Close);
@@ -254,6 +257,14 @@ namespace MiningSimulator.Ores
             {
                 itemSystem.InventoryChanged -= Refresh;
             }
+        }
+
+        private void RegisterBaseHud()
+        {
+            panelCoordinator?.RegisterGemAndShopUi(gemHud,
+                gameplayOpenButton != null
+                    ? gameplayOpenButton.transform as RectTransform
+                    : null);
         }
 
         private static void SetText(TextMeshProUGUI label, string english, string vietnamese)

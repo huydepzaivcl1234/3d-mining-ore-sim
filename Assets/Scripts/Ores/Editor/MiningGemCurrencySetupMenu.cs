@@ -6,13 +6,13 @@ using UnityEngine.UI;
 
 namespace MiningSimulator.Ores.Editor
 {
-    public static class MiningGemCurrencySetupMenu
+    public static class MiningGemSetupMenu
     {
         private const string CanvasName = "Mining HUD Canvas";
         private const string HudName = "Gem HUD";
 
-        [MenuItem("Mining Simulator/Setup/Add Or Update Gem Currency HUD")]
-        public static void AddOrUpdateGemCurrencyHud()
+        [MenuItem("Mining Simulator/Setup/Add Or Update Gem HUD")]
+        public static void AddOrUpdateGemHud()
         {
             PlayerWallet wallet = Object.FindFirstObjectByType<PlayerWallet>(
                 FindObjectsInactive.Include);
@@ -47,7 +47,7 @@ namespace MiningSimulator.Ores.Editor
                 : existing.gameObject;
             if (createdHud)
             {
-                Undo.RegisterCreatedObjectUndo(hudObject, "Create Gem Currency HUD");
+                Undo.RegisterCreatedObjectUndo(hudObject, "Create Gem HUD");
                 hudObject.transform.SetParent(canvasObject.transform, false);
                 ConfigureTopRight(hudObject.GetComponent<RectTransform>(),
                     uiData.GemHudPosition, uiData.GemHudSize);
@@ -69,11 +69,22 @@ namespace MiningSimulator.Ores.Editor
             hudSerialized.FindProperty("gemText").objectReferenceValue = gemText;
             hudSerialized.ApplyModifiedPropertiesWithoutUndo();
 
+            MiningUiPanelCoordinator coordinator = Object.FindFirstObjectByType<
+                MiningUiPanelCoordinator>(FindObjectsInactive.Include);
+            if (coordinator != null)
+            {
+                SerializedObject coordinatorSerialized = new(coordinator);
+                coordinatorSerialized.FindProperty("gemHud").objectReferenceValue =
+                    hudObject.GetComponent<RectTransform>();
+                coordinatorSerialized.ApplyModifiedPropertiesWithoutUndo();
+                EditorUtility.SetDirty(coordinator);
+            }
+
             EditorUtility.SetDirty(wallet);
             EditorUtility.SetDirty(gemHud);
             EditorSceneManager.MarkSceneDirty(hudObject.scene);
             Selection.activeGameObject = hudObject;
-            Debug.Log("Gem currency is ready. The HUD is selected; save the scene after editing it.",
+            Debug.Log("Gem HUD is ready. The HUD is selected; save the scene after editing it.",
                 hudObject);
         }
 

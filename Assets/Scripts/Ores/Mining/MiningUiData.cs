@@ -222,6 +222,10 @@ namespace MiningSimulator.Ores
         [SerializeField] private Vector2 inventoryMenuSlideDirection = Vector2.right;
         [Tooltip("Direction used when the NPC Progress HUD leaves the screen.")]
         [SerializeField] private Vector2 npcProgressHudSlideDirection = Vector2.up;
+        [Tooltip("Direction used when the Gem HUD leaves the screen.")]
+        [SerializeField] private Vector2 gemHudSlideDirection = Vector2.up;
+        [Tooltip("Direction used when the Shop menu button leaves the screen.")]
+        [SerializeField] private Vector2 shopMenuButtonSlideDirection = Vector2.right;
         [Tooltip("Direction used when a modal panel opens and closes.")]
         [SerializeField] private Vector2 modalSlideDirection = Vector2.down;
 
@@ -534,6 +538,8 @@ namespace MiningSimulator.Ores
         public Vector2 AudioMenuSlideDirection => audioMenuSlideDirection;
         public Vector2 InventoryMenuSlideDirection => inventoryMenuSlideDirection;
         public Vector2 NpcProgressHudSlideDirection => npcProgressHudSlideDirection;
+        public Vector2 GemHudSlideDirection => gemHudSlideDirection;
+        public Vector2 ShopMenuButtonSlideDirection => shopMenuButtonSlideDirection;
         public Vector2 ModalSlideDirection => modalSlideDirection;
         public string ShopTitle => shopTitle;
         public Vector2 ShopHeaderSize => shopHeaderSize;

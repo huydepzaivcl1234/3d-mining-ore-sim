@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: MiningShopData
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningShopData
   rareGiftBox: {fileID: 11400000, guid: f18a9bc3efc342d4b64dde59a7745142, type: 2}
-  rareGiftBoxGemCost: 100
+  rareGiftBoxGemCost: 20

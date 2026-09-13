@@ -54,6 +54,8 @@ namespace MiningSimulator.Ores.Editor
                 MiningUiPanelCoordinator>(FindObjectsInactive.Include));
             SetReference(serialized, "panelRoot", panel);
             SetReference(serialized, "gameplayOpenButton", openButton);
+            SetReference(serialized, "gemHud",
+                canvas.transform.Find("Gem HUD")?.GetComponent<RectTransform>());
             SetReference(serialized, "closeButton", FindComponent<Button>(panel, "Close Button"));
             SetReference(serialized, "buyRareGiftButton",
                 FindComponent<Button>(panel, "Buy Rare Gift Button"));
@@ -78,6 +80,19 @@ namespace MiningSimulator.Ores.Editor
                 FindComponent<TextMeshProUGUI>(panel, "Item Icon Fallback"));
             serialized.ApplyModifiedProperties();
             EditorUtility.SetDirty(controller);
+
+            MiningUiPanelCoordinator coordinator = Object.FindFirstObjectByType<
+                MiningUiPanelCoordinator>(FindObjectsInactive.Include);
+            if (coordinator != null)
+            {
+                SerializedObject coordinatorSerialized = new(coordinator);
+                SetReference(coordinatorSerialized, "gemHud",
+                    canvas.transform.Find("Gem HUD")?.GetComponent<RectTransform>());
+                SetReference(coordinatorSerialized, "shopMenuButton",
+                    openButton.transform as RectTransform);
+                coordinatorSerialized.ApplyModifiedProperties();
+                EditorUtility.SetDirty(coordinator);
+            }
 
             MiningMainMenuSetupMenu.EnsureShopButtonForCurrentMenu();
             panel.gameObject.SetActive(true);
