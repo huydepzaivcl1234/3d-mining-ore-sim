@@ -361,9 +361,7 @@ namespace MiningSimulator.Ores
                     refundedItemRewards),
                 ShopStatus.WheelComplete => MiningLocalization.Text(
                     "Rewards received!", "Đã nhận phần thưởng!"),
-                _ => MiningLocalization.Text(
-                    "Edit rewards and rates in MiningShopData.",
-                    "Chỉnh phần thưởng và tỉ lệ trong MiningShopData.")
+                _ => string.Empty
             };
         }
 

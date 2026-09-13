@@ -19,6 +19,8 @@ namespace MiningSimulator.Ores.Editor
         private const string RareGiftPath = "Assets/GameData/Items/Rare Gift Box.asset";
         private const string ApplePath = "Assets/GameData/Items/Apple.asset";
         private const string BananaPath = "Assets/GameData/Items/Banana.asset";
+        private const string MoneyIconPath = "Assets/Prefabs/UI/UpgradeMoneyReward.png";
+        private const string GemIconPath = "Assets/Ores/Icons/GemCurrencyIcon.png";
         private const string GeneratedUiFolder = "Assets/Generated/MiningUI";
         private const string WheelSpritePath = GeneratedUiFolder + "/LuckyWheelCircle.png";
 
@@ -177,10 +179,40 @@ namespace MiningSimulator.Ores.Editor
                     MiningShopWheelRewardType.Item, 3f, 0f, rareGift,
                     string.Empty, string.Empty, new Color(0.62f, 0.24f, 0.95f));
             }
+            AssignMissingCurrencyIcons(rewards);
             serialized.ApplyModifiedProperties();
             EditorUtility.SetDirty(data);
             AssetDatabase.SaveAssets();
             return data;
+        }
+
+        private static void AssignMissingCurrencyIcons(SerializedProperty rewards)
+        {
+            if (rewards == null)
+            {
+                return;
+            }
+            Sprite moneyIcon = AssetDatabase.LoadAssetAtPath<Sprite>(MoneyIconPath);
+            Sprite gemIcon = AssetDatabase.LoadAssetAtPath<Sprite>(GemIconPath);
+            for (int index = 0; index < rewards.arraySize; index++)
+            {
+                SerializedProperty reward = rewards.GetArrayElementAtIndex(index);
+                SerializedProperty icon = reward.FindPropertyRelative("icon");
+                if (icon == null || icon.objectReferenceValue != null)
+                {
+                    continue;
+                }
+                MiningShopWheelRewardType type = (MiningShopWheelRewardType)
+                    reward.FindPropertyRelative("rewardType").enumValueIndex;
+                if (type == MiningShopWheelRewardType.Money)
+                {
+                    icon.objectReferenceValue = moneyIcon;
+                }
+                else if (type == MiningShopWheelRewardType.Gems)
+                {
+                    icon.objectReferenceValue = gemIcon;
+                }
+            }
         }
 
         private static void ConfigureWheelReward(SerializedProperty reward,
@@ -299,6 +331,7 @@ namespace MiningSimulator.Ores.Editor
                 status.rectTransform.anchoredPosition = new Vector2(0f, -325f);
                 status.rectTransform.sizeDelta = new Vector2(1000f, 48f);
             }
+            status.text = string.Empty;
             return overlay;
         }
 
@@ -364,18 +397,61 @@ namespace MiningSimulator.Ores.Editor
                 segmentImage.color = reward != null ? reward.WheelColor : Color.gray;
                 segmentImage.raycastTarget = false;
 
+                RectTransform content = FindComponent<RectTransform>(segment, "Reward Content");
+                if (content == null)
+                {
+                    GameObject contentObject = new("Reward Content", typeof(RectTransform));
+                    Undo.RegisterCreatedObjectUndo(contentObject, "Create Wheel Reward Content");
+                    contentObject.transform.SetParent(segment, false);
+                    content = contentObject.GetComponent<RectTransform>();
+                }
+
                 TextMeshProUGUI label = FindComponent<TextMeshProUGUI>(segment, "Reward Label");
                 if (label == null)
                 {
-                    label = CreateLabel(segment, "Reward Label", string.Empty,
-                        Vector2.zero, new Vector2(130f, 54f), 17f, Color.white,
+                    label = CreateLabel(content, "Reward Label", string.Empty,
+                        Vector2.zero, new Vector2(108f, 54f), 15f, Color.white,
                         FontStyles.Bold);
                 }
-                float angle = (index + 0.5f) * Mathf.PI * 2f / segmentCount;
-                label.rectTransform.anchoredPosition =
-                    new Vector2(-Mathf.Sin(angle), Mathf.Cos(angle)) * 112f;
-                label.rectTransform.localRotation =
-                    Quaternion.Euler(0f, 0f, -index * 360f / segmentCount);
+                else if (label.transform.parent != content)
+                {
+                    Undo.SetTransformParent(label.transform, content,
+                        "Move Wheel Reward Label Beside Icon");
+                }
+
+                float stepAngle = 360f / segmentCount;
+                float middleRadians = stepAngle * 0.5f * Mathf.Deg2Rad;
+                Center(content,
+                    new Vector2(-Mathf.Sin(middleRadians), Mathf.Cos(middleRadians)) * 112f,
+                    new Vector2(142f, 58f));
+                content.localRotation = Quaternion.Euler(0f, 0f, -index * stepAngle);
+                content.localScale = Vector3.one;
+
+                Image rewardIcon = FindComponent<Image>(content, "Reward Icon");
+                if (rewardIcon == null)
+                {
+                    rewardIcon = CreateImage(content, "Reward Icon", Color.white)
+                        .GetComponent<Image>();
+                }
+                Sprite icon = reward != null ? reward.Icon : null;
+                rewardIcon.sprite = icon;
+                rewardIcon.color = Color.white;
+                rewardIcon.preserveAspect = true;
+                rewardIcon.raycastTarget = false;
+                rewardIcon.enabled = icon != null;
+                SetRect(rewardIcon.rectTransform, new Vector2(-50f, 0f),
+                    new Vector2(34f, 34f));
+
+                SetRect(label.rectTransform, icon != null
+                        ? new Vector2(22f, 0f)
+                        : Vector2.zero,
+                    icon != null ? new Vector2(96f, 56f) : new Vector2(138f, 56f));
+                label.rectTransform.localRotation = Quaternion.identity;
+                label.rectTransform.localScale = Vector3.one;
+                label.fontSize = 15f;
+                label.enableAutoSizing = true;
+                label.fontSizeMin = 10f;
+                label.fontSizeMax = 15f;
                 label.text = reward != null
                     ? $"{reward.GetDisplayName()}\n{shopData.GetWheelRewardDisplayPercent(reward):0.##}%"
                     : "?";
