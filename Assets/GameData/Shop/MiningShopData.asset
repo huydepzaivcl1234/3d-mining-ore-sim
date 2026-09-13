@@ -14,3 +14,54 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningShopData
   rareGiftBox: {fileID: 11400000, guid: f18a9bc3efc342d4b64dde59a7745142, type: 2}
   rareGiftBoxGemCost: 20
+  singleSpinGemCost: 10
+  multiSpinCount: 10
+  multiSpinGemCost: 100
+  wheelSpinDurationSeconds: 2.4
+  wheelSpinRotations: 6
+  wheelRewards:
+  - rewardType: 2
+    weight: 50
+    currencyAmount: 250
+    item: {fileID: 11400000, guid: 6556e39ad099f9f4aafb234d4eec3f75, type: 2}
+    itemAmount: 1
+    englishName: Apple
+    vietnameseName: "T\xE1o"
+    icon: {fileID: 21300000, guid: b15fd69cba1745d883c50d76ef368102, type: 3}
+    wheelColor: {r: 1, g: 0.66, b: 0.08, a: 1}
+  - rewardType: 1
+    weight: 25
+    currencyAmount: 5
+    item: {fileID: 0}
+    itemAmount: 1
+    englishName: Gem
+    vietnameseName: 
+    icon: {fileID: 21300000, guid: af4dd62c5913938a141c87c80c21e325, type: 3}
+    wheelColor: {r: 0.31, g: 0.85, b: 1, a: 1}
+  - rewardType: 2
+    weight: 14
+    currencyAmount: 0
+    item: {fileID: 11400000, guid: 6556e39ad099f9f4aafb234d4eec3f75, type: 2}
+    itemAmount: 2
+    englishName: Apple
+    vietnameseName: "t\xE1o"
+    icon: {fileID: 21300000, guid: b15fd69cba1745d883c50d76ef368102, type: 3}
+    wheelColor: {r: 1, g: 0.26, b: 0.25, a: 1}
+  - rewardType: 2
+    weight: 8
+    currencyAmount: 0
+    item: {fileID: 11400000, guid: d4439c8d4fb6e8c4cb8932645ca7aa8b, type: 2}
+    itemAmount: 3
+    englishName: Banana
+    vietnameseName: "Chu\u1ED1i"
+    icon: {fileID: 21300000, guid: c26ae78dbb2856e994d61e87f0479213, type: 3}
+    wheelColor: {r: 1, g: 0.85, b: 0.18, a: 1}
+  - rewardType: 2
+    weight: 3
+    currencyAmount: 0
+    item: {fileID: 11400000, guid: f18a9bc3efc342d4b64dde59a7745142, type: 2}
+    itemAmount: 1
+    englishName: Rare Gift
+    vietnameseName: "Qu\xE0 hi\u1EBFm"
+    icon: {fileID: 21300000, guid: a4d44f5cb6e14a2f8d3d78eea1b7c4f0, type: 3}
+    wheelColor: {r: 0.62, g: 0.24, b: 0.95, a: 1}

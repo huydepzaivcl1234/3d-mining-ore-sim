@@ -60,6 +60,32 @@ namespace MiningSimulator.Ores.Editor
         [MenuItem("Mining Simulator/Setup/Apply Candy UI Theme (PC Android iOS)")]
         public static void ApplyCandyTheme()
         {
+            ApplyCandyThemeInternal(true);
+        }
+
+        internal static void ApplyCandyThemeFromSetup()
+        {
+            ApplyCandyThemeInternal(false);
+        }
+
+        [MenuItem("Mining Simulator/Fixes/Restore Original UI Icon Colors")]
+        public static void RestoreOriginalIconColors()
+        {
+            Canvas canvas = FindHudCanvas();
+            if (canvas == null)
+            {
+                EditorUtility.DisplayDialog("Icon Repair",
+                    $"Could not find '{CanvasName}' in the open scene.", "OK");
+                return;
+            }
+            int repaired = RepairIcons(canvas);
+            EditorSceneManager.MarkSceneDirty(canvas.gameObject.scene);
+            EditorUtility.DisplayDialog("Icon Repair",
+                $"Removed dark UI effects from {repaired} sprite icons. Save the scene.", "OK");
+        }
+
+        private static void ApplyCandyThemeInternal(bool showCompletionDialog)
+        {
             if (EditorApplication.isPlayingOrWillChangePlaymode)
             {
                 EditorUtility.DisplayDialog("Candy UI",
@@ -101,6 +127,7 @@ namespace MiningSimulator.Ores.Editor
             }
 
             ConfigureSafeArea(canvas, data);
+            RepairIcons(canvas);
             MiningButtonSfxSetupMenu.AssignAllButtonSfx(false);
             EditorSceneManager.MarkSceneDirty(canvas.gameObject.scene);
             Undo.CollapseUndoOperations(undoGroup);
@@ -108,9 +135,12 @@ namespace MiningSimulator.Ores.Editor
             EditorGUIUtility.PingObject(canvas.gameObject);
             Debug.Log($"Candy UI applied to {images.Length} graphics, {labels.Length} labels and " +
                       $"{buttons.Length} buttons. Save the scene after reviewing it.", canvas);
-            EditorUtility.DisplayDialog("Candy UI",
-                "Candy theme applied for PC, Android and iOS. Review the Scene/Game views, " +
-                "then save the scene.", "OK");
+            if (showCompletionDialog)
+            {
+                EditorUtility.DisplayDialog("Candy UI",
+                    "Candy theme applied for PC, Android and iOS. Original sprite colors were " +
+                    "restored. Review the Scene/Game views, then save the scene.", "OK");
+            }
         }
 
         private static void ConfigureCanvas(Canvas canvas, MiningUiData data)
@@ -152,8 +182,7 @@ namespace MiningSimulator.Ores.Editor
             bool isIcon = IsIcon(image) && !isButton;
             if (isIcon)
             {
-                ApplyOutline(image.gameObject, data.CandyOutlineColor,
-                    Mathf.Max(1.5f, data.CandyOutlineThickness * 0.55f));
+                RepairIcon(image);
                 return;
             }
             if (image.type == Image.Type.Filled &&
@@ -452,7 +481,43 @@ namespace MiningSimulator.Ores.Editor
         private static bool IsIcon(Image image)
         {
             return image.sprite != null &&
-                   ContainsAny(image.name, "icon", "item", "sprite", "portrait");
+                   ContainsAny(image.name, "icon", "item", "sprite", "portrait",
+                       "thumbnail", "reward art");
+        }
+
+        private static int RepairIcons(Canvas canvas)
+        {
+            int repaired = 0;
+            foreach (Image image in canvas.GetComponentsInChildren<Image>(true))
+            {
+                if (image != null && image.GetComponent<Button>() == null && IsIcon(image))
+                {
+                    RepairIcon(image);
+                    repaired++;
+                }
+            }
+            return repaired;
+        }
+
+        private static void RepairIcon(Image image)
+        {
+            MiningCandyGradient gradient = image.GetComponent<MiningCandyGradient>();
+            if (gradient != null)
+            {
+                Undo.DestroyObjectImmediate(gradient);
+            }
+            foreach (Shadow effect in image.GetComponents<Shadow>())
+            {
+                Undo.DestroyObjectImmediate(effect);
+            }
+            Transform highlight = image.transform.Find(HighlightName);
+            if (highlight != null)
+            {
+                Undo.DestroyObjectImmediate(highlight.gameObject);
+            }
+            Undo.RecordObject(image, "Restore Original Icon Color");
+            image.preserveAspect = true;
+            EditorUtility.SetDirty(image);
         }
 
         private static bool ShouldHaveGloss(Image image)
