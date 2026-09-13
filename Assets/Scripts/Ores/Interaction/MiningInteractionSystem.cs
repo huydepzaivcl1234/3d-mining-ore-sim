@@ -79,6 +79,8 @@ namespace MiningSimulator.Ores
             if (keyboard != null && keyboard[data.InteractionKey].wasPressedThisFrame)
             {
                 target.Interact();
+                // The same target may change from BUY to VIEW INFO without pointer exit.
+                promptTextDirty = true;
             }
         }
 

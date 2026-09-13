@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using PrimeTween;
@@ -23,6 +24,7 @@ namespace MiningSimulator.Ores
 
         private PlayerWallet wallet;
         private MiningUpgradeSystem upgradeSystem;
+        private MiningComputerPanel infoPanel;
         private Renderer[] renderers;
         private Material[][] originalMaterials;
         private Material ghostMaterial;
@@ -36,12 +38,31 @@ namespace MiningSimulator.Ores
         private Vector3 restingLocalScale;
         private bool purchased;
         private bool initialized;
+        private int currentLevel = 1;
 
         public bool IsPurchased => purchased;
-        public string InteractionLabel => MiningLocalization.Text(
-            $"Buy computer ({MiningMoneyFormatter.Format(PurchaseCost)})",
-            $"Mua máy tính ({MiningMoneyFormatter.Format(PurchaseCost)})");
-        public bool CanInteract => isActiveAndEnabled && !purchased && data != null;
+        public int CurrentLevel => Mathf.Clamp(currentLevel, 1, MaximumLevel);
+        public int MaximumLevel => data != null ? data.MaximumLevel : 1;
+        public int CurrentBaseCoinsPerTick => data != null
+            ? data.GetBaseCoinsPerTick(CurrentLevel)
+            : 0;
+        public int NextBaseCoinsPerTick => data != null
+            ? data.GetBaseCoinsPerTick(Mathf.Min(CurrentLevel + 1, MaximumLevel))
+            : 0;
+        public float CurrentRewardPerTick => CalculateReward(CurrentBaseCoinsPerTick);
+        public float NextRewardPerTick => CalculateReward(NextBaseCoinsPerTick);
+        public float SecondsPerTick => data != null ? data.SecondsPerTick : 0f;
+        public float UpgradeCost => data != null ? data.GetUpgradeCost(CurrentLevel) : float.MaxValue;
+        public bool IsMaximumLevel => CurrentLevel >= MaximumLevel;
+        public bool CanUpgrade => purchased && !IsMaximumLevel && wallet != null &&
+                                  wallet.CurrentMoney >= UpgradeCost;
+        public string InteractionLabel => purchased
+            ? MiningLocalization.Text("View computer info", "Xem thông tin máy")
+            : string.Format(MiningLocalization.Text(
+                    "Buy computer ({0})", "Mua máy tính ({0})"),
+                MiningMoneyFormatter.Format(PurchaseCost));
+        public bool CanInteract => isActiveAndEnabled && data != null;
+        public event Action StateChanged;
         private int PurchaseCost => data != null ? data.PurchaseCost : 0;
 
         public void ConfigureIfMissing(MiningComputerData computerData,
@@ -66,6 +87,7 @@ namespace MiningSimulator.Ores
             InitializeIfNeeded();
             ResolveRuntimeReferences();
             purchased = LoadPurchased();
+            currentLevel = purchased ? LoadLevel() : 1;
             if (purchased)
             {
                 RestoreSolidMaterials();
@@ -100,7 +122,14 @@ namespace MiningSimulator.Ores
 
         public void Interact()
         {
-            TryPurchase();
+            if (purchased)
+            {
+                OpenInfoPanel();
+            }
+            else
+            {
+                TryPurchase();
+            }
         }
 
         public bool TryPurchase()
@@ -117,9 +146,27 @@ namespace MiningSimulator.Ores
             }
 
             purchased = true;
+            currentLevel = 1;
             SavePurchased();
+            SaveLevel();
             RestoreSolidMaterials();
             PlayAssemblyAnimation();
+            StateChanged?.Invoke();
+            return true;
+        }
+
+        public bool TryUpgrade()
+        {
+            ResolveRuntimeReferences();
+            if (!CanUpgrade || !wallet.TrySpend(UpgradeCost))
+            {
+                return false;
+            }
+
+            currentLevel = Mathf.Min(currentLevel + 1, MaximumLevel);
+            SaveLevel();
+            PlayCoinPunch();
+            StateChanged?.Invoke();
             return true;
         }
 
@@ -137,12 +184,15 @@ namespace MiningSimulator.Ores
             StopProduction();
             StopAnimationsAndRestore();
             purchased = false;
+            currentLevel = 1;
             if (data != null)
             {
                 PlayerPrefs.DeleteKey(GetSaveKey());
+                PlayerPrefs.DeleteKey(GetLevelSaveKey());
                 PlayerPrefs.Save();
                 ApplyGhostMaterial(data.GhostColor);
             }
+            StateChanged?.Invoke();
         }
 
         public static void ResetAllLoadedStations()
@@ -165,6 +215,24 @@ namespace MiningSimulator.Ores
             {
                 upgradeSystem = FindFirstObjectByType<MiningUpgradeSystem>(FindObjectsInactive.Include);
             }
+        }
+
+        private void OpenInfoPanel()
+        {
+            ResolveRuntimeReferences();
+            if (infoPanel == null)
+            {
+                infoPanel = FindFirstObjectByType<MiningComputerPanel>(
+                    FindObjectsInactive.Include);
+            }
+            if (infoPanel == null)
+            {
+                Debug.LogWarning("Computer info panel is missing. Run Mining Simulator/" +
+                                 "Setup/Create or Update Computer Info Panel in Edit Mode.", this);
+                return;
+            }
+
+            infoPanel.Show(this);
         }
 
         private void InitializeIfNeeded()
@@ -432,9 +500,7 @@ namespace MiningSimulator.Ores
                 return;
             }
 
-            float reward = upgradeSystem != null
-                ? upgradeSystem.CalculateMiningReward(data.BaseCoinsPerTick)
-                : data.BaseCoinsPerTick;
+            float reward = CurrentRewardPerTick;
             wallet.AddMoney(reward);
             SpawnRewardPopup(reward);
             PlayCoinPunch();
@@ -543,6 +609,13 @@ namespace MiningSimulator.Ores
             return data != null && PlayerPrefs.GetInt(GetSaveKey(), 0) == 1;
         }
 
+        private int LoadLevel()
+        {
+            return data == null
+                ? 1
+                : Mathf.Clamp(PlayerPrefs.GetInt(GetLevelSaveKey(), 1), 1, MaximumLevel);
+        }
+
         private void SavePurchased()
         {
             if (data == null)
@@ -553,10 +626,36 @@ namespace MiningSimulator.Ores
             PlayerPrefs.Save();
         }
 
+        private void SaveLevel()
+        {
+            if (data == null)
+            {
+                return;
+            }
+            PlayerPrefs.SetInt(GetLevelSaveKey(), CurrentLevel);
+            PlayerPrefs.Save();
+        }
+
+        private float CalculateReward(int baseCoins)
+        {
+            if (baseCoins <= 0)
+            {
+                return 0f;
+            }
+            return upgradeSystem != null
+                ? upgradeSystem.CalculateMiningReward(baseCoins)
+                : baseCoins;
+        }
+
         private string GetSaveKey()
         {
             string safeId = string.IsNullOrWhiteSpace(stationId) ? "Computer1" : stationId.Trim();
             return $"{data.PurchaseSaveKey}.{safeId}";
+        }
+
+        private string GetLevelSaveKey()
+        {
+            return GetSaveKey() + ".Level.v1";
         }
     }
 }
