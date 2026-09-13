@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace MiningSimulator.Ores
 {
@@ -96,6 +97,7 @@ namespace MiningSimulator.Ores
                 : FindFirstObjectByType<NpcProgressionSystem>(FindObjectsInactive.Include);
             nextTargetRefreshTime = 0f;
             ConfigurePhysics();
+            ConfigureShadows();
             RegisterNpcCollisionPairing();
             ResetProgressTracking();
         }
@@ -145,6 +147,7 @@ namespace MiningSimulator.Ores
             }
 
             ConfigurePhysics();
+            ConfigureShadows();
             ResetProgressTracking();
         }
 
@@ -970,6 +973,28 @@ namespace MiningSimulator.Ores
                 body.interpolation = RigidbodyInterpolation.Interpolate;
                 body.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
                 body.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+            }
+        }
+
+        private void ConfigureShadows()
+        {
+            if (npcData == null)
+            {
+                return;
+            }
+
+            Renderer[] renderers = GetComponentsInChildren<Renderer>(true);
+            foreach (Renderer targetRenderer in renderers)
+            {
+                if (targetRenderer == null)
+                {
+                    continue;
+                }
+
+                targetRenderer.shadowCastingMode = npcData.CastShadows
+                    ? ShadowCastingMode.On
+                    : ShadowCastingMode.Off;
+                targetRenderer.receiveShadows = npcData.ReceiveShadows;
             }
         }
 

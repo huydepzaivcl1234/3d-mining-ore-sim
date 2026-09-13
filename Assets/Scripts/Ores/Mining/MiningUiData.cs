@@ -53,6 +53,20 @@ namespace MiningSimulator.Ores
         [SerializeField] private string buyNpcIconFallback = "+";
         [SerializeField] private string openUpgradeIconFallback = "UP";
 
+        [Header("Gem HUD")]
+        [SerializeField] private Vector2 gemHudPosition = new(-24f, -24f);
+        [SerializeField] private Vector2 gemHudSize = new(250f, 64f);
+        [SerializeField] private Vector2 gemIconPosition = new(12f, -11f);
+        [SerializeField] private Vector2 gemIconSize = new(42f, 42f);
+        [SerializeField] private Vector2 gemTextPosition = new(64f, -12f);
+        [SerializeField] private Vector2 gemTextSize = new(170f, 40f);
+        [Min(1f), SerializeField] private float gemFontSize = 25f;
+        [SerializeField] private Color gemHudColor = new(0.11f, 0.055f, 0.18f, 0.94f);
+        [SerializeField] private Color gemTextColor = Color.white;
+        [SerializeField] private Color gemIconColor = new(0.55f, 0.25f, 1f, 1f);
+        [SerializeField] private Sprite gemIconSprite;
+        [SerializeField] private string gemIconFallback = "G";
+
         [Header("Upgrade Card Icons")]
         [SerializeField] private Vector2 upgradeCardIconSize = new(86f, 86f);
         [SerializeField] private Vector2 upgradeCardIconPosition = new(22f, -25f);
@@ -214,6 +228,12 @@ namespace MiningSimulator.Ores
         [Min(0.01f), SerializeField] private float rewardPopupDuration = 1.1f;
         [Min(0f), SerializeField] private float rewardPopupRiseDistance = 1.2f;
         [Min(0.001f), SerializeField] private float rewardPopupWorldScale = 0.18f;
+        [Header("Ore Reward Popup Motion")]
+        [Range(0.1f, 1f), SerializeField] private float rewardPopupStartScale = 0.55f;
+        [Min(1f), SerializeField] private float rewardPopupPopScale = 1.18f;
+        [Min(0.01f), SerializeField] private float rewardPopupPopDuration = 0.18f;
+        [Min(0.01f), SerializeField] private float rewardPopupSettleDuration = 0.12f;
+        [Range(0f, 0.95f), SerializeField] private float rewardPopupFadeStart = 0.55f;
         [Min(1f), SerializeField] private float rewardPopupFontSize = 5f;
         [SerializeField] private Color rewardPopupColor = new(1f, 0.82f, 0.16f, 1f);
         [SerializeField] private Color rewardPopupOutlineColor = new(0.08f, 0.04f, 0.01f, 1f);
@@ -356,6 +376,20 @@ namespace MiningSimulator.Ores
         public string NpcIconFallback => npcIconFallback;
         public string BuyNpcIconFallback => buyNpcIconFallback;
         public string OpenUpgradeIconFallback => openUpgradeIconFallback;
+        public Vector2 GemHudPosition => gemHudPosition;
+        public Vector2 GemHudSize => gemHudSize;
+        public Vector2 GemIconPosition => gemIconPosition;
+        public Vector2 GemIconSize => gemIconSize;
+        public Vector2 GemTextPosition => gemTextPosition;
+        public Vector2 GemTextSize => gemTextSize;
+        public float GemFontSize => gemFontSize;
+        public Color GemHudColor => gemHudColor;
+        public Color GemTextColor => gemTextColor;
+        public Color GemIconColor => gemIconColor;
+        public Sprite GemIconSprite => gemIconSprite;
+        public string GemIconFallback => string.IsNullOrWhiteSpace(gemIconFallback)
+            ? "G"
+            : gemIconFallback;
         public Vector2 UpgradeCardIconSize => upgradeCardIconSize;
         public Vector2 UpgradeCardIconPosition => upgradeCardIconPosition;
         public float UpgradeCardIconPadding => upgradeCardIconPadding;
@@ -492,6 +526,11 @@ namespace MiningSimulator.Ores
         public float RewardPopupDuration => rewardPopupDuration;
         public float RewardPopupRiseDistance => rewardPopupRiseDistance;
         public float RewardPopupWorldScale => rewardPopupWorldScale;
+        public float RewardPopupStartScale => rewardPopupStartScale;
+        public float RewardPopupPopScale => rewardPopupPopScale;
+        public float RewardPopupPopDuration => rewardPopupPopDuration;
+        public float RewardPopupSettleDuration => rewardPopupSettleDuration;
+        public float RewardPopupFadeStart => rewardPopupFadeStart;
         public float RewardPopupFontSize => rewardPopupFontSize;
         public Color RewardPopupColor => rewardPopupColor;
         public Color RewardPopupOutlineColor => rewardPopupOutlineColor;
@@ -703,6 +742,11 @@ namespace MiningSimulator.Ores
             rewardPopupPreviewAmount = Mathf.Max(0, rewardPopupPreviewAmount);
             rewardPopupRiseDistance = Mathf.Max(0f, rewardPopupRiseDistance);
             rewardPopupWorldScale = Mathf.Max(0.001f, rewardPopupWorldScale);
+            rewardPopupStartScale = Mathf.Clamp(rewardPopupStartScale, 0.1f, 1f);
+            rewardPopupPopScale = Mathf.Max(1f, rewardPopupPopScale);
+            rewardPopupPopDuration = Mathf.Max(0.01f, rewardPopupPopDuration);
+            rewardPopupSettleDuration = Mathf.Max(0.01f, rewardPopupSettleDuration);
+            rewardPopupFadeStart = Mathf.Clamp(rewardPopupFadeStart, 0f, 0.95f);
             rewardPopupFontSize = Mathf.Max(1f, rewardPopupFontSize);
             rewardPopupIconScale = Mathf.Max(0.001f, rewardPopupIconScale);
             unlockToastSize.x = Mathf.Max(1f, unlockToastSize.x);

@@ -14,6 +14,12 @@ namespace MiningSimulator.Ores
         [Min(1f), SerializeField] private float moneyCountUnitsPerSecond = 25f;
         [Min(0.05f), SerializeField] private float moneyCountMaximumDuration = 1.25f;
 
+        [Header("Gem Currency")]
+        [Tooltip("Gem balance used for a player who has no saved Gem data yet.")]
+        [Min(0f), SerializeField] private float startingGems;
+        [Tooltip("PlayerPrefs key used only by the Gem wallet.")]
+        [SerializeField] private string gemSaveKey = "MiningSimulator.Gems.v1";
+
         [Header("Camera")]
         [SerializeField] private Vector3 cameraFocusPoint;
         [Min(0.1f), SerializeField] private float cameraDistance = 18f;
@@ -34,6 +40,10 @@ namespace MiningSimulator.Ores
         public float ClickMaximumDistance => clickMaximumDistance;
         public float MoneyCountUnitsPerSecond => moneyCountUnitsPerSecond;
         public float MoneyCountMaximumDuration => moneyCountMaximumDuration;
+        public float StartingGems => startingGems;
+        public string GemSaveKey => string.IsNullOrWhiteSpace(gemSaveKey)
+            ? "MiningSimulator.Gems.v1"
+            : gemSaveKey;
         public Vector3 CameraFocusPoint => cameraFocusPoint;
         public float CameraDistance => cameraDistance;
         public float CameraYaw => cameraYaw;
@@ -54,6 +64,11 @@ namespace MiningSimulator.Ores
             clickMaximumDistance = Mathf.Max(0.1f, clickMaximumDistance);
             moneyCountUnitsPerSecond = Mathf.Max(1f, moneyCountUnitsPerSecond);
             moneyCountMaximumDuration = Mathf.Max(0.05f, moneyCountMaximumDuration);
+            startingGems = Mathf.Max(0f, startingGems);
+            if (string.IsNullOrWhiteSpace(gemSaveKey))
+            {
+                gemSaveKey = "MiningSimulator.Gems.v1";
+            }
             cameraMinimumDistance = Mathf.Max(0.1f, cameraMinimumDistance);
             cameraMaximumDistance = Mathf.Max(cameraMinimumDistance, cameraMaximumDistance);
             cameraDistance = Mathf.Clamp(cameraDistance, cameraMinimumDistance, cameraMaximumDistance);

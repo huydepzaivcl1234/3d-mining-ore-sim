@@ -68,6 +68,10 @@ namespace MiningSimulator.Ores
         [Range(0f, 0.5f), SerializeField] private float hitPunchScale = 0.08f;
         [Min(0f), SerializeField] private float hitPunchLift = 0.12f;
         [Min(0.01f), SerializeField] private float hitPunchDuration = 0.16f;
+        [Header("Break Feedback")]
+        [Range(0f, 0.8f), SerializeField] private float breakSquashAmount = 0.22f;
+        [Range(0f, 0.8f), SerializeField] private float breakStretchAmount = 0.14f;
+        [Min(0.03f), SerializeField] private float breakAnimationDuration = 0.32f;
         [SerializeField] private GameObject prefab;
         [SerializeField] private Color mapColor = Color.gray;
 
@@ -93,6 +97,9 @@ namespace MiningSimulator.Ores
         public float HitPunchScale => hitPunchScale;
         public float HitPunchLift => hitPunchLift;
         public float HitPunchDuration => hitPunchDuration;
+        public float BreakSquashAmount => breakSquashAmount;
+        public float BreakStretchAmount => breakStretchAmount;
+        public float BreakAnimationDuration => breakAnimationDuration;
         public GameObject Prefab => prefab;
         public Color MapColor => mapColor;
 
@@ -111,6 +118,9 @@ namespace MiningSimulator.Ores
             hitPunchScale = Mathf.Clamp(hitPunchScale, 0f, 0.5f);
             hitPunchLift = Mathf.Max(0f, hitPunchLift);
             hitPunchDuration = Mathf.Max(0.01f, hitPunchDuration);
+            breakSquashAmount = Mathf.Clamp(breakSquashAmount, 0f, 0.8f);
+            breakStretchAmount = Mathf.Clamp(breakStretchAmount, 0f, 0.8f);
+            breakAnimationDuration = Mathf.Max(0.03f, breakAnimationDuration);
         }
     }
 }

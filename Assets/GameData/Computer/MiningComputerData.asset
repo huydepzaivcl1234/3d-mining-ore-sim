@@ -17,8 +17,8 @@ MonoBehaviour:
   secondsPerTick: 2
   purchaseSaveKey: MiningSimulator.ComputerCoinMachine.Purchased.v1
   maximumLevel: 10
-  bonusCoinsPerLevel: 50
-  upgradeBaseCost: 500
+  bonusCoinsPerLevel: 25
+  upgradeBaseCost: 750
   upgradeCostGrowthMultiplier: 1.6
   ghostColor: {r: 0.1, g: 0.85, b: 1, a: 0.28}
   focusedGhostColor: {r: 0.35, g: 1, b: 0.75, a: 0.48}

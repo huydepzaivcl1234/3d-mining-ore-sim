@@ -116,6 +116,26 @@ namespace MiningSimulator.Ores
         [Min(0f), SerializeField] private float dayFogDensity = 0.002f;
         [Min(0f), SerializeField] private float nightFogDensity = 0.012f;
 
+        [Header("Cinematic Post Processing")]
+        [SerializeField] private bool controlCinematicPostProcessing = true;
+        [Tooltip("Use the filmic ACES tonemapper on the existing Global Volume.")]
+        [SerializeField] private bool useAcesTonemapping = true;
+        [Min(0f), SerializeField] private float dayBloomIntensity = 0.22f;
+        [Min(0f), SerializeField] private float nightBloomIntensity = 0.38f;
+        [Min(0f), SerializeField] private float bloomThreshold = 0.9f;
+        [Min(0f), SerializeField] private float goldenHourBloomBoost = 0.28f;
+        [Range(-5f, 5f), SerializeField] private float dayPostExposure = 0.05f;
+        [Range(-5f, 5f), SerializeField] private float nightPostExposure = -0.18f;
+        [Range(-100f, 100f), SerializeField] private float dayContrast = 7f;
+        [Range(-100f, 100f), SerializeField] private float nightContrast = 13f;
+        [Range(-100f, 100f), SerializeField] private float daySaturation = 4f;
+        [Range(-100f, 100f), SerializeField] private float nightSaturation = -5f;
+        [SerializeField] private Color dayColorFilter = Color.white;
+        [SerializeField] private Color nightColorFilter = new(0.72f, 0.8f, 1f, 1f);
+        [Range(0f, 1f), SerializeField] private float dayVignetteIntensity = 0.12f;
+        [Range(0f, 1f), SerializeField] private float nightVignetteIntensity = 0.2f;
+        [Range(0.01f, 1f), SerializeField] private float vignetteSmoothness = 0.55f;
+
         [Header("Day Special Ore")]
         [SerializeField] private OreData lightStone;
         [Range(0f, 100f), SerializeField] private float lightStoneChancePerSpawnPercent = 5f;
@@ -215,6 +235,23 @@ namespace MiningSimulator.Ores
         public Color NightFogColor => nightFogColor;
         public float DayFogDensity => dayFogDensity;
         public float NightFogDensity => nightFogDensity;
+        public bool ControlCinematicPostProcessing => controlCinematicPostProcessing;
+        public bool UseAcesTonemapping => useAcesTonemapping;
+        public float DayBloomIntensity => dayBloomIntensity;
+        public float NightBloomIntensity => nightBloomIntensity;
+        public float BloomThreshold => bloomThreshold;
+        public float GoldenHourBloomBoost => goldenHourBloomBoost;
+        public float DayPostExposure => dayPostExposure;
+        public float NightPostExposure => nightPostExposure;
+        public float DayContrast => dayContrast;
+        public float NightContrast => nightContrast;
+        public float DaySaturation => daySaturation;
+        public float NightSaturation => nightSaturation;
+        public Color DayColorFilter => dayColorFilter;
+        public Color NightColorFilter => nightColorFilter;
+        public float DayVignetteIntensity => dayVignetteIntensity;
+        public float NightVignetteIntensity => nightVignetteIntensity;
+        public float VignetteSmoothness => vignetteSmoothness;
         public OreData LightStone => lightStone;
         public float LightStoneChancePerSpawnPercent => lightStoneChancePerSpawnPercent;
         public int MaximumActiveLightStones => maximumActiveLightStones;
@@ -259,6 +296,19 @@ namespace MiningSimulator.Ores
             nightSkyFogSmoothness = Mathf.Clamp(nightSkyFogSmoothness, 0.01f, 1f);
             dayFogDensity = Mathf.Max(0f, dayFogDensity);
             nightFogDensity = Mathf.Max(0f, nightFogDensity);
+            dayBloomIntensity = Mathf.Max(0f, dayBloomIntensity);
+            nightBloomIntensity = Mathf.Max(0f, nightBloomIntensity);
+            bloomThreshold = Mathf.Max(0f, bloomThreshold);
+            goldenHourBloomBoost = Mathf.Max(0f, goldenHourBloomBoost);
+            dayPostExposure = Mathf.Clamp(dayPostExposure, -5f, 5f);
+            nightPostExposure = Mathf.Clamp(nightPostExposure, -5f, 5f);
+            dayContrast = Mathf.Clamp(dayContrast, -100f, 100f);
+            nightContrast = Mathf.Clamp(nightContrast, -100f, 100f);
+            daySaturation = Mathf.Clamp(daySaturation, -100f, 100f);
+            nightSaturation = Mathf.Clamp(nightSaturation, -100f, 100f);
+            dayVignetteIntensity = Mathf.Clamp01(dayVignetteIntensity);
+            nightVignetteIntensity = Mathf.Clamp01(nightVignetteIntensity);
+            vignetteSmoothness = Mathf.Clamp(vignetteSmoothness, 0.01f, 1f);
             auraLightIntensity = Mathf.Max(0f, auraLightIntensity);
             auraLightRange = Mathf.Max(0f, auraLightRange);
             auraPulseSpeed = Mathf.Max(0f, auraPulseSpeed);

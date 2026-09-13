@@ -85,6 +85,14 @@ namespace MiningSimulator.Ores
         [Min(0f), SerializeField] private float hitPunchLift = 0.12f;
         [Min(0.01f), SerializeField] private float hitPunchDuration = 0.16f;
 
+        [Header("Rare Reward Camera Shake")]
+        [SerializeField] private bool rareRewardCameraShake = true;
+        [SerializeField] private LuckyBlockType minimumShakeType = LuckyBlockType.Diamond;
+        [Min(0f), SerializeField] private float rareShakeStrength = 0.1f;
+        [Min(0.01f), SerializeField] private float rareShakeDuration = 0.32f;
+        [Min(0.1f), SerializeField] private float rareShakeFrequency = 24f;
+        [Min(1f), SerializeField] private float rainbowShakeMultiplier = 1.65f;
+
         [Header("Health Bar")]
         [SerializeField] private Vector3 healthBarWorldOffset = new(0f, 0.25f, 0f);
         [Min(0.01f), SerializeField] private float healthBarScale = 0.65f;
@@ -125,6 +133,13 @@ namespace MiningSimulator.Ores
         public float HitPunchScale => hitPunchScale;
         public float HitPunchLift => hitPunchLift;
         public float HitPunchDuration => hitPunchDuration;
+        public bool RareRewardCameraShake => rareRewardCameraShake;
+        public float RareShakeDuration => rareShakeDuration;
+        public float RareShakeFrequency => rareShakeFrequency;
+        public bool ShouldShakeCamera(LuckyBlockType type) =>
+            rareRewardCameraShake && type >= minimumShakeType && rareShakeStrength > 0f;
+        public float GetCameraShakeStrength(LuckyBlockType type) => rareShakeStrength *
+            (type == LuckyBlockType.Rainbow ? rainbowShakeMultiplier : 1f);
         public Vector3 HealthBarWorldOffset => healthBarWorldOffset;
         public float HealthBarScale => healthBarScale;
         public bool ShowCountdownLabel => showCountdownLabel;
@@ -153,6 +168,10 @@ namespace MiningSimulator.Ores
             hitPunchScale = Mathf.Clamp(hitPunchScale, 0f, 0.5f);
             hitPunchLift = Mathf.Max(0f, hitPunchLift);
             hitPunchDuration = Mathf.Max(0.01f, hitPunchDuration);
+            rareShakeStrength = Mathf.Max(0f, rareShakeStrength);
+            rareShakeDuration = Mathf.Max(0.01f, rareShakeDuration);
+            rareShakeFrequency = Mathf.Max(0.1f, rareShakeFrequency);
+            rainbowShakeMultiplier = Mathf.Max(1f, rainbowShakeMultiplier);
             healthBarScale = Mathf.Max(0.01f, healthBarScale);
             countdownLabelScale = Mathf.Max(0.01f, countdownLabelScale);
             countdownLabelFontSize = Mathf.Max(1f, countdownLabelFontSize);

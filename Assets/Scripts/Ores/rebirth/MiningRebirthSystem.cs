@@ -100,6 +100,7 @@ namespace MiningSimulator.Ores
             achievementSystem?.ResetAllData();
             MiningComputerStation.ResetAllLoadedStations();
             wallet?.ResetMoney();
+            wallet?.ResetGems();
             ApplyPermanentBoost();
             StateChanged?.Invoke();
         }

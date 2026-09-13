@@ -7,6 +7,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.Rendering;
 
 namespace MiningSimulator.Editor
 {
@@ -431,6 +432,13 @@ namespace MiningSimulator.Editor
             var systemSerialized = new SerializedObject(system);
             systemSerialized.FindProperty("data").objectReferenceValue = data;
             systemSerialized.FindProperty("sun").objectReferenceValue = sun;
+            Volume volume = UnityEngine.Object.FindFirstObjectByType<Volume>(
+                FindObjectsInactive.Include);
+            SerializedProperty volumeProperty = systemSerialized.FindProperty("cinematicVolume");
+            if (volumeProperty.objectReferenceValue == null)
+            {
+                volumeProperty.objectReferenceValue = volume;
+            }
             systemSerialized.ApplyModifiedProperties();
 
             OreSpawner spawner = UnityEngine.Object.FindFirstObjectByType<OreSpawner>(

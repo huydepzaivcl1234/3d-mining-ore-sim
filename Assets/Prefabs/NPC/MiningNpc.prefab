@@ -9,10 +9,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2959469947840653621}
-  - component: {fileID: 8149645977320992436}
-  - component: {fileID: 3362057275201503121}
-  - component: {fileID: 6456789610439645049}
-  - component: {fileID: 9063359376741394101}
+  - component: {fileID: 4802256784572739236}
+  - component: {fileID: 8997413567910028629}
+  - component: {fileID: 6240163918479986620}
+  - component: {fileID: 7082575674608149571}
   m_Layer: 0
   m_Name: MiningNpc
   m_TagString: Untagged
@@ -36,7 +36,7 @@ Transform:
   - {fileID: 4976706783355569380}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!136 &8149645977320992436
+--- !u!136 &4802256784572739236
 CapsuleCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -56,10 +56,10 @@ CapsuleCollider:
   m_Enabled: 1
   serializedVersion: 2
   m_Radius: 0.5
-  m_Height: 1.8522002
+  m_Height: 2.0189006
   m_Direction: 1
-  m_Center: {x: 0, y: 0.9020777, z: 0}
---- !u!54 &3362057275201503121
+  m_Center: {x: 0, y: 0.99054974, z: 0}
+--- !u!54 &8997413567910028629
 Rigidbody:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -86,7 +86,7 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &6456789610439645049
+--- !u!114 &6240163918479986620
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -111,7 +111,7 @@ MonoBehaviour:
   leftFootBone: {fileID: 8323151205542282700}
   rightFootBone: {fileID: 7143922415596964074}
   groundClampEpsilon: 0.01
---- !u!114 &9063359376741394101
+--- !u!114 &7082575674608149571
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

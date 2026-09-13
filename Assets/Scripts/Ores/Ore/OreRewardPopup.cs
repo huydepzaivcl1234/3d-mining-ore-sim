@@ -1,3 +1,4 @@
+using PrimeTween;
 using TMPro;
 using UnityEngine;
 
@@ -15,9 +16,10 @@ namespace MiningSimulator.Ores
         private MiningUiData uiData;
         private Camera targetCamera;
         private Vector3 startPosition;
+        private Vector3 restingScale;
         private Color startColor;
         private Color iconStartColor;
-        private float elapsed;
+        private Sequence animationSequence;
 
         public void Initialize(float amount, Vector3 worldPosition, MiningUiData targetUiData)
         {
@@ -27,7 +29,8 @@ namespace MiningSimulator.Ores
             targetCamera = Camera.main;
             startPosition = worldPosition + uiData.RewardPopupWorldOffset;
             transform.SetPositionAndRotation(startPosition, Quaternion.identity);
-            transform.localScale = Vector3.one * uiData.RewardPopupWorldScale;
+            restingScale = Vector3.one * uiData.RewardPopupWorldScale;
+            transform.localScale = restingScale * uiData.RewardPopupStartScale;
             label.text = string.Format(uiData.RewardPopupFormat,
                 MiningMoneyFormatter.Format(amount));
             label.fontSize = uiData.RewardPopupFontSize;
@@ -42,31 +45,15 @@ namespace MiningSimulator.Ores
                 coinIcon.color = uiData.RewardPopupIconColor;
                 iconStartColor = coinIcon.color;
             }
-            elapsed = 0f;
+            PlayAnimation();
         }
 
-        private void Update()
+        private void LateUpdate()
         {
             if (uiData == null || label == null)
             {
                 Destroy(gameObject);
                 return;
-            }
-
-            elapsed += Time.deltaTime;
-            float progress = Mathf.Clamp01(elapsed / uiData.RewardPopupDuration);
-            float easedProgress = 1f - (1f - progress) * (1f - progress);
-            transform.position = startPosition + Vector3.up *
-                (uiData.RewardPopupRiseDistance * easedProgress);
-
-            Color color = startColor;
-            color.a = 1f - progress;
-            label.color = color;
-            if (coinIcon != null)
-            {
-                Color iconColor = iconStartColor;
-                iconColor.a *= 1f - progress;
-                coinIcon.color = iconColor;
             }
 
             targetCamera ??= Camera.main;
@@ -76,8 +63,60 @@ namespace MiningSimulator.Ores
                     transform.position - targetCamera.transform.position,
                     targetCamera.transform.up);
             }
+        }
 
-            if (progress >= 1f)
+        private void OnDisable()
+        {
+            if (animationSequence.isAlive)
+            {
+                animationSequence.Stop();
+            }
+        }
+
+        private void PlayAnimation()
+        {
+            if (animationSequence.isAlive)
+            {
+                animationSequence.Stop();
+            }
+
+            float duration = uiData.RewardPopupDuration;
+            float popDuration = Mathf.Min(uiData.RewardPopupPopDuration, duration);
+            float settleDuration = Mathf.Min(uiData.RewardPopupSettleDuration,
+                Mathf.Max(0.01f, duration - popDuration));
+            Vector3 poppedScale = restingScale * uiData.RewardPopupPopScale;
+
+            animationSequence = Sequence.Create(Tween.Custom(this, 0f, 1f, duration,
+                    static (popup, progress) => popup.ApplyAnimationProgress(progress),
+                    Ease.OutCubic))
+                .Group(Tween.Scale(transform, poppedScale, popDuration, Ease.OutBack))
+                .Insert(popDuration, Tween.Scale(transform, restingScale, settleDuration,
+                    Ease.OutSine))
+                .ChainCallback(this, static popup => popup.DestroyAfterAnimation());
+        }
+
+        private void ApplyAnimationProgress(float progress)
+        {
+            transform.position = startPosition + Vector3.up *
+                (uiData.RewardPopupRiseDistance * progress);
+
+            float fadeStart = uiData.RewardPopupFadeStart;
+            float alpha = 1f - Mathf.InverseLerp(fadeStart, 1f, progress);
+            Color color = startColor;
+            color.a *= alpha;
+            label.color = color;
+            if (coinIcon != null)
+            {
+                Color iconColor = iconStartColor;
+                iconColor.a *= alpha;
+                coinIcon.color = iconColor;
+            }
+        }
+
+        private void DestroyAfterAnimation()
+        {
+            animationSequence = default;
+            if (this != null)
             {
                 Destroy(gameObject);
             }

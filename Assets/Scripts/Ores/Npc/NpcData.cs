@@ -47,6 +47,12 @@ namespace MiningSimulator.Ores
         [SerializeField] private LayerMask collisionLayers = ~0;
         [SerializeField] private bool ignoreNpcPhysicalCollisions = true;
 
+        [Header("Rendering")]
+        [Tooltip("Forces every renderer on the miner model and tool to cast realtime shadows.")]
+        [SerializeField] private bool castShadows = true;
+        [Tooltip("Lets the miner model and tool receive shadows from the environment.")]
+        [SerializeField] private bool receiveShadows = true;
+
         [Header("Dynamic Obstacle Response")]
         [Min(0.05f), SerializeField] private float obstacleProbeRadius = 0.32f;
         [Min(0.1f), SerializeField] private float obstacleProbeDistance = 1.25f;
@@ -110,6 +116,8 @@ namespace MiningSimulator.Ores
         public float Mass => mass;
         public LayerMask CollisionLayers => collisionLayers;
         public bool IgnoreNpcPhysicalCollisions => ignoreNpcPhysicalCollisions;
+        public bool CastShadows => castShadows;
+        public bool ReceiveShadows => receiveShadows;
         public float ObstacleProbeRadius => obstacleProbeRadius;
         public float ObstacleProbeDistance => obstacleProbeDistance;
         public float ObstacleAvoidanceStrength => obstacleAvoidanceStrength;

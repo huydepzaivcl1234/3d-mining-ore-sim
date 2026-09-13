@@ -458,7 +458,9 @@ namespace MiningSimulator.Ores
                 return;
             }
 
-            float delay = ore.Data != null ? ore.Data.DestroyDelay : 0f;
+            float delay = ore.Data != null
+                ? Mathf.Max(ore.Data.DestroyDelay, ore.Data.BreakAnimationDuration)
+                : 0f;
             if (delay > 0f && isActiveAndEnabled)
             {
                 pendingPoolReturns.Add(ore);

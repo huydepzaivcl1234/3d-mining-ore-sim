@@ -1,3 +1,4 @@
+using PrimeTween;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
@@ -15,6 +16,11 @@ namespace MiningSimulator.Ores
         private float distance;
         private float yaw;
         private float pitch;
+        private Tween shakeTween;
+        private float shakeEnvelope;
+        private float shakeStrength;
+        private float shakeFrequency;
+        private float shakeSeed;
 
         private void Awake()
         {
@@ -53,7 +59,52 @@ namespace MiningSimulator.Ores
 
             Quaternion rotation = Quaternion.Euler(pitch, yaw, 0f);
             Vector3 position = focusPoint - rotation * Vector3.forward * distance;
+            if (shakeEnvelope > 0f)
+            {
+                float sampleTime = Time.unscaledTime * shakeFrequency;
+                Vector3 localShake = new(
+                    SampleShake(sampleTime, shakeSeed),
+                    SampleShake(sampleTime, shakeSeed + 17.31f),
+                    0f);
+                position += rotation * (localShake * (shakeStrength * shakeEnvelope));
+            }
             controlledCamera.transform.SetPositionAndRotation(position, rotation);
+        }
+
+        public void PlayRewardShake(float strength, float duration, float frequency)
+        {
+            if (strength <= 0f || duration <= 0f)
+            {
+                return;
+            }
+
+            if (shakeTween.isAlive)
+            {
+                shakeTween.Stop();
+            }
+
+            shakeStrength = strength;
+            shakeFrequency = Mathf.Max(0.1f, frequency);
+            shakeSeed = Random.Range(0f, 1000f);
+            shakeEnvelope = 1f;
+            shakeTween = Tween.Custom(this, 1f, 0f, duration,
+                    static (cameraRig, envelope) => cameraRig.shakeEnvelope = envelope,
+                    Ease.OutQuad)
+                .OnComplete(this, static cameraRig => cameraRig.shakeEnvelope = 0f);
+        }
+
+        private void OnDisable()
+        {
+            if (shakeTween.isAlive)
+            {
+                shakeTween.Stop();
+            }
+            shakeEnvelope = 0f;
+        }
+
+        private static float SampleShake(float time, float seed)
+        {
+            return Mathf.PerlinNoise(time, seed) * 2f - 1f;
         }
 
         private void ReadKeyboard()

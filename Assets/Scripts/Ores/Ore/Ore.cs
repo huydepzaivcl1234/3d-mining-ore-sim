@@ -308,10 +308,12 @@ namespace MiningSimulator.Ores
                 : data.BaseSellValue;
             wallet?.AddMoney(reward);
             RewardGranted?.Invoke(this, reward);
+            hitPunch?.PlayBreak(data.BreakSquashAmount, data.BreakStretchAmount,
+                data.BreakAnimationDuration);
             Depleted?.Invoke(this);
             if (destroyOnDeplete)
             {
-                Destroy(gameObject, data.DestroyDelay);
+                Destroy(gameObject, Mathf.Max(data.DestroyDelay, data.BreakAnimationDuration));
             }
         }
 

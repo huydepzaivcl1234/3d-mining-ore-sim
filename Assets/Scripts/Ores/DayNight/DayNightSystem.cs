@@ -2,6 +2,7 @@ using System;
 using PrimeTween;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 
 namespace MiningSimulator.Ores
 {
@@ -11,6 +12,8 @@ namespace MiningSimulator.Ores
     {
         [SerializeField] private DayNightData data;
         [SerializeField] private Light sun;
+        [Tooltip("Existing scene Global Volume. Auto-found once when left empty.")]
+        [SerializeField] private Volume cinematicVolume;
 
         private static readonly int SkyTintId = Shader.PropertyToID("_SkyTint");
         private static readonly int TintId = Shader.PropertyToID("_Tint");
@@ -38,6 +41,12 @@ namespace MiningSimulator.Ores
         private SpriteRenderer celestialRenderer;
         private Transform celestialTransform;
         private Camera billboardCamera;
+        private VolumeProfile originalVolumeProfile;
+        private VolumeProfile runtimeVolumeProfile;
+        private Bloom bloom;
+        private ColorAdjustments colorAdjustments;
+        private Vignette vignette;
+        private Tonemapping tonemapping;
 
         public MiningTimePeriod CurrentPeriod => currentPeriod;
 
@@ -71,6 +80,7 @@ namespace MiningSimulator.Ores
         {
             InitializeIfNeeded();
             PrepareRuntimeSkybox();
+            PrepareCinematicVolume();
             EnsureCelestialDisc();
             ApplyLighting(daylight);
         }
@@ -85,14 +95,12 @@ namespace MiningSimulator.Ores
             StopLightingTween();
             if (runtimeSkybox == null)
             {
+                RestoreCinematicVolume();
                 return;
             }
-
-            if (RenderSettings.skybox == runtimeSkybox)
-            {
-                RenderSettings.skybox = originalSkybox;
-            }
+            if (RenderSettings.skybox == runtimeSkybox) RenderSettings.skybox = originalSkybox;
             Destroy(runtimeSkybox);
+            RestoreCinematicVolume();
         }
 
         private void Update()
@@ -323,6 +331,7 @@ namespace MiningSimulator.Ores
             }
 
             RenderSettings.ambientLight = ambient * ambientShimmer;
+            ApplyCinematicPostProcessing(daylightAmount, goldenAmount);
             ApplySkybox(daylightAmount);
             if (data.ControlFog)
             {
@@ -331,6 +340,95 @@ namespace MiningSimulator.Ores
                 RenderSettings.fogDensity = Mathf.Lerp(
                     data.NightFogDensity, data.DayFogDensity, daylightAmount);
             }
+        }
+
+        private void PrepareCinematicVolume()
+        {
+            if (data == null || !data.ControlCinematicPostProcessing)
+            {
+                return;
+            }
+
+            cinematicVolume ??= FindFirstObjectByType<Volume>(FindObjectsInactive.Include);
+            if (cinematicVolume == null || cinematicVolume.sharedProfile == null)
+            {
+                return;
+            }
+
+            originalVolumeProfile = cinematicVolume.sharedProfile;
+            runtimeVolumeProfile = Instantiate(originalVolumeProfile);
+            runtimeVolumeProfile.name = originalVolumeProfile.name + " (Cinematic Runtime)";
+            cinematicVolume.sharedProfile = runtimeVolumeProfile;
+            bloom = GetOrAddVolumeComponent<Bloom>();
+            colorAdjustments = GetOrAddVolumeComponent<ColorAdjustments>();
+            vignette = GetOrAddVolumeComponent<Vignette>();
+            tonemapping = GetOrAddVolumeComponent<Tonemapping>();
+            if (tonemapping != null && data.UseAcesTonemapping)
+            {
+                tonemapping.active = true;
+                tonemapping.mode.Override(TonemappingMode.ACES);
+            }
+        }
+
+        private void ApplyCinematicPostProcessing(float daylightAmount, float goldenAmount)
+        {
+            if (runtimeVolumeProfile == null)
+            {
+                return;
+            }
+
+            if (bloom != null)
+            {
+                bloom.active = true;
+                bloom.threshold.Override(data.BloomThreshold);
+                bloom.intensity.Override(Mathf.Lerp(data.NightBloomIntensity,
+                    data.DayBloomIntensity, daylightAmount) +
+                    Mathf.Clamp01(goldenAmount) * data.GoldenHourBloomBoost);
+            }
+
+            if (colorAdjustments != null)
+            {
+                colorAdjustments.active = true;
+                colorAdjustments.postExposure.Override(Mathf.Lerp(data.NightPostExposure,
+                    data.DayPostExposure, daylightAmount));
+                colorAdjustments.contrast.Override(Mathf.Lerp(data.NightContrast,
+                    data.DayContrast, daylightAmount));
+                colorAdjustments.saturation.Override(Mathf.Lerp(data.NightSaturation,
+                    data.DaySaturation, daylightAmount));
+                colorAdjustments.colorFilter.Override(Color.Lerp(data.NightColorFilter,
+                    data.DayColorFilter, daylightAmount));
+            }
+
+            if (vignette != null)
+            {
+                vignette.active = true;
+                vignette.intensity.Override(Mathf.Lerp(data.NightVignetteIntensity,
+                    data.DayVignetteIntensity, daylightAmount));
+                vignette.smoothness.Override(data.VignetteSmoothness);
+            }
+        }
+
+        private void RestoreCinematicVolume()
+        {
+            if (cinematicVolume != null && runtimeVolumeProfile != null &&
+                cinematicVolume.sharedProfile == runtimeVolumeProfile)
+            {
+                cinematicVolume.sharedProfile = originalVolumeProfile;
+            }
+            if (runtimeVolumeProfile != null)
+            {
+                Destroy(runtimeVolumeProfile);
+            }
+            runtimeVolumeProfile = null;
+        }
+
+        private T GetOrAddVolumeComponent<T>() where T : VolumeComponent
+        {
+            if (runtimeVolumeProfile.TryGet(out T component))
+            {
+                return component;
+            }
+            return runtimeVolumeProfile.Add<T>(true);
         }
 
         /// <summary>

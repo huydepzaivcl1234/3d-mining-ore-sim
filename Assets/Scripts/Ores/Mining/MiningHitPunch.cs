@@ -1,3 +1,4 @@
+using PrimeTween;
 using UnityEngine;
 
 namespace MiningSimulator.Ores
@@ -17,19 +18,17 @@ namespace MiningSimulator.Ores
 
         private Vector3 baseLocalPosition;
         private Vector3 baseLocalScale = Vector3.one;
-        private float elapsed;
-        private bool playing;
+        private Sequence animationSequence;
 
         public void Configure(Transform targetTransform, float targetScaleAmount,
             float targetLiftAmount, float targetDuration)
         {
-            if (playing && target != null)
+            if (animationSequence.isAlive)
             {
+                animationSequence.Stop();
                 RestoreBaseTransform();
             }
 
-            elapsed = 0f;
-            playing = false;
             target = targetTransform != null ? targetTransform : transform;
             scaleAmount = Mathf.Clamp(targetScaleAmount, 0f, 0.5f);
             liftAmount = Mathf.Max(0f, targetLiftAmount);
@@ -45,45 +44,70 @@ namespace MiningSimulator.Ores
                 CaptureBaseTransform();
             }
 
+            if (animationSequence.isAlive)
+            {
+                animationSequence.Stop();
+            }
             RestoreBaseTransform();
-            elapsed = 0f;
-            playing = true;
+
+            float halfDuration = duration * 0.5f;
+            Vector3 liftedPosition = baseLocalPosition + Vector3.up * liftAmount;
+            animationSequence = Sequence.Create(Tween.Scale(target,
+                    baseLocalScale * (1f + scaleAmount), halfDuration, Ease.OutQuad))
+                .Group(Tween.LocalPosition(target, liftedPosition, halfDuration, Ease.OutQuad))
+                .Chain(Tween.Scale(target, baseLocalScale, halfDuration, Ease.OutBack))
+                .Group(Tween.LocalPosition(target, baseLocalPosition, halfDuration, Ease.OutBack))
+                .OnComplete(this, static punch => punch.animationSequence = default);
+        }
+
+        public void PlayBreak(float squashAmount, float stretchAmount, float breakDuration)
+        {
+            if (target == null)
+            {
+                target = transform;
+                CaptureBaseTransform();
+            }
+
+            if (animationSequence.isAlive)
+            {
+                animationSequence.Stop();
+            }
+            RestoreBaseTransform();
+
+            float safeSquash = Mathf.Clamp(squashAmount, 0f, 0.8f);
+            float safeStretch = Mathf.Clamp(stretchAmount, 0f, 0.8f);
+            float safeDuration = Mathf.Max(0.03f, breakDuration);
+            float squashDuration = safeDuration * 0.28f;
+            float stretchDuration = safeDuration * 0.25f;
+            float vanishDuration = safeDuration - squashDuration - stretchDuration;
+            Vector3 squashScale = Vector3.Scale(baseLocalScale,
+                new Vector3(1f + safeSquash, 1f - safeSquash, 1f + safeSquash));
+            Vector3 stretchScale = Vector3.Scale(baseLocalScale,
+                new Vector3(1f - safeStretch, 1f + safeStretch, 1f - safeStretch));
+
+            animationSequence = Sequence.Create(Tween.Scale(target, squashScale,
+                    squashDuration, Ease.OutQuad))
+                .Chain(Tween.Scale(target, stretchScale, stretchDuration, Ease.OutBack))
+                .Chain(Tween.Scale(target, Vector3.zero, vanishDuration, Ease.InBack));
         }
 
         public void ResetImmediately()
         {
+            if (animationSequence.isAlive)
+            {
+                animationSequence.Stop();
+            }
+            animationSequence = default;
             if (target != null)
             {
                 RestoreBaseTransform();
             }
-
-            elapsed = 0f;
-            playing = false;
         }
 
         private void Awake()
         {
             target ??= transform;
             CaptureBaseTransform();
-        }
-
-        private void Update()
-        {
-            if (!playing || target == null)
-            {
-                return;
-            }
-
-            elapsed += Time.deltaTime;
-            float progress = Mathf.Clamp01(elapsed / duration);
-            float pulse = Mathf.SmoothStep(0f, 1f, Mathf.Sin(progress * Mathf.PI));
-            target.localScale = baseLocalScale * (1f + scaleAmount * pulse);
-            target.localPosition = baseLocalPosition + Vector3.up * (liftAmount * pulse);
-
-            if (progress >= 1f)
-            {
-                ResetImmediately();
-            }
         }
 
         private void OnDisable()
