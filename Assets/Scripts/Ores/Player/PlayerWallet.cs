@@ -7,8 +7,6 @@ namespace MiningSimulator.Ores
     [DisallowMultipleComponent]
     public sealed class PlayerWallet : MonoBehaviour
     {
-        private const string DefaultGemSaveKey = "MiningSimulator.Gems.v1";
-
         [Header("Game Data")]
         [SerializeField] private MiningGameData gameData;
 
@@ -22,6 +20,7 @@ namespace MiningSimulator.Ores
 
         public float CurrentMoney => currentMoney;
         public float CurrentGems => currentGems;
+        public MiningGameData GameData => gameData;
         public event Action<float> MoneyChanged;
         public event Action<float> MoneySpent;
         public event Action<float> GemsChanged;
@@ -142,7 +141,9 @@ namespace MiningSimulator.Ores
             GemsChanged?.Invoke(currentGems);
         }
 
-        private string GemSaveKey => gameData != null ? gameData.GemSaveKey : DefaultGemSaveKey;
+        private string GemSaveKey => gameData != null
+            ? gameData.GemSaveKey
+            : MiningGameData.DefaultGemSaveKey;
 
         private float LoadGems()
         {

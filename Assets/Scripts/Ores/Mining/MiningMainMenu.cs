@@ -12,6 +12,7 @@ namespace MiningSimulator.Ores
     {
         [Header("Data and pages")]
         [SerializeField] private MiningMainMenuData data;
+        [SerializeField] private MiningGameData gameData;
         [SerializeField] private MiningAudioManager audioManager;
         [SerializeField] private PlayerWallet wallet;
         [SerializeField] private CanvasGroup canvasGroup;
@@ -74,6 +75,7 @@ namespace MiningSimulator.Ores
         private bool ownsGameplayPause;
         private bool closing;
         private Vector2 cardHomePosition;
+        private readonly MiningAnimatedCurrencyValue gemCounter = new();
 
         private void Awake()
         {
@@ -110,6 +112,7 @@ namespace MiningSimulator.Ores
             {
                 wallet.GemsChanged -= HandleGemsChanged;
                 wallet.GemsChanged += HandleGemsChanged;
+                gemCounter.Initialize(wallet.CurrentGems);
             }
             RefreshLocalization();
         }
@@ -124,6 +127,14 @@ namespace MiningSimulator.Ores
             RefreshAudioControls();
             PlayEntrance();
             SelectButton(playButton);
+        }
+
+        private void Update()
+        {
+            if (gemCounter.Tick(Time.unscaledDeltaTime))
+            {
+                RefreshGemAmount();
+            }
         }
 
         private void OnDisable()
@@ -430,6 +441,7 @@ namespace MiningSimulator.Ores
             {
                 wallet = FindFirstObjectByType<PlayerWallet>(FindObjectsInactive.Include);
             }
+            gameData ??= wallet != null ? wallet.GameData : null;
             return data != null && canvasGroup != null && card != null &&
                    mainView != null && settingsView != null && mainViewGroup != null &&
                    settingsViewGroup != null && playButton != null && settingsButton != null &&
@@ -442,6 +454,7 @@ namespace MiningSimulator.Ores
 
         private void HandleGemsChanged(float amount)
         {
+            gemCounter.SetTarget(amount, gameData);
             RefreshGemAmount();
         }
 
@@ -454,8 +467,8 @@ namespace MiningSimulator.Ores
 
             string format = MiningLocalization.Text(data.EnglishGemAmountFormat,
                 data.VietnameseGemAmountFormat);
-            float amount = wallet != null ? wallet.CurrentGems : 0f;
-            gemAmountLabel.text = string.Format(format, MiningMoneyFormatter.Format(amount));
+            gemAmountLabel.text = string.Format(format,
+                MiningMoneyFormatter.Format(gemCounter.Value));
         }
 
         private void PauseGameplay()

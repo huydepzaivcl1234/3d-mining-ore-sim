@@ -65,6 +65,7 @@ namespace MiningSimulator.Ores.Editor
 
             var hudSerialized = new SerializedObject(gemHud);
             hudSerialized.FindProperty("wallet").objectReferenceValue = wallet;
+            hudSerialized.FindProperty("gameData").objectReferenceValue = gameData;
             hudSerialized.FindProperty("gemText").objectReferenceValue = gemText;
             hudSerialized.ApplyModifiedPropertiesWithoutUndo();
 

@@ -16,8 +16,10 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   clickMaximumDistance: 500
-  moneyCountUnitsPerSecond: 25
-  moneyCountMaximumDuration: 1.25
+  currencyCountUnitsPerSecond: 25
+  currencyCountMaximumDuration: 1.25
+  startingGems: 0
+  gemSaveKey: MiningSimulator.Gems.v1
   cameraFocusPoint: {x: 0, y: 0, z: 0}
   cameraDistance: 18
   cameraYaw: 45

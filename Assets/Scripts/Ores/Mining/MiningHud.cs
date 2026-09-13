@@ -27,20 +27,18 @@ namespace MiningSimulator.Ores
         [SerializeField] private string purchaseFailedMessage =
             "Không đủ tiền hoặc đã đạt giới hạn thợ mỏ.";
 
-        private float displayedMoney;
-        private float targetMoney;
-        private float currentCountSpeed;
+        private readonly MiningAnimatedCurrencyValue moneyCounter = new();
 
         private void OnEnable()
         {
+            gameData ??= wallet != null ? wallet.GameData : null;
             MiningLocalization.LanguageChanged -= HandleLanguageChanged;
             MiningLocalization.LanguageChanged += HandleLanguageChanged;
             if (wallet != null)
             {
                 wallet.MoneyChanged -= HandleMoneyChanged;
                 wallet.MoneyChanged += HandleMoneyChanged;
-                displayedMoney = wallet.CurrentMoney;
-                targetMoney = displayedMoney;
+                moneyCounter.Initialize(wallet.CurrentMoney);
             }
 
             if (npcShop != null)
@@ -80,14 +78,10 @@ namespace MiningSimulator.Ores
 
         private void Update()
         {
-            if (Mathf.Approximately(displayedMoney, targetMoney) || gameData == null)
+            if (moneyCounter.Tick(Time.unscaledDeltaTime))
             {
-                return;
+                RefreshMoneyText();
             }
-
-            displayedMoney = Mathf.MoveTowards(displayedMoney, targetMoney,
-                Time.unscaledDeltaTime * currentCountSpeed);
-            RefreshMoneyText();
         }
 
         private void BuyNpc()
@@ -106,18 +100,7 @@ namespace MiningSimulator.Ores
 
         private void HandleMoneyChanged(float money)
         {
-            targetMoney = money;
-
-            if (gameData == null)
-            {
-                displayedMoney = targetMoney;
-            }
-            else
-            {
-                float difference = Mathf.Abs(targetMoney - displayedMoney);
-                float durationLimitedSpeed = difference / gameData.MoneyCountMaximumDuration;
-                currentCountSpeed = Mathf.Max(gameData.MoneyCountUnitsPerSecond, durationLimitedSpeed);
-            }
+            moneyCounter.SetTarget(money, gameData);
 
             RefreshMoneyText();
             RefreshOtherText();
@@ -134,7 +117,7 @@ namespace MiningSimulator.Ores
             {
                 moneyText.text = string.Format(
                     MiningLocalization.Text("Money: {0}", moneyFormat),
-                    MiningMoneyFormatter.Format(displayedMoney));
+                    MiningMoneyFormatter.Format(moneyCounter.Value));
             }
         }
 

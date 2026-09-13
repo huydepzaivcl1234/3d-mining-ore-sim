@@ -26,7 +26,7 @@ MonoBehaviour:
   - ore: {fileID: 11400000, guid: 6ce1f29ef4520f9de60df99934688572, type: 2}
     spawnChancePercent: 0.1
   - ore: {fileID: 11400000, guid: e7dd7326dc52462469a0811436fb9d57, type: 2}
-    spawnChancePercent: 100
+    spawnChancePercent: 1
   rarityRules:
   - rarity: 0
     baseChanceMultiplier: 1

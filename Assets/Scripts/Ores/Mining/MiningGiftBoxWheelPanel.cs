@@ -29,6 +29,10 @@ namespace MiningSimulator.Ores
         private bool spinning;
         private Tween spinTween;
         private RectTransform centerHub;
+        private RectTransform rewardPopup;
+        private CanvasGroup rewardPopupGroup;
+        private TextMeshProUGUI rewardPopupLabel;
+        private Sequence rewardPopupSequence;
 
         private static Sprite cachedWheelSprite;
 
@@ -56,6 +60,10 @@ namespace MiningSimulator.Ores
             sourceSlotIndex = slotIndex;
             spinning = false;
             wheel.localRotation = Quaternion.identity;
+            if (rewardPopup != null)
+            {
+                rewardPopup.gameObject.SetActive(false);
+            }
             spinButton.interactable = true;
             closeButton.interactable = true;
             RebuildRewardCards();
@@ -86,6 +94,15 @@ namespace MiningSimulator.Ores
             {
                 spinTween.Stop();
             }
+            if (rewardPopupSequence.isAlive)
+            {
+                rewardPopupSequence.Stop();
+            }
+            if (rewardPopup != null)
+            {
+                rewardPopup.gameObject.SetActive(false);
+            }
+            rewardPopupSequence = default;
             if (spinning && giftBox != null && itemSystem != null)
             {
                 // A modal interruption or Scene shutdown must never silently eat the box.
@@ -179,6 +196,7 @@ namespace MiningSimulator.Ores
                         "YOU WON: {0}", "BẠN NHẬN ĐƯỢC: {0}"),
                     selectedReward.GetDisplayName());
                 spinLabel.text = MiningLocalization.Text("REWARD RECEIVED", "ĐÃ NHẬN THƯỞNG");
+                ShowRewardPopup(selectedReward.GetDisplayName());
             }
             else
             {
@@ -357,6 +375,67 @@ namespace MiningSimulator.Ores
                 uiData != null ? uiData.GiftWheelSpinButtonColor : new Color(1f, 0.62f, 0.08f));
             spinLabel = spinButton.transform.Find("Label").GetComponent<TextMeshProUGUI>();
             spinButton.onClick.AddListener(StartSpin);
+
+            GameObject popupObject = CreateImage(panel, "Reward Popup",
+                uiData != null ? uiData.GiftRewardPopupColor :
+                new Color(0.35f, 0.12f, 0.62f, 0.98f));
+            rewardPopup = (RectTransform)popupObject.transform;
+            SetCenteredRect(rewardPopup, new Vector2(0f, 15f),
+                uiData != null ? uiData.GiftRewardPopupSize : new Vector2(560f, 150f));
+            rewardPopupGroup = popupObject.AddComponent<CanvasGroup>();
+            rewardPopupGroup.alpha = 0f;
+            rewardPopupGroup.interactable = false;
+            rewardPopupGroup.blocksRaycasts = false;
+            rewardPopupLabel = CreateLabel(rewardPopup, "Reward Text", 32f,
+                uiData != null ? uiData.GiftRewardPopupTextColor :
+                new Color(1f, 0.82f, 0.16f, 1f));
+            popupObject.SetActive(false);
+        }
+
+        private void ShowRewardPopup(string rewardName)
+        {
+            if (rewardPopup == null || rewardPopupGroup == null || rewardPopupLabel == null)
+            {
+                return;
+            }
+            if (rewardPopupSequence.isAlive)
+            {
+                rewardPopupSequence.Stop();
+            }
+
+            rewardPopupLabel.text = string.Format(MiningLocalization.Text(
+                "YOU WON!\n{0}", "BẠN ĐÃ TRÚNG!\n{0}"), rewardName);
+            rewardPopup.gameObject.SetActive(true);
+            rewardPopup.SetAsLastSibling();
+            rewardPopupGroup.alpha = 0f;
+            float startScale = uiData != null ? uiData.GiftRewardPopupStartScale : 0.55f;
+            float punchScale = uiData != null ? uiData.GiftRewardPopupPunchScale : 1.12f;
+            float popDuration = uiData != null ? uiData.GiftRewardPopupPopDuration : 0.22f;
+            float settleDuration = uiData != null ? uiData.GiftRewardPopupSettleDuration : 0.12f;
+            float holdDuration = uiData != null ? uiData.GiftRewardPopupHoldDuration : 1.1f;
+            float fadeDuration = uiData != null ? uiData.GiftRewardPopupFadeDuration : 0.25f;
+            rewardPopup.localScale = Vector3.one * startScale;
+
+            rewardPopupSequence = Sequence.Create(useUnscaledTime: true)
+                .Group(Tween.Custom(rewardPopupGroup, 0f, 1f, popDuration,
+                    static (group, alpha) => group.alpha = alpha, Ease.OutCubic))
+                .Group(Tween.Scale(rewardPopup, Vector3.one * punchScale,
+                    popDuration, Ease.OutBack))
+                .Chain(Tween.Scale(rewardPopup, Vector3.one,
+                    settleDuration, Ease.OutCubic))
+                .ChainDelay(holdDuration)
+                .Chain(Tween.Custom(rewardPopupGroup, 1f, 0f, fadeDuration,
+                    static (group, alpha) => group.alpha = alpha, Ease.InCubic))
+                .OnComplete(this, static panel => panel.HideRewardPopup());
+        }
+
+        private void HideRewardPopup()
+        {
+            if (rewardPopup != null)
+            {
+                rewardPopup.gameObject.SetActive(false);
+            }
+            rewardPopupSequence = default;
         }
 
         /// <summary>A soft-edged white circle, generated once and reused for the wheel

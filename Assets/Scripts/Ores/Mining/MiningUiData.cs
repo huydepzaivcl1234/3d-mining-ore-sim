@@ -186,6 +186,16 @@ namespace MiningSimulator.Ores
         [SerializeField] private Color giftWheelPanelColor = new(0.06f, 0.075f, 0.11f, 0.98f);
         [SerializeField] private Color giftWheelHeaderColor = new(0.48f, 0.24f, 0.75f, 1f);
         [SerializeField] private Color giftWheelSpinButtonColor = new(1f, 0.62f, 0.08f, 1f);
+        [Header("Gift Reward Popup")]
+        [SerializeField] private Vector2 giftRewardPopupSize = new(560f, 150f);
+        [Range(0.1f, 1f), SerializeField] private float giftRewardPopupStartScale = 0.55f;
+        [Range(1f, 1.5f), SerializeField] private float giftRewardPopupPunchScale = 1.12f;
+        [Min(0.01f), SerializeField] private float giftRewardPopupPopDuration = 0.22f;
+        [Min(0.01f), SerializeField] private float giftRewardPopupSettleDuration = 0.12f;
+        [Min(0f), SerializeField] private float giftRewardPopupHoldDuration = 1.1f;
+        [Min(0.01f), SerializeField] private float giftRewardPopupFadeDuration = 0.25f;
+        [SerializeField] private Color giftRewardPopupColor = new(0.35f, 0.12f, 0.62f, 0.98f);
+        [SerializeField] private Color giftRewardPopupTextColor = new(1f, 0.82f, 0.16f, 1f);
 
         [Header("Active Effect Toast")]
         [SerializeField] private Vector2 effectToastPosition = new(0f, -190f);
@@ -498,6 +508,15 @@ namespace MiningSimulator.Ores
         public Color GiftWheelPanelColor => giftWheelPanelColor;
         public Color GiftWheelHeaderColor => giftWheelHeaderColor;
         public Color GiftWheelSpinButtonColor => giftWheelSpinButtonColor;
+        public Vector2 GiftRewardPopupSize => giftRewardPopupSize;
+        public float GiftRewardPopupStartScale => giftRewardPopupStartScale;
+        public float GiftRewardPopupPunchScale => giftRewardPopupPunchScale;
+        public float GiftRewardPopupPopDuration => giftRewardPopupPopDuration;
+        public float GiftRewardPopupSettleDuration => giftRewardPopupSettleDuration;
+        public float GiftRewardPopupHoldDuration => giftRewardPopupHoldDuration;
+        public float GiftRewardPopupFadeDuration => giftRewardPopupFadeDuration;
+        public Color GiftRewardPopupColor => giftRewardPopupColor;
+        public Color GiftRewardPopupTextColor => giftRewardPopupTextColor;
         public Vector2 EffectToastPosition => effectToastPosition;
         public Vector2 EffectToastSize => effectToastSize;
         public float EffectToastFontSize => effectToastFontSize;
@@ -723,6 +742,14 @@ namespace MiningSimulator.Ores
             giftWheelRewardRadius = Mathf.Max(1f, giftWheelRewardRadius);
             giftWheelSpinButtonSize.x = Mathf.Max(1f, giftWheelSpinButtonSize.x);
             giftWheelSpinButtonSize.y = Mathf.Max(1f, giftWheelSpinButtonSize.y);
+            giftRewardPopupSize.x = Mathf.Max(1f, giftRewardPopupSize.x);
+            giftRewardPopupSize.y = Mathf.Max(1f, giftRewardPopupSize.y);
+            giftRewardPopupStartScale = Mathf.Clamp(giftRewardPopupStartScale, 0.1f, 1f);
+            giftRewardPopupPunchScale = Mathf.Clamp(giftRewardPopupPunchScale, 1f, 1.5f);
+            giftRewardPopupPopDuration = Mathf.Max(0.01f, giftRewardPopupPopDuration);
+            giftRewardPopupSettleDuration = Mathf.Max(0.01f, giftRewardPopupSettleDuration);
+            giftRewardPopupHoldDuration = Mathf.Max(0f, giftRewardPopupHoldDuration);
+            giftRewardPopupFadeDuration = Mathf.Max(0.01f, giftRewardPopupFadeDuration);
             effectToastSize.x = Mathf.Max(1f, effectToastSize.x);
             effectToastSize.y = Mathf.Max(1f, effectToastSize.y);
             effectToastFontSize = Mathf.Max(1f, effectToastFontSize);

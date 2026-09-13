@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace MiningSimulator.Ores
 {
@@ -6,19 +7,23 @@ namespace MiningSimulator.Ores
     [CreateAssetMenu(fileName = "MiningGameData", menuName = "Mining Simulator/Game Data/Shared")]
     public sealed class MiningGameData : ScriptableObject
     {
+        public const string DefaultGemSaveKey = "MiningSimulator.Gems.v1";
+
         [Header("Click Mining")]
         [SerializeField] private LayerMask clickableLayers = ~0;
         [Min(0.1f), SerializeField] private float clickMaximumDistance = 500f;
 
-        [Header("Money Count Animation")]
-        [Min(1f), SerializeField] private float moneyCountUnitsPerSecond = 25f;
-        [Min(0.05f), SerializeField] private float moneyCountMaximumDuration = 1.25f;
+        [Header("Money And Gem Count Animation")]
+        [FormerlySerializedAs("moneyCountUnitsPerSecond")]
+        [Min(1f), SerializeField] private float currencyCountUnitsPerSecond = 25f;
+        [FormerlySerializedAs("moneyCountMaximumDuration")]
+        [Min(0.05f), SerializeField] private float currencyCountMaximumDuration = 1.25f;
 
         [Header("Gem Currency")]
         [Tooltip("Gem balance used for a player who has no saved Gem data yet.")]
         [Min(0f), SerializeField] private float startingGems;
         [Tooltip("PlayerPrefs key used only by the Gem wallet.")]
-        [SerializeField] private string gemSaveKey = "MiningSimulator.Gems.v1";
+        [SerializeField] private string gemSaveKey = DefaultGemSaveKey;
 
         [Header("Camera")]
         [SerializeField] private Vector3 cameraFocusPoint;
@@ -38,11 +43,11 @@ namespace MiningSimulator.Ores
 
         public LayerMask ClickableLayers => clickableLayers;
         public float ClickMaximumDistance => clickMaximumDistance;
-        public float MoneyCountUnitsPerSecond => moneyCountUnitsPerSecond;
-        public float MoneyCountMaximumDuration => moneyCountMaximumDuration;
+        public float CurrencyCountUnitsPerSecond => currencyCountUnitsPerSecond;
+        public float CurrencyCountMaximumDuration => currencyCountMaximumDuration;
         public float StartingGems => startingGems;
         public string GemSaveKey => string.IsNullOrWhiteSpace(gemSaveKey)
-            ? "MiningSimulator.Gems.v1"
+            ? DefaultGemSaveKey
             : gemSaveKey;
         public Vector3 CameraFocusPoint => cameraFocusPoint;
         public float CameraDistance => cameraDistance;
@@ -62,12 +67,12 @@ namespace MiningSimulator.Ores
         private void OnValidate()
         {
             clickMaximumDistance = Mathf.Max(0.1f, clickMaximumDistance);
-            moneyCountUnitsPerSecond = Mathf.Max(1f, moneyCountUnitsPerSecond);
-            moneyCountMaximumDuration = Mathf.Max(0.05f, moneyCountMaximumDuration);
+            currencyCountUnitsPerSecond = Mathf.Max(1f, currencyCountUnitsPerSecond);
+            currencyCountMaximumDuration = Mathf.Max(0.05f, currencyCountMaximumDuration);
             startingGems = Mathf.Max(0f, startingGems);
             if (string.IsNullOrWhiteSpace(gemSaveKey))
             {
-                gemSaveKey = "MiningSimulator.Gems.v1";
+                gemSaveKey = DefaultGemSaveKey;
             }
             cameraMinimumDistance = Mathf.Max(0.1f, cameraMinimumDistance);
             cameraMaximumDistance = Mathf.Max(cameraMinimumDistance, cameraMaximumDistance);

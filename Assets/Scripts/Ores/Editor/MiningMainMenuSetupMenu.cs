@@ -52,6 +52,7 @@ namespace MiningSimulator.Ores.Editor
 
             SerializedObject serialized = new(mainMenu);
             SetReference(serialized, "data", data);
+            SetReference(serialized, "gameData", FindFirstAsset<MiningGameData>());
             SetReference(serialized, "audioManager", Object.FindFirstObjectByType<MiningAudioManager>(
                 FindObjectsInactive.Include));
             SetReference(serialized, "wallet", Object.FindFirstObjectByType<PlayerWallet>(
