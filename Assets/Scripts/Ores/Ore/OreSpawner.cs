@@ -218,7 +218,8 @@ namespace MiningSimulator.Ores
             instance.transform.localScale = data.Prefab.transform.localScale * scale;
             ore.Initialize(data, wallet, upgradeSystem, false);
             instance.SetActive(true);
-            KeepAboveSurface(instance, position.y + data.SpawnHeightOffset);
+            KeepAboveSurface(instance, position.y);
+            instance.transform.position += Vector3.up * data.SpawnHeightOffset;
             ore.Depleted += HandleOreDepleted;
             ore.RewardGranted += HandleRewardGranted;
             activeOres.Add(ore);
@@ -487,7 +488,10 @@ namespace MiningSimulator.Ores
 
             Vector3 popupPosition = ore.GetWorldTopCenter();
             OreRewardPopup popup = Instantiate(rewardPopupPrefab, popupPosition, Quaternion.identity);
-            popup.Initialize(reward, popupPosition, uiData);
+            Sprite rewardIcon = ore.Data != null && ore.Data.Kind == OreKind.Gem
+                ? uiData.GemIconSprite
+                : null;
+            popup.Initialize(reward, popupPosition, uiData, rewardIcon);
         }
 
         private void RegisterExistingOres()

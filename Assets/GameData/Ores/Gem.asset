@@ -12,14 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d859909622396a747a6c00395cd02515, type: 3}
   m_Name: Gem
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.OreData
-  kind: 5
+  kind: 8
   displayName: Gem
   description: Give you gem
   tier: 1
   miningPowerRequired: 1
-  durability: 5
+  durability: 20
   clickDamage: 1
   baseSellValue: 0
+  gemReward: 1
   experienceReward: 5
   destroyDelay: 0
   maximumMiningNpcs: 3
@@ -27,7 +28,7 @@ MonoBehaviour:
   rareOre: 0
   rarity: 0
   spawnRotationOffset: {x: 0, y: 0, z: 0}
-  spawnHeightOffset: 0
+  spawnHeightOffset: -1
   healthBarWorldOffset: {x: 0, y: 0.25, z: 0}
   healthBarScale: 0.65
   hitPunchScale: 0.08

@@ -303,10 +303,20 @@ namespace MiningSimulator.Ores
 
             rewardGranted = true;
             reservedMiners.Clear();
-            float reward = upgradeSystem != null
-                ? upgradeSystem.CalculateMiningReward(data.BaseSellValue)
-                : data.BaseSellValue;
-            wallet?.AddMoney(reward);
+            bool grantsGems = data.Kind == OreKind.Gem;
+            float reward = grantsGems
+                ? data.GemReward
+                : upgradeSystem != null
+                    ? upgradeSystem.CalculateMiningReward(data.BaseSellValue)
+                    : data.BaseSellValue;
+            if (grantsGems)
+            {
+                wallet?.AddGems(reward);
+            }
+            else
+            {
+                wallet?.AddMoney(reward);
+            }
             RewardGranted?.Invoke(this, reward);
             hitPunch?.PlayBreak(data.BreakSquashAmount, data.BreakStretchAmount,
                 data.BreakAnimationDuration);

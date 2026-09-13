@@ -415,6 +415,14 @@ namespace MiningSimulator.Ores
         private void ApplyLanguage()
         {
             MiningLocalization.ApplyToHierarchy(transform.root);
+            SetLocalizedChildText(openButton != null ? openButton.transform : null, "Label",
+                "SETTINGS", "CÀI ĐẶT");
+            SetLocalizedChildText(settingsPanel != null ? settingsPanel.transform : null,
+                "Master Label", "MASTER VOLUME", "ÂM LƯỢNG TỔNG");
+            SetLocalizedChildText(settingsPanel != null ? settingsPanel.transform : null,
+                "Music Label", "MUSIC", "NHẠC");
+            SetLocalizedChildText(settingsPanel != null ? settingsPanel.transform : null,
+                "SFX Label", "SOUND EFFECTS", "HIỆU ỨNG");
             TextMeshProUGUI title = settingsPanel != null
                 ? settingsPanel.transform.Find("Header/Title")?.GetComponent<TextMeshProUGUI>()
                 : null;
@@ -434,6 +442,27 @@ namespace MiningSimulator.Ores
             if (returnToMenuLabel != null)
             {
                 returnToMenuLabel.text = MiningLocalization.Text("MAIN MENU", "MENU CHÍNH");
+            }
+        }
+
+        private static void SetLocalizedChildText(Transform root, string childName,
+            string english, string vietnamese)
+        {
+            if (root == null)
+            {
+                return;
+            }
+
+            TextMeshProUGUI[] labels = root.GetComponentsInChildren<TextMeshProUGUI>(true);
+            foreach (TextMeshProUGUI label in labels)
+            {
+                if (label.name != childName)
+                {
+                    continue;
+                }
+
+                label.text = MiningLocalization.Text(english, vietnamese);
+                return;
             }
         }
     }

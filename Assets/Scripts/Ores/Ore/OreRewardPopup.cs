@@ -10,7 +10,7 @@ namespace MiningSimulator.Ores
     public sealed class OreRewardPopup : MonoBehaviour
     {
         [SerializeField] private TextMeshPro label;
-        [Tooltip("Optional coin icon shown beside the reward amount. Assign its Sprite in the prefab.")]
+        [Tooltip("Optional reward icon shown beside the amount. Assign the default coin Sprite in the prefab.")]
         [SerializeField] private SpriteRenderer coinIcon;
 
         private MiningUiData uiData;
@@ -21,7 +21,8 @@ namespace MiningSimulator.Ores
         private Color iconStartColor;
         private Sequence animationSequence;
 
-        public void Initialize(float amount, Vector3 worldPosition, MiningUiData targetUiData)
+        public void Initialize(float amount, Vector3 worldPosition, MiningUiData targetUiData,
+            Sprite rewardIconOverride = null)
         {
             uiData = targetUiData;
             label ??= GetComponent<TextMeshPro>();
@@ -40,6 +41,10 @@ namespace MiningSimulator.Ores
             startColor = label.color;
             if (coinIcon != null)
             {
+                if (rewardIconOverride != null)
+                {
+                    coinIcon.sprite = rewardIconOverride;
+                }
                 coinIcon.transform.localPosition = uiData.RewardPopupIconLocalPosition;
                 coinIcon.transform.localScale = Vector3.one * uiData.RewardPopupIconScale;
                 coinIcon.color = uiData.RewardPopupIconColor;

@@ -11,7 +11,8 @@ namespace MiningSimulator.Ores
         Gold = 4,
         Diamond = 5,
         LightStone = 6,
-        DarkStone = 7
+        DarkStone = 7,
+        Gem = 8
     }
 
     public enum OreRarity
@@ -43,6 +44,8 @@ namespace MiningSimulator.Ores
 
         [Header("Economy")]
         [Min(0), SerializeField] private int baseSellValue = 1;
+        [Tooltip("Gem awarded when Kind is Gem. Gem Ore does not award Money.")]
+        [Min(0), SerializeField] private int gemReward = 1;
 
         [Header("Experience")]
         [Tooltip("Base NPC experience awarded whenever this ore is depleted.")]
@@ -84,6 +87,7 @@ namespace MiningSimulator.Ores
         public int MaxHealth => durability;
         public int ClickDamage => clickDamage;
         public int BaseSellValue => baseSellValue;
+        public int GemReward => gemReward;
         public int ExperienceReward => experienceReward;
         public float DestroyDelay => destroyDelay;
         public int MaximumMiningNpcs => maximumMiningNpcs;
@@ -110,6 +114,7 @@ namespace MiningSimulator.Ores
             durability = Mathf.Max(1, durability);
             clickDamage = Mathf.Max(1, clickDamage);
             baseSellValue = Mathf.Max(0, baseSellValue);
+            gemReward = Mathf.Max(0, gemReward);
             experienceReward = Mathf.Max(0, experienceReward);
             destroyDelay = Mathf.Max(0f, destroyDelay);
             maximumMiningNpcs = Mathf.Max(1, maximumMiningNpcs);

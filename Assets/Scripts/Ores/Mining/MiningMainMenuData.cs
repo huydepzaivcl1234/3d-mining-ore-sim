@@ -15,6 +15,8 @@ namespace MiningSimulator.Ores
         [SerializeField] private Vector2 cardSize = new(1040f, 620f);
         [SerializeField] private Vector2 gemIconSize = new(220f, 220f);
         [SerializeField] private Vector2 gemIconPosition = new(-250f, 90f);
+        [SerializeField] private Vector2 gemAmountSize = new(300f, 54f);
+        [SerializeField] private Vector2 gemAmountPosition = new(-250f, -20f);
         [SerializeField] private Vector2 titleSize = new(470f, 80f);
         [SerializeField] private Vector2 titlePosition = new(-250f, -65f);
         [SerializeField] private Vector2 subtitleSize = new(460f, 64f);
@@ -44,6 +46,8 @@ namespace MiningSimulator.Ores
         [SerializeField] private string vietnameseTitle = "MÔ PHỎNG ĐÀO MỎ";
         [SerializeField] private string englishSubtitle = "Mine ores • Hire miners • Upgrade";
         [SerializeField] private string vietnameseSubtitle = "Đào quặng • Thuê thợ mỏ • Nâng cấp";
+        [SerializeField] private string englishGemAmountFormat = "GEMS: {0}";
+        [SerializeField] private string vietnameseGemAmountFormat = "NGỌC: {0}";
         [SerializeField] private string englishPlayLabel = "PLAY";
         [SerializeField] private string vietnamesePlayLabel = "CHƠI";
         [SerializeField] private string englishSettingsLabel = "SETTINGS";
@@ -70,6 +74,7 @@ namespace MiningSimulator.Ores
         [Min(1f), SerializeField] private float subtitleFontSize = 24f;
         [Min(1f), SerializeField] private float playFontSize = 32f;
         [Min(1f), SerializeField] private float settingsFontSize = 26f;
+        [Min(1f), SerializeField] private float gemAmountFontSize = 30f;
 
         [Header("Colors")]
         [SerializeField] private Color backdropColor = new(0.012f, 0.022f, 0.055f, 1f);
@@ -82,6 +87,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private Color sliderBackgroundColor = new(0.09f, 0.12f, 0.19f, 1f);
         [SerializeField] private Color sliderFillColor = new(0.12f, 0.75f, 0.95f, 1f);
         [SerializeField] private Color playTextColor = Color.white;
+        [SerializeField] private Color gemAmountColor = new(0.78f, 0.62f, 1f, 1f);
 
         [Header("Play Transition")]
         [Min(100f), SerializeField] private float playSlideDistance = 1400f;
@@ -103,6 +109,10 @@ namespace MiningSimulator.Ores
         public Vector2 CardSize => cardSize;
         public Vector2 GemIconSize => gemIconSize;
         public Vector2 GemIconPosition => gemIconPosition;
+        public Vector2 GemAmountSize => gemAmountSize.x > 0f && gemAmountSize.y > 0f
+            ? gemAmountSize
+            : new Vector2(300f, 54f);
+        public Vector2 GemAmountPosition => gemAmountPosition;
         public Vector2 TitleSize => titleSize;
         public Vector2 TitlePosition => titlePosition;
         public Vector2 SubtitleSize => subtitleSize;
@@ -128,6 +138,12 @@ namespace MiningSimulator.Ores
         public string VietnameseTitle => vietnameseTitle;
         public string EnglishSubtitle => englishSubtitle;
         public string VietnameseSubtitle => vietnameseSubtitle;
+        public string EnglishGemAmountFormat => string.IsNullOrWhiteSpace(englishGemAmountFormat)
+            ? "GEMS: {0}"
+            : englishGemAmountFormat;
+        public string VietnameseGemAmountFormat => string.IsNullOrWhiteSpace(vietnameseGemAmountFormat)
+            ? "NGỌC: {0}"
+            : vietnameseGemAmountFormat;
         public string EnglishPlayLabel => englishPlayLabel;
         public string VietnamesePlayLabel => vietnamesePlayLabel;
         public string EnglishSettingsLabel => englishSettingsLabel;
@@ -152,6 +168,7 @@ namespace MiningSimulator.Ores
         public float SubtitleFontSize => subtitleFontSize;
         public float PlayFontSize => playFontSize;
         public float SettingsFontSize => settingsFontSize;
+        public float GemAmountFontSize => Mathf.Max(1f, gemAmountFontSize);
         public Color BackdropColor => backdropColor;
         public Color CardColor => cardColor;
         public Color TitleColor => titleColor;
@@ -162,6 +179,9 @@ namespace MiningSimulator.Ores
         public Color SliderBackgroundColor => sliderBackgroundColor;
         public Color SliderFillColor => sliderFillColor;
         public Color PlayTextColor => playTextColor;
+        public Color GemAmountColor => gemAmountColor.a > 0f
+            ? gemAmountColor
+            : new Color(0.78f, 0.62f, 1f, 1f);
         public float PlaySlideDistance => Mathf.Max(100f, playSlideDistance);
         public float PlayCollapseScaleX => Mathf.Clamp(playCollapseScaleX, 0.01f, 0.5f);
         public float PlaySlideDuration => Mathf.Max(0.05f, playSlideDuration);
@@ -182,6 +202,7 @@ namespace MiningSimulator.Ores
         {
             cardSize = MaxSize(cardSize);
             gemIconSize = MaxSize(gemIconSize);
+            gemAmountSize = MaxSize(gemAmountSize);
             titleSize = MaxSize(titleSize);
             subtitleSize = MaxSize(subtitleSize);
             playButtonSize = MaxSize(playButtonSize);
@@ -197,6 +218,7 @@ namespace MiningSimulator.Ores
             subtitleFontSize = Mathf.Max(1f, subtitleFontSize);
             playFontSize = Mathf.Max(1f, playFontSize);
             settingsFontSize = Mathf.Max(1f, settingsFontSize);
+            gemAmountFontSize = Mathf.Max(1f, gemAmountFontSize);
             playSlideDistance = Mathf.Max(100f, playSlideDistance);
             playCollapseScaleX = Mathf.Clamp(playCollapseScaleX, 0.01f, 0.5f);
             playSlideDuration = Mathf.Max(0.05f, playSlideDuration);

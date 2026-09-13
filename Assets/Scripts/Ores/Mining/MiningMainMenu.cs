@@ -13,6 +13,7 @@ namespace MiningSimulator.Ores
         [Header("Data and pages")]
         [SerializeField] private MiningMainMenuData data;
         [SerializeField] private MiningAudioManager audioManager;
+        [SerializeField] private PlayerWallet wallet;
         [SerializeField] private CanvasGroup canvasGroup;
         [SerializeField] private RectTransform card;
         [SerializeField] private GameObject mainView;
@@ -46,6 +47,7 @@ namespace MiningSimulator.Ores
         [Header("Localized labels")]
         [SerializeField] private TextMeshProUGUI titleLabel;
         [SerializeField] private TextMeshProUGUI subtitleLabel;
+        [SerializeField] private TextMeshProUGUI gemAmountLabel;
         [SerializeField] private TextMeshProUGUI playLabel;
         [SerializeField] private TextMeshProUGUI settingsLabel;
         [SerializeField] private TextMeshProUGUI exitLabel;
@@ -101,6 +103,11 @@ namespace MiningSimulator.Ores
             AddListeners();
             MiningLocalization.LanguageChanged -= RefreshLocalization;
             MiningLocalization.LanguageChanged += RefreshLocalization;
+            if (wallet != null)
+            {
+                wallet.GemsChanged -= HandleGemsChanged;
+                wallet.GemsChanged += HandleGemsChanged;
+            }
             RefreshLocalization();
         }
 
@@ -120,6 +127,10 @@ namespace MiningSimulator.Ores
         {
             RemoveListeners();
             MiningLocalization.LanguageChanged -= RefreshLocalization;
+            if (wallet != null)
+            {
+                wallet.GemsChanged -= HandleGemsChanged;
+            }
             audioManager?.SaveVolumeSettings();
             StopTransitions();
             ReleaseGameplayPause();
@@ -345,6 +356,7 @@ namespace MiningSimulator.Ores
             }
             SetText(titleLabel, data.EnglishTitle, data.VietnameseTitle);
             SetText(subtitleLabel, data.EnglishSubtitle, data.VietnameseSubtitle);
+            RefreshGemAmount();
             SetText(playLabel, data.EnglishPlayLabel, data.VietnamesePlayLabel);
             SetText(settingsLabel, data.EnglishSettingsLabel, data.VietnameseSettingsLabel);
             SetText(exitLabel, data.EnglishExitLabel, data.VietnameseExitLabel);
@@ -402,6 +414,10 @@ namespace MiningSimulator.Ores
                 audioManager = FindFirstObjectByType<MiningAudioManager>(
                     FindObjectsInactive.Include);
             }
+            if (wallet == null)
+            {
+                wallet = FindFirstObjectByType<PlayerWallet>(FindObjectsInactive.Include);
+            }
             return data != null && canvasGroup != null && card != null &&
                    mainView != null && settingsView != null && mainViewGroup != null &&
                    settingsViewGroup != null && playButton != null && settingsButton != null &&
@@ -410,6 +426,24 @@ namespace MiningSimulator.Ores
                    exitConfirmation != null && exitConfirmationGroup != null &&
                    exitConfirmationDialog != null && confirmExitButton != null &&
                    cancelExitButton != null;
+        }
+
+        private void HandleGemsChanged(float amount)
+        {
+            RefreshGemAmount();
+        }
+
+        private void RefreshGemAmount()
+        {
+            if (gemAmountLabel == null || data == null)
+            {
+                return;
+            }
+
+            string format = MiningLocalization.Text(data.EnglishGemAmountFormat,
+                data.VietnameseGemAmountFormat);
+            float amount = wallet != null ? wallet.CurrentGems : 0f;
+            gemAmountLabel.text = string.Format(format, MiningMoneyFormatter.Format(amount));
         }
 
         private void PauseGameplay()

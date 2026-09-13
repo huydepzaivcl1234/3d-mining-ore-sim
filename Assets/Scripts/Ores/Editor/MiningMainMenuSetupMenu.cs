@@ -36,6 +36,7 @@ namespace MiningSimulator.Ores.Editor
             bool created = existing == null;
             GameObject root = created ? CreateRoot(canvas, data) : existing.gameObject;
             EnsureModernStructure(root, data, gemSprite);
+            EnsureMainMenuGemAmount(root, data);
             EnsureExitConfirmation(root, data);
             EnsurePlayTransition(root, data);
 
@@ -51,6 +52,8 @@ namespace MiningSimulator.Ores.Editor
             SerializedObject serialized = new(mainMenu);
             SetReference(serialized, "data", data);
             SetReference(serialized, "audioManager", Object.FindFirstObjectByType<MiningAudioManager>(
+                FindObjectsInactive.Include));
+            SetReference(serialized, "wallet", Object.FindFirstObjectByType<PlayerWallet>(
                 FindObjectsInactive.Include));
             SetReference(serialized, "canvasGroup", rootGroup);
             SetReference(serialized, "card", card?.GetComponent<RectTransform>());
@@ -286,6 +289,10 @@ namespace MiningSimulator.Ores.Editor
             icon.preserveAspect = true;
             icon.raycastTarget = false;
 
+            CreateLabel(parent, "Gem Amount", string.Format(data.EnglishGemAmountFormat, "0"),
+                data.GemAmountPosition, data.GemAmountSize, data.GemAmountFontSize,
+                data.GemAmountColor, FontStyles.Bold);
+
             CreateLabel(parent, "Title", data.EnglishTitle, data.TitlePosition,
                 data.TitleSize, data.TitleFontSize, data.TitleColor, FontStyles.Bold);
             CreateLabel(parent, "Subtitle", data.EnglishSubtitle, data.SubtitlePosition,
@@ -412,6 +419,8 @@ namespace MiningSimulator.Ores.Editor
         {
             SetReference(serialized, "titleLabel", FindComponent<TextMeshProUGUI>(root, "Title"));
             SetReference(serialized, "subtitleLabel", FindComponent<TextMeshProUGUI>(root, "Subtitle"));
+            SetReference(serialized, "gemAmountLabel",
+                FindComponent<TextMeshProUGUI>(root, "Gem Amount"));
             SetReference(serialized, "playLabel", FindComponent<TextMeshProUGUI>(root, "Play Label"));
             SetReference(serialized, "settingsLabel", FindComponent<TextMeshProUGUI>(root, "Settings Label"));
             SetReference(serialized, "exitLabel", FindComponent<TextMeshProUGUI>(root, "Exit Label"));
@@ -432,6 +441,20 @@ namespace MiningSimulator.Ores.Editor
                 FindComponent<TextMeshProUGUI>(root, "Confirm Exit Label"));
             SetReference(serialized, "cancelExitLabel",
                 FindComponent<TextMeshProUGUI>(root, "Cancel Exit Label"));
+        }
+
+        private static void EnsureMainMenuGemAmount(GameObject root, MiningMainMenuData data)
+        {
+            Transform mainView = FindDescendant(root.transform, "Main View");
+            if (mainView == null || FindDescendant(mainView, "Gem Amount") != null)
+            {
+                return;
+            }
+
+            Undo.RecordObject(mainView, "Add Main Menu Gem Amount");
+            CreateLabel(mainView, "Gem Amount", string.Format(data.EnglishGemAmountFormat, "0"),
+                data.GemAmountPosition, data.GemAmountSize, data.GemAmountFontSize,
+                data.GemAmountColor, FontStyles.Bold);
         }
 
         private static void AssignGemIcon(Sprite gemSprite)

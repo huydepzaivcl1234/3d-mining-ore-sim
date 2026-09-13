@@ -45,15 +45,39 @@ MonoBehaviour:
   nightSunRotation: {x: 210, y: -30, z: 0}
   daySunColor: {r: 1, g: 0.94, b: 0.78, a: 1}
   nightSunColor: {r: 0.42, g: 0.5, b: 0.85, a: 1}
-  daySunIntensity: 1.35
+  daySunIntensity: 1.12
   nightSunIntensity: 0.18
   dayAmbientColor: {r: 0.72, g: 0.78, b: 0.86, a: 1}
   nightAmbientColor: {r: 0.12, g: 0.16, b: 0.28, a: 1}
+  daySunArcDegrees: 72
+  nightSunArcDegrees: 10
+  sunShimmerAmount: 0.06
+  shimmerSpeed: 0.15
+  ambientShimmerAmount: 0.04
+  goldenHourColor: {r: 1, g: 0.55, b: 0.24, a: 1}
+  goldenHourStrength: 0.6
+  showCelestialDisc: 1
+  sunDiscColor: {r: 1, g: 0.86, b: 0.58, a: 1}
+  moonDiscColor: {r: 0.78, g: 0.85, b: 1, a: 1}
+  sunDiscIntensity: 1.2
+  moonDiscIntensity: 0.85
+  sunDiscScale: 16
+  moonDiscScale: 8
+  celestialDiscDistance: 480
+  controlShadows: 1
+  dayShadowType: 2
+  nightShadowType: 2
+  dayShadowStrength: 1
+  nightShadowStrength: 0.45
+  shadowBias: 0.05
+  shadowNormalBias: 0.4
+  dayShadowDistance: 120
+  nightShadowDistance: 70
   controlSkybox: 1
   skyboxMaterial: {fileID: 2100000, guid: 1cf6f4c6e6e0518419839d3f5448dd99, type: 2}
   daySkyTint: {r: 0.52, g: 0.72, b: 1, a: 1}
   nightSkyTint: {r: 0.25, g: 0.31, b: 0.52, a: 1}
-  daySkyExposure: 1.15
+  daySkyExposure: 1
   nightSkyExposure: 0.58
   controlExtendedSkybox: 1
   skyRotationSpeed: 0.35
@@ -70,6 +94,23 @@ MonoBehaviour:
   nightFogColor: {r: 0.07, g: 0.1, b: 0.2, a: 1}
   dayFogDensity: 0.005
   nightFogDensity: 0.012
+  controlCinematicPostProcessing: 1
+  useAcesTonemapping: 1
+  dayBloomIntensity: 0.18
+  nightBloomIntensity: 0.38
+  bloomThreshold: 0.9
+  goldenHourBloomBoost: 0.18
+  dayPostExposure: -0.08
+  nightPostExposure: -0.18
+  dayContrast: 7
+  nightContrast: 13
+  daySaturation: 4
+  nightSaturation: -5
+  dayColorFilter: {r: 1, g: 1, b: 1, a: 1}
+  nightColorFilter: {r: 0.72, g: 0.8, b: 1, a: 1}
+  dayVignetteIntensity: 0.12
+  nightVignetteIntensity: 0.2
+  vignetteSmoothness: 0.55
   lightStone: {fileID: 11400000, guid: 60b3200fc7d6b3149bc117a7a0eda15b, type: 2}
   lightStoneChancePerSpawnPercent: 1
   maximumActiveLightStones: 2
