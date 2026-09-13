@@ -37,6 +37,7 @@ namespace MiningSimulator.Ores.Editor
             GameObject root = created ? CreateRoot(canvas, data) : existing.gameObject;
             EnsureModernStructure(root, data, gemSprite);
             EnsureMainMenuGemAmount(root, data);
+            EnsureMainMenuShopButton(root, data);
             EnsureExitConfirmation(root, data);
             EnsurePlayTransition(root, data);
 
@@ -76,6 +77,9 @@ namespace MiningSimulator.Ores.Editor
             SetReference(serialized, "cancelExitButton",
                 FindComponent<Button>(root.transform, "Cancel Exit Button"));
             SetReference(serialized, "playButton", FindComponent<Button>(root.transform, "Play Button"));
+            SetReference(serialized, "shopButton", FindComponent<Button>(root.transform, "Shop Button"));
+            SetReference(serialized, "shopPanel", Object.FindFirstObjectByType<MiningShopPanel>(
+                FindObjectsInactive.Include));
             SetReference(serialized, "settingsButton", FindComponent<Button>(root.transform, "Settings Button"));
             SetReference(serialized, "exitButton", FindComponent<Button>(root.transform, "Exit Button"));
             SetReference(serialized, "backButton", FindComponent<Button>(root.transform, "Back Button"));
@@ -301,6 +305,9 @@ namespace MiningSimulator.Ores.Editor
             CreateButton(parent, "Play Button", "Play Label", data.EnglishPlayLabel,
                 data.PlayButtonPosition, data.PlayButtonSize, data.PlayButtonColor,
                 data.PlayTextColor, data.PlayFontSize);
+            CreateButton(parent, "Shop Button", "Shop Label", data.EnglishShopLabel,
+                data.ShopButtonPosition, data.PlayButtonSize, data.ShopButtonColor,
+                data.PlayTextColor, data.PlayFontSize);
             CreateButton(parent, "Settings Button", "Settings Label", data.EnglishSettingsLabel,
                 data.SettingsButtonPosition, data.PlayButtonSize, data.SettingsButtonColor,
                 data.PlayTextColor, data.PlayFontSize);
@@ -422,6 +429,7 @@ namespace MiningSimulator.Ores.Editor
             SetReference(serialized, "gemAmountLabel",
                 FindComponent<TextMeshProUGUI>(root, "Gem Amount"));
             SetReference(serialized, "playLabel", FindComponent<TextMeshProUGUI>(root, "Play Label"));
+            SetReference(serialized, "shopLabel", FindComponent<TextMeshProUGUI>(root, "Shop Label"));
             SetReference(serialized, "settingsLabel", FindComponent<TextMeshProUGUI>(root, "Settings Label"));
             SetReference(serialized, "exitLabel", FindComponent<TextMeshProUGUI>(root, "Exit Label"));
             SetReference(serialized, "settingsTitleLabel", FindComponent<TextMeshProUGUI>(root, "Settings Title"));
@@ -455,6 +463,48 @@ namespace MiningSimulator.Ores.Editor
             CreateLabel(mainView, "Gem Amount", string.Format(data.EnglishGemAmountFormat, "0"),
                 data.GemAmountPosition, data.GemAmountSize, data.GemAmountFontSize,
                 data.GemAmountColor, FontStyles.Bold);
+        }
+
+        internal static void EnsureShopButtonForCurrentMenu()
+        {
+            Canvas canvas = FindHudCanvas();
+            GameObject root = canvas != null ? canvas.transform.Find(MenuName)?.gameObject : null;
+            if (root == null)
+            {
+                return;
+            }
+
+            MiningMainMenuData data = LoadOrCreateData();
+            EnsureMainMenuShopButton(root, data);
+            MiningMainMenu mainMenu = root.GetComponent<MiningMainMenu>();
+            if (mainMenu == null)
+            {
+                return;
+            }
+
+            SerializedObject serialized = new(mainMenu);
+            SetReference(serialized, "shopButton",
+                FindComponent<Button>(root.transform, "Shop Button"));
+            SetReference(serialized, "shopLabel",
+                FindComponent<TextMeshProUGUI>(root.transform, "Shop Label"));
+            SetReference(serialized, "shopPanel", Object.FindFirstObjectByType<MiningShopPanel>(
+                FindObjectsInactive.Include));
+            serialized.ApplyModifiedProperties();
+            EditorUtility.SetDirty(mainMenu);
+        }
+
+        private static void EnsureMainMenuShopButton(GameObject root, MiningMainMenuData data)
+        {
+            Transform mainView = FindDescendant(root.transform, "Main View");
+            if (mainView == null || FindDescendant(mainView, "Shop Button") != null)
+            {
+                return;
+            }
+
+            Undo.RecordObject(mainView, "Add Main Menu Shop Button");
+            CreateButton(mainView, "Shop Button", "Shop Label", data.EnglishShopLabel,
+                data.ShopButtonPosition, data.PlayButtonSize, data.ShopButtonColor,
+                data.PlayTextColor, data.PlayFontSize);
         }
 
         private static void AssignGemIcon(Sprite gemSprite)

@@ -34,8 +34,10 @@ namespace MiningSimulator.Ores
 
         [Header("Main buttons")]
         [SerializeField] private Button playButton;
+        [SerializeField] private Button shopButton;
         [SerializeField] private Button settingsButton;
         [SerializeField] private Button exitButton;
+        [SerializeField] private MiningShopPanel shopPanel;
 
         [Header("Settings controls")]
         [SerializeField] private Button backButton;
@@ -49,6 +51,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private TextMeshProUGUI subtitleLabel;
         [SerializeField] private TextMeshProUGUI gemAmountLabel;
         [SerializeField] private TextMeshProUGUI playLabel;
+        [SerializeField] private TextMeshProUGUI shopLabel;
         [SerializeField] private TextMeshProUGUI settingsLabel;
         [SerializeField] private TextMeshProUGUI exitLabel;
         [SerializeField] private TextMeshProUGUI settingsTitleLabel;
@@ -160,9 +163,7 @@ namespace MiningSimulator.Ores
             transition = Sequence.Create(useUnscaledTime: true)
                 .Group(Tween.Custom(card, card.anchoredPosition, slideDestination,
                     data.PlaySlideDuration,
-                    static (rect, position) => rect.anchoredPosition = position, Ease.InBack))
-                .Group(Tween.Scale(card, new Vector3(data.PlayCollapseScaleX, 1f, 1f),
-                    data.PlaySlideDuration, Ease.InCubic))
+                    static (rect, position) => rect.anchoredPosition = position, Ease.InCubic))
                 .Group(Tween.Custom(transitionBar, 0f, 1f,
                     Mathf.Min(0.18f, data.PlaySlideDuration),
                     static (image, alpha) => SetGraphicAlpha(image, alpha), Ease.OutCubic))
@@ -200,6 +201,14 @@ namespace MiningSimulator.Ores
             RefreshAudioControls();
             SwitchPage(mainView, settingsView, settingsViewGroup);
             SelectButton(backButton);
+        }
+
+        public void OpenShop()
+        {
+            if (!closing)
+            {
+                shopPanel?.Open();
+            }
         }
 
         public void CloseSettings()
@@ -358,6 +367,7 @@ namespace MiningSimulator.Ores
             SetText(subtitleLabel, data.EnglishSubtitle, data.VietnameseSubtitle);
             RefreshGemAmount();
             SetText(playLabel, data.EnglishPlayLabel, data.VietnamesePlayLabel);
+            SetText(shopLabel, data.EnglishShopLabel, data.VietnameseShopLabel);
             SetText(settingsLabel, data.EnglishSettingsLabel, data.VietnameseSettingsLabel);
             SetText(exitLabel, data.EnglishExitLabel, data.VietnameseExitLabel);
             SetText(settingsTitleLabel, data.EnglishSettingsLabel, data.VietnameseSettingsLabel);
@@ -378,6 +388,7 @@ namespace MiningSimulator.Ores
         {
             RemoveListeners();
             playButton?.onClick.AddListener(Play);
+            shopButton?.onClick.AddListener(OpenShop);
             settingsButton?.onClick.AddListener(OpenSettings);
             exitButton?.onClick.AddListener(ExitGame);
             confirmExitButton?.onClick.AddListener(ConfirmExit);
@@ -392,6 +403,7 @@ namespace MiningSimulator.Ores
         private void RemoveListeners()
         {
             playButton?.onClick.RemoveListener(Play);
+            shopButton?.onClick.RemoveListener(OpenShop);
             settingsButton?.onClick.RemoveListener(OpenSettings);
             exitButton?.onClick.RemoveListener(ExitGame);
             confirmExitButton?.onClick.RemoveListener(ConfirmExit);
@@ -472,6 +484,10 @@ namespace MiningSimulator.Ores
         private void SetMainButtonsInteractable(bool value)
         {
             playButton.interactable = value;
+            if (shopButton != null)
+            {
+                shopButton.interactable = value;
+            }
             settingsButton.interactable = value;
             exitButton.interactable = value;
         }

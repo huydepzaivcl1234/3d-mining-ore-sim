@@ -23,6 +23,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private Vector2 subtitlePosition = new(-250f, -132f);
         [SerializeField] private Vector2 playButtonSize = new(330f, 78f);
         [SerializeField] private Vector2 playButtonPosition = new(250f, 100f);
+        [SerializeField] private Vector2 shopButtonPosition = new(250f, -200f);
         [SerializeField] private Vector2 settingsButtonPosition = new(250f, 0f);
         [SerializeField] private Vector2 exitButtonPosition = new(250f, -100f);
         [SerializeField] private Vector2 settingsTitlePosition = new(0f, 225f);
@@ -50,6 +51,8 @@ namespace MiningSimulator.Ores
         [SerializeField] private string vietnameseGemAmountFormat = "NGỌC: {0}";
         [SerializeField] private string englishPlayLabel = "PLAY";
         [SerializeField] private string vietnamesePlayLabel = "CHƠI";
+        [SerializeField] private string englishShopLabel = "SHOP";
+        [SerializeField] private string vietnameseShopLabel = "CỬA HÀNG";
         [SerializeField] private string englishSettingsLabel = "SETTINGS";
         [SerializeField] private string vietnameseSettingsLabel = "CÀI ĐẶT";
         [SerializeField] private string englishExitLabel = "EXIT";
@@ -82,6 +85,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private Color titleColor = Color.white;
         [SerializeField] private Color subtitleColor = new(0.70f, 0.82f, 1f, 1f);
         [SerializeField] private Color playButtonColor = new(0.12f, 0.78f, 0.56f, 1f);
+        [SerializeField] private Color shopButtonColor = new(0.52f, 0.27f, 0.88f, 1f);
         [SerializeField] private Color settingsButtonColor = new(0.10f, 0.55f, 0.88f, 1f);
         [SerializeField] private Color exitButtonColor = new(0.82f, 0.16f, 0.24f, 1f);
         [SerializeField] private Color sliderBackgroundColor = new(0.09f, 0.12f, 0.19f, 1f);
@@ -119,6 +123,7 @@ namespace MiningSimulator.Ores
         public Vector2 SubtitlePosition => subtitlePosition;
         public Vector2 PlayButtonSize => playButtonSize;
         public Vector2 PlayButtonPosition => playButtonPosition;
+        public Vector2 ShopButtonPosition => shopButtonPosition;
         public Vector2 SettingsButtonPosition => settingsButtonPosition;
         public Vector2 ExitButtonPosition => exitButtonPosition;
         public Vector2 SettingsTitlePosition => settingsTitlePosition;
@@ -146,6 +151,12 @@ namespace MiningSimulator.Ores
             : vietnameseGemAmountFormat;
         public string EnglishPlayLabel => englishPlayLabel;
         public string VietnamesePlayLabel => vietnamesePlayLabel;
+        public string EnglishShopLabel => string.IsNullOrWhiteSpace(englishShopLabel)
+            ? "SHOP"
+            : englishShopLabel;
+        public string VietnameseShopLabel => string.IsNullOrWhiteSpace(vietnameseShopLabel)
+            ? "CỬA HÀNG"
+            : vietnameseShopLabel;
         public string EnglishSettingsLabel => englishSettingsLabel;
         public string VietnameseSettingsLabel => vietnameseSettingsLabel;
         public string EnglishExitLabel => englishExitLabel;
@@ -174,6 +185,9 @@ namespace MiningSimulator.Ores
         public Color TitleColor => titleColor;
         public Color SubtitleColor => subtitleColor;
         public Color PlayButtonColor => playButtonColor;
+        public Color ShopButtonColor => shopButtonColor.a > 0f
+            ? shopButtonColor
+            : new Color(0.52f, 0.27f, 0.88f, 1f);
         public Color SettingsButtonColor => settingsButtonColor;
         public Color ExitButtonColor => exitButtonColor;
         public Color SliderBackgroundColor => sliderBackgroundColor;
