@@ -8816,7 +8816,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.NpcShop
   wallet: {fileID: 5319940143687006134}
   oreSpawner: {fileID: 1828941534}
-  npcPrefab: {fileID: 6456789610439645049, guid: 3b9fc0d6232590649bdd95a4ecb5a7cc, type: 3}
+  npcPrefab: {fileID: 6240163918479986620, guid: 3b9fc0d6232590649bdd95a4ecb5a7cc, type: 3}
   spawnPoint: {fileID: 0}
   npcData: {fileID: 11400000, guid: c48d624e49324697a2ff1f170be6b3c0, type: 2}
   progressionSystem: {fileID: 655586588}
