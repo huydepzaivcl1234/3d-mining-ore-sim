@@ -434,9 +434,9 @@ namespace MiningSimulator.Ores
             {
                 languageLabel.text = MiningLocalization.CurrentLanguageName switch
                 {
-                    MiningLocalization.EnglishLanguageName => "EN ✓",
-                    MiningLocalization.VietnameseLanguageName => "VI ✓",
-                    string languageName => $"{languageName.ToUpperInvariant()} ✓"
+                    MiningLocalization.EnglishLanguageName => "EN",
+                    MiningLocalization.VietnameseLanguageName => "VI",
+                    string languageName => languageName.ToUpperInvariant()
                 };
             }
             if (returnToMenuLabel != null)

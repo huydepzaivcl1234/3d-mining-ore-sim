@@ -229,6 +229,24 @@ namespace MiningSimulator.Ores
         [Tooltip("Direction used when a modal panel opens and closes.")]
         [SerializeField] private Vector2 modalSlideDirection = Vector2.down;
 
+        [Header("Candy UI Theme")]
+        [SerializeField] private Color candyOutlineColor = new(0.035f, 0.065f, 0.12f, 1f);
+        [SerializeField] private Color candyNeutralTop = new(0.16f, 0.20f, 0.29f, 1f);
+        [SerializeField] private Color candyNeutralBottom = new(0.065f, 0.08f, 0.12f, 1f);
+        [SerializeField] private Color candyGemTop = new(0.31f, 0.85f, 1f, 1f);
+        [SerializeField] private Color candyGemBottom = new(0.12f, 0.50f, 0.88f, 1f);
+        [SerializeField] private Color candyGoldTop = new(1f, 0.84f, 0.29f, 1f);
+        [SerializeField] private Color candyGoldBottom = new(1f, 0.45f, 0f, 1f);
+        [SerializeField] private Color candyPrimaryTop = new(0.20f, 0.84f, 0.69f, 1f);
+        [SerializeField] private Color candyPrimaryBottom = new(0.08f, 0.52f, 0.38f, 1f);
+        [SerializeField] private Color candyDangerTop = new(1f, 0.42f, 0.24f, 1f);
+        [SerializeField] private Color candyDangerBottom = new(0.88f, 0.09f, 0.23f, 1f);
+        [Range(1f, 8f), SerializeField] private float candyOutlineThickness = 4f;
+        [Range(0f, 1f), SerializeField] private float candyGlossAlpha = 0.32f;
+        [Range(0f, 1f), SerializeField] private float candyTextOutlineWidth = 0.22f;
+        [Min(0f), SerializeField] private float candySafeAreaPadding = 10f;
+        [Min(44f), SerializeField] private float candyMinimumTouchTarget = 64f;
+
         [Header("NPC Shop Style")]
         [SerializeField] private string shopTitle = "KHU ĐÀO QUẶNG";
         [SerializeField] private Vector2 shopHeaderSize = new(330f, 54f);
@@ -541,6 +559,22 @@ namespace MiningSimulator.Ores
         public Vector2 GemHudSlideDirection => gemHudSlideDirection;
         public Vector2 ShopMenuButtonSlideDirection => shopMenuButtonSlideDirection;
         public Vector2 ModalSlideDirection => modalSlideDirection;
+        public Color CandyOutlineColor => candyOutlineColor;
+        public Color CandyNeutralTop => candyNeutralTop;
+        public Color CandyNeutralBottom => candyNeutralBottom;
+        public Color CandyGemTop => candyGemTop;
+        public Color CandyGemBottom => candyGemBottom;
+        public Color CandyGoldTop => candyGoldTop;
+        public Color CandyGoldBottom => candyGoldBottom;
+        public Color CandyPrimaryTop => candyPrimaryTop;
+        public Color CandyPrimaryBottom => candyPrimaryBottom;
+        public Color CandyDangerTop => candyDangerTop;
+        public Color CandyDangerBottom => candyDangerBottom;
+        public float CandyOutlineThickness => candyOutlineThickness;
+        public float CandyGlossAlpha => candyGlossAlpha;
+        public float CandyTextOutlineWidth => candyTextOutlineWidth;
+        public float CandySafeAreaPadding => candySafeAreaPadding;
+        public float CandyMinimumTouchTarget => candyMinimumTouchTarget;
         public string ShopTitle => shopTitle;
         public Vector2 ShopHeaderSize => shopHeaderSize;
         public float ShopTitleFontSize => shopTitleFontSize;
@@ -767,6 +801,11 @@ namespace MiningSimulator.Ores
             effectToastPercentFontSize = Mathf.Max(1f, effectToastPercentFontSize);
             panelTransitionDuration = Mathf.Max(0.01f, panelTransitionDuration);
             panelSlideExtraDistance = Mathf.Max(0f, panelSlideExtraDistance);
+            candyOutlineThickness = Mathf.Clamp(candyOutlineThickness, 1f, 8f);
+            candyGlossAlpha = Mathf.Clamp01(candyGlossAlpha);
+            candyTextOutlineWidth = Mathf.Clamp01(candyTextOutlineWidth);
+            candySafeAreaPadding = Mathf.Max(0f, candySafeAreaPadding);
+            candyMinimumTouchTarget = Mathf.Max(44f, candyMinimumTouchTarget);
             cardSpacing = Mathf.Max(0f, cardSpacing);
             outlineThickness = Mathf.Max(0f, outlineThickness);
             shopHeaderSize.x = Mathf.Max(1f, shopHeaderSize.x);

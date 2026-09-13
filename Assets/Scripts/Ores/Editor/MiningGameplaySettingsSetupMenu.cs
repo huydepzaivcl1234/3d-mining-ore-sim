@@ -63,7 +63,7 @@ namespace MiningSimulator.Ores.Editor
             ArrangeAudioRow(panel, "SFX", 36f, -272f);
             ArrangeExisting(panel, "Close", 580f, -12f, 48f, 48f);
 
-            Button languageButton = EnsureButton(panel, "Language Toggle", "Label", "EN ✓",
+            Button languageButton = EnsureButton(panel, "Language Toggle", "Label", "EN",
                 30f, -365f, 170f, 54f,
                 uiData != null ? uiData.LanguageButtonColor : new Color(0.2f, 0.65f, 0.94f),
                 uiData, audioManager);

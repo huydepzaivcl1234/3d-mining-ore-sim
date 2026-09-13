@@ -527,20 +527,28 @@ namespace MiningSimulator.Ores
             return child;
         }
 
-        private static GameObject CreateImage(Transform parent, string objectName, Color color)
+        private GameObject CreateImage(Transform parent, string objectName, Color color)
         {
             GameObject child = new(objectName, typeof(RectTransform), typeof(CanvasRenderer),
                 typeof(Image));
             child.transform.SetParent(parent, false);
             Image image = child.GetComponent<Image>();
-            image.color = color;
+            image.color = Color.white;
+            MiningCandyGradient gradient = child.AddComponent<MiningCandyGradient>();
+            gradient.SetColors(Color.Lerp(color, Color.white, 0.20f),
+                Color.Lerp(color, Color.black, 0.18f));
+            Shadow shadow = child.AddComponent<Shadow>();
+            shadow.effectColor = new Color(0.01f, 0.02f, 0.04f, 0.55f);
+            shadow.effectDistance = new Vector2(0f, -5f);
             Outline outline = child.AddComponent<Outline>();
-            outline.effectColor = new Color(0.025f, 0.055f, 0.09f, 1f);
-            outline.effectDistance = new Vector2(3f, -3f);
+            outline.effectColor = uiData != null ? uiData.CandyOutlineColor :
+                new Color(0.025f, 0.055f, 0.09f, 1f);
+            float thickness = uiData != null ? uiData.CandyOutlineThickness : 3f;
+            outline.effectDistance = new Vector2(thickness, -thickness);
             return child;
         }
 
-        private static Button CreateButton(Transform parent, string objectName, string text,
+        private Button CreateButton(Transform parent, string objectName, string text,
             Vector2 position, Vector2 size, Color color)
         {
             GameObject buttonObject = CreateImage(parent, objectName, color);
@@ -548,6 +556,16 @@ namespace MiningSimulator.Ores
             SetCenteredRect(rect, position, size);
             Button button = buttonObject.AddComponent<Button>();
             button.targetGraphic = buttonObject.GetComponent<Image>();
+            button.transition = Selectable.Transition.None;
+            SmoothButtonPunch punch = buttonObject.AddComponent<SmoothButtonPunch>();
+            if (uiData != null)
+            {
+                punch.Configure(uiData.ButtonHoverScale, uiData.ButtonHoverPunchScale,
+                    uiData.ButtonPressedScale, uiData.ButtonClickBounceScale,
+                    uiData.ButtonHoverPunchDuration, uiData.ButtonHoverSettleDuration,
+                    uiData.ButtonPressDuration, uiData.ButtonClickBounceDuration,
+                    uiData.ButtonClickSettleDuration);
+            }
             TextMeshProUGUI label = CreateLabel(rect, "Label", 21f, Color.white);
             label.text = text;
             return button;
