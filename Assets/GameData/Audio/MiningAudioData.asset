@@ -26,6 +26,8 @@ MonoBehaviour:
   buttonClickSfx: {fileID: 8300000, guid: c827175ac1520f24193f96c9f3a3f753, type: 3}
   panelOpenSfx: {fileID: 0}
   panelCloseSfx: {fileID: 0}
+  wheelSpinSfx: {fileID: 8300000, guid: bc9b89f6417d1b645a585b7e48a470aa, type: 3}
+  wheelRewardSfx: {fileID: 8300000, guid: 87edb7399c8fc8c47b310b9b9b877617, type: 3}
   sfxVolume: 0.8
   sfxMixerGroup: {fileID: 0}
   minimumPitch: 0.96

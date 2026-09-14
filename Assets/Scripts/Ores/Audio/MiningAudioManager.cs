@@ -287,6 +287,22 @@ namespace MiningSimulator.Ores
             }
         }
 
+        public void PlayWheelSpinSfx()
+        {
+            if (audioData != null)
+            {
+                PlaySfx(audioData.WheelSpinSfx);
+            }
+        }
+
+        public void PlayWheelRewardSfx()
+        {
+            if (audioData != null)
+            {
+                PlaySfx(audioData.WheelRewardSfx);
+            }
+        }
+
         public void PlayMiningImpactSfx(bool oreBroken)
         {
             if (audioData != null)

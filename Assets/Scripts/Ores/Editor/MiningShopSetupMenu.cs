@@ -59,6 +59,8 @@ namespace MiningSimulator.Ores.Editor
                 FindObjectsInactive.Include));
             SetReference(serialized, "panelCoordinator", Object.FindFirstObjectByType<
                 MiningUiPanelCoordinator>(FindObjectsInactive.Include));
+            SetReference(serialized, "audioManager", Object.FindFirstObjectByType<
+                MiningAudioManager>(FindObjectsInactive.Include));
             SetReference(serialized, "panelRoot", panel);
             SetReference(serialized, "gameplayOpenButton", openButton);
             SetReference(serialized, "gemHud",
@@ -371,6 +373,15 @@ namespace MiningSimulator.Ores.Editor
             wheelBackground.color = new Color(0.06f, 0.10f, 0.18f, 1f);
             wheelBackground.enabled = false;
             Sprite wheelSprite = LoadOrCreateWheelSprite();
+            RectTransform labelsRoot = FindComponent<RectTransform>(wheelRoot, "Wheel Labels");
+            if (labelsRoot == null)
+            {
+                GameObject labelsObject = new("Wheel Labels", typeof(RectTransform));
+                Undo.RegisterCreatedObjectUndo(labelsObject, "Create Wheel Labels Layer");
+                labelsObject.transform.SetParent(wheelRoot, false);
+                labelsRoot = labelsObject.GetComponent<RectTransform>();
+            }
+            Stretch(labelsRoot);
 
             int segmentCount = Mathf.Max(1, shopData.WheelRewards.Count);
             for (int index = 0; index < segmentCount; index++)
@@ -397,16 +408,28 @@ namespace MiningSimulator.Ores.Editor
                 segmentImage.color = reward != null ? reward.WheelColor : Color.gray;
                 segmentImage.raycastTarget = false;
 
+                string contentName = $"Reward Content {index + 1}";
                 RectTransform content = FindComponent<RectTransform>(segment, "Reward Content");
+                content ??= labelsRoot.Find(contentName) as RectTransform;
                 if (content == null)
                 {
-                    GameObject contentObject = new("Reward Content", typeof(RectTransform));
+                    GameObject contentObject = new(contentName, typeof(RectTransform));
                     Undo.RegisterCreatedObjectUndo(contentObject, "Create Wheel Reward Content");
-                    contentObject.transform.SetParent(segment, false);
+                    contentObject.transform.SetParent(labelsRoot, false);
                     content = contentObject.GetComponent<RectTransform>();
                 }
+                else
+                {
+                    content.name = contentName;
+                    if (content.parent != labelsRoot)
+                    {
+                        Undo.SetTransformParent(content, labelsRoot,
+                            "Move Rewards Above Wheel Segments");
+                    }
+                }
+                content.gameObject.SetActive(true);
 
-                TextMeshProUGUI label = FindComponent<TextMeshProUGUI>(segment, "Reward Label");
+                TextMeshProUGUI label = FindComponent<TextMeshProUGUI>(content, "Reward Label");
                 if (label == null)
                 {
                     label = CreateLabel(content, "Reward Label", string.Empty,
@@ -420,11 +443,11 @@ namespace MiningSimulator.Ores.Editor
                 }
 
                 float stepAngle = 360f / segmentCount;
-                float middleRadians = stepAngle * 0.5f * Mathf.Deg2Rad;
+                float middleRadians = (index + 0.5f) * stepAngle * Mathf.Deg2Rad;
                 Center(content,
                     new Vector2(-Mathf.Sin(middleRadians), Mathf.Cos(middleRadians)) * 112f,
                     new Vector2(142f, 58f));
-                content.localRotation = Quaternion.Euler(0f, 0f, -index * stepAngle);
+                content.localRotation = Quaternion.identity;
                 content.localScale = Vector3.one;
 
                 Image rewardIcon = FindComponent<Image>(content, "Reward Icon");
@@ -456,10 +479,17 @@ namespace MiningSimulator.Ores.Editor
                     ? $"{reward.GetDisplayName()}\n{shopData.GetWheelRewardDisplayPercent(reward):0.##}%"
                     : "?";
             }
+            labelsRoot.SetAsLastSibling();
 
             for (int index = segmentCount; index < 100; index++)
             {
                 Transform extra = wheelRoot.Find($"Wheel Segment {index + 1}");
+                if (extra == null) break;
+                extra.gameObject.SetActive(false);
+            }
+            for (int index = segmentCount; index < 100; index++)
+            {
+                Transform extra = labelsRoot.Find($"Reward Content {index + 1}");
                 if (extra == null) break;
                 extra.gameObject.SetActive(false);
             }

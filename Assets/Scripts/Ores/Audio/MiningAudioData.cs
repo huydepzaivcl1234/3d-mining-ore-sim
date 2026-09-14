@@ -26,6 +26,10 @@ namespace MiningSimulator.Ores
         [SerializeField] private AudioClip buttonClickSfx;
         [SerializeField] private AudioClip panelOpenSfx;
         [SerializeField] private AudioClip panelCloseSfx;
+        [Tooltip("Optional. Falls back to Ore Hit SFX when empty.")]
+        [SerializeField] private AudioClip wheelSpinSfx;
+        [Tooltip("Optional. Falls back to Level Up SFX when empty.")]
+        [SerializeField] private AudioClip wheelRewardSfx;
 
         [Header("SFX Playback")]
         [Range(0f, 1f), SerializeField] private float sfxVolume = 0.8f;
@@ -47,6 +51,8 @@ namespace MiningSimulator.Ores
         public AudioClip PanelOpenSfx => panelOpenSfx;
         public AudioClip ButtonClickSfx => buttonClickSfx;
         public AudioClip PanelCloseSfx => panelCloseSfx;
+        public AudioClip WheelSpinSfx => wheelSpinSfx != null ? wheelSpinSfx : oreHitSfx;
+        public AudioClip WheelRewardSfx => wheelRewardSfx != null ? wheelRewardSfx : levelUpSfx;
         public float SfxVolume => sfxVolume;
         public AudioMixerGroup SfxMixerGroup => sfxMixerGroup;
         public float MinimumPitch => minimumPitch;

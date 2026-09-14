@@ -23,6 +23,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private PlayerWallet wallet;
         [SerializeField] private MiningItemSystem itemSystem;
         [SerializeField] private MiningUiPanelCoordinator panelCoordinator;
+        [SerializeField] private MiningAudioManager audioManager;
 
         [Header("Panel")]
         [SerializeField] private RectTransform panelRoot;
@@ -56,8 +57,12 @@ namespace MiningSimulator.Ores
 
         private readonly MiningAnimatedCurrencyValue gemCounter = new();
         private readonly List<MiningShopWheelReward> rolledRewards = new(10);
+        private readonly List<int> rolledRewardIndices = new(10);
         private ShopStatus status;
         private int refundedItemRewards;
+        private int currentSpinIndex;
+        private float pendingSpinCost;
+        private bool rewardsRevealed;
         private bool spinning;
         private Tween spinTween;
         private Sequence resultSequence;
@@ -104,15 +109,23 @@ namespace MiningSimulator.Ores
             RemoveListeners();
             if (spinTween.isAlive) spinTween.Stop();
             if (resultSequence.isAlive) resultSequence.Stop();
+            RefundInterruptedSpin();
             spinning = false;
         }
 
         public void Open()
         {
             if (panelRoot == null) return;
-            status = ShopStatus.None;
-            rolledRewards.Clear();
-            refundedItemRewards = 0;
+            if (!spinning)
+            {
+                status = ShopStatus.None;
+                rolledRewards.Clear();
+                rolledRewardIndices.Clear();
+                refundedItemRewards = 0;
+                currentSpinIndex = 0;
+                rewardsRevealed = false;
+                HideResultPanel();
+            }
             Refresh();
             panelRoot.SetAsLastSibling();
             if (panelCoordinator != null) panelCoordinator.OpenPanel(panelRoot);
@@ -178,7 +191,7 @@ namespace MiningSimulator.Ores
             }
 
             rolledRewards.Clear();
-            int finalRewardIndex = -1;
+            rolledRewardIndices.Clear();
             count = Mathf.Max(1, count);
             for (int index = 0; index < count; index++)
             {
@@ -186,24 +199,87 @@ namespace MiningSimulator.Ores
                         out MiningShopWheelReward reward))
                 {
                     rolledRewards.Clear();
+                    rolledRewardIndices.Clear();
                     status = ShopStatus.InvalidWheel;
                     Refresh();
                     return;
                 }
                 rolledRewards.Add(reward);
-                finalRewardIndex = rewardIndex;
+                rolledRewardIndices.Add(rewardIndex);
             }
             if (!wallet.TrySpendGems(totalCost))
             {
                 rolledRewards.Clear();
+                rolledRewardIndices.Clear();
                 status = ShopStatus.NotEnoughGems;
                 Refresh();
                 return;
             }
 
-            // Grant first: quitting or unloading during the animation can never eat a paid spin.
             refundedItemRewards = 0;
-            float refundPerFailedItem = totalCost / count;
+            currentSpinIndex = 0;
+            pendingSpinCost = Mathf.Max(0f, totalCost);
+            rewardsRevealed = false;
+            spinning = true;
+            status = ShopStatus.Spinning;
+            HideResultPanel();
+            Refresh();
+            if (closeButton != null) closeButton.interactable = false;
+            if (wheelRoot == null)
+            {
+                FinishAllSpinsAndGrantRewards();
+                return;
+            }
+
+            PlayNextWheelSpin();
+        }
+
+        private void PlayNextWheelSpin()
+        {
+            if (!spinning || currentSpinIndex >= rolledRewardIndices.Count)
+            {
+                FinishAllSpinsAndGrantRewards();
+                return;
+            }
+
+            int segmentCount = Mathf.Max(1, data.WheelRewards.Count);
+            float step = 360f / segmentCount;
+            float startAngle = wheelRoot.localEulerAngles.z;
+            // Segments start on their boundary; offset by half a segment so the
+            // fixed pointer lands on the center of the selected reward.
+            float selectedAngle = Mathf.Repeat(
+                -(rolledRewardIndices[currentSpinIndex] + 0.5f) * step, 360f);
+            float alignment = Mathf.Repeat(selectedAngle - Mathf.Repeat(startAngle, 360f), 360f);
+            float endAngle = startAngle + data.WheelSpinRotations * 360f + alignment;
+            RefreshStatus();
+            audioManager?.PlayWheelSpinSfx();
+            spinTween = Tween.Custom(this, startAngle, endAngle,
+                    data.WheelSpinDurationSeconds,
+                    static (panel, angle) => panel.wheelRoot.localRotation =
+                        Quaternion.Euler(0f, 0f, angle),
+                    Ease.OutQuart, useUnscaledTime: true)
+                .OnComplete(this, static panel => panel.CompleteCurrentWheelSpin());
+        }
+
+        private void CompleteCurrentWheelSpin()
+        {
+            currentSpinIndex++;
+            if (currentSpinIndex < rolledRewardIndices.Count)
+            {
+                PlayNextWheelSpin();
+                return;
+            }
+
+            FinishAllSpinsAndGrantRewards();
+        }
+
+        private void FinishAllSpinsAndGrantRewards()
+        {
+            if (!spinning) return;
+
+            float refundPerFailedItem = rolledRewards.Count > 0
+                ? pendingSpinCost / rolledRewards.Count
+                : pendingSpinCost;
             foreach (MiningShopWheelReward reward in rolledRewards)
             {
                 if (!GrantReward(reward))
@@ -213,28 +289,9 @@ namespace MiningSimulator.Ores
                 }
             }
 
-            spinning = true;
-            status = ShopStatus.Spinning;
-            Refresh();
-            if (closeButton != null) closeButton.interactable = false;
-            if (wheelRoot == null)
-            {
-                CompleteWheelSpin();
-                return;
-            }
-
-            int segmentCount = Mathf.Max(1, data.WheelRewards.Count);
-            float step = 360f / segmentCount;
-            float startAngle = wheelRoot.localEulerAngles.z;
-            float selectedAngle = Mathf.Repeat(-finalRewardIndex * step, 360f);
-            float alignment = Mathf.Repeat(selectedAngle - Mathf.Repeat(startAngle, 360f), 360f);
-            float endAngle = startAngle + data.WheelSpinRotations * 360f + alignment;
-            spinTween = Tween.Custom(this, startAngle, endAngle,
-                    data.WheelSpinDurationSeconds,
-                    static (panel, angle) => panel.wheelRoot.localRotation =
-                        Quaternion.Euler(0f, 0f, angle),
-                    Ease.OutQuart, useUnscaledTime: true)
-                .OnComplete(this, static panel => panel.CompleteWheelSpin());
+            pendingSpinCost = 0f;
+            rewardsRevealed = true;
+            CompleteWheelSpin();
         }
 
         private bool GrantReward(MiningShopWheelReward reward)
@@ -260,6 +317,7 @@ namespace MiningSimulator.Ores
             spinning = false;
             status = ShopStatus.WheelComplete;
             Refresh();
+            audioManager?.PlayWheelRewardSfx();
             if (closeButton != null) closeButton.interactable = true;
             ShowResultPanel();
             EventSystem.current?.SetSelectedGameObject(spinOnceButton != null
@@ -275,21 +333,32 @@ namespace MiningSimulator.Ores
             if (wheelResultGroup != null) wheelResultGroup.alpha = 0f;
             if (wheelResultGroup != null)
             {
-                resultSequence = Sequence.Create(Tween.Scale(wheelResultPanel,
-                        Vector3.one * 1.06f, 0.20f, Ease.OutBack, useUnscaledTime: true))
+                resultSequence = Sequence.Create(useUnscaledTime: true)
+                    .Group(Tween.Scale(wheelResultPanel,
+                        Vector3.one * 1.06f, 0.20f, Ease.OutBack))
                     .Group(Tween.Custom(wheelResultGroup, 0f, 1f, 0.16f,
                         static (group, value) => group.alpha = value,
-                        Ease.OutQuad, useUnscaledTime: true))
+                        Ease.OutQuad))
                     .Chain(Tween.Scale(wheelResultPanel, Vector3.one, 0.10f,
-                        Ease.OutQuad, useUnscaledTime: true));
+                        Ease.OutQuad));
             }
             else
             {
-                resultSequence = Sequence.Create(Tween.Scale(wheelResultPanel,
-                        Vector3.one * 1.06f, 0.20f, Ease.OutBack, useUnscaledTime: true))
+                resultSequence = Sequence.Create(useUnscaledTime: true)
+                    .Group(Tween.Scale(wheelResultPanel,
+                        Vector3.one * 1.06f, 0.20f, Ease.OutBack))
                     .Chain(Tween.Scale(wheelResultPanel, Vector3.one, 0.10f,
-                        Ease.OutQuad, useUnscaledTime: true));
+                        Ease.OutQuad));
             }
+        }
+
+        private void HideResultPanel()
+        {
+            if (resultSequence.isAlive) resultSequence.Stop();
+            if (wheelResultPanel == null) return;
+            wheelResultPanel.localScale = Vector3.one;
+            if (wheelResultGroup != null) wheelResultGroup.alpha = 0f;
+            wheelResultPanel.gameObject.SetActive(false);
         }
 
         private void Refresh()
@@ -353,7 +422,10 @@ namespace MiningSimulator.Ores
                 ShopStatus.InvalidWheel => MiningLocalization.Text(
                     "Add at least one valid Wheel Reward in MiningShopData.",
                     "Hãy thêm ít nhất một phần thưởng hợp lệ trong MiningShopData."),
-                ShopStatus.Spinning => MiningLocalization.Text("Spinning...", "Đang quay..."),
+                ShopStatus.Spinning => string.Format(MiningLocalization.Text(
+                    "Spinning {0}/{1}...", "Đang quay {0}/{1}..."),
+                    Mathf.Min(currentSpinIndex + 1, rolledRewards.Count),
+                    rolledRewards.Count),
                 ShopStatus.WheelComplete when refundedItemRewards > 0 => string.Format(
                     MiningLocalization.Text(
                         "Done. {0} item reward(s) could not fit and were refunded.",
@@ -368,7 +440,7 @@ namespace MiningSimulator.Ores
         private void RefreshResults()
         {
             if (wheelResultsLabel == null) return;
-            if (rolledRewards.Count == 0)
+            if (!rewardsRevealed || rolledRewards.Count == 0)
             {
                 wheelResultsLabel.text = MiningLocalization.Text(
                     "Your rewards appear here.", "Phần thưởng sẽ hiện ở đây.");
@@ -428,6 +500,18 @@ namespace MiningSimulator.Ores
         {
             panelCoordinator?.RegisterGemAndShopUi(gemHud,
                 gameplayOpenButton != null ? gameplayOpenButton.transform as RectTransform : null);
+        }
+
+        private void RefundInterruptedSpin()
+        {
+            if (!spinning || pendingSpinCost <= 0f || wallet == null) return;
+            wallet.AddGems(pendingSpinCost);
+            pendingSpinCost = 0f;
+            rolledRewards.Clear();
+            rolledRewardIndices.Clear();
+            currentSpinIndex = 0;
+            rewardsRevealed = false;
+            status = ShopStatus.None;
         }
 
         private static void SetText(TextMeshProUGUI label, string english, string vietnamese)

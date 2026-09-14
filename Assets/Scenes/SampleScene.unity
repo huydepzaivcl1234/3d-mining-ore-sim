@@ -8086,8 +8086,7 @@ RectTransform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 396928385}
+  m_Children: []
   m_Father: {fileID: 776729186}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -10187,7 +10186,7 @@ GameObject:
   m_Component:
   - component: {fileID: 396928385}
   m_Layer: 0
-  m_Name: Reward Content
+  m_Name: Reward Content 4
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -10200,18 +10199,18 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 396928384}
-  m_LocalRotation: {x: 0, y: 0, z: -0.95105654, w: -0.30901694}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 230074409}
   - {fileID: 1158780477}
-  m_Father: {fileID: 321892286}
+  m_Father: {fileID: 1652537212}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -65.83195, y: 90.6099}
+  m_AnchoredPosition: {x: 106.51832, y: -34.609886}
   m_SizeDelta: {x: 142, y: 58}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &399535710
@@ -13251,7 +13250,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 285, y: -177}
+  m_AnchoredPosition: {x: 285, y: -157}
   m_SizeDelta: {x: 500, y: 245}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &518979497
@@ -21133,6 +21132,7 @@ RectTransform:
   - {fileID: 1029843934}
   - {fileID: 321892286}
   - {fileID: 1604443128}
+  - {fileID: 1652537212}
   - {fileID: 1854804259}
   m_Father: {fileID: 480689624}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -25629,7 +25629,7 @@ GameObject:
   m_Component:
   - component: {fileID: 969771856}
   m_Layer: 0
-  m_Name: Reward Content
+  m_Name: Reward Content 1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -25649,7 +25649,7 @@ RectTransform:
   m_Children:
   - {fileID: 1854374904}
   - {fileID: 1655209599}
-  m_Father: {fileID: 1108828474}
+  m_Father: {fileID: 1652537212}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -27193,8 +27193,7 @@ RectTransform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 1707593524}
+  m_Children: []
   m_Father: {fileID: 776729186}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -29759,8 +29758,7 @@ RectTransform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 969771856}
+  m_Children: []
   m_Father: {fileID: 776729186}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -33793,7 +33791,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1238168052}
   m_Layer: 0
-  m_Name: Reward Content
+  m_Name: Reward Content 5
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -33806,18 +33804,18 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1238168051}
-  m_LocalRotation: {x: 0, y: 0, z: -0.5877852, w: -0.80901706}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1996555156}
   - {fileID: 1677190445}
-  m_Father: {fileID: 1604443128}
+  m_Father: {fileID: 1652537212}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -65.83195, y: 90.6099}
+  m_AnchoredPosition: {x: 65.83192, y: 90.6099}
   m_SizeDelta: {x: 142, y: 58}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1246904592
@@ -44248,8 +44246,7 @@ RectTransform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 1238168052}
+  m_Children: []
   m_Father: {fileID: 776729186}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -46229,6 +46226,46 @@ MonoBehaviour:
   m_EffectColor: {r: 0.035, g: 0.065, b: 0.12, a: 1}
   m_EffectDistance: {x: 1.83, y: -1.83}
   m_UseGraphicAlpha: 1
+--- !u!1 &1652537211
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1652537212}
+  m_Layer: 0
+  m_Name: Wheel Labels
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1652537212
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1652537211}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 969771856}
+  - {fileID: 2121802098}
+  - {fileID: 1707593524}
+  - {fileID: 396928385}
+  - {fileID: 1238168052}
+  m_Father: {fileID: 776729186}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1652610828
 GameObject:
   m_ObjectHideFlags: 0
@@ -47399,7 +47436,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1707593524}
   m_Layer: 0
-  m_Name: Reward Content
+  m_Name: Reward Content 3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -47412,18 +47449,18 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1707593523}
-  m_LocalRotation: {x: 0, y: 0, z: -0.95105654, w: 0.30901697}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1825389521}
   - {fileID: 1269497053}
-  m_Father: {fileID: 1029843934}
+  m_Father: {fileID: 1652537212}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -65.83195, y: 90.6099}
+  m_AnchoredPosition: {x: 0.000009791351, y: -112}
   m_SizeDelta: {x: 142, y: 58}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1709604329
@@ -49018,8 +49055,7 @@ RectTransform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 2121802098}
+  m_Children: []
   m_Father: {fileID: 776729186}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -58439,7 +58475,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2121802098}
   m_Layer: 0
-  m_Name: Reward Content
+  m_Name: Reward Content 2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -58452,18 +58488,18 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2121802097}
-  m_LocalRotation: {x: 0, y: 0, z: -0.58778524, w: 0.809017}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 86844338}
   - {fileID: 749602242}
-  m_Father: {fileID: 1804678895}
+  m_Father: {fileID: 1652537212}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -65.83195, y: 90.6099}
+  m_AnchoredPosition: {x: -106.5183, y: -34.609886}
   m_SizeDelta: {x: 142, y: 58}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &2127211620
@@ -68136,6 +68172,7 @@ MonoBehaviour:
   wallet: {fileID: 5319940143687006134}
   itemSystem: {fileID: 1388648154}
   panelCoordinator: {fileID: 450512002}
+  audioManager: {fileID: 2127211622}
   panelRoot: {fileID: 1896077275}
   gameplayOpenButton: {fileID: 289181573}
   gemHud: {fileID: 841593408}
