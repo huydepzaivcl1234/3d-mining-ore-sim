@@ -47,7 +47,7 @@ MonoBehaviour:
   - questId: daily_mine_5000
     period: 1
     objective: 0
-    targetAmount: 1
+    targetAmount: 5000
     englishName: Mine 5000 ore
     vietnameseName: "\u0110\xE0o 5000 qu\u1EB7ng"
     rewardType: 0

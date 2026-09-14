@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using PrimeTween;
 using TMPro;
@@ -10,6 +11,14 @@ namespace MiningSimulator.Ores
     [DisallowMultipleComponent]
     public sealed class MiningGiftBoxWheelPanel : MonoBehaviour
     {
+        /// <summary>Fires the instant the wheel actually starts spinning (cost already paid,
+        /// reward already rolled). Covers every gift box type shown through this one shared
+        /// panel, including any added later - nothing gift-specific to wire up per box.</summary>
+        public event Action WheelSpinStarted;
+        /// <summary>Fires once a reward is successfully granted to the player, right as the
+        /// reward popup appears. Same "every gift box, current and future" coverage as above.</summary>
+        public event Action<MiningGiftReward> RewardGranted;
+
         private readonly List<GameObject> rewardCards = new();
 
         private MiningItemSystem itemSystem;
@@ -150,6 +159,7 @@ namespace MiningSimulator.Ores
             float selectedAngle = Mathf.Repeat(-rewardIndex * step, 360f);
             float alignment = Mathf.Repeat(selectedAngle - Mathf.Repeat(startAngle, 360f), 360f);
             float endAngle = startAngle + giftBox.GiftSpinRotations * 360f + alignment;
+            WheelSpinStarted?.Invoke();
             spinTween = Tween.Custom(this, startAngle, endAngle,
                     giftBox.GiftSpinDurationSeconds,
                     static (panel, angle) => panel.wheel.localRotation =
@@ -197,6 +207,7 @@ namespace MiningSimulator.Ores
                     selectedReward.GetDisplayName());
                 spinLabel.text = MiningLocalization.Text("REWARD RECEIVED", "ĐÃ NHẬN THƯỞNG");
                 ShowRewardPopup(selectedReward.GetDisplayName());
+                RewardGranted?.Invoke(selectedReward);
             }
             else
             {

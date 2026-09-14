@@ -16,6 +16,15 @@ MonoBehaviour:
   - item: {fileID: 11400000, guid: f18a9bc3efc342d4b64dde59a7745142, type: 2}
     itemAmount: 1
     gemCost: 20
+  - item: {fileID: 11400000, guid: 6556e39ad099f9f4aafb234d4eec3f75, type: 2}
+    itemAmount: 5
+    gemCost: 35
+  - item: {fileID: 11400000, guid: d4439c8d4fb6e8c4cb8932645ca7aa8b, type: 2}
+    itemAmount: 5
+    gemCost: 35
+  - item: {fileID: 11400000, guid: c1a7e2ced9de9bf42b9f38b6cf7528e1, type: 2}
+    itemAmount: 5
+    gemCost: 35
   productSchemaVersion: 1
   rareGiftBox: {fileID: 11400000, guid: f18a9bc3efc342d4b64dde59a7745142, type: 2}
   rareGiftBoxGemCost: 20

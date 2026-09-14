@@ -20,6 +20,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private MiningRebirthSystem rebirthSystem;
         [SerializeField] private MiningRebirthPanel rebirthPanel;
         [SerializeField] private MiningAudioSettingsPanel audioSettingsPanel;
+        [SerializeField] private MiningGiftBoxWheelPanel giftBoxWheelPanel;
         [SerializeField] private AudioSource musicSource;
         [SerializeField] private AudioSource sfxSource;
 
@@ -77,6 +78,10 @@ namespace MiningSimulator.Ores
             if (audioSettingsPanel == null)
             {
                 audioSettingsPanel = FindFirstObjectByType<MiningAudioSettingsPanel>(FindObjectsInactive.Include);
+            }
+            if (giftBoxWheelPanel == null)
+            {
+                giftBoxWheelPanel = FindFirstObjectByType<MiningGiftBoxWheelPanel>(FindObjectsInactive.Include);
             }
         }
 
@@ -136,6 +141,14 @@ namespace MiningSimulator.Ores
                 audioSettingsPanel.PanelClosed += HandlePanelClosed;
             }
 
+            if (giftBoxWheelPanel != null)
+            {
+                giftBoxWheelPanel.WheelSpinStarted -= HandleWheelSpinStarted;
+                giftBoxWheelPanel.WheelSpinStarted += HandleWheelSpinStarted;
+                giftBoxWheelPanel.RewardGranted -= HandleWheelRewardGranted;
+                giftBoxWheelPanel.RewardGranted += HandleWheelRewardGranted;
+            }
+
             ResolveSources();
             ConfigureSources();
         }
@@ -191,6 +204,12 @@ namespace MiningSimulator.Ores
             {
                 audioSettingsPanel.PanelOpened -= HandlePanelOpened;
                 audioSettingsPanel.PanelClosed -= HandlePanelClosed;
+            }
+
+            if (giftBoxWheelPanel != null)
+            {
+                giftBoxWheelPanel.WheelSpinStarted -= HandleWheelSpinStarted;
+                giftBoxWheelPanel.RewardGranted -= HandleWheelRewardGranted;
             }
         }
 
@@ -465,6 +484,16 @@ namespace MiningSimulator.Ores
             {
                 PlaySfx(audioData.RebirthSfx);
             }
+        }
+
+        private void HandleWheelSpinStarted()
+        {
+            PlayWheelSpinSfx();
+        }
+
+        private void HandleWheelRewardGranted(MiningGiftReward reward)
+        {
+            PlayWheelRewardSfx();
         }
     }
 }
