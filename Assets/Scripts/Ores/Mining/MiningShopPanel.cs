@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using PrimeTween;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
@@ -11,6 +12,80 @@ namespace MiningSimulator.Ores
     [DisallowMultipleComponent]
     public sealed class MiningShopPanel : MonoBehaviour
     {
+        [System.Serializable]
+        private sealed class ShopProductView
+        {
+            [SerializeField] private GameObject root;
+            [SerializeField] private CanvasGroup canvasGroup;
+            [SerializeField] private Image icon;
+            [SerializeField] private TextMeshProUGUI iconFallback;
+            [SerializeField] private TextMeshProUGUI nameLabel;
+            [SerializeField] private TextMeshProUGUI descriptionLabel;
+            [SerializeField] private TextMeshProUGUI amountLabel;
+            [SerializeField] private TextMeshProUGUI priceLabel;
+            [SerializeField] private Button buyButton;
+            [SerializeField] private TextMeshProUGUI buyLabel;
+
+            private UnityAction buyAction;
+
+            public void Bind(int productIndex, System.Action<int> purchase)
+            {
+                Unbind();
+                if (buyButton == null) return;
+                buyAction = () => purchase(productIndex);
+                buyButton.onClick.AddListener(buyAction);
+            }
+
+            public void Unbind()
+            {
+                if (buyButton != null && buyAction != null)
+                {
+                    buyButton.onClick.RemoveListener(buyAction);
+                }
+                buyAction = null;
+            }
+
+            public void Refresh(MiningShopProduct product, PlayerWallet wallet,
+                MiningItemSystem itemSystem, bool shopBusy)
+            {
+                bool valid = product != null && product.IsValid;
+                root?.SetActive(valid);
+                if (!valid) return;
+
+                MiningItemData item = product.Item;
+                Sprite sprite = item.InventoryIcon;
+                if (icon != null)
+                {
+                    icon.sprite = sprite;
+                    icon.enabled = sprite != null;
+                }
+                if (iconFallback != null)
+                {
+                    iconFallback.text = item.IconFallback;
+                    iconFallback.color = item.FallbackColor;
+                    iconFallback.gameObject.SetActive(sprite == null);
+                }
+                if (nameLabel != null) nameLabel.text = item.DisplayName;
+                if (descriptionLabel != null) descriptionLabel.text = item.Description;
+                if (amountLabel != null) amountLabel.text = $"x{product.ItemAmount}";
+                if (priceLabel != null)
+                {
+                    priceLabel.text = $"{MiningMoneyFormatter.Format(product.GemCost)} GEM";
+                }
+                if (buyLabel != null)
+                {
+                    buyLabel.text = MiningLocalization.Text("BUY", "MUA");
+                }
+
+                bool hasSpace = itemSystem != null &&
+                                itemSystem.CanAddItem(item, product.ItemAmount);
+                bool affordable = wallet != null && wallet.CurrentGems >= product.GemCost;
+                bool available = !shopBusy && hasSpace && affordable;
+                if (buyButton != null) buyButton.interactable = available;
+                if (canvasGroup != null) canvasGroup.alpha = available ? 1f : 0.42f;
+            }
+        }
+
         private enum ShopStatus
         {
             None, Purchased, NotEnoughGems, InventoryFull, MissingProduct,
@@ -31,6 +106,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private RectTransform gemHud;
         [SerializeField] private Button closeButton;
         [SerializeField] private Button buyRareGiftButton;
+        [SerializeField] private List<ShopProductView> productViews = new();
 
         [Header("Lucky Wheel")]
         [SerializeField] private RectTransform wheelRoot;
@@ -64,6 +140,7 @@ namespace MiningSimulator.Ores
         private float pendingSpinCost;
         private bool rewardsRevealed;
         private bool spinning;
+        private string purchasedItemName;
         private Tween spinTween;
         private Sequence resultSequence;
 
@@ -75,12 +152,20 @@ namespace MiningSimulator.Ores
 
         private void OnEnable()
         {
+            productViews ??= new List<ShopProductView>();
             gameData ??= wallet != null ? wallet.GameData : null;
             RegisterBaseHud();
             RemoveListeners();
             gameplayOpenButton?.onClick.AddListener(Open);
             closeButton?.onClick.AddListener(Close);
-            buyRareGiftButton?.onClick.AddListener(BuyRareGiftBox);
+            if (productViews.Count == 0)
+            {
+                buyRareGiftButton?.onClick.AddListener(BuyRareGiftBox);
+            }
+            for (int index = 0; index < productViews.Count; index++)
+            {
+                productViews[index]?.Bind(index, BuyProduct);
+            }
             spinOnceButton?.onClick.AddListener(SpinOnce);
             spinTenButton?.onClick.AddListener(SpinTen);
             MiningLocalization.LanguageChanged += Refresh;
@@ -171,6 +256,44 @@ namespace MiningSimulator.Ores
                 Refresh();
                 return;
             }
+            status = ShopStatus.Purchased;
+            purchasedItemName = gift.DisplayName;
+            Refresh();
+        }
+
+        private void BuyProduct(int productIndex)
+        {
+            MiningShopProduct product = data != null && productIndex >= 0 &&
+                                        productIndex < data.Products.Count
+                ? data.Products[productIndex]
+                : null;
+            if (product == null || !product.IsValid || wallet == null || itemSystem == null)
+            {
+                status = ShopStatus.MissingProduct;
+                Refresh();
+                return;
+            }
+            if (!itemSystem.CanAddItem(product.Item, product.ItemAmount))
+            {
+                status = ShopStatus.InventoryFull;
+                Refresh();
+                return;
+            }
+            if (!wallet.TrySpendGems(product.GemCost))
+            {
+                status = ShopStatus.NotEnoughGems;
+                Refresh();
+                return;
+            }
+            if (!itemSystem.TryAddItem(product.Item, product.ItemAmount))
+            {
+                wallet.AddGems(product.GemCost);
+                status = ShopStatus.InventoryFull;
+                Refresh();
+                return;
+            }
+
+            purchasedItemName = product.Item.DisplayName;
             status = ShopStatus.Purchased;
             Refresh();
         }
@@ -382,14 +505,26 @@ namespace MiningSimulator.Ores
             RefreshIcon(gift);
             RefreshStatus();
             RefreshResults();
+            RefreshProductViews();
 
             bool wheelReady = data != null && data.WheelRewards.Count > 0 &&
                               wallet != null && itemSystem != null && !spinning;
             if (spinOnceButton != null) spinOnceButton.interactable = wheelReady;
             if (spinTenButton != null) spinTenButton.interactable = wheelReady;
-            if (buyRareGiftButton != null)
+            if (productViews.Count == 0 && buyRareGiftButton != null)
                 buyRareGiftButton.interactable = gift != null && wallet != null &&
                                                  itemSystem != null && !spinning;
+        }
+
+        private void RefreshProductViews()
+        {
+            for (int index = 0; index < productViews.Count; index++)
+            {
+                MiningShopProduct product = data != null && index < data.Products.Count
+                    ? data.Products[index]
+                    : null;
+                productViews[index]?.Refresh(product, wallet, itemSystem, spinning);
+            }
         }
 
         private void RefreshSpinLabels()
@@ -411,8 +546,11 @@ namespace MiningSimulator.Ores
             if (statusLabel == null) return;
             statusLabel.text = status switch
             {
-                ShopStatus.Purchased => MiningLocalization.Text(
-                    "Rare Gift Box added to Inventory!", "Đã thêm Hộp Quà Hiếm vào Túi đồ!"),
+                ShopStatus.Purchased => string.Format(MiningLocalization.Text(
+                        "{0} added to Inventory!", "Đã thêm {0} vào Túi đồ!"),
+                    string.IsNullOrWhiteSpace(purchasedItemName)
+                        ? MiningLocalization.Text("Item", "Vật phẩm")
+                        : purchasedItemName),
                 ShopStatus.NotEnoughGems => MiningLocalization.Text(
                     "Not enough Gems.", "Không đủ Gem."),
                 ShopStatus.InventoryFull => MiningLocalization.Text(
@@ -489,6 +627,10 @@ namespace MiningSimulator.Ores
             gameplayOpenButton?.onClick.RemoveListener(Open);
             closeButton?.onClick.RemoveListener(Close);
             buyRareGiftButton?.onClick.RemoveListener(BuyRareGiftBox);
+            foreach (ShopProductView productView in productViews)
+            {
+                productView?.Unbind();
+            }
             spinOnceButton?.onClick.RemoveListener(SpinOnce);
             spinTenButton?.onClick.RemoveListener(SpinTen);
             MiningLocalization.LanguageChanged -= Refresh;

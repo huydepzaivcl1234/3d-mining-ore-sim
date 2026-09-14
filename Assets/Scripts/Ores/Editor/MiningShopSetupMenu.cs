@@ -23,30 +23,69 @@ namespace MiningSimulator.Ores.Editor
         private const string GemIconPath = "Assets/Ores/Icons/GemCurrencyIcon.png";
         private const string GeneratedUiFolder = "Assets/Generated/MiningUI";
         private const string WheelSpritePath = GeneratedUiFolder + "/LuckyWheelCircle.png";
+        private static bool syncQueued;
+
+        [InitializeOnLoadMethod]
+        private static void QueueSyncAfterScriptsReload()
+        {
+            QueueOpenPanelSync();
+        }
 
         [MenuItem("Mining Simulator/Setup/Create Or Update Shop Panel")]
         public static void CreateOrUpdateShopPanel()
         {
+            CreateOrUpdateShopPanelInternal(true, true);
+        }
+
+        internal static void QueueOpenPanelSync()
+        {
+            if (syncQueued) return;
+            syncQueued = true;
+            EditorApplication.delayCall += () =>
+            {
+                syncQueued = false;
+                SyncOpenShopPanelFromData();
+            };
+        }
+
+        private static void SyncOpenShopPanelFromData()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isCompiling)
+            {
+                return;
+            }
+            Canvas canvas = FindHudCanvas();
+            if (canvas == null || canvas.transform.Find(PanelName) == null)
+            {
+                return;
+            }
+            CreateOrUpdateShopPanelInternal(false, false);
+        }
+
+        private static void CreateOrUpdateShopPanelInternal(bool showDialogs, bool applyTheme)
+        {
             Canvas canvas = FindHudCanvas();
             if (canvas == null)
             {
-                EditorUtility.DisplayDialog("Shop Setup",
-                    $"Could not find the Canvas named '{CanvasName}' in the open scene.", "OK");
+                if (showDialogs)
+                {
+                    EditorUtility.DisplayDialog("Shop Setup",
+                        $"Could not find the Canvas named '{CanvasName}' in the open scene.",
+                        "OK");
+                }
                 return;
             }
 
             MiningItemData rareGift = AssetDatabase.LoadAssetAtPath<MiningItemData>(RareGiftPath);
-            if (rareGift == null)
-            {
-                EditorUtility.DisplayDialog("Shop Setup",
-                    $"Rare Gift Box was not found at '{RareGiftPath}'.", "OK");
-                return;
-            }
-
             MiningShopData shopData = LoadOrCreateShopData(rareGift);
             MiningUiData uiData = FindFirstAsset<MiningUiData>();
             RectTransform panel = EnsurePanel(canvas.transform, uiData, shopData);
             Button openButton = EnsureGameplayButton(canvas.transform, uiData);
+            MiningItemSystem itemSystem = Object.FindFirstObjectByType<MiningItemSystem>(
+                FindObjectsInactive.Include);
+            RegisterShopProductsInItemDatabase(shopData, itemSystem != null
+                ? itemSystem.Database
+                : null);
             MiningShopPanel controller = canvas.GetComponent<MiningShopPanel>() ??
                                          Undo.AddComponent<MiningShopPanel>(canvas.gameObject);
 
@@ -55,8 +94,7 @@ namespace MiningSimulator.Ores.Editor
             SetReference(serialized, "gameData", FindFirstAsset<MiningGameData>());
             SetReference(serialized, "wallet", Object.FindFirstObjectByType<PlayerWallet>(
                 FindObjectsInactive.Include));
-            SetReference(serialized, "itemSystem", Object.FindFirstObjectByType<MiningItemSystem>(
-                FindObjectsInactive.Include));
+            SetReference(serialized, "itemSystem", itemSystem);
             SetReference(serialized, "panelCoordinator", Object.FindFirstObjectByType<
                 MiningUiPanelCoordinator>(FindObjectsInactive.Include));
             SetReference(serialized, "audioManager", Object.FindFirstObjectByType<
@@ -105,6 +143,7 @@ namespace MiningSimulator.Ores.Editor
                 FindComponent<TextMeshProUGUI>(panel, "Spin Ten Label"));
             SetReference(serialized, "wheelResultsLabel",
                 FindComponent<TextMeshProUGUI>(panel, "Wheel Results Label"));
+            WireProductViews(serialized, panel, shopData);
             serialized.ApplyModifiedProperties();
             EditorUtility.SetDirty(controller);
 
@@ -121,18 +160,26 @@ namespace MiningSimulator.Ores.Editor
                 EditorUtility.SetDirty(coordinator);
             }
 
-            MiningMainMenuSetupMenu.EnsureShopButtonForCurrentMenu();
+            if (showDialogs)
+            {
+                MiningMainMenuSetupMenu.EnsureShopButtonForCurrentMenu();
+            }
             panel.gameObject.SetActive(true);
             panel.SetAsLastSibling();
-            MiningCandyUiSetupMenu.ApplyCandyThemeFromSetup();
-            MiningButtonSfxSetupMenu.AssignAllButtonSfx(false);
+            if (applyTheme)
+            {
+                MiningCandyUiSetupMenu.ApplyCandyThemeFromSetup();
+                MiningButtonSfxSetupMenu.AssignAllButtonSfx(false);
+            }
             EditorSceneManager.MarkSceneDirty(canvas.gameObject.scene);
-            Selection.activeGameObject = panel.gameObject;
-            EditorGUIUtility.PingObject(panel.gameObject);
-            EditorUtility.DisplayDialog("Shop Setup",
-                "Shop is ready with a configurable Lucky Wheel (10 Gems x1, 100 Gems x10). " +
-                "Edit Wheel Rewards in MiningShopData, then save the scene.",
-                "OK");
+            if (showDialogs)
+            {
+                Selection.activeGameObject = panel.gameObject;
+                EditorGUIUtility.PingObject(panel.gameObject);
+                EditorUtility.DisplayDialog("Shop Setup",
+                    "Shop is ready. Add products and Wheel Rewards in MiningShopData, then " +
+                    "save the scene.", "OK");
+            }
         }
 
         private static MiningShopData LoadOrCreateShopData(MiningItemData rareGift)
@@ -155,9 +202,24 @@ namespace MiningSimulator.Ores.Editor
 
             SerializedObject serialized = new(data);
             SerializedProperty product = serialized.FindProperty("rareGiftBox");
-            if (product != null && product.objectReferenceValue == null)
+            if (product != null && product.objectReferenceValue == null && rareGift != null)
             {
                 product.objectReferenceValue = rareGift;
+            }
+            SerializedProperty products = serialized.FindProperty("products");
+            SerializedProperty schemaVersion = serialized.FindProperty("productSchemaVersion");
+            if (products != null && schemaVersion != null && schemaVersion.intValue < 1)
+            {
+                MiningItemData legacyItem = product != null
+                    ? product.objectReferenceValue as MiningItemData
+                    : rareGift;
+                if (products.arraySize == 0 && legacyItem != null)
+                {
+                    products.arraySize = 1;
+                    ConfigureShopProduct(products.GetArrayElementAtIndex(0), legacyItem, 1,
+                        serialized.FindProperty("rareGiftBoxGemCost")?.floatValue ?? 100f);
+                }
+                schemaVersion.intValue = 1;
             }
             SerializedProperty rewards = serialized.FindProperty("wheelRewards");
             if (rewards != null && rewards.arraySize == 0)
@@ -182,10 +244,90 @@ namespace MiningSimulator.Ores.Editor
                     string.Empty, string.Empty, new Color(0.62f, 0.24f, 0.95f));
             }
             AssignMissingCurrencyIcons(rewards);
+            bool changed = serialized.hasModifiedProperties;
             serialized.ApplyModifiedProperties();
-            EditorUtility.SetDirty(data);
-            AssetDatabase.SaveAssets();
+            if (changed)
+            {
+                EditorUtility.SetDirty(data);
+                AssetDatabase.SaveAssets();
+            }
             return data;
+        }
+
+        private static void ConfigureShopProduct(SerializedProperty product,
+            MiningItemData item, int amount, float gemCost)
+        {
+            product.FindPropertyRelative("item").objectReferenceValue = item;
+            product.FindPropertyRelative("itemAmount").intValue = Mathf.Max(1, amount);
+            product.FindPropertyRelative("gemCost").floatValue = Mathf.Max(0f, gemCost);
+        }
+
+        private static void RegisterShopProductsInItemDatabase(MiningShopData shopData,
+            MiningItemDatabase database)
+        {
+            if (shopData == null || database == null) return;
+            SerializedObject serialized = new(database);
+            SerializedProperty items = serialized.FindProperty("items");
+            if (items == null) return;
+
+            bool changed = false;
+            foreach (MiningShopProduct product in shopData.Products)
+            {
+                MiningItemData item = product != null ? product.Item : null;
+                if (item == null) continue;
+                bool found = false;
+                for (int index = 0; index < items.arraySize; index++)
+                {
+                    if (items.GetArrayElementAtIndex(index).objectReferenceValue == item)
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                if (found) continue;
+                items.InsertArrayElementAtIndex(items.arraySize);
+                items.GetArrayElementAtIndex(items.arraySize - 1).objectReferenceValue = item;
+                changed = true;
+            }
+            if (!changed) return;
+            serialized.ApplyModifiedProperties();
+            EditorUtility.SetDirty(database);
+            AssetDatabase.SaveAssets();
+        }
+
+        private static void WireProductViews(SerializedObject controller, RectTransform panel,
+            MiningShopData shopData)
+        {
+            RectTransform content = FindComponent<RectTransform>(panel, "Product Content");
+            SerializedProperty views = controller.FindProperty("productViews");
+            if (views == null) return;
+
+            views.arraySize = shopData.Products.Count;
+            for (int index = 0; index < shopData.Products.Count; index++)
+            {
+                RectTransform row = FindProductRow(content, index);
+                SerializedProperty view = views.GetArrayElementAtIndex(index);
+                SetReference(view, "root", row != null ? row.gameObject : null);
+                SetReference(view, "canvasGroup", row != null
+                    ? row.GetComponent<CanvasGroup>()
+                    : null);
+                SetReference(view, "icon", FindComponent<Image>(row, "Item Icon"));
+                SetReference(view, "iconFallback",
+                    FindComponent<TextMeshProUGUI>(row, "Item Icon Fallback"));
+                SetReference(view, "nameLabel",
+                    FindComponent<TextMeshProUGUI>(row, "Item Name"));
+                SetReference(view, "descriptionLabel",
+                    FindComponent<TextMeshProUGUI>(row, "Item Description"));
+                SetReference(view, "amountLabel",
+                    FindComponent<TextMeshProUGUI>(row, "Item Amount"));
+                SetReference(view, "priceLabel",
+                    FindComponent<TextMeshProUGUI>(row, "Gem Price"));
+                Button buyButton = FindComponent<Button>(row, "Buy Product Button") ??
+                                   FindComponent<Button>(row, "Buy Rare Gift Button");
+                SetReference(view, "buyButton", buyButton);
+                SetReference(view, "buyLabel",
+                    FindComponent<TextMeshProUGUI>(row, "Buy Label"));
+            }
         }
 
         private static void AssignMissingCurrencyIcons(SerializedProperty rewards)
@@ -234,7 +376,6 @@ namespace MiningSimulator.Ores.Editor
         private static RectTransform EnsurePanel(Transform canvas, MiningUiData uiData,
             MiningShopData shopData)
         {
-            MiningItemData rareGift = shopData.RareGiftBox;
             Transform existing = canvas.Find(PanelName);
             RectTransform overlay;
             if (existing == null)
@@ -308,17 +449,8 @@ namespace MiningSimulator.Ores.Editor
             }
             gemBalance.rectTransform.anchoredPosition = new Vector2(285f, 265f);
             gemBalance.rectTransform.sizeDelta = new Vector2(500f, 48f);
-            if (card.Find("Rare Gift Product") == null)
-            {
-                CreateProductCard(card, uiData, rareGift, shopData.RareGiftBoxGemCost);
-            }
-            LayoutProductCard(card);
+            EnsureProductList(card, uiData, shopData);
             EnsureLuckyWheel(card, uiData, shopData);
-            TextMeshProUGUI price = FindComponent<TextMeshProUGUI>(card, "Gem Price");
-            if (price != null)
-            {
-                price.text = $"{MiningMoneyFormatter.Format(shopData.RareGiftBoxGemCost)} GEM";
-            }
 
             TextMeshProUGUI status = FindComponent<TextMeshProUGUI>(card, "Shop Message");
             if (status == null)
@@ -337,26 +469,248 @@ namespace MiningSimulator.Ores.Editor
             return overlay;
         }
 
-        private static void LayoutProductCard(RectTransform card)
+        private static RectTransform EnsureProductList(RectTransform card, MiningUiData uiData,
+            MiningShopData shopData)
         {
-            RectTransform product = card.Find("Rare Gift Product") as RectTransform;
-            if (product == null)
+            RectTransform scroll = card.Find("Product Scroll View") as RectTransform;
+            if (scroll == null)
             {
-                return;
+                scroll = CreateImage(card, "Product Scroll View", Color.clear)
+                    .GetComponent<RectTransform>();
             }
-            Center(product, new Vector2(285f, 92f), new Vector2(500f, 235f));
-            SetRect(FindComponent<RectTransform>(product, "Item Icon"),
-                new Vector2(-170f, 20f), new Vector2(112f, 112f));
-            SetRect(FindComponent<RectTransform>(product, "Item Icon Fallback"),
-                Vector2.zero, new Vector2(105f, 105f));
-            SetRect(FindComponent<RectTransform>(product, "Item Name"),
-                new Vector2(65f, 72f), new Vector2(315f, 46f));
-            SetRect(FindComponent<RectTransform>(product, "Item Description"),
-                new Vector2(65f, 17f), new Vector2(315f, 64f));
-            SetRect(FindComponent<RectTransform>(product, "Gem Price"),
-                new Vector2(-70f, -80f), new Vector2(210f, 48f));
-            SetRect(FindComponent<RectTransform>(product, "Buy Rare Gift Button"),
-                new Vector2(145f, -80f), new Vector2(180f, 56f));
+            Center(scroll, new Vector2(285f, 130f), new Vector2(510f, 190f));
+            ConfigureTransparentScrollGraphic(scroll.gameObject);
+            ConfigureCanvasGroup(scroll.gameObject);
+
+            RectTransform viewport = scroll.Find("Viewport") as RectTransform;
+            if (viewport == null)
+            {
+                viewport = CreateImage(scroll, "Viewport", Color.clear)
+                    .GetComponent<RectTransform>();
+            }
+            Stretch(viewport);
+            ConfigureTransparentScrollGraphic(viewport.gameObject);
+            if (viewport.GetComponent<RectMask2D>() == null)
+            {
+                Undo.AddComponent<RectMask2D>(viewport.gameObject);
+            }
+
+            RectTransform content = viewport.Find("Product Content") as RectTransform;
+            if (content == null)
+            {
+                GameObject contentObject = new("Product Content", typeof(RectTransform));
+                Undo.RegisterCreatedObjectUndo(contentObject, "Create Shop Product Content");
+                contentObject.transform.SetParent(viewport, false);
+                content = contentObject.GetComponent<RectTransform>();
+            }
+            float height = Mathf.Max(190f, shopData.Products.Count * 92f +
+                                           Mathf.Max(0, shopData.Products.Count - 1) * 10f);
+            content.anchorMin = new Vector2(0.5f, 1f);
+            content.anchorMax = new Vector2(0.5f, 1f);
+            content.pivot = new Vector2(0.5f, 1f);
+            content.anchoredPosition = Vector2.zero;
+            content.sizeDelta = new Vector2(500f, height);
+
+            RectTransform legacy = card.Find("Rare Gift Product") as RectTransform;
+            if (legacy != null && legacy.parent != content)
+            {
+                Undo.SetTransformParent(legacy, content,
+                    "Move Existing Shop Product Into Scroll View");
+            }
+            for (int index = 0; index < shopData.Products.Count; index++)
+            {
+                EnsureProductRow(content, uiData, shopData.Products[index], index);
+            }
+            DisableExtraProductRows(content, shopData.Products.Count);
+
+            ScrollRect scrollRect = scroll.GetComponent<ScrollRect>() ??
+                                    Undo.AddComponent<ScrollRect>(scroll.gameObject);
+            scrollRect.content = content;
+            scrollRect.viewport = viewport;
+            scrollRect.horizontal = false;
+            scrollRect.vertical = true;
+            scrollRect.movementType = ScrollRect.MovementType.Elastic;
+            scrollRect.elasticity = 0.12f;
+            scrollRect.inertia = true;
+            scrollRect.decelerationRate = 0.135f;
+            scrollRect.scrollSensitivity = 35f;
+            return content;
+        }
+
+        private static RectTransform EnsureProductRow(RectTransform content,
+            MiningUiData uiData, MiningShopProduct product, int index)
+        {
+            RectTransform row = FindProductRow(content, index);
+            if (row == null)
+            {
+                string name = index == 0 ? "Rare Gift Product" : $"Shop Product {index + 1}";
+                row = CreateImage(content, name,
+                    new Color(0.10f, 0.12f, 0.19f, 0.98f)).GetComponent<RectTransform>();
+            }
+            row.gameObject.SetActive(true);
+            row.anchorMin = new Vector2(0.5f, 1f);
+            row.anchorMax = new Vector2(0.5f, 1f);
+            row.pivot = new Vector2(0.5f, 1f);
+            row.anchoredPosition = new Vector2(0f, -index * 102f);
+            row.sizeDelta = new Vector2(490f, 92f);
+            ConfigureCanvasGroup(row.gameObject);
+            EnsureCandySurface(row.gameObject, new Color(0.12f, 0.17f, 0.27f, 1f),
+                new Color(0.04f, 0.07f, 0.13f, 1f));
+
+            MiningItemData item = product != null ? product.Item : null;
+            Image icon = FindComponent<Image>(row, "Item Icon");
+            if (icon == null)
+            {
+                icon = CreateImage(row, "Item Icon", Color.white).GetComponent<Image>();
+            }
+            icon.sprite = item != null ? item.InventoryIcon : null;
+            icon.preserveAspect = true;
+            icon.enabled = icon.sprite != null;
+            SetRect(icon.rectTransform, new Vector2(-205f, 0f), new Vector2(68f, 68f));
+
+            TextMeshProUGUI fallback = FindComponent<TextMeshProUGUI>(row,
+                "Item Icon Fallback");
+            if (fallback == null)
+            {
+                fallback = CreateLabel(icon.rectTransform, "Item Icon Fallback", "?",
+                    Vector2.zero, new Vector2(64f, 64f), 34f, Color.white, FontStyles.Bold);
+            }
+            fallback.text = item != null ? item.IconFallback : "?";
+            fallback.color = item != null ? item.FallbackColor : Color.magenta;
+            fallback.gameObject.SetActive(icon.sprite == null);
+
+            TextMeshProUGUI nameLabel = EnsureProductLabel(row, "Item Name", 18f,
+                FontStyles.Bold);
+            SetRect(nameLabel.rectTransform, new Vector2(-85f, 24f), new Vector2(185f, 30f));
+            nameLabel.text = item != null ? item.DisplayName : "ITEM";
+            TextMeshProUGUI description = EnsureProductLabel(row, "Item Description", 13f,
+                FontStyles.Normal);
+            SetRect(description.rectTransform, new Vector2(-72f, -14f),
+                new Vector2(210f, 42f));
+            description.text = item != null ? item.Description : string.Empty;
+            TextMeshProUGUI amount = EnsureProductLabel(row, "Item Amount", 16f,
+                FontStyles.Bold);
+            SetRect(amount.rectTransform, new Vector2(65f, 25f), new Vector2(70f, 28f));
+            amount.text = $"x{(product != null ? product.ItemAmount : 1)}";
+            TextMeshProUGUI price = EnsureProductLabel(row, "Gem Price", 16f,
+                FontStyles.Bold);
+            SetRect(price.rectTransform, new Vector2(65f, -20f), new Vector2(125f, 32f));
+            price.text = $"{MiningMoneyFormatter.Format(product != null ? product.GemCost : 0f)} GEM";
+
+            Button buy = FindComponent<Button>(row, "Buy Product Button") ??
+                         FindComponent<Button>(row, "Buy Rare Gift Button");
+            if (buy == null)
+            {
+                buy = CreateButton(row, "Buy Product Button", "Buy Label", "BUY",
+                    new Vector2(190f, 0f), new Vector2(105f, 50f),
+                    new Color(0.10f, 0.70f, 0.52f, 1f), Color.white, 18f, uiData);
+            }
+            SetRect(buy.transform as RectTransform, new Vector2(190f, 0f),
+                new Vector2(105f, 50f));
+            EnsureCandySurface(buy.gameObject, new Color(0.20f, 0.84f, 0.69f, 1f),
+                new Color(0.08f, 0.49f, 0.36f, 1f));
+            return row;
+        }
+
+        private static TextMeshProUGUI EnsureProductLabel(Transform row, string name,
+            float fontSize, FontStyles style)
+        {
+            TextMeshProUGUI label = FindComponent<TextMeshProUGUI>(row, name);
+            if (label == null)
+            {
+                label = CreateLabel(row, name, string.Empty, Vector2.zero,
+                    new Vector2(100f, 30f), fontSize, Color.white, style);
+            }
+            label.fontSize = fontSize;
+            label.fontStyle = style;
+            label.enableAutoSizing = true;
+            label.fontSizeMin = Mathf.Max(10f, fontSize - 4f);
+            label.fontSizeMax = fontSize;
+            return label;
+        }
+
+        private static RectTransform FindProductRow(RectTransform content, int index)
+        {
+            if (content == null) return null;
+            string name = index == 0 ? "Rare Gift Product" : $"Shop Product {index + 1}";
+            return content.Find(name) as RectTransform;
+        }
+
+        private static void DisableExtraProductRows(RectTransform content, int productCount)
+        {
+            if (content == null) return;
+            for (int index = 0; index < content.childCount; index++)
+            {
+                Transform child = content.GetChild(index);
+                bool productRow = child.name == "Rare Gift Product" ||
+                                  child.name.StartsWith("Shop Product ",
+                                      System.StringComparison.Ordinal);
+                if (!productRow) continue;
+                int rowIndex = child.name == "Rare Gift Product" ? 0 :
+                    int.TryParse(child.name.Substring("Shop Product ".Length), out int number)
+                        ? number - 1
+                        : int.MaxValue;
+                child.gameObject.SetActive(rowIndex < productCount);
+            }
+        }
+
+        private static void ConfigureCanvasGroup(GameObject target)
+        {
+            CanvasGroup group = target.GetComponent<CanvasGroup>() ??
+                                Undo.AddComponent<CanvasGroup>(target);
+            Undo.RecordObject(group, "Configure Shop Canvas Group");
+            group.alpha = 1f;
+            group.interactable = true;
+            group.blocksRaycasts = true;
+            EditorUtility.SetDirty(group);
+        }
+
+        private static void ConfigureTransparentScrollGraphic(GameObject target)
+        {
+            Image image = target.GetComponent<Image>() ?? Undo.AddComponent<Image>(target);
+            MiningCandyGradient gradient = target.GetComponent<MiningCandyGradient>();
+            if (gradient != null) Undo.DestroyObjectImmediate(gradient);
+            foreach (Shadow effect in target.GetComponents<Shadow>())
+            {
+                Undo.DestroyObjectImmediate(effect);
+            }
+            Transform highlight = target.transform.Find("Candy Highlight");
+            if (highlight != null) Undo.DestroyObjectImmediate(highlight.gameObject);
+            Undo.RecordObject(image, "Configure Transparent Shop Scroll Graphic");
+            image.sprite = null;
+            image.type = Image.Type.Simple;
+            image.color = Color.clear;
+            image.raycastTarget = true;
+            EditorUtility.SetDirty(image);
+        }
+
+        private static void EnsureCandySurface(GameObject target, Color top, Color bottom)
+        {
+            MiningCandyGradient gradient = target.GetComponent<MiningCandyGradient>() ??
+                                            Undo.AddComponent<MiningCandyGradient>(target);
+            gradient.SetColors(top, bottom);
+            if (target.GetComponent<Outline>() == null)
+            {
+                Outline outline = Undo.AddComponent<Outline>(target);
+                outline.effectColor = new Color(0.035f, 0.065f, 0.12f, 1f);
+                outline.effectDistance = new Vector2(3f, -3f);
+            }
+            bool hasPlainShadow = false;
+            foreach (Shadow effect in target.GetComponents<Shadow>())
+            {
+                if (effect.GetType() == typeof(Shadow))
+                {
+                    hasPlainShadow = true;
+                    break;
+                }
+            }
+            if (!hasPlainShadow)
+            {
+                Shadow shadow = Undo.AddComponent<Shadow>(target);
+                shadow.effectColor = new Color(0.01f, 0.02f, 0.04f, 0.65f);
+                shadow.effectDistance = new Vector2(0f, -5f);
+            }
+            EditorUtility.SetDirty(gradient);
         }
 
         private static void EnsureLuckyWheel(RectTransform card, MiningUiData uiData,
@@ -622,41 +976,6 @@ namespace MiningSimulator.Ores.Editor
             return AssetDatabase.LoadAssetAtPath<Sprite>(WheelSpritePath);
         }
 
-        private static void CreateProductCard(RectTransform card, MiningUiData uiData,
-            MiningItemData rareGift, float gemCost)
-        {
-            GameObject productObject = CreateImage(card, "Rare Gift Product",
-                new Color(0.10f, 0.12f, 0.19f, 0.98f));
-            RectTransform product = productObject.GetComponent<RectTransform>();
-            Center(product, new Vector2(0f, -20f), new Vector2(660f, 330f));
-
-            GameObject iconObject = CreateImage(product, "Item Icon", Color.white);
-            RectTransform iconRect = iconObject.GetComponent<RectTransform>();
-            Center(iconRect, new Vector2(-220f, 35f), new Vector2(150f, 150f));
-            Image icon = iconObject.GetComponent<Image>();
-            icon.sprite = rareGift.InventoryIcon;
-            icon.preserveAspect = true;
-            icon.enabled = icon.sprite != null;
-            TextMeshProUGUI fallback = CreateLabel(iconRect, "Item Icon Fallback",
-                rareGift.IconFallback, Vector2.zero, new Vector2(140f, 140f), 62f,
-                rareGift.FallbackColor, FontStyles.Bold);
-            fallback.gameObject.SetActive(icon.sprite == null);
-
-            CreateLabel(product, "Item Name", rareGift.DisplayName,
-                new Vector2(85f, 105f), new Vector2(360f, 50f), 30f,
-                new Color(0.90f, 0.72f, 1f, 1f), FontStyles.Bold);
-            CreateLabel(product, "Item Description", rareGift.Description,
-                new Vector2(85f, 37f), new Vector2(360f, 78f), 18f,
-                new Color(0.78f, 0.84f, 0.95f, 1f), FontStyles.Normal);
-            CreateLabel(product, "Gem Price", $"{MiningMoneyFormatter.Format(gemCost)} GEM",
-                new Vector2(-80f, -105f),
-                new Vector2(260f, 54f), 27f, new Color(0.78f, 0.62f, 1f),
-                FontStyles.Bold);
-            CreateButton(product, "Buy Rare Gift Button", "Buy Label", "BUY",
-                new Vector2(190f, -105f), new Vector2(220f, 58f),
-                new Color(0.52f, 0.27f, 0.88f, 1f), Color.white, 25f, uiData);
-        }
-
         private static Button EnsureGameplayButton(Transform canvas, MiningUiData uiData)
         {
             Transform existing = canvas.Find(OpenButtonName);
@@ -757,6 +1076,7 @@ namespace MiningSimulator.Ores.Editor
 
         private static Transform FindDescendant(Transform root, string name)
         {
+            if (root == null) return null;
             Transform[] children = root.GetComponentsInChildren<Transform>(true);
             foreach (Transform child in children)
             {
@@ -771,6 +1091,15 @@ namespace MiningSimulator.Ores.Editor
         private static void SetReference(SerializedObject serialized, string name, Object value)
         {
             SerializedProperty property = serialized.FindProperty(name);
+            if (property != null)
+            {
+                property.objectReferenceValue = value;
+            }
+        }
+
+        private static void SetReference(SerializedProperty serialized, string name, Object value)
+        {
+            SerializedProperty property = serialized?.FindPropertyRelative(name);
             if (property != null)
             {
                 property.objectReferenceValue = value;
@@ -792,6 +1121,27 @@ namespace MiningSimulator.Ores.Editor
             rect.pivot = new Vector2(0.5f, 0.5f);
             rect.anchoredPosition = position;
             rect.sizeDelta = size;
+        }
+    }
+
+    [CustomEditor(typeof(MiningShopData))]
+    public sealed class MiningShopDataInspector : UnityEditor.Editor
+    {
+        public override void OnInspectorGUI()
+        {
+            if (DrawDefaultInspector())
+            {
+                MiningShopSetupMenu.QueueOpenPanelSync();
+            }
+            EditorGUILayout.Space();
+            if (GUILayout.Button("Sync Shop UI In Open Scene"))
+            {
+                MiningShopSetupMenu.QueueOpenPanelSync();
+            }
+            EditorGUILayout.HelpBox(
+                "Add products under Shop Products. Each entry accepts any MiningItemData, " +
+                "quantity and Gem price. The open Shop Panel syncs automatically.",
+                MessageType.Info);
         }
     }
 }

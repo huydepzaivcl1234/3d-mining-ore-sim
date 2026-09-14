@@ -4,6 +4,25 @@ using UnityEngine;
 
 namespace MiningSimulator.Ores
 {
+    [Serializable]
+    public sealed class MiningShopProduct
+    {
+        [SerializeField] private MiningItemData item;
+        [Min(1), SerializeField] private int itemAmount = 1;
+        [Min(0f), SerializeField] private float gemCost = 100f;
+
+        public MiningItemData Item => item;
+        public int ItemAmount => Mathf.Max(1, itemAmount);
+        public float GemCost => Mathf.Max(0f, gemCost);
+        public bool IsValid => item != null && ItemAmount > 0;
+
+        public void Validate()
+        {
+            itemAmount = Mathf.Max(1, itemAmount);
+            gemCost = Mathf.Max(0f, gemCost);
+        }
+    }
+
     public enum MiningShopWheelRewardType
     {
         Money = 0,
@@ -67,9 +86,15 @@ namespace MiningSimulator.Ores
         menuName = "Mining Simulator/Game Data/Shop")]
     public sealed class MiningShopData : ScriptableObject
     {
-        [Header("Rare Gift Box")]
-        [SerializeField] private MiningItemData rareGiftBox;
-        [Min(0f), SerializeField] private float rareGiftBoxGemCost = 100f;
+        [Header("Shop Products")]
+        [Tooltip("Add, remove or reorder any gift/item sold for Gems. The Shop UI syncs from this list.")]
+        [SerializeField] private List<MiningShopProduct> products = new();
+
+        [HideInInspector, SerializeField] private int productSchemaVersion;
+        [HideInInspector, SerializeField] private MiningItemData rareGiftBox;
+        [HideInInspector, Min(0f), SerializeField] private float rareGiftBoxGemCost = 100f;
+
+        /* Legacy fields are kept serialized so existing Shop data remains compatible. */
 
         [Header("Lucky Wheel")]
         [Min(0f), SerializeField] private float singleSpinGemCost = 10f;
@@ -82,6 +107,8 @@ namespace MiningSimulator.Ores
 
         public MiningItemData RareGiftBox => rareGiftBox;
         public float RareGiftBoxGemCost => Mathf.Max(0f, rareGiftBoxGemCost);
+        public IReadOnlyList<MiningShopProduct> Products => products ??
+            (IReadOnlyList<MiningShopProduct>)Array.Empty<MiningShopProduct>();
         public float SingleSpinGemCost => Mathf.Max(0f, singleSpinGemCost);
         public int MultiSpinCount => Mathf.Clamp(multiSpinCount, 1, 100);
         public float MultiSpinGemCost => Mathf.Max(0f, multiSpinGemCost);
@@ -144,6 +171,11 @@ namespace MiningSimulator.Ores
 
         private void OnValidate()
         {
+            products ??= new List<MiningShopProduct>();
+            foreach (MiningShopProduct product in products)
+            {
+                product?.Validate();
+            }
             rareGiftBoxGemCost = Mathf.Max(0f, rareGiftBoxGemCost);
             singleSpinGemCost = Mathf.Max(0f, singleSpinGemCost);
             multiSpinCount = Mathf.Clamp(multiSpinCount, 1, 100);

@@ -14,6 +14,7 @@ namespace MiningSimulator.Ores.Editor
         private const string DataFolder = "Assets/GameData/Quests";
         private const string DataPath = DataFolder + "/MiningQuestData.asset";
         private const string RoundedSpritePath = "Assets/Generated/MiningUI/CandyRoundedRect.png";
+        private static bool syncQueued;
 
         private static readonly Color OutlineColor = new(0.035f, 0.065f, 0.12f, 1f);
         private static readonly Color NeutralTop = new(0.10f, 0.14f, 0.23f, 1f);
@@ -28,6 +29,62 @@ namespace MiningSimulator.Ores.Editor
         private static readonly Color DailyBottom = new(0.12f, 0.50f, 0.88f, 1f);
         private static readonly Color WeeklyTop = new(1f, 0.67f, 0.18f, 1f);
         private static readonly Color WeeklyBottom = new(0.95f, 0.31f, 0.12f, 1f);
+
+        [InitializeOnLoadMethod]
+        private static void QueueSyncAfterScriptsReload()
+        {
+            QueueOpenPanelSync();
+        }
+
+        internal static void QueueOpenPanelSync()
+        {
+            if (syncQueued) return;
+            syncQueued = true;
+            EditorApplication.delayCall += () =>
+            {
+                syncQueued = false;
+                SyncOpenQuestPanelFromData();
+            };
+        }
+
+        private static void SyncOpenQuestPanelFromData()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isCompiling)
+            {
+                return;
+            }
+            Canvas canvas = FindCanvas();
+            RectTransform panelRoot = canvas != null
+                ? canvas.transform.Find("Quest Panel") as RectTransform
+                : null;
+            RectTransform card = panelRoot != null
+                ? panelRoot.Find("Quest Card") as RectTransform
+                : null;
+            PlayerWallet wallet = Object.FindFirstObjectByType<PlayerWallet>(
+                FindObjectsInactive.Include);
+            MiningQuestData data = AssetDatabase.LoadAssetAtPath<MiningQuestData>(DataPath);
+            MiningQuestPanel panel = canvas != null ? canvas.GetComponent<MiningQuestPanel>() : null;
+            if (card == null || wallet == null || data == null || panel == null ||
+                !TryValidateQuestIds(data, out _))
+            {
+                return;
+            }
+
+            MiningQuestSystem questSystem = wallet.GetComponent<MiningQuestSystem>() ??
+                                            Undo.AddComponent<MiningQuestSystem>(wallet.gameObject);
+            WireQuestSystem(questSystem, data, wallet,
+                Object.FindFirstObjectByType<OreSpawner>(FindObjectsInactive.Include),
+                Object.FindFirstObjectByType<NpcShop>(FindObjectsInactive.Include),
+                Object.FindFirstObjectByType<MiningRebirthSystem>(FindObjectsInactive.Include));
+            ConfigureCanvasGroup(panelRoot.gameObject);
+            WireQuestPanel(panel, data, questSystem,
+                Object.FindFirstObjectByType<MiningUiPanelCoordinator>(
+                    FindObjectsInactive.Include), panelRoot,
+                canvas.transform.Find("Quest Menu Button")?.GetComponent<Button>(),
+                FindDescendant(canvas.transform, "Quest Button")?.GetComponent<Button>(),
+                FindComponent<Button>(card, "Close Button"), card);
+            EditorSceneManager.MarkSceneDirty(canvas.gameObject.scene);
+        }
 
         [MenuItem("Mining Simulator/Setup/Create Or Update Daily Weekly Quests")]
         public static void CreateOrUpdateQuests()
@@ -144,10 +201,12 @@ namespace MiningSimulator.Ores.Editor
 
             SerializedProperty rows = serialized.FindProperty("rows");
             RectTransform content = EnsureQuestList(card, data.Quests.Count);
+            var expectedRows = new HashSet<string>(System.StringComparer.Ordinal);
             rows.arraySize = data.Quests.Count;
             for (int index = 0; index < data.Quests.Count; index++)
             {
                 MiningQuestDefinition quest = data.Quests[index];
+                expectedRows.Add("Quest Row " + quest.QuestId);
                 RectTransform row = EnsureQuestRow(card, content, quest, index);
                 SerializedProperty element = rows.GetArrayElementAtIndex(index);
                 element.FindPropertyRelative("questId").stringValue = quest.QuestId;
@@ -167,6 +226,7 @@ namespace MiningSimulator.Ores.Editor
                 element.FindPropertyRelative("claimLabel").objectReferenceValue =
                     FindComponent<TextMeshProUGUI>(row, "Claim Label");
             }
+            DisableUnusedQuestRows(card, content, expectedRows);
             serialized.ApplyModifiedProperties();
             EditorUtility.SetDirty(panel);
         }
@@ -273,8 +333,8 @@ namespace MiningSimulator.Ores.Editor
             }
 
             RectTransform content = contentTransform as RectTransform;
-            float contentHeight = Mathf.Max(460f, questCount * 145f +
-                                                   Mathf.Max(0, questCount - 1) * 12f);
+            float contentHeight = Mathf.Max(460f, questCount * 108f +
+                                                   Mathf.Max(0, questCount - 1) * 8f);
             content.anchorMin = new Vector2(0.5f, 1f);
             content.anchorMax = new Vector2(0.5f, 1f);
             content.pivot = new Vector2(0.5f, 1f);
@@ -377,13 +437,15 @@ namespace MiningSimulator.Ores.Editor
             }
 
             RectTransform row = existing as RectTransform;
+            row.gameObject.SetActive(true);
             row.anchorMin = new Vector2(0.5f, 1f);
             row.anchorMax = new Vector2(0.5f, 1f);
             row.pivot = new Vector2(0.5f, 1f);
-            row.anchoredPosition = new Vector2(0f, -index * 157f);
-            row.sizeDelta = new Vector2(940f, 145f);
+            row.anchoredPosition = new Vector2(0f, -index * 116f);
+            row.sizeDelta = new Vector2(940f, 108f);
             if (!created)
             {
+                LayoutQuestRow(row);
                 return row;
             }
 
@@ -420,7 +482,47 @@ namespace MiningSimulator.Ores.Editor
             Button claim = CreateButton(row, "Claim Button", "IN PROGRESS",
                 new Vector2(375f, -5f), new Vector2(165f, 68f), false, GreenTop, GreenBottom);
             claim.GetComponentInChildren<TextMeshProUGUI>().name = "Claim Label";
+            LayoutQuestRow(row);
             return row;
+        }
+
+        private static void LayoutQuestRow(RectTransform row)
+        {
+            Center(FindComponent<RectTransform>(row, "Period Badge"),
+                new Vector2(-385f, 24f), new Vector2(135f, 38f));
+            Center(FindComponent<RectTransform>(row, "Quest Name"),
+                new Vector2(-135f, 23f), new Vector2(360f, 34f));
+            Center(FindComponent<RectTransform>(row, "Reward"),
+                new Vector2(-85f, -34f), new Vector2(470f, 28f));
+            Center(FindComponent<RectTransform>(row, "Progress Background"),
+                new Vector2(-95f, -5f), new Vector2(450f, 22f));
+            Center(FindComponent<RectTransform>(row, "Progress"),
+                Vector2.zero, new Vector2(430f, 20f));
+            Center(FindComponent<RectTransform>(row, "Claim Button"),
+                new Vector2(375f, -3f), new Vector2(165f, 58f));
+        }
+
+        private static void DisableUnusedQuestRows(RectTransform card, RectTransform content,
+            HashSet<string> expectedRows)
+        {
+            SetUnusedQuestRowsActive(card, expectedRows, false, content);
+            SetUnusedQuestRowsActive(content, expectedRows, false, null);
+        }
+
+        private static void SetUnusedQuestRowsActive(Transform parent,
+            HashSet<string> expectedRows, bool active, Transform ignoredChild)
+        {
+            if (parent == null) return;
+            for (int index = 0; index < parent.childCount; index++)
+            {
+                Transform child = parent.GetChild(index);
+                if (child == ignoredChild || !child.name.StartsWith("Quest Row ",
+                        System.StringComparison.Ordinal) || expectedRows.Contains(child.name))
+                {
+                    continue;
+                }
+                child.gameObject.SetActive(active);
+            }
         }
 
         private static Button CreateButton(Transform parent, string name, string text,
@@ -537,6 +639,7 @@ namespace MiningSimulator.Ores.Editor
 
         private static void Center(RectTransform rect, Vector2 position, Vector2 size)
         {
+            if (rect == null) return;
             rect.anchorMin = new Vector2(0.5f, 0.5f);
             rect.anchorMax = new Vector2(0.5f, 0.5f);
             rect.pivot = new Vector2(0.5f, 0.5f);
@@ -559,6 +662,26 @@ namespace MiningSimulator.Ores.Editor
             rect.anchorMax = Vector2.one;
             rect.offsetMin = Vector2.zero;
             rect.offsetMax = Vector2.zero;
+        }
+    }
+
+    [CustomEditor(typeof(MiningQuestData))]
+    public sealed class MiningQuestDataInspector : UnityEditor.Editor
+    {
+        public override void OnInspectorGUI()
+        {
+            if (DrawDefaultInspector())
+            {
+                MiningQuestSetupMenu.QueueOpenPanelSync();
+            }
+            EditorGUILayout.Space();
+            if (GUILayout.Button("Sync Quest UI In Open Scene"))
+            {
+                MiningQuestSetupMenu.QueueOpenPanelSync();
+            }
+            EditorGUILayout.HelpBox(
+                "Every quest needs a unique Quest Id. Adding, removing or reordering quests " +
+                "automatically updates the open Quest Panel.", MessageType.Info);
         }
     }
 }

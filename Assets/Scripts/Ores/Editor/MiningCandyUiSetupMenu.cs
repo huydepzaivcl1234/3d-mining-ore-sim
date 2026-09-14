@@ -228,9 +228,9 @@ namespace MiningSimulator.Ores.Editor
                 return;
             }
 
-            if (IsQuestScrollGraphic(image))
+            if (IsDataScrollGraphic(image))
             {
-                RestoreTransparentQuestScrollGraphic(image);
+                RestoreTransparentDataScrollGraphic(image);
                 return;
             }
 
@@ -305,9 +305,12 @@ namespace MiningSimulator.Ores.Editor
             }
         }
 
-        private static bool IsQuestScrollGraphic(Image image)
+        private static bool IsDataScrollGraphic(Image image)
         {
-            if (image.name != "Quest Scroll View" && image.name != "Viewport")
+            bool namedScrollGraphic = image.name == "Quest Scroll View" ||
+                                      image.name == "Product Scroll View" ||
+                                      image.name == "Viewport";
+            if (!namedScrollGraphic)
             {
                 return false;
             }
@@ -315,7 +318,7 @@ namespace MiningSimulator.Ores.Editor
             Transform current = image.transform;
             while (current != null)
             {
-                if (current.name == "Quest Panel")
+                if (current.name == "Quest Panel" || current.name == "Shop Panel")
                 {
                     return true;
                 }
@@ -324,7 +327,7 @@ namespace MiningSimulator.Ores.Editor
             return false;
         }
 
-        private static void RestoreTransparentQuestScrollGraphic(Image image)
+        private static void RestoreTransparentDataScrollGraphic(Image image)
         {
             MiningCandyGradient gradient = image.GetComponent<MiningCandyGradient>();
             if (gradient != null) Undo.DestroyObjectImmediate(gradient);
@@ -335,7 +338,7 @@ namespace MiningSimulator.Ores.Editor
             Transform highlight = image.transform.Find(HighlightName);
             if (highlight != null) Undo.DestroyObjectImmediate(highlight.gameObject);
 
-            Undo.RecordObject(image, "Restore Transparent Quest Scroll Graphic");
+            Undo.RecordObject(image, "Restore Transparent Data Scroll Graphic");
             image.sprite = null;
             image.type = Image.Type.Simple;
             image.color = Color.clear;
