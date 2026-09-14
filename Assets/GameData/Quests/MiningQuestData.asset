@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 502b0e685a4b4ef68e1aa79d9637db47, type: 3}
+  m_Name: MiningQuestData
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningQuestData
+  saveKey: MiningSimulator.Quests.v1
+  quests:
+  - questId: daily_mine_500
+    period: 0
+    objective: 0
+    targetAmount: 500
+    englishName: Mine 500 ores today
+    vietnameseName: "\u0110\xE0o 500 qu\u1EB7ng h\xF4m nay"
+    rewardType: 0
+    moneyReward: 1000
+    randomMoneyMinimum: 0
+    randomMoneyMaximum: 0
+  - questId: daily_buy_3_npc
+    period: 0
+    objective: 1
+    targetAmount: 3
+    englishName: Hire 3 miners today
+    vietnameseName: "Mua th\xEAm 3 NPC h\xF4m nay"
+    rewardType: 1
+    moneyReward: 0
+    randomMoneyMinimum: 750
+    randomMoneyMaximum: 1500
+  - questId: weekly_rebirth_1
+    period: 1
+    objective: 2
+    targetAmount: 1
+    englishName: Rebirth once this week
+    vietnameseName: "Rebirth 1 l\u1EA7n trong tu\u1EA7n"
+    rewardType: 0
+    moneyReward: 5000
+    randomMoneyMinimum: 0
+    randomMoneyMaximum: 0

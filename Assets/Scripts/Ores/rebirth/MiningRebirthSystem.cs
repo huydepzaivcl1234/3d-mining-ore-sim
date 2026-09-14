@@ -14,6 +14,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private NpcShop npcShop;
         [SerializeField] private MiningItemSystem itemSystem;
         [SerializeField] private MiningAchievementSystem achievementSystem;
+        [SerializeField] private MiningQuestSystem questSystem;
         private int completedRebirths;
 
         public int CompletedRebirths => completedRebirths;
@@ -98,6 +99,7 @@ namespace MiningSimulator.Ores
             npcShop?.ResetAllNpcs();
             itemSystem?.ResetAllData();
             achievementSystem?.ResetAllData();
+            questSystem?.ResetAllData();
             MiningComputerStation.ResetAllLoadedStations();
             wallet?.ResetMoney();
             wallet?.ResetGems();
@@ -147,6 +149,11 @@ namespace MiningSimulator.Ores
             if (achievementSystem == null)
             {
                 achievementSystem = FindFirstObjectByType<MiningAchievementSystem>(
+                    FindObjectsInactive.Include);
+            }
+            if (questSystem == null)
+            {
+                questSystem = FindFirstObjectByType<MiningQuestSystem>(
                     FindObjectsInactive.Include);
             }
         }

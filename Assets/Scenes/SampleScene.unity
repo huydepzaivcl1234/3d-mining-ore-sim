@@ -12031,6 +12031,7 @@ MonoBehaviour:
   effectToast: {fileID: 573600083}
   gemHud: {fileID: 841593408}
   shopMenuButton: {fileID: 289181568}
+  questMenuButton: {fileID: 0}
 --- !u!114 &450512003
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -15568,7 +15569,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &581456575
 RectTransform:
   m_ObjectHideFlags: 0
@@ -27395,6 +27396,7 @@ MonoBehaviour:
   npcShop: {fileID: 655586586}
   itemSystem: {fileID: 1388648154}
   achievementSystem: {fileID: 0}
+  questSystem: {fileID: 0}
 --- !u!1 &1044932565
 GameObject:
   m_ObjectHideFlags: 0

@@ -22,6 +22,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private RectTransform effectToast;
         [SerializeField] private RectTransform gemHud;
         [SerializeField] private RectTransform shopMenuButton;
+        [SerializeField] private RectTransform questMenuButton;
 
         private Vector2 shopHome;
         private Vector2 rebirthHome;
@@ -34,6 +35,7 @@ namespace MiningSimulator.Ores
         private Vector2 effectToastHome;
         private Vector2 gemHudHome;
         private Vector2 shopMenuButtonHome;
+        private Vector2 questMenuButtonHome;
 
         private Vector2 npcProgressHome;
         private RectTransform activeModal;
@@ -63,6 +65,13 @@ namespace MiningSimulator.Ores
                 shopMenuButton = shopButton;
                 shopMenuButtonHome = GetPosition(shopMenuButton);
             }
+        }
+
+        public void RegisterQuestUi(RectTransform questButton)
+        {
+            if (questButton == null) return;
+            questMenuButton = questButton;
+            questMenuButtonHome = GetPosition(questMenuButton);
         }
 
         private float TransitionDuration => uiData != null ? uiData.PanelTransitionDuration : 0.28f;
@@ -175,6 +184,7 @@ namespace MiningSimulator.Ores
             npcProgressHome = GetPosition(npcProgressHud);
             gemHudHome = GetPosition(gemHud);
             shopMenuButtonHome = GetPosition(shopMenuButton);
+            questMenuButtonHome = GetPosition(questMenuButton);
             initialized = true;
         }
 
@@ -188,7 +198,7 @@ namespace MiningSimulator.Ores
 
         private void ResolveOptionalHudReferences()
         {
-            if (gemHud != null && shopMenuButton != null)
+            if (gemHud != null && shopMenuButton != null && questMenuButton != null)
             {
                 return;
             }
@@ -213,6 +223,7 @@ namespace MiningSimulator.Ores
 
             gemHud ??= canvas.Find("Gem HUD") as RectTransform;
             shopMenuButton ??= canvas.Find("Shop Menu Button") as RectTransform;
+            questMenuButton ??= canvas.Find("Quest Menu Button") as RectTransform;
         }
 
         private RectTransform FindActiveModal()
@@ -237,6 +248,8 @@ namespace MiningSimulator.Ores
             AnimateBasePanel(effectToast, effectToastHome, EffectToastSlideDirection, visible);
             AnimateBasePanel(gemHud, gemHudHome, GemHudSlideDirection, visible);
             AnimateBasePanel(shopMenuButton, shopMenuButtonHome, ShopMenuButtonSlideDirection,
+                visible);
+            AnimateBasePanel(questMenuButton, questMenuButtonHome, ShopMenuButtonSlideDirection,
                 visible);
         }
 
@@ -269,6 +282,8 @@ namespace MiningSimulator.Ores
                 visible);
             SetBasePanelImmediately(gemHud, gemHudHome, GemHudSlideDirection, visible);
             SetBasePanelImmediately(shopMenuButton, shopMenuButtonHome,
+                ShopMenuButtonSlideDirection, visible);
+            SetBasePanelImmediately(questMenuButton, questMenuButtonHome,
                 ShopMenuButtonSlideDirection, visible);
         }
 

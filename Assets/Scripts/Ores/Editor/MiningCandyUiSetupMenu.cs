@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System.IO;
+using Microlight.MicroBar;
 using TMPro;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -15,6 +16,7 @@ namespace MiningSimulator.Ores.Editor
         private const string GeneratedFolder = "Assets/Generated/MiningUI";
         private const string RoundedSpritePath = GeneratedFolder + "/CandyRoundedRect.png";
         private const string HighlightName = "Candy Highlight";
+        private const string OriginalMicroBarSpriteGuid = "3a79b19cd8e7d0e488c39c168da793bb";
         private const string PromptKey = "MiningSimulator.CandyUiPrompt.v1";
 
         private readonly struct Palette
@@ -84,6 +86,24 @@ namespace MiningSimulator.Ores.Editor
                 $"Removed dark UI effects from {repaired} sprite icons. Save the scene.", "OK");
         }
 
+        [MenuItem("Mining Simulator/Fixes/Restore Rebirth And Level Bar Colors")]
+        public static void RestoreProgressBarColors()
+        {
+            Canvas canvas = FindHudCanvas();
+            MiningUiData data = FindFirstAsset<MiningUiData>();
+            if (canvas == null || data == null)
+            {
+                EditorUtility.DisplayDialog("Progress Bar Repair",
+                    "Open the gameplay scene and make sure MiningUiData exists.", "OK");
+                return;
+            }
+
+            int repaired = RepairProgressBars(canvas, data);
+            EditorSceneManager.MarkSceneDirty(canvas.gameObject.scene);
+            EditorUtility.DisplayDialog("Progress Bar Repair",
+                $"Restored {repaired} Rebirth/Level MicroBar graphics. Save the scene.", "OK");
+        }
+
         private static void ApplyCandyThemeInternal(bool showCompletionDialog)
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode)
@@ -129,6 +149,7 @@ namespace MiningSimulator.Ores.Editor
             ConfigureSafeArea(canvas, data);
             RepairIcons(canvas);
             MiningButtonSfxSetupMenu.AssignAllButtonSfx(false);
+            RepairProgressBars(canvas, data);
             EditorSceneManager.MarkSceneDirty(canvas.gameObject.scene);
             Undo.CollapseUndoOperations(undoGroup);
             Selection.activeGameObject = canvas.gameObject;
@@ -161,6 +182,16 @@ namespace MiningSimulator.Ores.Editor
             if (image == null || image.name == HighlightName ||
                 IsTransitionGraphic(image.name))
             {
+                return;
+            }
+
+            MicroBar microBar = image.GetComponentInParent<MicroBar>();
+            if (microBar != null)
+            {
+                if (microBar.name == "Experience Bar" || microBar.name == "Progress Bar")
+                {
+                    RestoreMicroBarImage(image, data);
+                }
                 return;
             }
 
@@ -223,6 +254,81 @@ namespace MiningSimulator.Ores.Editor
             {
                 EnsureGloss(rect, roundedSprite, data);
             }
+        }
+
+        private static int RepairProgressBars(Canvas canvas, MiningUiData data)
+        {
+            int repaired = 0;
+            foreach (MicroBar bar in canvas.GetComponentsInChildren<MicroBar>(true))
+            {
+                if (bar == null || (bar.name != "Experience Bar" && bar.name != "Progress Bar"))
+                {
+                    continue;
+                }
+
+                var serialized = new SerializedObject(bar);
+                SerializedProperty simple = serialized.FindProperty("simpleBar");
+                if (simple == null) continue;
+                Color primary = bar.name == "Experience Bar"
+                    ? data.NpcExperienceBarColor
+                    : data.RebirthProgressColor;
+                simple.FindPropertyRelative("_adaptiveColor").boolValue = false;
+                simple.FindPropertyRelative("_barPrimaryColor").colorValue = primary;
+                simple.FindPropertyRelative("_ghostBarDamageColor").colorValue =
+                    data.RebirthProgressGhostColor;
+                simple.FindPropertyRelative("_ghostBarHealColor").colorValue =
+                    data.RebirthProgressGhostColor;
+                serialized.ApplyModifiedProperties();
+
+                Image background = simple.FindPropertyRelative("_uiBackground")
+                    .objectReferenceValue as Image;
+                Image fill = simple.FindPropertyRelative("_uiPrimaryBar")
+                    .objectReferenceValue as Image;
+                Image ghost = simple.FindPropertyRelative("_uiGhostBar")
+                    .objectReferenceValue as Image;
+                RestoreMicroBarImage(background, data.NpcExperienceBarBackgroundColor, true);
+                RestoreMicroBarImage(fill, primary, false);
+                RestoreMicroBarImage(ghost, data.RebirthProgressGhostColor, false);
+                repaired++;
+            }
+            return repaired;
+        }
+
+        private static void RestoreMicroBarImage(Image image, MiningUiData data)
+        {
+            if (image == null) return;
+            MicroBar bar = image.GetComponentInParent<MicroBar>();
+            Color color = image.name == "HP Background"
+                ? data.NpcExperienceBarBackgroundColor
+                : bar != null && bar.name == "Experience Bar"
+                    ? data.NpcExperienceBarColor
+                    : data.RebirthProgressColor;
+            RestoreMicroBarImage(image, color, image.name == "HP Background");
+        }
+
+        private static void RestoreMicroBarImage(Image image, Color color, bool background)
+        {
+            if (image == null) return;
+            MiningCandyGradient gradient = image.GetComponent<MiningCandyGradient>();
+            if (gradient != null) Undo.DestroyObjectImmediate(gradient);
+            foreach (Shadow effect in image.GetComponents<Shadow>())
+            {
+                Undo.DestroyObjectImmediate(effect);
+            }
+            Transform highlight = image.transform.Find(HighlightName);
+            if (highlight != null) Undo.DestroyObjectImmediate(highlight.gameObject);
+
+            Undo.RecordObject(image, "Restore MicroBar Graphic");
+            string spritePath = AssetDatabase.GUIDToAssetPath(OriginalMicroBarSpriteGuid);
+            Sprite originalSprite = AssetDatabase.LoadAssetAtPath<Sprite>(spritePath);
+            if (originalSprite != null) image.sprite = originalSprite;
+            image.type = background ? Image.Type.Sliced : Image.Type.Filled;
+            image.fillMethod = Image.FillMethod.Horizontal;
+            image.fillOrigin = (int)Image.OriginHorizontal.Left;
+            image.fillClockwise = true;
+            image.color = color;
+            image.raycastTarget = false;
+            EditorUtility.SetDirty(image);
         }
 
         private static void ApplyTextStyle(TextMeshProUGUI label, MiningUiData data)
@@ -307,7 +413,8 @@ namespace MiningSimulator.Ores.Editor
                 "NPC Progress HUD",
                 "Inventory Menu Button",
                 "Gem HUD",
-                "Shop Menu Button"
+                "Shop Menu Button",
+                "Quest Menu Button"
             };
 
             foreach (string objectName in protectedObjects)
