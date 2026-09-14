@@ -229,7 +229,7 @@ namespace MiningSimulator.Ores
         {
             if (upgradeSystem == null || upgradeSystem.UpgradeData == null)
             {
-                if (npcCapacityButton != null) npcCapacityButton.interactable = false;
+                SetButtonAvailability(npcCapacityButton, false);
                 return;
             }
 
@@ -250,18 +250,15 @@ namespace MiningSimulator.Ores
                     definition.MaximumStacks, MiningMoneyFormatter.Format(
                         upgradeSystem.GetCost(MiningUpgradeType.NpcCapacity)));
             }
-            if (npcCapacityButton != null)
-            {
-                npcCapacityButton.interactable =
-                    upgradeSystem.CanPurchase(MiningUpgradeType.NpcCapacity);
-            }
+            SetButtonAvailability(npcCapacityButton,
+                upgradeSystem.CanPurchase(MiningUpgradeType.NpcCapacity));
         }
 
         private void RefreshUpgrade(MiningUpgradeType type, Button button, TextMeshProUGUI label)
         {
             if (upgradeSystem == null || upgradeSystem.UpgradeData == null)
             {
-                if (button != null) button.interactable = false;
+                SetButtonAvailability(button, false);
                 return;
             }
 
@@ -281,10 +278,26 @@ namespace MiningSimulator.Ores
                     definition.MaximumStacks, MiningMoneyFormatter.Format(
                         upgradeSystem.GetCost(type)));
             }
-            if (button != null)
+            SetButtonAvailability(button, upgradeSystem.CanPurchase(type));
+        }
+
+        private void SetButtonAvailability(Button button, bool available)
+        {
+            if (button == null)
             {
-                button.interactable = upgradeSystem.CanPurchase(type);
+                return;
             }
+
+            button.interactable = available;
+            CanvasGroup group = button.GetComponent<CanvasGroup>() ??
+                                button.gameObject.AddComponent<CanvasGroup>();
+            group.alpha = available ? 1f : GetUnavailableAlpha();
+        }
+
+        private float GetUnavailableAlpha()
+        {
+            MiningUiData data = panelCoordinator != null ? panelCoordinator.UiData : null;
+            return data != null ? data.UpgradeUnavailableAlpha : 0.42f;
         }
 
         private void HandleLanguageChanged()

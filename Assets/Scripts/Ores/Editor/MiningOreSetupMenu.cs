@@ -1432,6 +1432,10 @@ namespace MiningSimulator.Editor
                 GameObject upgradePanel = CreateUiObject("Upgrade Panel", canvas, typeof(Image));
                 upgradePanelTransform = upgradePanel.transform;
             }
+            if (upgradePanelTransform.GetComponent<CanvasGroup>() == null)
+            {
+                upgradePanelTransform.gameObject.AddComponent<CanvasGroup>();
+            }
 
             RectTransform panelRect = upgradePanelTransform.GetComponent<RectTransform>();
             panelRect.anchorMin = uiData.UpgradePanelFullscreen
@@ -1757,6 +1761,10 @@ namespace MiningSimulator.Editor
             Vector2 position = uiData.GetUpgradeCardPosition(index);
             Button button = EnsureStyledButton(parent, name, position, uiData.CardSize, uiData.CardColor,
                 uiData.CardTextColor, uiData);
+            if (button.GetComponent<CanvasGroup>() == null)
+            {
+                button.gameObject.AddComponent<CanvasGroup>();
+            }
             TextMeshProUGUI label = EnsureText(button.transform, "Label");
             label.text = preview;
             label.alignment = TextAlignmentOptions.Left;

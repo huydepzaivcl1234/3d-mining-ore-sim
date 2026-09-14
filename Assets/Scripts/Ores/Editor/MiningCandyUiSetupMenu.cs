@@ -86,6 +86,49 @@ namespace MiningSimulator.Ores.Editor
                 $"Removed dark UI effects from {repaired} sprite icons. Save the scene.", "OK");
         }
 
+        [MenuItem("Mining Simulator/Fixes/Restore Upgrade Unaffordable Dimming")]
+        public static void RestoreUpgradeUnavailableDimming()
+        {
+            Canvas canvas = FindHudCanvas();
+            Transform panel = canvas != null ? canvas.transform.Find("Upgrade Panel") : null;
+            if (panel == null)
+            {
+                EditorUtility.DisplayDialog("Upgrade Card Repair",
+                    "Open the gameplay scene containing Mining HUD Canvas > Upgrade Panel.",
+                    "OK");
+                return;
+            }
+
+            if (panel.GetComponent<CanvasGroup>() == null)
+            {
+                Undo.AddComponent<CanvasGroup>(panel.gameObject);
+            }
+
+            int repaired = 0;
+            foreach (Button button in panel.GetComponentsInChildren<Button>(true))
+            {
+                if (button == null || !button.name.EndsWith(" Upgrade",
+                        System.StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                CanvasGroup group = button.GetComponent<CanvasGroup>() ??
+                                    Undo.AddComponent<CanvasGroup>(button.gameObject);
+                Undo.RecordObject(group, "Restore Upgrade Availability Visual");
+                group.alpha = 1f;
+                group.interactable = true;
+                group.blocksRaycasts = true;
+                EditorUtility.SetDirty(group);
+                repaired++;
+            }
+
+            EditorSceneManager.MarkSceneDirty(canvas.gameObject.scene);
+            EditorUtility.DisplayDialog("Upgrade Card Repair",
+                $"Prepared {repaired} upgrade cards. In Play Mode, cards now darken when " +
+                "money is insufficient or the upgrade is maxed. Save the scene.", "OK");
+        }
+
         [MenuItem("Mining Simulator/Fixes/Restore Rebirth And Level Bar Colors")]
         public static void RestoreProgressBarColors()
         {
@@ -185,6 +228,12 @@ namespace MiningSimulator.Ores.Editor
                 return;
             }
 
+            if (IsQuestScrollGraphic(image))
+            {
+                RestoreTransparentQuestScrollGraphic(image);
+                return;
+            }
+
             MicroBar microBar = image.GetComponentInParent<MicroBar>();
             if (microBar != null)
             {
@@ -254,6 +303,44 @@ namespace MiningSimulator.Ores.Editor
             {
                 EnsureGloss(rect, roundedSprite, data);
             }
+        }
+
+        private static bool IsQuestScrollGraphic(Image image)
+        {
+            if (image.name != "Quest Scroll View" && image.name != "Viewport")
+            {
+                return false;
+            }
+
+            Transform current = image.transform;
+            while (current != null)
+            {
+                if (current.name == "Quest Panel")
+                {
+                    return true;
+                }
+                current = current.parent;
+            }
+            return false;
+        }
+
+        private static void RestoreTransparentQuestScrollGraphic(Image image)
+        {
+            MiningCandyGradient gradient = image.GetComponent<MiningCandyGradient>();
+            if (gradient != null) Undo.DestroyObjectImmediate(gradient);
+            foreach (Shadow effect in image.GetComponents<Shadow>())
+            {
+                Undo.DestroyObjectImmediate(effect);
+            }
+            Transform highlight = image.transform.Find(HighlightName);
+            if (highlight != null) Undo.DestroyObjectImmediate(highlight.gameObject);
+
+            Undo.RecordObject(image, "Restore Transparent Quest Scroll Graphic");
+            image.sprite = null;
+            image.type = Image.Type.Simple;
+            image.color = Color.clear;
+            image.raycastTarget = true;
+            EditorUtility.SetDirty(image);
         }
 
         private static int RepairProgressBars(Canvas canvas, MiningUiData data)

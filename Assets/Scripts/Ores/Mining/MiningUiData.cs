@@ -326,6 +326,8 @@ namespace MiningSimulator.Ores
         [SerializeField] private Color closeButtonColor = new(0.96f, 0.08f, 0.34f, 1f);
         [SerializeField] private Color navigationButtonColor = new(0.14f, 0.72f, 0.52f, 1f);
         [SerializeField] private Color titleTextColor = Color.white;
+        [Tooltip("Opacity used for an upgrade card when the player cannot afford it or it is maxed.")]
+        [Range(0.1f, 1f), SerializeField] private float upgradeUnavailableAlpha = 0.42f;
 
         [Header("Rebirth HUD Layout")]
         [SerializeField] private Vector2 rebirthHudPosition = new(-24f, -24f);
@@ -644,6 +646,7 @@ namespace MiningSimulator.Ores
         public Color CloseButtonColor => closeButtonColor;
         public Color NavigationButtonColor => navigationButtonColor;
         public Color TitleTextColor => titleTextColor;
+        public float UpgradeUnavailableAlpha => Mathf.Clamp(upgradeUnavailableAlpha, 0.1f, 1f);
 
         public Vector2 GetUpgradeCardPosition(int index)
         {
@@ -808,6 +811,7 @@ namespace MiningSimulator.Ores
             candyMinimumTouchTarget = Mathf.Max(44f, candyMinimumTouchTarget);
             cardSpacing = Mathf.Max(0f, cardSpacing);
             outlineThickness = Mathf.Max(0f, outlineThickness);
+            upgradeUnavailableAlpha = Mathf.Clamp(upgradeUnavailableAlpha, 0.1f, 1f);
             shopHeaderSize.x = Mathf.Max(1f, shopHeaderSize.x);
             shopHeaderSize.y = Mathf.Max(1f, shopHeaderSize.y);
             rewardPopupDuration = Mathf.Max(0.01f, rewardPopupDuration);

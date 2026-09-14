@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using System.Collections.Generic;
 using TMPro;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -48,6 +49,11 @@ namespace MiningSimulator.Ores.Editor
             }
 
             MiningQuestData data = LoadOrCreateData();
+            if (!TryValidateQuestIds(data, out string validationMessage))
+            {
+                EditorUtility.DisplayDialog("Quest Setup", validationMessage, "OK");
+                return;
+            }
             MiningQuestSystem questSystem = wallet.GetComponent<MiningQuestSystem>() ??
                                             Undo.AddComponent<MiningQuestSystem>(wallet.gameObject);
             OreSpawner oreSpawner = Object.FindFirstObjectByType<OreSpawner>(
@@ -137,11 +143,12 @@ namespace MiningSimulator.Ores.Editor
                 FindComponent<TextMeshProUGUI>(card, "Quest Status"));
 
             SerializedProperty rows = serialized.FindProperty("rows");
+            RectTransform content = EnsureQuestList(card, data.Quests.Count);
             rows.arraySize = data.Quests.Count;
             for (int index = 0; index < data.Quests.Count; index++)
             {
                 MiningQuestDefinition quest = data.Quests[index];
-                RectTransform row = EnsureQuestRow(card, quest, index);
+                RectTransform row = EnsureQuestRow(card, content, quest, index);
                 SerializedProperty element = rows.GetArrayElementAtIndex(index);
                 element.FindPropertyRelative("questId").stringValue = quest.QuestId;
                 element.FindPropertyRelative("root").objectReferenceValue = row.gameObject;
@@ -191,13 +198,18 @@ namespace MiningSimulator.Ores.Editor
         private static RectTransform EnsureQuestPanel(Transform canvas)
         {
             Transform existing = canvas.Find("Quest Panel");
-            if (existing != null) return existing as RectTransform;
+            if (existing != null)
+            {
+                ConfigureCanvasGroup(existing.gameObject);
+                existing.gameObject.SetActive(true);
+                return existing as RectTransform;
+            }
 
             GameObject rootObject = CreateImage(canvas, "Quest Panel",
                 new Color(0.015f, 0.025f, 0.055f, 0.86f), false);
             RectTransform root = rootObject.GetComponent<RectTransform>();
             Stretch(root);
-            rootObject.AddComponent<CanvasGroup>();
+            ConfigureCanvasGroup(rootObject);
 
             GameObject cardObject = CreateImage(root, "Quest Card", Color.white, true,
                 NeutralTop, NeutralBottom);
@@ -221,18 +233,159 @@ namespace MiningSimulator.Ores.Editor
             return root;
         }
 
-        private static RectTransform EnsureQuestRow(RectTransform card,
+        private static RectTransform EnsureQuestList(RectTransform card, int questCount)
+        {
+            Transform scrollTransform = card.Find("Quest Scroll View");
+            if (scrollTransform == null)
+            {
+                GameObject scrollObject = CreateImage(card, "Quest Scroll View", Color.clear,
+                    false);
+                scrollTransform = scrollObject.transform;
+            }
+
+            RectTransform scrollRectTransform = scrollTransform as RectTransform;
+            Center(scrollRectTransform, new Vector2(0f, -28f), new Vector2(970f, 460f));
+            ConfigureCanvasGroup(scrollTransform.gameObject);
+            ConfigureTransparentRaycastImage(scrollTransform.gameObject);
+
+            Transform viewportTransform = scrollTransform.Find("Viewport");
+            if (viewportTransform == null)
+            {
+                GameObject viewportObject = CreateImage(scrollTransform, "Viewport", Color.clear,
+                    false);
+                viewportTransform = viewportObject.transform;
+            }
+            RectTransform viewport = viewportTransform as RectTransform;
+            Stretch(viewport);
+            ConfigureTransparentRaycastImage(viewportTransform.gameObject);
+            if (viewportTransform.GetComponent<RectMask2D>() == null)
+            {
+                Undo.AddComponent<RectMask2D>(viewportTransform.gameObject);
+            }
+
+            Transform contentTransform = viewportTransform.Find("Content");
+            if (contentTransform == null)
+            {
+                GameObject contentObject = new("Content", typeof(RectTransform));
+                Undo.RegisterCreatedObjectUndo(contentObject, "Create Quest Content");
+                contentObject.transform.SetParent(viewportTransform, false);
+                contentTransform = contentObject.transform;
+            }
+
+            RectTransform content = contentTransform as RectTransform;
+            float contentHeight = Mathf.Max(460f, questCount * 145f +
+                                                   Mathf.Max(0, questCount - 1) * 12f);
+            content.anchorMin = new Vector2(0.5f, 1f);
+            content.anchorMax = new Vector2(0.5f, 1f);
+            content.pivot = new Vector2(0.5f, 1f);
+            content.anchoredPosition = Vector2.zero;
+            content.sizeDelta = new Vector2(940f, contentHeight);
+
+            ScrollRect scroll = scrollTransform.GetComponent<ScrollRect>() ??
+                                Undo.AddComponent<ScrollRect>(scrollTransform.gameObject);
+            scroll.content = content;
+            scroll.viewport = viewport;
+            scroll.horizontal = false;
+            scroll.vertical = true;
+            scroll.movementType = ScrollRect.MovementType.Elastic;
+            scroll.elasticity = 0.12f;
+            scroll.inertia = true;
+            scroll.decelerationRate = 0.135f;
+            scroll.scrollSensitivity = 45f;
+            return content;
+        }
+
+        private static bool TryValidateQuestIds(MiningQuestData data, out string message)
+        {
+            var uniqueIds = new HashSet<string>(System.StringComparer.Ordinal);
+            for (int index = 0; index < data.Quests.Count; index++)
+            {
+                MiningQuestDefinition quest = data.Quests[index];
+                if (quest == null || string.IsNullOrWhiteSpace(quest.QuestId))
+                {
+                    message = $"Quest #{index + 1} has no Quest Id. Give every quest a stable, " +
+                              "unique Quest Id, then run this setup again.";
+                    return false;
+                }
+
+                if (!uniqueIds.Add(quest.QuestId))
+                {
+                    message = $"Quest #{index + 1} uses the duplicate Quest Id " +
+                              $"'{quest.QuestId}'. Change it to a unique value, for example " +
+                              $"'{quest.QuestId}_{index + 1}', then run this setup again. " +
+                              "Quest data was not changed.";
+                    return false;
+                }
+            }
+
+            message = null;
+            return true;
+        }
+
+        private static void ConfigureTransparentRaycastImage(GameObject target)
+        {
+            Image image = target.GetComponent<Image>() ?? Undo.AddComponent<Image>(target);
+            MiningCandyGradient gradient = target.GetComponent<MiningCandyGradient>();
+            if (gradient != null)
+            {
+                Undo.DestroyObjectImmediate(gradient);
+            }
+            foreach (Shadow effect in target.GetComponents<Shadow>())
+            {
+                Undo.DestroyObjectImmediate(effect);
+            }
+            Transform highlight = target.transform.Find("Candy Highlight");
+            if (highlight != null)
+            {
+                Undo.DestroyObjectImmediate(highlight.gameObject);
+            }
+
+            Undo.RecordObject(image, "Configure Transparent Quest Scroll Graphic");
+            image.sprite = null;
+            image.type = Image.Type.Simple;
+            image.color = Color.clear;
+            image.raycastTarget = true;
+            EditorUtility.SetDirty(image);
+        }
+
+        private static void ConfigureCanvasGroup(GameObject target)
+        {
+            CanvasGroup group = target.GetComponent<CanvasGroup>() ??
+                                Undo.AddComponent<CanvasGroup>(target);
+            Undo.RecordObject(group, "Configure Quest Canvas Group");
+            group.alpha = 1f;
+            group.interactable = true;
+            group.blocksRaycasts = true;
+            EditorUtility.SetDirty(group);
+        }
+
+        private static RectTransform EnsureQuestRow(RectTransform card, RectTransform content,
             MiningQuestDefinition quest, int index)
         {
             string objectName = "Quest Row " + quest.QuestId;
-            Transform existing = card.Find(objectName);
-            if (existing != null) return existing as RectTransform;
+            Transform existing = content.Find(objectName) ?? card.Find(objectName);
+            bool created = existing == null;
+            if (created)
+            {
+                GameObject rowObject = CreateImage(content, objectName, Color.white, true,
+                    NeutralTop, NeutralBottom);
+                existing = rowObject.transform;
+            }
+            else if (existing.parent != content)
+            {
+                Undo.SetTransformParent(existing, content, "Move Quest Row Into Scroll View");
+            }
 
-            float y = 145f - index * 170f;
-            GameObject rowObject = CreateImage(card, objectName, Color.white, true,
-                NeutralTop, NeutralBottom);
-            RectTransform row = rowObject.GetComponent<RectTransform>();
-            Center(row, new Vector2(0f, y), new Vector2(940f, 145f));
+            RectTransform row = existing as RectTransform;
+            row.anchorMin = new Vector2(0.5f, 1f);
+            row.anchorMax = new Vector2(0.5f, 1f);
+            row.pivot = new Vector2(0.5f, 1f);
+            row.anchoredPosition = new Vector2(0f, -index * 157f);
+            row.sizeDelta = new Vector2(940f, 145f);
+            if (!created)
+            {
+                return row;
+            }
 
             bool daily = quest.Period == MiningQuestPeriod.Daily;
             GameObject badgeObject = CreateImage(row, "Period Badge", Color.white, true,

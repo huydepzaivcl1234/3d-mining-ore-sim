@@ -44,3 +44,13 @@ MonoBehaviour:
     moneyReward: 5000
     randomMoneyMinimum: 0
     randomMoneyMaximum: 0
+  - questId: daily_mine_5000
+    period: 1
+    objective: 0
+    targetAmount: 1
+    englishName: Mine 5000 ore
+    vietnameseName: "\u0110\xE0o 5000 qu\u1EB7ng"
+    rewardType: 0
+    moneyReward: 2500
+    randomMoneyMinimum: 0
+    randomMoneyMaximum: 0
