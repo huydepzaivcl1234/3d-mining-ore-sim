@@ -16,6 +16,7 @@ namespace MiningSimulator.Ores
         private float distance;
         private float yaw;
         private float pitch;
+        private bool inputLocked;
         private Tween shakeTween;
         private float shakeEnvelope;
         private float shakeStrength;
@@ -36,13 +37,20 @@ namespace MiningSimulator.Ores
 
         private void Update()
         {
-            if (gameData == null)
+            if (gameData == null || inputLocked)
             {
                 return;
             }
 
             ReadKeyboard();
             ReadMouse();
+        }
+
+        /// <summary>Called by MiningUiPanelCoordinator while a modal (Shop, Upgrade,
+        /// Rebirth...) is open, so orbit/pan/zoom can't fight with clicking/scrolling the UI.</summary>
+        public void SetInputLocked(bool locked)
+        {
+            inputLocked = locked;
         }
 
         private void LateUpdate()
@@ -137,6 +145,15 @@ namespace MiningSimulator.Ores
         {
             Mouse mouse = Mouse.current;
             if (mouse == null)
+            {
+                return;
+            }
+
+            // If the pointer is over a UI element (a panel, a scrollable list, a button...),
+            // none of this input should reach the 3D camera — otherwise scrolling a UI list
+            // also zooms the camera underneath it, and dragging a UI element can spin the view.
+            if (UnityEngine.EventSystems.EventSystem.current != null &&
+                UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
             {
                 return;
             }

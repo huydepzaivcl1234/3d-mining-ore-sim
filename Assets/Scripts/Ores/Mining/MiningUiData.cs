@@ -26,11 +26,11 @@ namespace MiningSimulator.Ores
         [Min(1f), SerializeField] private float npcCountFontSize = 21f;
         [Min(1f), SerializeField] private float buyButtonFontSize = 22f;
         [Min(1f), SerializeField] private float statusFontSize = 17f;
-        [SerializeField] private Color shopPanelColor = new(0.035f, 0.045f, 0.06f, 0.94f);
+        [SerializeField] private Color shopPanelColor = new(0.07f, 0.06f, 0.04f, 0.95f);
         [SerializeField] private Color shopTextColor = Color.white;
-        [SerializeField] private Color statusTextColor = new(1f, 0.82f, 0.28f, 1f);
-        [SerializeField] private Color buyButtonColor = new(0.95f, 0.57f, 0.1f, 1f);
-        [SerializeField] private Color buyButtonTextColor = new(0.08f, 0.06f, 0.03f, 1f);
+        [SerializeField] private Color statusTextColor = new(1f, 0.85f, 0.35f, 1f);
+        [SerializeField] private Color buyButtonColor = new(1f, 0.72f, 0.19f, 1f);
+        [SerializeField] private Color buyButtonTextColor = new(0.06f, 0.04f, 0.02f, 1f);
 
         [Header("HUD Icons")]
         [SerializeField] private Vector2 hudIconSize = new(42f, 42f);
@@ -40,9 +40,9 @@ namespace MiningSimulator.Ores
         [SerializeField] private Vector2 openUpgradeIconPosition = new(8f, -2f);
         [Min(1f), SerializeField] private float hudIconFontSize = 22f;
         [Min(0f), SerializeField] private float hudIconPadding = 8f;
-        [SerializeField] private Color moneyIconColor = new(1f, 0.72f, 0.08f, 1f);
-        [SerializeField] private Color npcIconColor = new(0.20f, 0.65f, 0.94f, 1f);
-        [SerializeField] private Color upgradeIconColor = new(0.14f, 0.72f, 0.52f, 1f);
+        [SerializeField] private Color moneyIconColor = new(1f, 0.80f, 0.25f, 1f);
+        [SerializeField] private Color npcIconColor = new(0.80f, 0.50f, 0.20f, 1f);
+        [SerializeField] private Color upgradeIconColor = new(1f, 0.72f, 0.19f, 1f);
         [SerializeField] private Color iconSymbolColor = Color.white;
         [SerializeField] private Sprite moneyIconSprite;
         [SerializeField] private Sprite npcIconSprite;
@@ -61,9 +61,9 @@ namespace MiningSimulator.Ores
         [SerializeField] private Vector2 gemTextPosition = new(64f, -12f);
         [SerializeField] private Vector2 gemTextSize = new(170f, 40f);
         [Min(1f), SerializeField] private float gemFontSize = 25f;
-        [SerializeField] private Color gemHudColor = new(0.11f, 0.055f, 0.18f, 0.94f);
+        [SerializeField] private Color gemHudColor = new(0.06f, 0.08f, 0.05f, 0.95f);
         [SerializeField] private Color gemTextColor = Color.white;
-        [SerializeField] private Color gemIconColor = new(0.55f, 0.25f, 1f, 1f);
+        [SerializeField] private Color gemIconColor = new(0.18f, 0.75f, 0.50f, 1f);
         [SerializeField] private Sprite gemIconSprite;
         [SerializeField] private string gemIconFallback = "G";
 
@@ -109,7 +109,7 @@ namespace MiningSimulator.Ores
         [Min(1f), SerializeField] private float npcProgressTitleFontSize = 21f;
         [Min(1f), SerializeField] private float npcProgressInfoFontSize = 17f;
         [Min(0.01f), SerializeField] private float npcExperienceBarAnimationSpeed = 2.5f;
-        [SerializeField] private Color npcProgressPanelColor = new(0.93f, 0.96f, 0.98f, 0.98f);
+        [SerializeField] private Color npcProgressPanelColor = new(0.08f, 0.07f, 0.05f, 0.95f);
         [SerializeField] private Color npcExperienceBarColor = new(0.12f, 0.9f, 0.22f, 1f);
         [SerializeField] private Color npcExperienceBarBackgroundColor = new(0.18f, 0.22f, 0.24f, 1f);
 
@@ -141,24 +141,24 @@ namespace MiningSimulator.Ores
         [SerializeField] private Vector2 audioCloseButtonSize = new(48f, 48f);
         [Min(1f), SerializeField] private float audioTitleFontSize = 30f;
         [Min(1f), SerializeField] private float audioLabelFontSize = 22f;
-        [SerializeField] private Color audioPanelColor = new(0.93f, 0.96f, 0.98f, 1f);
-        [SerializeField] private Color audioHeaderColor = new(0.20f, 0.65f, 0.94f, 1f);
-        [SerializeField] private Color audioSliderColor = new(0.14f, 0.72f, 0.52f, 1f);
-        [SerializeField] private Color audioSliderBackgroundColor = new(0.15f, 0.18f, 0.22f, 1f);
+        [SerializeField] private Color audioPanelColor = new(0.08f, 0.07f, 0.05f, 0.96f);
+        [SerializeField] private Color audioHeaderColor = new(0.55f, 0.35f, 0.15f, 1f);
+        [SerializeField] private Color audioSliderColor = new(1f, 0.72f, 0.19f, 1f);
+        [SerializeField] private Color audioSliderBackgroundColor = new(0.15f, 0.13f, 0.10f, 1f);
 
         [Header("Reset Data Button")]
         [SerializeField] private Vector2 resetDataButtonPosition = new(130f, -354f);
         [SerializeField] private Vector2 resetDataButtonSize = new(300f, 46f);
         [Min(1f), SerializeField] private float resetDataFontSize = 19f;
         [Min(0.1f), SerializeField] private float resetDataConfirmationDuration = 3f;
-        [SerializeField] private Color resetDataButtonColor = new(0.88f, 0.12f, 0.18f, 1f);
-        [SerializeField] private Color resetDataArmedColor = new(1f, 0.36f, 0.08f, 1f);
+        [SerializeField] private Color resetDataButtonColor = new(0.85f, 0.15f, 0.05f, 1f);
+        [SerializeField] private Color resetDataArmedColor = new(1f, 0.20f, 0.05f, 1f);
 
         [Header("Language Button")]
         [SerializeField] private Vector2 languageButtonPosition = new(20f, -354f);
         [SerializeField] private Vector2 languageButtonSize = new(100f, 46f);
         [Min(8f), SerializeField] private float languageButtonFontSize = 14f;
-        [SerializeField] private Color languageButtonColor = new(0.2f, 0.65f, 0.94f, 1f);
+        [SerializeField] private Color languageButtonColor = new(0.55f, 0.35f, 0.15f, 1f);
 
         [Header("Inventory Layout")]
         [SerializeField] private Vector2 inventoryMenuButtonPosition = new(-24f, -278f);
@@ -172,9 +172,9 @@ namespace MiningSimulator.Ores
         [SerializeField] private Vector2 inventorySlotSpacing = new(114f, 116f);
         [Min(1f), SerializeField] private float inventoryItemFontSize = 15f;
         [Min(1f), SerializeField] private float inventoryCountFontSize = 17f;
-        [SerializeField] private Color inventoryPanelColor = new(0.93f, 0.96f, 0.98f, 1f);
-        [SerializeField] private Color inventoryHeaderColor = new(0.48f, 0.24f, 0.75f, 1f);
-        [SerializeField] private Color inventorySlotColor = new(0.12f, 0.15f, 0.20f, 1f);
+        [SerializeField] private Color inventoryPanelColor = new(0.08f, 0.07f, 0.05f, 0.96f);
+        [SerializeField] private Color inventoryHeaderColor = new(0.55f, 0.35f, 0.15f, 1f);
+        [SerializeField] private Color inventorySlotColor = new(0.10f, 0.08f, 0.06f, 0.92f);
 
         [Header("Gift Box Wheel")]
         [SerializeField] private Vector2 giftWheelPanelSize = new(720f, 620f);
@@ -183,9 +183,9 @@ namespace MiningSimulator.Ores
         [SerializeField] private Vector2 giftWheelRewardSize = new(150f, 58f);
         [Min(1f), SerializeField] private float giftWheelRewardRadius = 142f;
         [SerializeField] private Vector2 giftWheelSpinButtonSize = new(260f, 56f);
-        [SerializeField] private Color giftWheelPanelColor = new(0.06f, 0.075f, 0.11f, 0.98f);
-        [SerializeField] private Color giftWheelHeaderColor = new(0.48f, 0.24f, 0.75f, 1f);
-        [SerializeField] private Color giftWheelSpinButtonColor = new(1f, 0.62f, 0.08f, 1f);
+        [SerializeField] private Color giftWheelPanelColor = new(0.06f, 0.05f, 0.04f, 0.98f);
+        [SerializeField] private Color giftWheelHeaderColor = new(0.55f, 0.35f, 0.15f, 1f);
+        [SerializeField] private Color giftWheelSpinButtonColor = new(1f, 0.72f, 0.19f, 1f);
         [Header("Gift Reward Popup")]
         [SerializeField] private Vector2 giftRewardPopupSize = new(560f, 150f);
         [Range(0.1f, 1f), SerializeField] private float giftRewardPopupStartScale = 0.55f;
@@ -194,20 +194,20 @@ namespace MiningSimulator.Ores
         [Min(0.01f), SerializeField] private float giftRewardPopupSettleDuration = 0.12f;
         [Min(0f), SerializeField] private float giftRewardPopupHoldDuration = 1.1f;
         [Min(0.01f), SerializeField] private float giftRewardPopupFadeDuration = 0.25f;
-        [SerializeField] private Color giftRewardPopupColor = new(0.35f, 0.12f, 0.62f, 0.98f);
-        [SerializeField] private Color giftRewardPopupTextColor = new(1f, 0.82f, 0.16f, 1f);
+        [SerializeField] private Color giftRewardPopupColor = new(0.35f, 0.22f, 0.08f, 0.98f);
+        [SerializeField] private Color giftRewardPopupTextColor = new(1f, 0.85f, 0.30f, 1f);
 
         [Header("Active Effect Toast")]
         [SerializeField] private Vector2 effectToastPosition = new(0f, -190f);
         [SerializeField] private Vector2 effectToastSize = new(620f, 120f);
         [Min(1f), SerializeField] private float effectToastFontSize = 19f;
-        [SerializeField] private Color effectToastColor = new(0.08f, 0.10f, 0.14f, 0.94f);
+        [SerializeField] private Color effectToastColor = new(0.07f, 0.06f, 0.04f, 0.95f);
         [SerializeField] private Vector2 effectToastSlotSize = new(78f, 78f);
         [Min(0f), SerializeField] private float effectToastSlotSpacing = 10f;
         [Min(0f), SerializeField] private float effectToastIconPadding = 7f;
         [Min(1f), SerializeField] private float effectToastTimerFontSize = 16f;
         [Min(1f), SerializeField] private float effectToastPercentFontSize = 13f;
-        [SerializeField] private Color effectToastSlotColor = new(0.10f, 0.11f, 0.13f, 0.96f);
+        [SerializeField] private Color effectToastSlotColor = new(0.10f, 0.08f, 0.06f, 0.96f);
 
         [Header("Panel Slide Animation")]
         [Min(0.01f), SerializeField] private float panelTransitionDuration = 0.28f;
@@ -228,22 +228,28 @@ namespace MiningSimulator.Ores
         [SerializeField] private Vector2 shopMenuButtonSlideDirection = Vector2.right;
         [Tooltip("Direction used when a modal panel opens and closes.")]
         [SerializeField] private Vector2 modalSlideDirection = Vector2.down;
+        [Tooltip("If true, the semi-transparent backdrop behind an open modal panel blocks clicks from reaching whatever is underneath it (standard modal behavior). If false, clicks pass through to the background.")]
+        [SerializeField] private bool modalBackdropBlocksClicks = true;
+        [Tooltip("Color (and, via its alpha, opacity) of the semi-transparent backdrop shown behind an open modal panel.")]
+        [SerializeField] private Color modalBackdropColor = new(0f, 0f, 0f, 0.6f);
+        [Tooltip("How long the modal backdrop takes to fade in/out when a panel opens/closes, in seconds.")]
+        [Min(0f), SerializeField] private float modalBackdropFadeDuration = 0.2f;
 
         [Header("Candy UI Theme")]
-        [SerializeField] private Color candyOutlineColor = new(0.035f, 0.065f, 0.12f, 1f);
-        [SerializeField] private Color candyNeutralTop = new(0.16f, 0.20f, 0.29f, 1f);
-        [SerializeField] private Color candyNeutralBottom = new(0.065f, 0.08f, 0.12f, 1f);
-        [SerializeField] private Color candyGemTop = new(0.31f, 0.85f, 1f, 1f);
-        [SerializeField] private Color candyGemBottom = new(0.12f, 0.50f, 0.88f, 1f);
-        [SerializeField] private Color candyGoldTop = new(1f, 0.84f, 0.29f, 1f);
-        [SerializeField] private Color candyGoldBottom = new(1f, 0.45f, 0f, 1f);
-        [SerializeField] private Color candyPrimaryTop = new(0.20f, 0.84f, 0.69f, 1f);
-        [SerializeField] private Color candyPrimaryBottom = new(0.08f, 0.52f, 0.38f, 1f);
-        [SerializeField] private Color candyDangerTop = new(1f, 0.42f, 0.24f, 1f);
-        [SerializeField] private Color candyDangerBottom = new(0.88f, 0.09f, 0.23f, 1f);
-        [Range(1f, 8f), SerializeField] private float candyOutlineThickness = 4f;
-        [Range(0f, 1f), SerializeField] private float candyGlossAlpha = 0.32f;
-        [Range(0f, 1f), SerializeField] private float candyTextOutlineWidth = 0.22f;
+        [SerializeField] private Color candyOutlineColor = new(0.24f, 0.18f, 0.12f, 1f);
+        [SerializeField] private Color candyNeutralTop = new(0.12f, 0.10f, 0.08f, 1f);
+        [SerializeField] private Color candyNeutralBottom = new(0.05f, 0.04f, 0.03f, 1f);
+        [SerializeField] private Color candyGemTop = new(0.22f, 0.62f, 0.44f, 1f);
+        [SerializeField] private Color candyGemBottom = new(0.10f, 0.42f, 0.27f, 1f);
+        [SerializeField] private Color candyGoldTop = new(1f, 0.80f, 0.25f, 1f);
+        [SerializeField] private Color candyGoldBottom = new(0.85f, 0.52f, 0f, 1f);
+        [SerializeField] private Color candyPrimaryTop = new(1f, 0.72f, 0.19f, 1f);
+        [SerializeField] private Color candyPrimaryBottom = new(0.80f, 0.52f, 0f, 1f);
+        [SerializeField] private Color candyDangerTop = new(1f, 0.27f, 0.13f, 1f);
+        [SerializeField] private Color candyDangerBottom = new(0.80f, 0.10f, 0f, 1f);
+        [Range(1f, 8f), SerializeField] private float candyOutlineThickness = 3.5f;
+        [Range(0f, 1f), SerializeField] private float candyGlossAlpha = 0.22f;
+        [Range(0f, 1f), SerializeField] private float candyTextOutlineWidth = 0.20f;
         [Min(0f), SerializeField] private float candySafeAreaPadding = 10f;
         [Min(44f), SerializeField] private float candyMinimumTouchTarget = 64f;
 
@@ -251,7 +257,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private string shopTitle = "KHU ĐÀO QUẶNG";
         [SerializeField] private Vector2 shopHeaderSize = new(330f, 54f);
         [Min(1f), SerializeField] private float shopTitleFontSize = 21f;
-        [SerializeField] private Color shopHeaderColor = new(0.20f, 0.65f, 0.94f, 1f);
+        [SerializeField] private Color shopHeaderColor = new(0.55f, 0.35f, 0.15f, 1f);
 
         [Header("Ore Reward Popup")]
         [SerializeField] private string rewardPopupFormat = "+{0}";
@@ -267,7 +273,7 @@ namespace MiningSimulator.Ores
         [Min(0.01f), SerializeField] private float rewardPopupSettleDuration = 0.12f;
         [Range(0f, 0.95f), SerializeField] private float rewardPopupFadeStart = 0.55f;
         [Min(1f), SerializeField] private float rewardPopupFontSize = 5f;
-        [SerializeField] private Color rewardPopupColor = new(1f, 0.82f, 0.16f, 1f);
+        [SerializeField] private Color rewardPopupColor = new(1f, 0.80f, 0.25f, 1f);
         [SerializeField] private Color rewardPopupOutlineColor = new(0.08f, 0.04f, 0.01f, 1f);
         [Range(0f, 1f), SerializeField] private float rewardPopupOutlineWidth = 0.2f;
         [Tooltip("Local position of the optional coin icon beside the popup amount.")]
@@ -284,8 +290,8 @@ namespace MiningSimulator.Ores
         [Min(1f), SerializeField] private float unlockToastFontSize = 24f;
         [Min(0.1f), SerializeField] private float unlockToastHoldDuration = 2.2f;
         [Min(0.01f), SerializeField] private float unlockToastFadeDuration = 0.25f;
-        [SerializeField] private Color unlockToastBackgroundColor = new(0.08f, 0.09f, 0.11f, 0.95f);
-        [SerializeField] private Color unlockToastTextColor = new(1f, 0.86f, 0.32f, 1f);
+        [SerializeField] private Color unlockToastBackgroundColor = new(0.07f, 0.06f, 0.04f, 0.95f);
+        [SerializeField] private Color unlockToastTextColor = new(1f, 0.85f, 0.35f, 1f);
 
         [Header("Upgrade Panel Layout")]
         [SerializeField] private bool upgradePanelFullscreen = true;
@@ -318,14 +324,14 @@ namespace MiningSimulator.Ores
         [SerializeField] private Vector4 cardTextMargin = new(132f, 0f, 24f, 0f);
 
         [Header("Upgrade Panel Colors")]
-        [SerializeField] private Color panelColor = new(0.93f, 0.96f, 0.98f, 1f);
-        [SerializeField] private Color headerColor = new(0.20f, 0.65f, 0.94f, 1f);
-        [SerializeField] private Color outlineColor = new(0.025f, 0.055f, 0.09f, 1f);
-        [SerializeField] private Color cardColor = Color.white;
-        [SerializeField] private Color cardTextColor = new(0.04f, 0.055f, 0.075f, 1f);
-        [SerializeField] private Color closeButtonColor = new(0.96f, 0.08f, 0.34f, 1f);
-        [SerializeField] private Color navigationButtonColor = new(0.14f, 0.72f, 0.52f, 1f);
-        [SerializeField] private Color titleTextColor = Color.white;
+        [SerializeField] private Color panelColor = new(0.08f, 0.07f, 0.05f, 0.96f);
+        [SerializeField] private Color headerColor = new(0.55f, 0.35f, 0.15f, 1f);
+        [SerializeField] private Color outlineColor = new(0.24f, 0.18f, 0.12f, 1f);
+        [SerializeField] private Color cardColor = new(0.12f, 0.10f, 0.08f, 0.92f);
+        [SerializeField] private Color cardTextColor = new(0.96f, 0.93f, 0.88f, 1f);
+        [SerializeField] private Color closeButtonColor = new(1f, 0.27f, 0.13f, 1f);
+        [SerializeField] private Color navigationButtonColor = new(0.80f, 0.50f, 0.20f, 1f);
+        [SerializeField] private Color titleTextColor = new(0.96f, 0.93f, 0.88f, 1f);
         [Tooltip("Opacity used for an upgrade card when the player cannot afford it or it is maxed.")]
         [Range(0.1f, 1f), SerializeField] private float upgradeUnavailableAlpha = 0.42f;
 
@@ -356,8 +362,8 @@ namespace MiningSimulator.Ores
         [Min(1f), SerializeField] private float rebirthModalTextFontSize = 22f;
 
         [Header("Rebirth Colors")]
-        [SerializeField] private Color rebirthHudColor = new(0.96f, 0.98f, 1f, 0.96f);
-        [SerializeField] private Color rebirthHeaderColor = new(1f, 0.15f, 0.18f, 1f);
+        [SerializeField] private Color rebirthHudColor = new(0.08f, 0.07f, 0.05f, 0.96f);
+        [SerializeField] private Color rebirthHeaderColor = new(1f, 0.27f, 0.13f, 1f);
         [SerializeField] private Color rebirthProgressColor = new(0.12f, 0.92f, 0.18f, 1f);
         [SerializeField] private Color rebirthProgressGhostColor = new(0.55f, 1f, 0.58f, 1f);
         [SerializeField] private Color rebirthConfirmColor = new(0.12f, 0.95f, 0.16f, 1f);
@@ -561,6 +567,9 @@ namespace MiningSimulator.Ores
         public Vector2 GemHudSlideDirection => gemHudSlideDirection;
         public Vector2 ShopMenuButtonSlideDirection => shopMenuButtonSlideDirection;
         public Vector2 ModalSlideDirection => modalSlideDirection;
+        public bool ModalBackdropBlocksClicks => modalBackdropBlocksClicks;
+        public Color ModalBackdropColor => modalBackdropColor;
+        public float ModalBackdropFadeDuration => modalBackdropFadeDuration;
         public Color CandyOutlineColor => candyOutlineColor;
         public Color CandyNeutralTop => candyNeutralTop;
         public Color CandyNeutralBottom => candyNeutralBottom;
@@ -807,6 +816,7 @@ namespace MiningSimulator.Ores
             candyOutlineThickness = Mathf.Clamp(candyOutlineThickness, 1f, 8f);
             candyGlossAlpha = Mathf.Clamp01(candyGlossAlpha);
             candyTextOutlineWidth = Mathf.Clamp01(candyTextOutlineWidth);
+            modalBackdropFadeDuration = Mathf.Max(0f, modalBackdropFadeDuration);
             candySafeAreaPadding = Mathf.Max(0f, candySafeAreaPadding);
             candyMinimumTouchTarget = Mathf.Max(44f, candyMinimumTouchTarget);
             cardSpacing = Mathf.Max(0f, cardSpacing);

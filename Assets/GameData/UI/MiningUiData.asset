@@ -29,11 +29,11 @@ MonoBehaviour:
   npcCountFontSize: 21
   buyButtonFontSize: 22
   statusFontSize: 17
-  shopPanelColor: {r: 0.035, g: 0.045, b: 0.06, a: 0.94}
+  shopPanelColor: {r: 0.07, g: 0.06, b: 0.04, a: 0.95}
   shopTextColor: {r: 1, g: 1, b: 1, a: 1}
-  statusTextColor: {r: 1, g: 0.82, b: 0.28, a: 1}
-  buyButtonColor: {r: 0.95, g: 0.57, b: 0.1, a: 1}
-  buyButtonTextColor: {r: 0.08, g: 0.06, b: 0.03, a: 1}
+  statusTextColor: {r: 1, g: 0.85, b: 0.35, a: 1}
+  buyButtonColor: {r: 1, g: 0.72, b: 0.19, a: 1}
+  buyButtonTextColor: {r: 0.06, g: 0.04, b: 0.02, a: 1}
   hudIconSize: {x: 42, y: 42}
   moneyIconPosition: {x: 16, y: -62}
   npcIconPosition: {x: 16, y: -108}
@@ -41,9 +41,9 @@ MonoBehaviour:
   openUpgradeIconPosition: {x: 8, y: -2}
   hudIconFontSize: 22
   hudIconPadding: 8
-  moneyIconColor: {r: 1, g: 0.72, b: 0.08, a: 1}
-  npcIconColor: {r: 0.2, g: 0.65, b: 0.94, a: 1}
-  upgradeIconColor: {r: 0.14, g: 0.72, b: 0.52, a: 1}
+  moneyIconColor: {r: 1, g: 0.80, b: 0.25, a: 1}
+  npcIconColor: {r: 0.80, g: 0.50, b: 0.20, a: 1}
+  upgradeIconColor: {r: 1, g: 0.72, b: 0.19, a: 1}
   iconSymbolColor: {r: 1, g: 1, b: 1, a: 1}
   moneyIconSprite: {fileID: 62247565, guid: 4f7ca63df9f4a0e4db24cfd637f9b2d2, type: 3}
   npcIconSprite: {fileID: 451636688, guid: bf740a43e6c32ad4fb5f99f2aa91a9a0, type: 3}
@@ -60,9 +60,9 @@ MonoBehaviour:
   gemTextPosition: {x: 64, y: -12}
   gemTextSize: {x: 170, y: 40}
   gemFontSize: 25
-  gemHudColor: {r: 0.11, g: 0.055, b: 0.18, a: 0.94}
+  gemHudColor: {r: 0.06, g: 0.08, b: 0.05, a: 0.95}
   gemTextColor: {r: 1, g: 1, b: 1, a: 1}
-  gemIconColor: {r: 0.55, g: 0.25, b: 1, a: 1}
+  gemIconColor: {r: 0.18, g: 0.75, b: 0.50, a: 1}
   gemIconSprite: {fileID: 21300000, guid: af4dd62c5913938a141c87c80c21e325, type: 3}
   gemIconFallback: G
   upgradeCardIconSize: {x: 86, y: 86}
@@ -104,7 +104,7 @@ MonoBehaviour:
   npcProgressTitleFontSize: 21
   npcProgressInfoFontSize: 17
   npcExperienceBarAnimationSpeed: 2.5
-  npcProgressPanelColor: {r: 0.93, g: 0.96, b: 0.98, a: 0.98}
+  npcProgressPanelColor: {r: 0.08, g: 0.07, b: 0.05, a: 0.95}
   npcExperienceBarColor: {r: 0.12, g: 0.9, b: 0.22, a: 1}
   npcExperienceBarBackgroundColor: {r: 0.18, g: 0.22, b: 0.24, a: 1}
   smoothButtonAnimationEnabled: 1
@@ -132,20 +132,20 @@ MonoBehaviour:
   audioCloseButtonSize: {x: 48, y: 48}
   audioTitleFontSize: 30
   audioLabelFontSize: 22
-  audioPanelColor: {r: 0.93, g: 0.96, b: 0.98, a: 1}
-  audioHeaderColor: {r: 0.2, g: 0.65, b: 0.94, a: 1}
-  audioSliderColor: {r: 0.14, g: 0.72, b: 0.52, a: 1}
-  audioSliderBackgroundColor: {r: 0.15, g: 0.18, b: 0.22, a: 1}
+  audioPanelColor: {r: 0.08, g: 0.07, b: 0.05, a: 0.96}
+  audioHeaderColor: {r: 0.55, g: 0.35, b: 0.15, a: 1}
+  audioSliderColor: {r: 1, g: 0.72, b: 0.19, a: 1}
+  audioSliderBackgroundColor: {r: 0.15, g: 0.13, b: 0.10, a: 1}
   resetDataButtonPosition: {x: 130, y: -354}
   resetDataButtonSize: {x: 300, y: 46}
   resetDataFontSize: 19
   resetDataConfirmationDuration: 3
-  resetDataButtonColor: {r: 0.88, g: 0.12, b: 0.18, a: 1}
-  resetDataArmedColor: {r: 1, g: 0.36, b: 0.08, a: 1}
+  resetDataButtonColor: {r: 0.85, g: 0.15, b: 0.05, a: 1}
+  resetDataArmedColor: {r: 1, g: 0.20, b: 0.05, a: 1}
   languageButtonPosition: {x: 20, y: -354}
   languageButtonSize: {x: 100, y: 46}
   languageButtonFontSize: 14
-  languageButtonColor: {r: 0.2, g: 0.65, b: 0.94, a: 1}
+  languageButtonColor: {r: 0.55, g: 0.35, b: 0.15, a: 1}
   inventoryMenuButtonPosition: {x: -24, y: -278}
   inventoryMenuButtonSize: {x: 180, y: 48}
   inventoryPanelSize: {x: 930, y: 590}
@@ -157,28 +157,28 @@ MonoBehaviour:
   inventorySlotSpacing: {x: 114, y: 116}
   inventoryItemFontSize: 15
   inventoryCountFontSize: 17
-  inventoryPanelColor: {r: 0.93, g: 0.96, b: 0.98, a: 1}
-  inventoryHeaderColor: {r: 0.48, g: 0.24, b: 0.75, a: 1}
-  inventorySlotColor: {r: 0.12, g: 0.15, b: 0.2, a: 1}
+  inventoryPanelColor: {r: 0.08, g: 0.07, b: 0.05, a: 0.96}
+  inventoryHeaderColor: {r: 0.55, g: 0.35, b: 0.15, a: 1}
+  inventorySlotColor: {r: 0.10, g: 0.08, b: 0.06, a: 0.92}
   giftWheelPanelSize: {x: 720, y: 620}
   giftWheelHeaderSize: {x: 720, y: 72}
   giftWheelSize: {x: 360, y: 360}
   giftWheelRewardSize: {x: 150, y: 58}
   giftWheelRewardRadius: 142
   giftWheelSpinButtonSize: {x: 260, y: 56}
-  giftWheelPanelColor: {r: 0.06, g: 0.075, b: 0.11, a: 0.98}
-  giftWheelHeaderColor: {r: 0.48, g: 0.24, b: 0.75, a: 1}
-  giftWheelSpinButtonColor: {r: 1, g: 0.62, b: 0.08, a: 1}
+  giftWheelPanelColor: {r: 0.06, g: 0.05, b: 0.04, a: 0.98}
+  giftWheelHeaderColor: {r: 0.55, g: 0.35, b: 0.15, a: 1}
+  giftWheelSpinButtonColor: {r: 1, g: 0.72, b: 0.19, a: 1}
   effectToastPosition: {x: 0, y: -190}
   effectToastSize: {x: 620, y: 120}
   effectToastFontSize: 19
-  effectToastColor: {r: 0.08, g: 0.1, b: 0.14, a: 0.94}
+  effectToastColor: {r: 0.07, g: 0.06, b: 0.04, a: 0.95}
   effectToastSlotSize: {x: 78, y: 78}
   effectToastSlotSpacing: 10
   effectToastIconPadding: 7
   effectToastTimerFontSize: 16
   effectToastPercentFontSize: 13
-  effectToastSlotColor: {r: 0.1, g: 0.11, b: 0.13, a: 0.96}
+  effectToastSlotColor: {r: 0.10, g: 0.08, b: 0.06, a: 0.96}
   panelTransitionDuration: 0.28
   panelSlideExtraDistance: 100
   shopSlideDirection: {x: -1, y: 0}
@@ -190,7 +190,7 @@ MonoBehaviour:
   shopTitle: "KHU \u0110\xC0O QU\u1EB6NG"
   shopHeaderSize: {x: 330, y: 54}
   shopTitleFontSize: 21
-  shopHeaderColor: {r: 0.2, g: 0.65, b: 0.94, a: 1}
+  shopHeaderColor: {r: 0.55, g: 0.35, b: 0.15, a: 1}
   rewardPopupFormat: +{0}
   rewardPopupPreviewAmount: 100
   rewardPopupWorldOffset: {x: 0, y: 0.35, z: 0}
@@ -203,7 +203,7 @@ MonoBehaviour:
   rewardPopupSettleDuration: 0.12
   rewardPopupFadeStart: 0.55
   rewardPopupFontSize: 50
-  rewardPopupColor: {r: 1, g: 0.82, b: 0.16, a: 1}
+  rewardPopupColor: {r: 1, g: 0.80, b: 0.25, a: 1}
   rewardPopupOutlineColor: {r: 0.08, g: 0.04, b: 0.01, a: 1}
   rewardPopupOutlineWidth: 0.2
   rewardPopupIconLocalPosition: {x: 0, y: 0, z: -0.02}
@@ -216,8 +216,8 @@ MonoBehaviour:
   unlockToastFontSize: 24
   unlockToastHoldDuration: 2.2
   unlockToastFadeDuration: 0.25
-  unlockToastBackgroundColor: {r: 0.08, g: 0.09, b: 0.11, a: 0.95}
-  unlockToastTextColor: {r: 1, g: 0.86, b: 0.32, a: 1}
+  unlockToastBackgroundColor: {r: 0.07, g: 0.06, b: 0.04, a: 0.95}
+  unlockToastTextColor: {r: 1, g: 0.85, b: 0.35, a: 1}
   upgradePanelFullscreen: 1
   upgradeCardColumns: 2
   upgradeCardColumnSpacing: 920
@@ -241,14 +241,14 @@ MonoBehaviour:
   cardFontSize: 22
   navigationFontSize: 20
   cardTextMargin: {x: 132, y: 0, z: 24, w: 0}
-  panelColor: {r: 0.93, g: 0.96, b: 0.98, a: 1}
-  headerColor: {r: 0.2, g: 0.65, b: 0.94, a: 1}
-  outlineColor: {r: 0.025, g: 0.055, b: 0.09, a: 1}
-  cardColor: {r: 1, g: 1, b: 1, a: 1}
-  cardTextColor: {r: 0.04, g: 0.055, b: 0.075, a: 1}
-  closeButtonColor: {r: 0.96, g: 0.08, b: 0.34, a: 1}
-  navigationButtonColor: {r: 0.14, g: 0.72, b: 0.52, a: 1}
-  titleTextColor: {r: 1, g: 1, b: 1, a: 1}
+  panelColor: {r: 0.08, g: 0.07, b: 0.05, a: 0.96}
+  headerColor: {r: 0.55, g: 0.35, b: 0.15, a: 1}
+  outlineColor: {r: 0.24, g: 0.18, b: 0.12, a: 1}
+  cardColor: {r: 0.12, g: 0.10, b: 0.08, a: 0.92}
+  cardTextColor: {r: 0.96, g: 0.93, b: 0.88, a: 1}
+  closeButtonColor: {r: 1, g: 0.27, b: 0.13, a: 1}
+  navigationButtonColor: {r: 0.80, g: 0.50, b: 0.20, a: 1}
+  titleTextColor: {r: 0.96, g: 0.93, b: 0.88, a: 1}
   rebirthHudPosition: {x: -24, y: -24}
   rebirthHudSize: {x: 380, y: 172}
   rebirthHudHeaderSize: {x: 380, y: 50}
@@ -271,8 +271,8 @@ MonoBehaviour:
   rebirthModalButtonSize: {x: 240, y: 58}
   rebirthWarningFontSize: 26
   rebirthModalTextFontSize: 22
-  rebirthHudColor: {r: 0.96, g: 0.98, b: 1, a: 0.96}
-  rebirthHeaderColor: {r: 1, g: 0.15, b: 0.18, a: 1}
+  rebirthHudColor: {r: 0.08, g: 0.07, b: 0.05, a: 0.96}
+  rebirthHeaderColor: {r: 1, g: 0.27, b: 0.13, a: 1}
   rebirthProgressColor: {r: 0.12, g: 0.92, b: 0.18, a: 1}
   rebirthProgressGhostColor: {r: 0.55, g: 1, b: 0.58, a: 1}
   rebirthConfirmColor: {r: 0.12, g: 0.95, b: 0.16, a: 1}

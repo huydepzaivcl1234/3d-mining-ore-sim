@@ -530,10 +530,13 @@ namespace MiningSimulator.Ores.Editor
             scrollRect.horizontal = false;
             scrollRect.vertical = true;
             scrollRect.movementType = ScrollRect.MovementType.Elastic;
-            scrollRect.elasticity = 0.12f;
+            scrollRect.elasticity = 0.08f;
             scrollRect.inertia = true;
-            scrollRect.decelerationRate = 0.135f;
-            scrollRect.scrollSensitivity = 35f;
+            // Higher deceleration = the list keeps gliding longer after you stop scrolling
+            // instead of snapping to a halt; lower sensitivity = each wheel tick nudges it
+            // instead of jumping, so it reads as one smooth motion rather than steps.
+            scrollRect.decelerationRate = 0.35f;
+            scrollRect.scrollSensitivity = 18f;
             return content;
         }
 

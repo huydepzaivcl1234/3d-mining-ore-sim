@@ -348,10 +348,10 @@ namespace MiningSimulator.Ores.Editor
             scroll.horizontal = false;
             scroll.vertical = true;
             scroll.movementType = ScrollRect.MovementType.Elastic;
-            scroll.elasticity = 0.12f;
+            scroll.elasticity = 0.08f;
             scroll.inertia = true;
-            scroll.decelerationRate = 0.135f;
-            scroll.scrollSensitivity = 45f;
+            scroll.decelerationRate = 0.35f;
+            scroll.scrollSensitivity = 18f;
             return content;
         }
 

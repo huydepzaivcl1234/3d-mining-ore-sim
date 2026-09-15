@@ -23,6 +23,8 @@ namespace MiningSimulator.Ores
         [SerializeField] private RectTransform gemHud;
         [SerializeField] private RectTransform shopMenuButton;
         [SerializeField] private RectTransform questMenuButton;
+        [Tooltip("Auto-found in Awake when left empty.")]
+        [SerializeField] private MiningOrbitCamera orbitCamera;
 
         private Vector2 shopHome;
         private Vector2 rebirthHome;
@@ -41,6 +43,9 @@ namespace MiningSimulator.Ores
         private RectTransform activeModal;
         private bool initialized;
         private readonly Dictionary<RectTransform, Vector2> additionalPanelHomes = new();
+        private CanvasGroup backdropGroup;
+        private RectTransform backdropRect;
+        private Coroutine backdropRoutine;
 
         public MiningUiData UiData => uiData;
 
@@ -96,6 +101,10 @@ namespace MiningSimulator.Ores
 
         private void Awake()
         {
+            if (orbitCamera == null)
+            {
+                orbitCamera = FindFirstObjectByType<MiningOrbitCamera>(FindObjectsInactive.Include);
+            }
             ResolveOptionalHudReferences();
             CacheHomePositions();
         }
@@ -141,6 +150,8 @@ namespace MiningSimulator.Ores
             panel.anchoredPosition = GetModalHiddenPosition(panel);
             SetInteraction(panel, true);
             AnimateBasePanels(false);
+            orbitCamera?.SetInputLocked(true);
+            ShowBackdrop(panel);
             StartCoroutine(AnimateRect(panel, GetHomePosition(panel), TransitionDuration));
         }
 
@@ -155,6 +166,8 @@ namespace MiningSimulator.Ores
             StopAllCoroutines();
             SetInteraction(panel, false);
             AnimateBasePanels(true);
+            orbitCamera?.SetInputLocked(false);
+            HideBackdrop();
             StartCoroutine(AnimateRect(panel, GetModalHiddenPosition(panel), TransitionDuration, () =>
             {
                 if (activeModal == panel)
@@ -376,6 +389,106 @@ namespace MiningSimulator.Ores
                                 panel.gameObject.AddComponent<CanvasGroup>();
             group.interactable = enabled;
             group.blocksRaycasts = enabled;
+        }
+
+        private void ShowBackdrop(RectTransform panel)
+        {
+            EnsureBackdrop(panel);
+            if (backdropRect == null)
+            {
+                return;
+            }
+
+            backdropRect.gameObject.SetActive(true);
+            backdropGroup.blocksRaycasts = uiData == null || uiData.ModalBackdropBlocksClicks;
+            if (backdropRoutine != null)
+            {
+                StopCoroutine(backdropRoutine);
+            }
+            float targetAlpha = uiData != null ? uiData.ModalBackdropColor.a : 0.6f;
+            backdropRoutine = StartCoroutine(
+                AnimateCanvasGroupAlpha(backdropGroup, targetAlpha, BackdropFadeDuration));
+        }
+
+        private float BackdropFadeDuration => uiData != null && uiData.ModalBackdropFadeDuration > 0f
+            ? uiData.ModalBackdropFadeDuration
+            : TransitionDuration;
+
+        private void HideBackdrop()
+        {
+            if (backdropGroup == null)
+            {
+                return;
+            }
+
+            backdropGroup.blocksRaycasts = false;
+            if (backdropRoutine != null)
+            {
+                StopCoroutine(backdropRoutine);
+            }
+            backdropRoutine = StartCoroutine(AnimateCanvasGroupAlpha(backdropGroup, 0f, BackdropFadeDuration,
+                () => backdropRect.gameObject.SetActive(false)));
+        }
+
+        /// <summary>Builds a full-screen dim overlay once, lazily, so opening any modal panel
+        /// (Shop, Upgrade, Rebirth, Inventory, Audio Settings...) visibly covers the 3D scene
+        /// behind it instead of leaving gameplay fully visible/clickable underneath.</summary>
+        private void EnsureBackdrop(RectTransform panel)
+        {
+            if (backdropRect != null)
+            {
+                return;
+            }
+
+            Canvas canvas = panel != null ? panel.GetComponentInParent<Canvas>() : null;
+            if (canvas == null)
+            {
+                return;
+            }
+
+            GameObject backdropObject = new("Modal Backdrop", typeof(RectTransform),
+                typeof(CanvasRenderer), typeof(UnityEngine.UI.Image), typeof(CanvasGroup));
+            backdropRect = (RectTransform)backdropObject.transform;
+            backdropRect.SetParent(canvas.transform, false);
+            backdropRect.anchorMin = Vector2.zero;
+            backdropRect.anchorMax = Vector2.one;
+            backdropRect.offsetMin = Vector2.zero;
+            backdropRect.offsetMax = Vector2.zero;
+
+            UnityEngine.UI.Image image = backdropObject.GetComponent<UnityEngine.UI.Image>();
+            image.color = uiData != null ? uiData.ModalBackdropColor : new Color(0f, 0f, 0f, 0.6f);
+            image.raycastTarget = uiData == null || uiData.ModalBackdropBlocksClicks;
+
+            backdropGroup = backdropObject.GetComponent<CanvasGroup>();
+            backdropGroup.alpha = 0f;
+            backdropGroup.blocksRaycasts = false;
+            backdropGroup.interactable = false;
+            backdropRect.gameObject.SetActive(false);
+            // Always the very first child of the canvas, so it renders behind every other UI
+            // element in it (base HUD, any modal) permanently — no per-open reordering needed.
+            backdropRect.SetAsFirstSibling();
+        }
+
+        private static IEnumerator AnimateCanvasGroupAlpha(CanvasGroup group, float target,
+            float duration, Action completed = null)
+        {
+            if (group == null)
+            {
+                yield break;
+            }
+
+            float start = group.alpha;
+            float safeDuration = Mathf.Max(0.01f, duration);
+            float elapsed = 0f;
+            while (elapsed < safeDuration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                group.alpha = Mathf.Lerp(start, target, Mathf.Clamp01(elapsed / safeDuration));
+                yield return null;
+            }
+
+            group.alpha = target;
+            completed?.Invoke();
         }
 
         private static IEnumerator AnimateRect(RectTransform panel, Vector2 destination,

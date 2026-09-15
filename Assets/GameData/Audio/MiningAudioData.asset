@@ -32,3 +32,5 @@ MonoBehaviour:
   sfxMixerGroup: {fileID: 0}
   minimumPitch: 0.96
   maximumPitch: 1.04
+  miningSfxCooldown: 0.05
+  muteAudioOnLostFocus: 1

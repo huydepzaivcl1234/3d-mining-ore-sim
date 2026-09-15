@@ -36,6 +36,10 @@ namespace MiningSimulator.Ores
         [SerializeField] private AudioMixerGroup sfxMixerGroup;
         [Range(0.1f, 3f), SerializeField] private float minimumPitch = 0.96f;
         [Range(0.1f, 3f), SerializeField] private float maximumPitch = 1.04f;
+        [Tooltip("Minimum duration between consecutive ore hit SFX to prevent voice congestion / lag.")]
+        [Range(0.01f, 0.5f), SerializeField] private float miningSfxCooldown = 0.05f;
+        [Tooltip("Mute audio output when the application loses focus to prevent OS audio desync.")]
+        [SerializeField] private bool muteAudioOnLostFocus = true;
 
         public AudioClip BackgroundMusic => backgroundMusic;
         public bool PlayMusicOnStart => playMusicOnStart;
@@ -57,6 +61,8 @@ namespace MiningSimulator.Ores
         public AudioMixerGroup SfxMixerGroup => sfxMixerGroup;
         public float MinimumPitch => minimumPitch;
         public float MaximumPitch => maximumPitch;
+        public float MiningSfxCooldown => miningSfxCooldown;
+        public bool MuteAudioOnLostFocus => muteAudioOnLostFocus;
 
         private void OnValidate()
         {
@@ -64,6 +70,7 @@ namespace MiningSimulator.Ores
             sfxVolume = Mathf.Clamp01(sfxVolume);
             minimumPitch = Mathf.Clamp(minimumPitch, 0.1f, 3f);
             maximumPitch = Mathf.Clamp(maximumPitch, minimumPitch, 3f);
+            miningSfxCooldown = Mathf.Clamp(miningSfxCooldown, 0.01f, 0.5f);
         }
     }
 }

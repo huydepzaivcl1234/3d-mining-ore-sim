@@ -29,6 +29,7 @@ namespace MiningSimulator.Ores
         private float masterVolume = 1f;
         private float musicVolume = 1f;
         private float sfxVolume = 1f;
+        private float nextAllowedMiningSfxTime;
 
         public MiningAudioData AudioData => audioData;
         public bool MusicMuted => musicMuted;
@@ -42,6 +43,7 @@ namespace MiningSimulator.Ores
             LoadVolumeSettings();
             ResolveSources();
             ConfigureSources();
+            PreloadAllAudioClips();
             FindReferencesIfMissing();
         }
 
@@ -324,10 +326,25 @@ namespace MiningSimulator.Ores
 
         public void PlayMiningImpactSfx(bool oreBroken)
         {
-            if (audioData != null)
+            if (audioData == null)
             {
-                PlaySfx(oreBroken ? audioData.OreBreakSfx : audioData.OreHitSfx);
+                return;
             }
+
+            if (oreBroken)
+            {
+                PlaySfx(audioData.OreBreakSfx);
+                return;
+            }
+
+            float now = Time.unscaledTime;
+            if (now < nextAllowedMiningSfxTime)
+            {
+                return;
+            }
+
+            nextAllowedMiningSfxTime = now + audioData.MiningSfxCooldown;
+            PlaySfx(audioData.OreHitSfx);
         }
 
         private void ConfigureSources()
@@ -373,8 +390,22 @@ namespace MiningSimulator.Ores
             }
         }
 
+        private void OnApplicationFocus(bool hasFocus)
+        {
+            if (audioData != null && audioData.MuteAudioOnLostFocus)
+            {
+                AudioListener.pause = !hasFocus;
+            }
+
+            if (hasFocus)
+            {
+                nextAllowedMiningSfxTime = 0f;
+            }
+        }
+
         private void OnApplicationQuit()
         {
+            AudioListener.pause = false;
             SaveVolumeSettings();
         }
 
@@ -418,6 +449,27 @@ namespace MiningSimulator.Ores
             }
 
             return source;
+        }
+
+        private void PreloadAllAudioClips()
+        {
+            if (audioData == null)
+            {
+                return;
+            }
+
+            EnsureClipLoaded(audioData.BackgroundMusic);
+            EnsureClipLoaded(audioData.OreHitSfx);
+            EnsureClipLoaded(audioData.OreBreakSfx);
+            EnsureClipLoaded(audioData.ButtonClickSfx);
+            EnsureClipLoaded(audioData.NpcPurchasedSfx);
+            EnsureClipLoaded(audioData.UpgradePurchasedSfx);
+            EnsureClipLoaded(audioData.LevelUpSfx);
+            EnsureClipLoaded(audioData.RebirthSfx);
+            EnsureClipLoaded(audioData.PanelOpenSfx);
+            EnsureClipLoaded(audioData.PanelCloseSfx);
+            EnsureClipLoaded(audioData.WheelSpinSfx);
+            EnsureClipLoaded(audioData.WheelRewardSfx);
         }
 
         private static bool EnsureClipLoaded(AudioClip clip)
