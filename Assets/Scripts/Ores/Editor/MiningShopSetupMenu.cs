@@ -34,7 +34,7 @@ namespace MiningSimulator.Ores.Editor
         [MenuItem("Mining Simulator/Setup/Create Or Update Shop Panel")]
         public static void CreateOrUpdateShopPanel()
         {
-            CreateOrUpdateShopPanelInternal(true, true);
+            CreateOrUpdateShopPanelInternal(true);
         }
 
         internal static void QueueOpenPanelSync()
@@ -59,10 +59,10 @@ namespace MiningSimulator.Ores.Editor
             {
                 return;
             }
-            CreateOrUpdateShopPanelInternal(false, false);
+            CreateOrUpdateShopPanelInternal(false);
         }
 
-        private static void CreateOrUpdateShopPanelInternal(bool showDialogs, bool applyTheme)
+        private static void CreateOrUpdateShopPanelInternal(bool showDialogs)
         {
             Canvas canvas = FindHudCanvas();
             if (canvas == null)
@@ -166,9 +166,8 @@ namespace MiningSimulator.Ores.Editor
             }
             panel.gameObject.SetActive(true);
             panel.SetAsLastSibling();
-            if (applyTheme)
+            if (showDialogs)
             {
-                MiningCandyUiSetupMenu.ApplyCandyThemeFromSetup();
                 MiningButtonSfxSetupMenu.AssignAllButtonSfx(false);
             }
             EditorSceneManager.MarkSceneDirty(canvas.gameObject.scene);
@@ -557,8 +556,6 @@ namespace MiningSimulator.Ores.Editor
             row.anchoredPosition = new Vector2(0f, -index * 102f);
             row.sizeDelta = new Vector2(490f, 92f);
             ConfigureCanvasGroup(row.gameObject);
-            EnsureCandySurface(row.gameObject, new Color(0.12f, 0.17f, 0.27f, 1f),
-                new Color(0.04f, 0.07f, 0.13f, 1f));
 
             MiningItemData item = product != null ? product.Item : null;
             Image icon = FindComponent<Image>(row, "Item Icon");
@@ -610,8 +607,6 @@ namespace MiningSimulator.Ores.Editor
             }
             SetRect(buy.transform as RectTransform, new Vector2(190f, 0f),
                 new Vector2(105f, 50f));
-            EnsureCandySurface(buy.gameObject, new Color(0.20f, 0.84f, 0.69f, 1f),
-                new Color(0.08f, 0.49f, 0.36f, 1f));
             return row;
         }
 
@@ -671,49 +666,16 @@ namespace MiningSimulator.Ores.Editor
         private static void ConfigureTransparentScrollGraphic(GameObject target)
         {
             Image image = target.GetComponent<Image>() ?? Undo.AddComponent<Image>(target);
-            MiningCandyGradient gradient = target.GetComponent<MiningCandyGradient>();
-            if (gradient != null) Undo.DestroyObjectImmediate(gradient);
             foreach (Shadow effect in target.GetComponents<Shadow>())
             {
                 Undo.DestroyObjectImmediate(effect);
             }
-            Transform highlight = target.transform.Find("Candy Highlight");
-            if (highlight != null) Undo.DestroyObjectImmediate(highlight.gameObject);
             Undo.RecordObject(image, "Configure Transparent Shop Scroll Graphic");
             image.sprite = null;
             image.type = Image.Type.Simple;
             image.color = Color.clear;
             image.raycastTarget = true;
             EditorUtility.SetDirty(image);
-        }
-
-        private static void EnsureCandySurface(GameObject target, Color top, Color bottom)
-        {
-            MiningCandyGradient gradient = target.GetComponent<MiningCandyGradient>() ??
-                                            Undo.AddComponent<MiningCandyGradient>(target);
-            gradient.SetColors(top, bottom);
-            if (target.GetComponent<Outline>() == null)
-            {
-                Outline outline = Undo.AddComponent<Outline>(target);
-                outline.effectColor = new Color(0.035f, 0.065f, 0.12f, 1f);
-                outline.effectDistance = new Vector2(3f, -3f);
-            }
-            bool hasPlainShadow = false;
-            foreach (Shadow effect in target.GetComponents<Shadow>())
-            {
-                if (effect.GetType() == typeof(Shadow))
-                {
-                    hasPlainShadow = true;
-                    break;
-                }
-            }
-            if (!hasPlainShadow)
-            {
-                Shadow shadow = Undo.AddComponent<Shadow>(target);
-                shadow.effectColor = new Color(0.01f, 0.02f, 0.04f, 0.65f);
-                shadow.effectDistance = new Vector2(0f, -5f);
-            }
-            EditorUtility.SetDirty(gradient);
         }
 
         private static void EnsureLuckyWheel(RectTransform card, MiningUiData uiData,

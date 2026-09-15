@@ -537,17 +537,14 @@ namespace MiningSimulator.Ores
                 typeof(Image));
             child.transform.SetParent(parent, false);
             Image image = child.GetComponent<Image>();
-            image.color = Color.white;
-            MiningCandyGradient gradient = child.AddComponent<MiningCandyGradient>();
-            gradient.SetColors(Color.Lerp(color, Color.white, 0.20f),
-                Color.Lerp(color, Color.black, 0.18f));
+            image.color = color;
             Shadow shadow = child.AddComponent<Shadow>();
             shadow.effectColor = new Color(0.01f, 0.02f, 0.04f, 0.55f);
             shadow.effectDistance = new Vector2(0f, -5f);
             Outline outline = child.AddComponent<Outline>();
-            outline.effectColor = uiData != null ? uiData.CandyOutlineColor :
+            outline.effectColor = uiData != null ? uiData.OutlineColor :
                 new Color(0.025f, 0.055f, 0.09f, 1f);
-            float thickness = uiData != null ? uiData.CandyOutlineThickness : 3f;
+            float thickness = uiData != null ? uiData.OutlineThickness : 3f;
             outline.effectDistance = new Vector2(thickness, -thickness);
             return child;
         }

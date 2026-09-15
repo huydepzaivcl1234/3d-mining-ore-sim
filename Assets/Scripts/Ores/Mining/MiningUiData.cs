@@ -235,24 +235,6 @@ namespace MiningSimulator.Ores
         [Tooltip("How long the modal backdrop takes to fade in/out when a panel opens/closes, in seconds.")]
         [Min(0f), SerializeField] private float modalBackdropFadeDuration = 0.2f;
 
-        [Header("Candy UI Theme")]
-        [SerializeField] private Color candyOutlineColor = new(0.24f, 0.18f, 0.12f, 1f);
-        [SerializeField] private Color candyNeutralTop = new(0.12f, 0.10f, 0.08f, 1f);
-        [SerializeField] private Color candyNeutralBottom = new(0.05f, 0.04f, 0.03f, 1f);
-        [SerializeField] private Color candyGemTop = new(0.22f, 0.62f, 0.44f, 1f);
-        [SerializeField] private Color candyGemBottom = new(0.10f, 0.42f, 0.27f, 1f);
-        [SerializeField] private Color candyGoldTop = new(1f, 0.80f, 0.25f, 1f);
-        [SerializeField] private Color candyGoldBottom = new(0.85f, 0.52f, 0f, 1f);
-        [SerializeField] private Color candyPrimaryTop = new(1f, 0.72f, 0.19f, 1f);
-        [SerializeField] private Color candyPrimaryBottom = new(0.80f, 0.52f, 0f, 1f);
-        [SerializeField] private Color candyDangerTop = new(1f, 0.27f, 0.13f, 1f);
-        [SerializeField] private Color candyDangerBottom = new(0.80f, 0.10f, 0f, 1f);
-        [Range(1f, 8f), SerializeField] private float candyOutlineThickness = 3.5f;
-        [Range(0f, 1f), SerializeField] private float candyGlossAlpha = 0.22f;
-        [Range(0f, 1f), SerializeField] private float candyTextOutlineWidth = 0.20f;
-        [Min(0f), SerializeField] private float candySafeAreaPadding = 10f;
-        [Min(44f), SerializeField] private float candyMinimumTouchTarget = 64f;
-
         [Header("NPC Shop Style")]
         [SerializeField] private string shopTitle = "KHU ĐÀO QUẶNG";
         [SerializeField] private Vector2 shopHeaderSize = new(330f, 54f);
@@ -570,22 +552,6 @@ namespace MiningSimulator.Ores
         public bool ModalBackdropBlocksClicks => modalBackdropBlocksClicks;
         public Color ModalBackdropColor => modalBackdropColor;
         public float ModalBackdropFadeDuration => modalBackdropFadeDuration;
-        public Color CandyOutlineColor => candyOutlineColor;
-        public Color CandyNeutralTop => candyNeutralTop;
-        public Color CandyNeutralBottom => candyNeutralBottom;
-        public Color CandyGemTop => candyGemTop;
-        public Color CandyGemBottom => candyGemBottom;
-        public Color CandyGoldTop => candyGoldTop;
-        public Color CandyGoldBottom => candyGoldBottom;
-        public Color CandyPrimaryTop => candyPrimaryTop;
-        public Color CandyPrimaryBottom => candyPrimaryBottom;
-        public Color CandyDangerTop => candyDangerTop;
-        public Color CandyDangerBottom => candyDangerBottom;
-        public float CandyOutlineThickness => candyOutlineThickness;
-        public float CandyGlossAlpha => candyGlossAlpha;
-        public float CandyTextOutlineWidth => candyTextOutlineWidth;
-        public float CandySafeAreaPadding => candySafeAreaPadding;
-        public float CandyMinimumTouchTarget => candyMinimumTouchTarget;
         public string ShopTitle => shopTitle;
         public Vector2 ShopHeaderSize => shopHeaderSize;
         public float ShopTitleFontSize => shopTitleFontSize;
@@ -813,12 +779,7 @@ namespace MiningSimulator.Ores
             effectToastPercentFontSize = Mathf.Max(1f, effectToastPercentFontSize);
             panelTransitionDuration = Mathf.Max(0.01f, panelTransitionDuration);
             panelSlideExtraDistance = Mathf.Max(0f, panelSlideExtraDistance);
-            candyOutlineThickness = Mathf.Clamp(candyOutlineThickness, 1f, 8f);
-            candyGlossAlpha = Mathf.Clamp01(candyGlossAlpha);
-            candyTextOutlineWidth = Mathf.Clamp01(candyTextOutlineWidth);
             modalBackdropFadeDuration = Mathf.Max(0f, modalBackdropFadeDuration);
-            candySafeAreaPadding = Mathf.Max(0f, candySafeAreaPadding);
-            candyMinimumTouchTarget = Mathf.Max(44f, candyMinimumTouchTarget);
             cardSpacing = Mathf.Max(0f, cardSpacing);
             outlineThickness = Mathf.Max(0f, outlineThickness);
             upgradeUnavailableAlpha = Mathf.Clamp(upgradeUnavailableAlpha, 0.1f, 1f);

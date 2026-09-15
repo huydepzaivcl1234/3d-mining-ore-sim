@@ -385,19 +385,9 @@ namespace MiningSimulator.Ores.Editor
         private static void ConfigureTransparentRaycastImage(GameObject target)
         {
             Image image = target.GetComponent<Image>() ?? Undo.AddComponent<Image>(target);
-            MiningCandyGradient gradient = target.GetComponent<MiningCandyGradient>();
-            if (gradient != null)
-            {
-                Undo.DestroyObjectImmediate(gradient);
-            }
             foreach (Shadow effect in target.GetComponents<Shadow>())
             {
                 Undo.DestroyObjectImmediate(effect);
-            }
-            Transform highlight = target.transform.Find("Candy Highlight");
-            if (highlight != null)
-            {
-                Undo.DestroyObjectImmediate(highlight.gameObject);
             }
 
             Undo.RecordObject(image, "Configure Transparent Quest Scroll Graphic");
@@ -555,12 +545,8 @@ namespace MiningSimulator.Ores.Editor
             Image image = value.GetComponent<Image>();
             image.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(RoundedSpritePath);
             image.type = image.sprite != null ? Image.Type.Sliced : Image.Type.Simple;
-            image.color = color;
-            if (top.HasValue && bottom.HasValue)
-            {
-                MiningCandyGradient gradient = Undo.AddComponent<MiningCandyGradient>(value);
-                gradient.SetColors(top.Value, bottom.Value);
-            }
+            image.color = top.HasValue && bottom.HasValue
+                ? Color.Lerp(top.Value, bottom.Value, 0.5f) : color;
             if (outlined)
             {
                 Outline outline = Undo.AddComponent<Outline>(value);
