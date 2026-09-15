@@ -229,6 +229,7 @@ namespace MiningSimulator.Ores
                 currentLanguage = MiningLanguage.English;
                 initialized = true;
                 LeanLocalization.SetCurrentLanguageAll(EnglishLanguageName);
+                LanguageChanged?.Invoke();
                 return;
             }
 
@@ -303,6 +304,7 @@ namespace MiningSimulator.Ores
                     StringComparison.OrdinalIgnoreCase))
                 {
                     LeanLocalization.SetCurrentLanguageAll(EnglishLanguageName);
+                    LanguageChanged?.Invoke();
                 }
                 return;
             }
