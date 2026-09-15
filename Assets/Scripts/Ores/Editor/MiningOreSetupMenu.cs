@@ -1338,10 +1338,13 @@ namespace MiningSimulator.Editor
             StyleShopText(panel.Find("Status"), uiData.StatusTextPosition, uiData.ShopTextSize,
                 uiData.StatusFontSize, uiData.StatusTextColor);
 
-            Transform buyButton = panel.Find("Buy Mining NPC");
-            ConfigureTopLeftRect(buyButton, uiData.BuyButtonPosition, uiData.BuyButtonSize);
-            StyleButton(buyButton, uiData.BuyButtonColor, uiData.BuyButtonTextColor,
-                uiData.OutlineColor, uiData.OutlineThickness, uiData);
+            Transform buyButton = panel.Find("BuyMinerButton") ?? panel.Find("Buy Mining NPC");
+            if (buyButton != null && buyButton.GetComponent<JuicyBuyMinerButton>() == null)
+            {
+                ConfigureTopLeftRect(buyButton, uiData.BuyButtonPosition, uiData.BuyButtonSize);
+                StyleButton(buyButton, uiData.BuyButtonColor, uiData.BuyButtonTextColor,
+                    uiData.OutlineColor, uiData.OutlineThickness, uiData);
+            }
             TextMeshProUGUI buyLabel = buyButton?.Find("Label")?.GetComponent<TextMeshProUGUI>();
             if (buyLabel != null)
             {
@@ -1352,8 +1355,9 @@ namespace MiningSimulator.Editor
                 uiData.MoneyIconSprite, uiData.MoneyIconFallback, uiData.MoneyIconColor, uiData);
             EnsureHudIcon(panel, "NPC Icon", uiData.NpcIconPosition, uiData.HudIconSize,
                 uiData.NpcIconSprite, uiData.NpcIconFallback, uiData.NpcIconColor, uiData);
-            EnsureHudIcon(buyButton, "Icon", uiData.BuyButtonIconPosition, uiData.HudIconSize,
-                uiData.BuyNpcIconSprite, uiData.BuyNpcIconFallback, uiData.MoneyIconColor, uiData);
+            if (buyButton != null && buyButton.GetComponent<JuicyBuyMinerButton>() == null)
+                EnsureHudIcon(buyButton, "Icon", uiData.BuyButtonIconPosition, uiData.HudIconSize,
+                    uiData.BuyNpcIconSprite, uiData.BuyNpcIconFallback, uiData.MoneyIconColor, uiData);
         }
 
         private static void StyleShopText(Transform target, Vector2 position, Vector2 size,
@@ -2646,7 +2650,7 @@ namespace MiningSimulator.Editor
                 ConvertToTextMeshPro(panel.Find("NPC Count"), TextAlignmentOptions.Left);
             hudSerialized.FindProperty("statusText").objectReferenceValue =
                 ConvertToTextMeshPro(panel.Find("Status"), TextAlignmentOptions.Left);
-            Transform buttonTransform = panel.Find("Buy Mining NPC");
+            Transform buttonTransform = panel.Find("BuyMinerButton") ?? panel.Find("Buy Mining NPC");
             SetReferenceIfMissing(hudSerialized.FindProperty("buyButton"), buttonTransform?.GetComponent<Button>());
             hudSerialized.FindProperty("buyButtonLabel").objectReferenceValue =
                 ConvertToTextMeshPro(buttonTransform?.Find("Label"), TextAlignmentOptions.Center);
