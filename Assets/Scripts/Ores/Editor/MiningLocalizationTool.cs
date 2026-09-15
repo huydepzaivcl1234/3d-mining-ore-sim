@@ -66,19 +66,8 @@ public sealed class MiningLocalizationTool : EditorWindow
         lean.SetCurrentLanguage("English");
         EditorUtility.SetDirty(lean);
 
-        foreach (string key in new[]
-        {
-            "Mining.Language",
-            "Mining.LanguageName",
-            "LeanLocalization.CurrentLanguage",
-            "LeanLocalization.CurrentLanguageAlt"
-        })
-        {
-            PlayerPrefs.DeleteKey(key);
-        }
-
-        PlayerPrefs.Save();
-        Debug.Log("English base prepared. Review and save the scene.");
+        Debug.Log("English base prepared. Saved player language remains intact. " +
+            "Review and save the scene.");
     }
 
     private static void BindLabel(TextMeshProUGUI label, string key)

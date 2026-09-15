@@ -28,6 +28,7 @@ namespace MiningSimulator.Ores
         private RectTransform returnPanel;
         private RectTransform wheel;
         private TextMeshProUGUI titleLabel;
+        private TextMeshProUGUI centerLabel;
         private TextMeshProUGUI statusLabel;
         private TextMeshProUGUI spinLabel;
         private Button spinButton;
@@ -125,25 +126,19 @@ namespace MiningSimulator.Ores
             if (spinning || giftBox == null || itemSystem == null || wallet == null ||
                 !giftBox.TryRollGiftReward(out int rewardIndex, out MiningGiftReward reward))
             {
-                statusLabel.text = MiningLocalization.Text(
-                    "This gift box has no valid rewards.",
-                    "Hộp quà chưa có phần thưởng hợp lệ.");
+                statusLabel.text = MiningLocalization.Text("This gift box has no valid rewards.");
                 return;
             }
 
             if (reward.RewardType == MiningGiftRewardType.Item &&
                 !CanFitItemRewardAfterConsumption(reward))
             {
-                statusLabel.text = MiningLocalization.Text(
-                    "Inventory is full. Free a slot before spinning.",
-                    "Túi đồ đã đầy. Hãy dọn một ô trước khi quay.");
+                statusLabel.text = MiningLocalization.Text("Inventory is full. Free a slot before spinning.");
                 return;
             }
             if (!itemSystem.TryConsumeGiftBox(sourceSlotIndex, giftBox))
             {
-                statusLabel.text = MiningLocalization.Text(
-                    "The gift box is no longer in this slot.",
-                    "Hộp quà không còn trong ô này.");
+                statusLabel.text = MiningLocalization.Text("The gift box is no longer in this slot.");
                 return;
             }
 
@@ -151,7 +146,7 @@ namespace MiningSimulator.Ores
             spinning = true;
             spinButton.interactable = false;
             closeButton.interactable = false;
-            statusLabel.text = MiningLocalization.Text("Spinning...", "Đang quay...");
+            statusLabel.text = MiningLocalization.Text("Spinning...");
 
             int rewardCount = Mathf.Max(1, giftBox.GiftRewards.Count);
             float step = 360f / rewardCount;
@@ -202,20 +197,17 @@ namespace MiningSimulator.Ores
 
             if (granted)
             {
-                statusLabel.text = string.Format(MiningLocalization.Text(
-                        "YOU WON: {0}", "BẠN NHẬN ĐƯỢC: {0}"),
+                statusLabel.text = string.Format(MiningLocalization.Text("YOU WON: {0}"),
                     selectedReward.GetDisplayName());
-                spinLabel.text = MiningLocalization.Text("REWARD RECEIVED", "ĐÃ NHẬN THƯỞNG");
+                spinLabel.text = MiningLocalization.Text("REWARD RECEIVED");
                 ShowRewardPopup(selectedReward.GetDisplayName());
                 RewardGranted?.Invoke(selectedReward);
             }
             else
             {
                 itemSystem.TryAddItem(giftBox);
-                statusLabel.text = MiningLocalization.Text(
-                    "Inventory changed during the spin. The gift box was returned.",
-                    "Túi đồ đã thay đổi khi quay. Hộp quà đã được hoàn lại.");
-                spinLabel.text = MiningLocalization.Text("SPIN FAILED", "QUAY THẤT BẠI");
+                statusLabel.text = MiningLocalization.Text("Inventory changed during the spin. The gift box was returned.");
+                spinLabel.text = MiningLocalization.Text("SPIN FAILED");
             }
         }
 
@@ -248,15 +240,17 @@ namespace MiningSimulator.Ores
 
         private void RefreshLabels()
         {
+            if (centerLabel != null)
+            {
+                centerLabel.text = MiningLocalization.Text("RARE");
+            }
             titleLabel.text = giftBox != null
-                ? MiningLocalization.Text("RARE GIFT BOX", "HỘP QUÀ HIẾM")
+                ? MiningLocalization.Text("RARE GIFT BOX")
                 : string.Empty;
             if (selectedReward == null)
             {
-                statusLabel.text = MiningLocalization.Text(
-                    "The pointer decides your reward. Press SPIN.",
-                    "Kim chỉ phần thưởng của bạn. Bấm QUAY.");
-                spinLabel.text = MiningLocalization.Text("SPIN", "QUAY");
+                statusLabel.text = MiningLocalization.Text("The pointer decides your reward. Press SPIN.");
+                spinLabel.text = MiningLocalization.Text("SPIN");
             }
         }
 
@@ -368,8 +362,8 @@ namespace MiningSimulator.Ores
             Image hubImage = hubObject.GetComponent<Image>();
             hubImage.sprite = GetWheelSprite();
             hubImage.type = Image.Type.Simple;
-            TextMeshProUGUI center = CreateLabel(centerHub, "Center", 22f, new Color(1f, 0.78f, 0.16f));
-            center.text = "RARE";
+            centerLabel = CreateLabel(centerHub, "Center", 22f, new Color(1f, 0.78f, 0.16f));
+            centerLabel.text = MiningLocalization.Text("RARE");
 
             TextMeshProUGUI pointer = CreateLabel(panel, "Pointer", 42f,
                 new Color(1f, 0.82f, 0.12f));
@@ -414,8 +408,7 @@ namespace MiningSimulator.Ores
                 rewardPopupSequence.Stop();
             }
 
-            rewardPopupLabel.text = string.Format(MiningLocalization.Text(
-                "YOU WON!\n{0}", "BẠN ĐÃ TRÚNG!\n{0}"), rewardName);
+            rewardPopupLabel.text = string.Format(MiningLocalization.Text("YOU WON!\n{0}"), rewardName);
             rewardPopup.gameObject.SetActive(true);
             rewardPopup.SetAsLastSibling();
             rewardPopupGroup.alpha = 0f;

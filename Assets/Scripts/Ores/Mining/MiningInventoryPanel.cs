@@ -160,8 +160,7 @@ namespace MiningSimulator.Ores
             if (titleLabel != null)
             {
                 int occupied = itemSystem != null ? itemSystem.OccupiedSlotCount : 0;
-                titleLabel.text = string.Format(MiningLocalization.Text(
-                        "INVENTORY  •  {0}/{1} SLOTS", "TÚI ĐỒ  •  {0}/{1} Ô"),
+                titleLabel.text = string.Format(MiningLocalization.Text("INVENTORY  •  {0}/{1} SLOTS"),
                     occupied, MiningItemDatabase.InventoryCapacity);
             }
 
@@ -195,7 +194,7 @@ namespace MiningSimulator.Ores
                 {
                     view.nameLabel.text = occupied
                         ? $"{slot.Item.DisplayName}\n{slot.Item.GetInventorySummary()}"
-                        : MiningLocalization.Text("EMPTY", "TRỐNG");
+                        : MiningLocalization.Text("EMPTY");
                 }
                 if (view.countLabel != null)
                 {

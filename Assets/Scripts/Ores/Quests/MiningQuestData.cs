@@ -76,10 +76,10 @@ namespace MiningSimulator.Ores
         public string GetRewardPreview()
         {
             return rewardType == MiningQuestRewardType.RandomMoney
-                ? string.Format(MiningLocalization.Text("{0} - {1} MONEY", "{0} - {1} TIỀN"),
+                ? string.Format(MiningLocalization.Text("{0} - {1} MONEY"),
                     MiningMoneyFormatter.Format(RandomMoneyMinimum),
                     MiningMoneyFormatter.Format(RandomMoneyMaximum))
-                : string.Format(MiningLocalization.Text("{0} MONEY", "{0} TIỀN"),
+                : string.Format(MiningLocalization.Text("{0} MONEY"),
                     MiningMoneyFormatter.Format(MoneyReward));
         }
 

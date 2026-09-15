@@ -180,8 +180,7 @@ namespace MiningSimulator.Ores
             if (!resetConfirmationArmed)
             {
                 resetConfirmationArmed = true;
-                SetResetButtonVisual(MiningLocalization.Text(
-                        "CLICK AGAIN TO DELETE", "BẤM LẦN NỮA ĐỂ XÓA"),
+                SetResetButtonVisual(MiningLocalization.Text("CLICK AGAIN TO DELETE"),
                     uiData != null ? uiData.ResetDataArmedColor : new Color(1f, 0.36f, 0.08f));
                 if (resetStateCoroutine != null)
                 {
@@ -198,8 +197,7 @@ namespace MiningSimulator.Ores
             resetStateCoroutine = null;
             resetConfirmationArmed = false;
             rebirthSystem?.ResetAllProgress();
-            SetResetButtonVisual(MiningLocalization.Text(
-                    "DATA RESET", "ĐÃ RESET DỮ LIỆU"),
+            SetResetButtonVisual(MiningLocalization.Text("DATA RESET"),
                 uiData != null ? uiData.ResetDataButtonColor : new Color(0.88f, 0.12f, 0.18f));
             resetStateCoroutine = StartCoroutine(RestoreResetButtonAfterDelay());
         }
@@ -222,8 +220,7 @@ namespace MiningSimulator.Ores
         private void ResetButtonState()
         {
             resetConfirmationArmed = false;
-            SetResetButtonVisual(MiningLocalization.Text(
-                    "RESET DATA", "RESET DỮ LIỆU"),
+            SetResetButtonVisual(MiningLocalization.Text("RESET DATA"),
                 uiData != null ? uiData.ResetDataButtonColor : new Color(0.88f, 0.12f, 0.18f));
         }
 
@@ -259,7 +256,7 @@ namespace MiningSimulator.Ores
                 ?.GetComponent<TextMeshProUGUI>();
             if (title != null)
             {
-                title.text = MiningLocalization.Text("SETTINGS", "CÀI ĐẶT");
+                title.text = MiningLocalization.Text("SETTINGS");
             }
 
             Transform existing = settingsPanel.transform.Find("Reset Data");
@@ -428,7 +425,7 @@ namespace MiningSimulator.Ores
                 : null;
             if (title != null)
             {
-                title.text = MiningLocalization.Text("SETTINGS", "CÀI ĐẶT");
+                title.text = MiningLocalization.Text("SETTINGS");
             }
             if (languageLabel != null)
             {
@@ -441,7 +438,7 @@ namespace MiningSimulator.Ores
             }
             if (returnToMenuLabel != null)
             {
-                returnToMenuLabel.text = MiningLocalization.Text("MAIN MENU", "MENU CHÍNH");
+                returnToMenuLabel.text = MiningLocalization.Text("MAIN MENU");
             }
         }
 

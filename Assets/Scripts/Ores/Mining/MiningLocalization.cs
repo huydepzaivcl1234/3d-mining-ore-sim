@@ -47,6 +47,7 @@ namespace MiningSimulator.Ores
         private static MiningLanguage currentLanguage;
         private static string currentLanguageName;
         private static bool initialized;
+        private static bool applyingLeanLanguage;
 
         public static event Action LanguageChanged;
 
@@ -78,11 +79,29 @@ namespace MiningSimulator.Ores
             currentLanguage = MiningLanguage.English;
             currentLanguageName = EnglishLanguageName;
             initialized = false;
+            applyingLeanLanguage = false;
             LanguageChanged = null;
             LeanLocalization.OnLocalizationChanged -= HandleLeanLocalizationChanged;
             LeanLocalization.OnLocalizationChanged += HandleLeanLocalizationChanged;
         }
 
+        /// <summary>Looks up an English phrase in the Lean CSV tables.</summary>
+        public static string Text(string english)
+        {
+            EnsureInitialized();
+            return LeanLocalization.GetTranslationText(GetPhraseName(english), english,
+                replaceTokens: false) ?? english;
+        }
+
+        /// <summary>Uses a semantic key when identical English text has different meanings.</summary>
+        public static string TextKey(string key, string englishFallback)
+        {
+            EnsureInitialized();
+            return LeanLocalization.GetTranslationText(key, englishFallback,
+                replaceTokens: false) ?? englishFallback;
+        }
+
+        // Compatibility for serialized pairs until their English keys are in the CSV.
         public static string Text(string english, string vietnamese)
         {
             EnsureInitialized();
@@ -124,7 +143,7 @@ namespace MiningSimulator.Ores
             PlayerPrefs.SetString(LanguageNameSaveKey, currentLanguageName);
             PlayerPrefs.SetInt(LanguageSaveKey, (int)currentLanguage);
             PlayerPrefs.Save();
-            LeanLocalization.SetCurrentLanguageAll(currentLanguageName);
+            ApplyLeanLanguage();
             LanguageChanged?.Invoke();
         }
 
@@ -232,7 +251,25 @@ namespace MiningSimulator.Ores
             currentLanguageName = savedName.Trim();
             currentLanguage = ToLegacyLanguage(currentLanguageName);
             initialized = true;
-            LeanLocalization.SetCurrentLanguageAll(currentLanguageName);
+            ApplyLeanLanguage();
+        }
+
+        private static void ApplyLeanLanguage()
+        {
+            if (applyingLeanLanguage)
+            {
+                return;
+            }
+
+            applyingLeanLanguage = true;
+            try
+            {
+                LeanLocalization.SetCurrentLanguageAll(currentLanguageName);
+            }
+            finally
+            {
+                applyingLeanLanguage = false;
+            }
         }
 
         private static string TranslateStaticText(string value)
@@ -277,24 +314,19 @@ namespace MiningSimulator.Ores
 
         private static void HandleLeanLocalizationChanged()
         {
-            if (!initialized)
+            if (!initialized || applyingLeanLanguage)
             {
                 return;
             }
 
             string leanLanguage = LeanLocalization.GetFirstCurrentLanguage();
-            if (string.IsNullOrWhiteSpace(leanLanguage) ||
-                string.Equals(currentLanguageName, leanLanguage,
+            if (!string.IsNullOrWhiteSpace(leanLanguage) &&
+                !string.Equals(currentLanguageName, leanLanguage,
                     StringComparison.OrdinalIgnoreCase))
             {
-                return;
+                ApplyLeanLanguage();
             }
-
-            currentLanguageName = leanLanguage;
-            currentLanguage = ToLegacyLanguage(leanLanguage);
-            PlayerPrefs.SetString(LanguageNameSaveKey, currentLanguageName);
-            PlayerPrefs.SetInt(LanguageSaveKey, (int)currentLanguage);
-            PlayerPrefs.Save();
+            // Lean sources may register after the menu; refresh script-owned labels then.
             LanguageChanged?.Invoke();
         }
     }

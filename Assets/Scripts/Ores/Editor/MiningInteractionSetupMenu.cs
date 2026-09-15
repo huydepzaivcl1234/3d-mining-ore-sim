@@ -74,7 +74,7 @@ namespace MiningSimulator.Editor
             data = system.Data != null ? system.Data : data;
             prompt = system.Prompt != null ? system.Prompt : prompt;
             prompt.ShowEditorPreview(data.GetPrompt(
-                MiningLocalization.Text("Portal", "Cổng dịch chuyển")));
+                MiningLocalization.Text("Portal")));
             EditorUtility.SetDirty(system);
             EditorUtility.SetDirty(prompt);
             EditorSceneManager.MarkSceneDirty(canvas.gameObject.scene);

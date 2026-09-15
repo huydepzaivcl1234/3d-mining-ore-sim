@@ -380,9 +380,7 @@ namespace MiningSimulator.Ores
             }
 
             string reward = BuildRewardText(achievement);
-            string message = string.Format(MiningLocalization.Text(
-                    "ACHIEVEMENT: {0} • Permanent {1}",
-                    "THÀNH TỰU: {0} • Vĩnh viễn {1}"),
+            string message = string.Format(MiningLocalization.Text("ACHIEVEMENT: {0} • Permanent {1}"),
                 achievement.Title, reward);
             unlockNotifier.ShowToast(message);
         }
@@ -390,7 +388,7 @@ namespace MiningSimulator.Ores
         private static string BuildRewardText(MiningAchievementDefinition achievement)
         {
             string money = achievement.MoneyMultiplierPercent > 0f
-                ? $"+{achievement.MoneyMultiplierPercent:0.##}% {MiningLocalization.Text("money", "tiền")}"
+                ? $"+{achievement.MoneyMultiplierPercent:0.##}% {MiningLocalization.Text("money")}"
                 : string.Empty;
             string experience = achievement.ExperienceMultiplierPercent > 0f
                 ? $"+{achievement.ExperienceMultiplierPercent:0.##}% XP"

@@ -14,7 +14,7 @@ namespace MiningSimulator.Ores
                  "presses the interaction key, so this object needs no manual wiring.")]
         [SerializeField] private MiningPortalMaintenancePanel maintenancePanel;
 
-        public string InteractionLabel => MiningLocalization.Text("Portal", "Cổng dịch chuyển");
+        public string InteractionLabel => MiningLocalization.Text("Portal");
         public bool CanInteract => isActiveAndEnabled;
         public void Interact()
         {

@@ -59,8 +59,8 @@ namespace MiningSimulator.Ores
                 if (periodLabel != null)
                 {
                     periodLabel.text = definition.Period == MiningQuestPeriod.Daily
-                        ? MiningLocalization.Text("DAILY", "HÀNG NGÀY")
-                        : MiningLocalization.Text("WEEKLY", "HÀNG TUẦN");
+                        ? MiningLocalization.Text("DAILY")
+                        : MiningLocalization.Text("WEEKLY");
                 }
                 if (nameLabel != null) nameLabel.text = definition.GetLocalizedName();
                 if (progressLabel != null)
@@ -70,7 +70,7 @@ namespace MiningSimulator.Ores
                 }
                 if (rewardLabel != null)
                 {
-                    rewardLabel.text = MiningLocalization.Text("REWARD: ", "THƯỞNG: ") +
+                    rewardLabel.text = MiningLocalization.Text("REWARD:") + " " +
                                        definition.GetRewardPreview();
                 }
                 if (progressFill != null)
@@ -82,10 +82,10 @@ namespace MiningSimulator.Ores
                 if (claimLabel != null)
                 {
                     claimLabel.text = claimed
-                        ? MiningLocalization.Text("CLAIMED", "ĐÃ NHẬN")
+                        ? MiningLocalization.Text("CLAIMED")
                         : complete
-                            ? MiningLocalization.Text("CLAIM", "NHẬN")
-                            : MiningLocalization.Text("IN PROGRESS", "ĐANG LÀM");
+                            ? MiningLocalization.Text("CLAIM")
+                            : MiningLocalization.Text("IN PROGRESS");
                 }
             }
         }
@@ -185,8 +185,7 @@ namespace MiningSimulator.Ores
             {
                 if (statusLabel != null)
                 {
-                    statusLabel.text = string.Format(MiningLocalization.Text(
-                        "+{0} MONEY RECEIVED!", "+{0} TIỀN ĐÃ NHẬN!"),
+                    statusLabel.text = string.Format(MiningLocalization.Text("+{0} MONEY RECEIVED!"),
                         MiningMoneyFormatter.Format(amount));
                 }
             }
@@ -197,18 +196,17 @@ namespace MiningSimulator.Ores
         {
             if (titleLabel != null)
             {
-                titleLabel.text = MiningLocalization.Text("DAILY & WEEKLY QUESTS",
-                    "NHIỆM VỤ NGÀY & TUẦN");
+                titleLabel.text = MiningLocalization.Text("DAILY & WEEKLY QUESTS");
             }
             if (gameplayOpenButton != null)
             {
                 TextMeshProUGUI label = gameplayOpenButton.GetComponentInChildren<TextMeshProUGUI>();
-                if (label != null) label.text = MiningLocalization.Text("QUESTS", "NHIỆM VỤ");
+                if (label != null) label.text = MiningLocalization.Text("QUESTS");
             }
             if (mainMenuOpenButton != null)
             {
                 TextMeshProUGUI label = mainMenuOpenButton.GetComponentInChildren<TextMeshProUGUI>();
-                if (label != null) label.text = MiningLocalization.Text("QUESTS", "NHIỆM VỤ");
+                if (label != null) label.text = MiningLocalization.Text("QUESTS");
             }
             RefreshTimer();
             RefreshRows();
@@ -230,9 +228,7 @@ namespace MiningSimulator.Ores
             if (resetTimerLabel == null || questSystem == null) return;
             TimeSpan daily = questSystem.GetTimeUntilReset(MiningQuestPeriod.Daily);
             TimeSpan weekly = questSystem.GetTimeUntilReset(MiningQuestPeriod.Weekly);
-            resetTimerLabel.text = string.Format(MiningLocalization.Text(
-                    "DAILY RESET {0}  •  WEEKLY RESET {1}",
-                    "RESET NGÀY {0}  •  RESET TUẦN {1}"),
+            resetTimerLabel.text = string.Format(MiningLocalization.Text("DAILY RESET {0}  •  WEEKLY RESET {1}"),
                 FormatDuration(daily), FormatDuration(weekly));
         }
 

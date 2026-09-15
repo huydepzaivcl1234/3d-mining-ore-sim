@@ -26493,9 +26493,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: LeanLocalization::Lean.Localization.LeanLocalization
   currentLanguage: Vietnamese
-  detectLanguage: 1
+  detectLanguage: 0
   defaultLanguage: English
-  saveLoad: 1
+  saveLoad: 0
   prefabs: []
 --- !u!114 &766663152
 MonoBehaviour:
@@ -78833,7 +78833,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 61ed5002bfd083e4b9062c82a5e5e1e0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MiningLanguageSwitcher
-  enableLanguageSwitching: 0
 --- !u!114 &5319940143687006137
 MonoBehaviour:
   m_ObjectHideFlags: 0

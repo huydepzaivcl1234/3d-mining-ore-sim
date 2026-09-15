@@ -149,9 +149,7 @@ namespace MiningSimulator.Ores
         {
             if (statusText != null)
             {
-                statusText.text = MiningLocalization.Text(
-                    "Right mouse: rotate • WASD: move",
-                    "Chuột phải: xoay • WASD: di chuyển");
+                statusText.text = MiningLocalization.Text("Right mouse: rotate • WASD: move");
             }
             RefreshMoneyText();
             RefreshOtherText();

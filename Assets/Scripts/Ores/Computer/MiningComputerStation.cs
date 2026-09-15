@@ -57,9 +57,8 @@ namespace MiningSimulator.Ores
         public bool CanUpgrade => purchased && !IsMaximumLevel && wallet != null &&
                                   wallet.CurrentMoney >= UpgradeCost;
         public string InteractionLabel => purchased
-            ? MiningLocalization.Text("View computer info", "Xem thông tin máy")
-            : string.Format(MiningLocalization.Text(
-                    "Buy computer ({0})", "Mua máy tính ({0})"),
+            ? MiningLocalization.Text("View computer info")
+            : string.Format(MiningLocalization.Text("Buy computer ({0})"),
                 MiningMoneyFormatter.Format(PurchaseCost));
         public bool CanInteract => isActiveAndEnabled && data != null;
         public event Action StateChanged;

@@ -71,10 +71,10 @@ namespace MiningSimulator.Ores
             return rewardType switch
             {
                 MiningShopWheelRewardType.Money => string.Format(
-                    MiningLocalization.Text("{0} GOLD", "{0} VÀNG"),
+                    MiningLocalization.Text("{0} GOLD"),
                     MiningMoneyFormatter.Format(CurrencyAmount)),
                 MiningShopWheelRewardType.Gems => string.Format(
-                    MiningLocalization.Text("{0} GEMS", "{0} GEM"),
+                    MiningLocalization.Text("{0} GEMS"),
                     MiningMoneyFormatter.Format(CurrencyAmount)),
                 _ => item != null ? $"{item.DisplayName} x{ItemAmount}" : string.Empty
             };

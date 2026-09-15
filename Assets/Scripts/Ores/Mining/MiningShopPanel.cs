@@ -74,7 +74,7 @@ namespace MiningSimulator.Ores
                 }
                 if (buyLabel != null)
                 {
-                    buyLabel.text = MiningLocalization.Text("BUY", "MUA");
+                    buyLabel.text = MiningLocalization.Text("BUY");
                 }
 
                 bool hasSpace = itemSystem != null &&
@@ -488,19 +488,18 @@ namespace MiningSimulator.Ores
         {
             MiningItemData gift = data != null ? data.RareGiftBox : null;
             float giftCost = data != null ? data.RareGiftBoxGemCost : 100f;
-            SetText(gameplayButtonLabel, "SHOP", "CỬA HÀNG");
-            SetText(titleLabel, "GEM SHOP", "CỬA HÀNG GEM");
-            SetText(wheelTitleLabel, "LUCKY WHEEL", "VÒNG QUAY MAY MẮN");
+            SetText(gameplayButtonLabel, "SHOP");
+            SetText(titleLabel, "GEM SHOP");
+            SetText(wheelTitleLabel, "LUCKY WHEEL");
             RefreshGemBalance();
             if (itemNameLabel != null) itemNameLabel.text = gift != null ? gift.DisplayName :
-                MiningLocalization.Text("RARE GIFT BOX", "HỘP QUÀ HIẾM");
+                MiningLocalization.Text("RARE GIFT BOX");
             if (itemDescriptionLabel != null) itemDescriptionLabel.text = gift != null
                 ? gift.Description
-                : MiningLocalization.Text("Spin the wheel for a rare reward.",
-                    "Quay vòng quay để nhận phần thưởng hiếm.");
+                : MiningLocalization.Text("Spin the wheel for a rare reward.");
             if (priceLabel != null)
                 priceLabel.text = $"{MiningMoneyFormatter.Format(giftCost)} GEM";
-            SetText(buyLabel, "BUY", "MUA");
+            SetText(buyLabel, "BUY");
             RefreshSpinLabels();
             RefreshIcon(gift);
             RefreshStatus();
@@ -533,11 +532,9 @@ namespace MiningSimulator.Ores
             int count = data != null ? data.MultiSpinCount : 10;
             float many = data != null ? data.MultiSpinGemCost : 100f;
             if (spinOnceLabel != null)
-                spinOnceLabel.text = string.Format(MiningLocalization.Text(
-                    "SPIN 1\n{0} GEM", "QUAY 1\n{0} GEM"), MiningMoneyFormatter.Format(one));
+                spinOnceLabel.text = string.Format(MiningLocalization.Text("SPIN 1\n{0} GEM"), MiningMoneyFormatter.Format(one));
             if (spinTenLabel != null)
-                spinTenLabel.text = string.Format(MiningLocalization.Text(
-                    "SPIN {0}\n{1} GEM", "QUAY {0}\n{1} GEM"), count,
+                spinTenLabel.text = string.Format(MiningLocalization.Text("SPIN {0}\n{1} GEM"), count,
                     MiningMoneyFormatter.Format(many));
         }
 
@@ -546,31 +543,21 @@ namespace MiningSimulator.Ores
             if (statusLabel == null) return;
             statusLabel.text = status switch
             {
-                ShopStatus.Purchased => string.Format(MiningLocalization.Text(
-                        "{0} added to Inventory!", "Đã thêm {0} vào Túi đồ!"),
+                ShopStatus.Purchased => string.Format(MiningLocalization.Text("{0} added to Inventory!"),
                     string.IsNullOrWhiteSpace(purchasedItemName)
-                        ? MiningLocalization.Text("Item", "Vật phẩm")
+                        ? MiningLocalization.Text("Item")
                         : purchasedItemName),
-                ShopStatus.NotEnoughGems => MiningLocalization.Text(
-                    "Not enough Gems.", "Không đủ Gem."),
-                ShopStatus.InventoryFull => MiningLocalization.Text(
-                    "Inventory is full.", "Túi đồ đã đầy."),
-                ShopStatus.MissingProduct => MiningLocalization.Text(
-                    "Shop product is not configured.", "Vật phẩm Shop chưa được thiết lập."),
-                ShopStatus.InvalidWheel => MiningLocalization.Text(
-                    "Add at least one valid Wheel Reward in MiningShopData.",
-                    "Hãy thêm ít nhất một phần thưởng hợp lệ trong MiningShopData."),
-                ShopStatus.Spinning => string.Format(MiningLocalization.Text(
-                    "Spinning {0}/{1}...", "Đang quay {0}/{1}..."),
+                ShopStatus.NotEnoughGems => MiningLocalization.Text("Not enough Gems."),
+                ShopStatus.InventoryFull => MiningLocalization.Text("Inventory is full."),
+                ShopStatus.MissingProduct => MiningLocalization.Text("Shop product is not configured."),
+                ShopStatus.InvalidWheel => MiningLocalization.Text("Add at least one valid Wheel Reward in MiningShopData."),
+                ShopStatus.Spinning => string.Format(MiningLocalization.Text("Spinning {0}/{1}..."),
                     Mathf.Min(currentSpinIndex + 1, rolledRewards.Count),
                     rolledRewards.Count),
                 ShopStatus.WheelComplete when refundedItemRewards > 0 => string.Format(
-                    MiningLocalization.Text(
-                        "Done. {0} item reward(s) could not fit and were refunded.",
-                        "Đã xong. {0} vật phẩm không đủ chỗ và đã được hoàn Gem."),
+                    MiningLocalization.Text("Done. {0} item reward(s) could not fit and were refunded."),
                     refundedItemRewards),
-                ShopStatus.WheelComplete => MiningLocalization.Text(
-                    "Rewards received!", "Đã nhận phần thưởng!"),
+                ShopStatus.WheelComplete => MiningLocalization.Text("Rewards received!"),
                 _ => string.Empty
             };
         }
@@ -580,8 +567,7 @@ namespace MiningSimulator.Ores
             if (wheelResultsLabel == null) return;
             if (!rewardsRevealed || rolledRewards.Count == 0)
             {
-                wheelResultsLabel.text = MiningLocalization.Text(
-                    "Your rewards appear here.", "Phần thưởng sẽ hiện ở đây.");
+                wheelResultsLabel.text = MiningLocalization.Text("Your rewards appear here.");
                 return;
             }
             System.Text.StringBuilder builder = new();
@@ -618,8 +604,7 @@ namespace MiningSimulator.Ores
         private void RefreshGemBalance()
         {
             if (gemBalanceLabel != null)
-                gemBalanceLabel.text = string.Format(MiningLocalization.Text(
-                    "GEMS: {0}", "GEM: {0}"), MiningMoneyFormatter.Format(gemCounter.Value));
+                gemBalanceLabel.text = string.Format(MiningLocalization.Text("GEMS: {0}"), MiningMoneyFormatter.Format(gemCounter.Value));
         }
 
         private void RemoveListeners()
@@ -656,9 +641,9 @@ namespace MiningSimulator.Ores
             status = ShopStatus.None;
         }
 
-        private static void SetText(TextMeshProUGUI label, string english, string vietnamese)
+        private static void SetText(TextMeshProUGUI label, string english)
         {
-            if (label != null) label.text = MiningLocalization.Text(english, vietnamese);
+            if (label != null) label.text = MiningLocalization.Text(english);
         }
     }
 }

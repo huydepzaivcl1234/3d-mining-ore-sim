@@ -153,59 +153,50 @@ namespace MiningSimulator.Ores
             }
 
             if (titleLabel != null)
-                titleLabel.text = MiningLocalization.Text("COIN COMPUTER", "MÁY TẠO TIỀN");
+                titleLabel.text = MiningLocalization.Text("COIN COMPUTER");
             if (levelLabel != null)
-                levelLabel.text = string.Format(MiningLocalization.Text(
-                    "Level: {0}/{1}", "Cấp: {0}/{1}"), station.CurrentLevel,
+                levelLabel.text = string.Format(MiningLocalization.Text("Level: {0}/{1}"), station.CurrentLevel,
                     station.MaximumLevel);
             if (incomeLabel != null)
-                incomeLabel.text = string.Format(MiningLocalization.Text(
-                    "Income: {0} every {1:0.##}s", "Thu nhập: {0} mỗi {1:0.##} giây"),
+                incomeLabel.text = string.Format(MiningLocalization.Text("Income: {0} every {1:0.##}s"),
                     MiningMoneyFormatter.Format(station.CurrentRewardPerTick),
                     station.SecondsPerTick);
 
             bool maximum = station.IsMaximumLevel;
             if (nextIncomeLabel != null)
                 nextIncomeLabel.text = maximum
-                    ? MiningLocalization.Text("Maximum income reached", "Đã đạt thu nhập tối đa")
-                    : string.Format(MiningLocalization.Text(
-                        "Next level: {0} every {1:0.##}s",
-                        "Cấp tiếp theo: {0} mỗi {1:0.##} giây"),
+                    ? MiningLocalization.Text("Maximum income reached")
+                    : string.Format(MiningLocalization.Text("Next level: {0} every {1:0.##}s"),
                         MiningMoneyFormatter.Format(station.NextRewardPerTick),
                         station.SecondsPerTick);
             if (costLabel != null)
                 costLabel.text = maximum
-                    ? MiningLocalization.Text("Upgrade cost: MAX", "Giá nâng cấp: TỐI ĐA")
-                    : string.Format(MiningLocalization.Text(
-                        "Upgrade cost: {0}", "Giá nâng cấp: {0}"),
+                    ? MiningLocalization.Text("Upgrade cost: MAX")
+                    : string.Format(MiningLocalization.Text("Upgrade cost: {0}"),
                         MiningMoneyFormatter.Format(station.UpgradeCost));
 
             if (upgradeButton != null)
                 upgradeButton.interactable = station.CanUpgrade;
             if (upgradeButtonLabel != null)
                 upgradeButtonLabel.text = maximum
-                    ? MiningLocalization.Text("MAX LEVEL", "CẤP TỐI ĐA")
-                    : string.Format(MiningLocalization.Text(
-                        "UPGRADE ({0})", "NÂNG CẤP ({0})"),
+                    ? MiningLocalization.Text("MAX LEVEL")
+                    : string.Format(MiningLocalization.Text("UPGRADE ({0})"),
                         MiningMoneyFormatter.Format(station.UpgradeCost));
             if (statusLabel != null)
             {
                 if (maximum)
                 {
-                    statusLabel.text = MiningLocalization.Text(
-                        "Machine fully upgraded", "Máy đã nâng cấp hoàn toàn");
+                    statusLabel.text = MiningLocalization.Text("Machine fully upgraded");
                 }
                 else if (station.CanUpgrade)
                 {
-                    statusLabel.text = MiningLocalization.Text(
-                        "Ready to upgrade", "Có thể nâng cấp");
+                    statusLabel.text = MiningLocalization.Text("Ready to upgrade");
                 }
                 else
                 {
                     float missing = Mathf.Max(0f, station.UpgradeCost -
                         (wallet != null ? wallet.CurrentMoney : 0f));
-                    statusLabel.text = string.Format(MiningLocalization.Text(
-                        "Need {0} more", "Cần thêm {0}"),
+                    statusLabel.text = string.Format(MiningLocalization.Text("Need {0} more"),
                         MiningMoneyFormatter.Format(missing));
                 }
             }

@@ -374,25 +374,25 @@ namespace MiningSimulator.Ores
             {
                 return;
             }
-            SetText(titleLabel, data.EnglishTitle, data.VietnameseTitle);
-            SetText(subtitleLabel, data.EnglishSubtitle, data.VietnameseSubtitle);
+            SetText(titleLabel, "MENU_TITLE", data.EnglishTitle);
+            SetText(subtitleLabel, "MENU_SUBTITLE", data.EnglishSubtitle);
             RefreshGemAmount();
-            SetText(playLabel, data.EnglishPlayLabel, data.VietnamesePlayLabel);
-            SetText(shopLabel, data.EnglishShopLabel, data.VietnameseShopLabel);
-            SetText(settingsLabel, data.EnglishSettingsLabel, data.VietnameseSettingsLabel);
-            SetText(exitLabel, data.EnglishExitLabel, data.VietnameseExitLabel);
-            SetText(settingsTitleLabel, data.EnglishSettingsLabel, data.VietnameseSettingsLabel);
-            SetText(masterLabel, "MASTER VOLUME", "ÂM LƯỢNG TỔNG");
-            SetText(musicLabel, "MUSIC", "NHẠC");
-            SetText(sfxLabel, "SOUND EFFECTS", "HIỆU ỨNG");
-            SetText(languageLabel, data.EnglishLanguageLabel, data.VietnameseLanguageLabel);
-            SetText(backLabel, data.EnglishBackLabel, data.VietnameseBackLabel);
-            SetText(exitConfirmationTitleLabel, data.EnglishExitConfirmationTitle,
-                data.VietnameseExitConfirmationTitle);
-            SetText(exitConfirmationMessageLabel, data.EnglishExitConfirmationMessage,
-                data.VietnameseExitConfirmationMessage);
-            SetText(confirmExitLabel, data.EnglishConfirmLabel, data.VietnameseConfirmLabel);
-            SetText(cancelExitLabel, data.EnglishCancelLabel, data.VietnameseCancelLabel);
+            SetText(playLabel, "MENU_PLAY_LABEL", data.EnglishPlayLabel);
+            SetText(shopLabel, "MENU_SHOP_LABEL", data.EnglishShopLabel);
+            SetText(settingsLabel, "MENU_SETTINGS_LABEL", data.EnglishSettingsLabel);
+            SetText(exitLabel, "MENU_EXIT_LABEL", data.EnglishExitLabel);
+            SetText(settingsTitleLabel, "MENU_SETTINGS_LABEL", data.EnglishSettingsLabel);
+            SetText(masterLabel, "MENU_MASTER_VOLUME", "MASTER VOLUME");
+            SetText(musicLabel, "MENU_MUSIC", "MUSIC");
+            SetText(sfxLabel, "MENU_SFX", "SOUND EFFECTS");
+            SetText(languageLabel, "MENU_LANGUAGE_LABEL", data.EnglishLanguageLabel);
+            SetText(backLabel, "MENU_BACK_LABEL", data.EnglishBackLabel);
+            SetText(exitConfirmationTitleLabel, "MENU_EXIT_CONFIRMATION_TITLE",
+                data.EnglishExitConfirmationTitle);
+            SetText(exitConfirmationMessageLabel, "MENU_EXIT_CONFIRMATION_MESSAGE",
+                data.EnglishExitConfirmationMessage);
+            SetText(confirmExitLabel, "MENU_CONFIRM_LABEL", data.EnglishConfirmLabel);
+            SetText(cancelExitLabel, "MENU_CANCEL_LABEL", data.EnglishCancelLabel);
         }
 
         private void AddListeners()
@@ -465,8 +465,8 @@ namespace MiningSimulator.Ores
                 return;
             }
 
-            string format = MiningLocalization.Text(data.EnglishGemAmountFormat,
-                data.VietnameseGemAmountFormat);
+            string format = MiningLocalization.TextKey("MENU_GEM_AMOUNT_FORMAT",
+                data.EnglishGemAmountFormat);
             gemAmountLabel.text = string.Format(format,
                 MiningMoneyFormatter.Format(gemCounter.Value));
         }
@@ -529,11 +529,11 @@ namespace MiningSimulator.Ores
             ownsGameplayPause = false;
         }
 
-        private static void SetText(TextMeshProUGUI label, string english, string vietnamese)
+        private static void SetText(TextMeshProUGUI label, string key, string english)
         {
             if (label != null)
             {
-                label.text = MiningLocalization.Text(english, vietnamese);
+                label.text = MiningLocalization.TextKey(key, english);
             }
         }
 
