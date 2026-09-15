@@ -1,5 +1,8 @@
 MINING AREA = KHU ĐÀO QUẶNG
 UPGRADES = NÂNG CẤP
+EXPAND = MỞ RỘNG
+Pickaxes & Gear | Backpack = Cúp Đào & Công Cụ | Balo Khai Mỏ
+OPEN PANEL = MỞ BẢNG
 INVENTORY = TÚI ĐỒ
 MINER PROGRESS = TIẾN TRÌNH THỢ MỎ
 BACK = QUAY LẠI
