@@ -61,7 +61,7 @@ namespace MiningSimulator.Ores
                 return;
             }
 
-            string format = MiningLocalization.Text(englishFormat, vietnameseFormat);
+            string format = MiningLocalization.TextKey("HUD_GEM_FORMAT", "GEMS: {0}");
             gemText.text = string.Format(format, MiningMoneyFormatter.Format(gemCounter.Value));
         }
     }

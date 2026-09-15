@@ -69,7 +69,7 @@ namespace MiningSimulator.Ores
             get
             {
                 EnsureInitialized();
-                return currentLanguageName;
+                return GetEffectiveLanguageName();
             }
         }
 
@@ -105,7 +105,7 @@ namespace MiningSimulator.Ores
         public static string Text(string english, string vietnamese)
         {
             EnsureInitialized();
-            string fallback = string.Equals(currentLanguageName, VietnameseLanguageName,
+            string fallback = string.Equals(GetEffectiveLanguageName(), VietnameseLanguageName,
                 StringComparison.OrdinalIgnoreCase)
                 ? vietnamese
                 : english;
@@ -135,6 +135,10 @@ namespace MiningSimulator.Ores
             if (string.Equals(currentLanguageName, languageName,
                 StringComparison.OrdinalIgnoreCase))
             {
+                // Lean may have initialized after this class. Always re-apply the
+                // requested language so every LeanLocalization instance agrees.
+                ApplyLeanLanguage();
+                LanguageChanged?.Invoke();
                 return;
             }
 
@@ -143,6 +147,14 @@ namespace MiningSimulator.Ores
             PlayerPrefs.SetString(LanguageNameSaveKey, currentLanguageName);
             PlayerPrefs.SetInt(LanguageSaveKey, (int)currentLanguage);
             PlayerPrefs.Save();
+            ApplyLeanLanguage();
+            LanguageChanged?.Invoke();
+        }
+
+        /// <summary>Applies the saved choice after LeanLocalization has registered its sources.</summary>
+        public static void InitializeRuntime()
+        {
+            EnsureInitialized();
             ApplyLeanLanguage();
             LanguageChanged?.Invoke();
         }
@@ -251,7 +263,6 @@ namespace MiningSimulator.Ores
             currentLanguageName = savedName.Trim();
             currentLanguage = ToLegacyLanguage(currentLanguageName);
             initialized = true;
-            ApplyLeanLanguage();
         }
 
         private static void ApplyLeanLanguage()
@@ -270,6 +281,14 @@ namespace MiningSimulator.Ores
             {
                 applyingLeanLanguage = false;
             }
+        }
+
+        private static string GetEffectiveLanguageName()
+        {
+            string leanLanguage = LeanLocalization.GetFirstCurrentLanguage();
+            return string.IsNullOrWhiteSpace(leanLanguage)
+                ? currentLanguageName
+                : leanLanguage;
         }
 
         private static string TranslateStaticText(string value)
@@ -324,7 +343,13 @@ namespace MiningSimulator.Ores
                 !string.Equals(currentLanguageName, leanLanguage,
                     StringComparison.OrdinalIgnoreCase))
             {
-                ApplyLeanLanguage();
+                // A Lean language changed outside the mining menu is still a valid
+                // change. Mirror it into the one persisted mining state.
+                currentLanguageName = leanLanguage;
+                currentLanguage = ToLegacyLanguage(leanLanguage);
+                PlayerPrefs.SetString(LanguageNameSaveKey, currentLanguageName);
+                PlayerPrefs.SetInt(LanguageSaveKey, (int)currentLanguage);
+                PlayerPrefs.Save();
             }
             // Lean sources may register after the menu; refresh script-owned labels then.
             LanguageChanged?.Invoke();
