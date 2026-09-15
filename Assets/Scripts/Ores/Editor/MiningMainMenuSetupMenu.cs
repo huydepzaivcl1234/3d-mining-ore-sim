@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using System.IO;
 using TMPro;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -16,6 +17,142 @@ namespace MiningSimulator.Ores.Editor
         private const string DataPath = DataFolder + "/MiningMainMenuData.asset";
         // Keep the existing imported asset path so its GUID and user assignments remain intact.
         private const string GemIconPath = "Assets/Ores/Icons/GemCurrencyIcon.png";
+        private const string ButtonPanelSpritePath = "Assets/Generated/UI/MenuButtonPanel.png";
+        private static Sprite cachedButtonPanelSprite;
+
+        /// <summary>
+        /// One neutral gray 9-slice sprite reused by every menu button and tinted per-button
+        /// via the existing Image.color — so Play stays green, Shop purple, Exit red etc.,
+        /// but each now reads as a brushed-steel panel (gradient body, dark bevel border,
+        /// bright bottom accent strip, corner rivets) instead of a flat rounded rectangle.
+        /// Generated once and cached on disk; re-running this menu reuses the existing file.
+        /// </summary>
+        private static Sprite GetOrCreateButtonPanelSprite()
+        {
+            if (cachedButtonPanelSprite != null)
+            {
+                return cachedButtonPanelSprite;
+            }
+
+            Sprite existing = AssetDatabase.LoadAssetAtPath<Sprite>(ButtonPanelSpritePath);
+            if (existing != null)
+            {
+                cachedButtonPanelSprite = existing;
+                return existing;
+            }
+
+            const int width = 128;
+            const int height = 64;
+            const float radius = 14f;
+            const float borderThickness = 3f;
+            const float stripHeight = 5f;
+            var pixels = new Color32[width * height];
+
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    // Texture Y is bottom-up; keep "top"/"bottom" matching what you see on screen.
+                    float px = x + 0.5f;
+                    float py = y + 0.5f;
+                    float cx = Mathf.Clamp(px, radius, width - radius);
+                    float cy = Mathf.Clamp(py, radius, height - radius);
+                    float dist = Vector2.Distance(new Vector2(px, py), new Vector2(cx, cy));
+                    float shapeAlpha = Mathf.Clamp01(radius + 0.75f - dist);
+                    Color pixel;
+
+                    bool insideBody = dist <= radius - borderThickness &&
+                        px >= borderThickness && px <= width - borderThickness &&
+                        py >= borderThickness;
+                    bool insideStrip = insideBody && py <= borderThickness + stripHeight;
+
+                    if (insideStrip)
+                    {
+                        pixel = new Color(0.98f, 0.98f, 0.98f, 1f); // bright -> vivid accent once tinted
+                    }
+                    else if (insideBody)
+                    {
+                        float t = Mathf.Clamp01((py - borderThickness) / (height - borderThickness * 2f));
+                        float shade = Mathf.Lerp(0.92f, 0.58f, t); // light top -> darker bottom
+                        pixel = new Color(shade, shade, shade, 1f);
+                    }
+                    else
+                    {
+                        pixel = new Color(0.16f, 0.16f, 0.18f, 1f); // dark bevel border
+                    }
+
+                    pixels[y * width + x] = (Color32)new Color(pixel.r, pixel.g, pixel.b, shapeAlpha);
+                }
+            }
+
+            // Small corner rivets, dark, stamped after the base fill.
+            DrawRivet(pixels, width, height, 11, height - 11);
+            DrawRivet(pixels, width, height, width - 11, height - 11);
+            DrawRivet(pixels, width, height, 11, 11);
+            DrawRivet(pixels, width, height, width - 11, 11);
+
+            var texture = new Texture2D(width, height, TextureFormat.RGBA32, false)
+            {
+                filterMode = FilterMode.Bilinear,
+                wrapMode = TextureWrapMode.Clamp
+            };
+            texture.SetPixels32(pixels);
+            texture.Apply();
+
+            string folder = Path.GetDirectoryName(ButtonPanelSpritePath);
+            if (!string.IsNullOrEmpty(folder) && !AssetDatabase.IsValidFolder(folder))
+            {
+                Directory.CreateDirectory(folder);
+            }
+            File.WriteAllBytes(ButtonPanelSpritePath, texture.EncodeToPNG());
+            AssetDatabase.ImportAsset(ButtonPanelSpritePath, ImportAssetOptions.ForceUpdate);
+
+            TextureImporter importer = AssetImporter.GetAtPath(ButtonPanelSpritePath) as TextureImporter;
+            if (importer != null)
+            {
+                importer.textureType = TextureImporterType.Sprite;
+                importer.spriteImportMode = SpriteImportMode.Single;
+                importer.spritePixelsPerUnit = 100f;
+                importer.filterMode = FilterMode.Bilinear;
+                importer.mipmapEnabled = false;
+                importer.alphaIsTransparency = true;
+                importer.spriteBorder = new Vector4(radius, borderThickness + stripHeight,
+                    radius, borderThickness);
+                EditorUtility.SetDirty(importer);
+                importer.SaveAndReimport();
+            }
+
+            cachedButtonPanelSprite = AssetDatabase.LoadAssetAtPath<Sprite>(ButtonPanelSpritePath);
+            return cachedButtonPanelSprite;
+        }
+
+        private static void DrawRivet(Color32[] pixels, int width, int height, float cx, float cy)
+        {
+            const float rivetRadius = 2.3f;
+            for (int y = Mathf.Max(0, Mathf.FloorToInt(cy - rivetRadius - 1));
+                 y <= Mathf.Min(height - 1, Mathf.CeilToInt(cy + rivetRadius + 1)); y++)
+            {
+                for (int x = Mathf.Max(0, Mathf.FloorToInt(cx - rivetRadius - 1));
+                     x <= Mathf.Min(width - 1, Mathf.CeilToInt(cx + rivetRadius + 1)); x++)
+                {
+                    float dist = Vector2.Distance(new Vector2(x + 0.5f, y + 0.5f), new Vector2(cx, cy));
+                    if (dist > rivetRadius + 0.5f)
+                    {
+                        continue;
+                    }
+                    int index = y * width + x;
+                    float existingAlpha = pixels[index].a / 255f;
+                    if (existingAlpha <= 0f)
+                    {
+                        continue; // don't draw rivets outside the panel's rounded silhouette
+                    }
+                    float rivetAlpha = Mathf.Clamp01(rivetRadius + 0.5f - dist);
+                    Color32 blended = Color32.Lerp(pixels[index],
+                        new Color32(24, 26, 30, pixels[index].a), rivetAlpha);
+                    pixels[index] = blended;
+                }
+            }
+        }
 
         [MenuItem("Mining Simulator/Setup/Create Or Update Main Menu")]
         public static void CreateOrUpdateMainMenu()
@@ -366,6 +503,19 @@ namespace MiningSimulator.Ores.Editor
             float fontSize)
         {
             GameObject buttonObject = CreateImage(parent, name, color);
+            Image image = buttonObject.GetComponent<Image>();
+            Sprite panelSprite = GetOrCreateButtonPanelSprite();
+            if (panelSprite != null)
+            {
+                image.sprite = panelSprite;
+                image.type = Image.Type.Sliced;
+            }
+
+            Shadow shadow = buttonObject.AddComponent<Shadow>();
+            shadow.effectColor = new Color(0f, 0f, 0f, 0.45f);
+            shadow.effectDistance = new Vector2(0f, -3f);
+            shadow.useGraphicAlpha = true;
+
             RectTransform rect = buttonObject.GetComponent<RectTransform>();
             Center(rect, position, size);
             Button button = buttonObject.AddComponent<Button>();
