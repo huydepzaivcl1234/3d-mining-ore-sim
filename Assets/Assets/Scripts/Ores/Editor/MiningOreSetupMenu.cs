@@ -1424,11 +1424,14 @@ namespace MiningSimulator.Editor
                 openLabel.text = "NÂNG CẤP";
                 openButtonTransform = openButton.transform;
             }
-            StyleButton(openButtonTransform, uiData.NavigationButtonColor, uiData.TitleTextColor,
-                uiData.OutlineColor, uiData.OutlineThickness, uiData);
-            EnsureHudIcon(openButtonTransform, "Icon", uiData.OpenUpgradeIconPosition,
-                uiData.HudIconSize, uiData.OpenUpgradeIconSprite, uiData.OpenUpgradeIconFallback,
-                uiData.UpgradeIconColor, uiData);
+            if (openButtonTransform.GetComponent<JuicyOpenPanelButton>() == null)
+            {
+                StyleButton(openButtonTransform, uiData.NavigationButtonColor, uiData.TitleTextColor,
+                    uiData.OutlineColor, uiData.OutlineThickness, uiData);
+                EnsureHudIcon(openButtonTransform, "Icon", uiData.OpenUpgradeIconPosition,
+                    uiData.HudIconSize, uiData.OpenUpgradeIconSprite, uiData.OpenUpgradeIconFallback,
+                    uiData.UpgradeIconColor, uiData);
+            }
 
             Transform upgradePanelTransform = canvas.Find("Upgrade Panel");
             if (upgradePanelTransform == null)
