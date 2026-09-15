@@ -62,7 +62,7 @@ MonoBehaviour:
     englishTitle: A New Beginning
     vietnameseTitle: "Kh\u1EDFi \u0110\u1EA7u M\u1EDBi"
     englishDescription: Complete your first Rebirth.
-    vietnameseDescription: "Ho\xE0n th\xE0nh Rebirth l\u1EA7n \u0111\u1EA7u ti\xEAn."
+    vietnameseDescription: "Ho\xE0n th\xE0nh T\xE1i sinh l\u1EA7n \u0111\u1EA7u ti\xEAn."
     trigger: 3
     oreKind: 0
     targetAmount: 1

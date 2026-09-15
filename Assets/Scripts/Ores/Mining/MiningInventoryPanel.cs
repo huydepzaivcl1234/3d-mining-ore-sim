@@ -28,6 +28,7 @@ namespace MiningSimulator.Ores
 
         private readonly SlotView[] slotViews =
             new SlotView[MiningItemDatabase.InventoryCapacity];
+        private TextMeshProUGUI openButtonLabel;
         private MiningGiftBoxWheelPanel giftBoxWheelPanel;
 
         public event Action PanelOpened;
@@ -42,6 +43,9 @@ namespace MiningSimulator.Ores
             panelCoordinator?.RegisterInventoryUi(
                 openButton != null ? openButton.GetComponent<RectTransform>() : null,
                 inventoryPanel != null ? inventoryPanel.GetComponent<RectTransform>() : null);
+            openButtonLabel = openButton != null
+                ? openButton.GetComponentInChildren<TextMeshProUGUI>(true)
+                : null;
             CacheSlotViews();
             EnsureGiftBoxWheelPanel();
             inventoryPanel?.SetActive(false);
@@ -157,10 +161,15 @@ namespace MiningSimulator.Ores
 
         private void Refresh()
         {
+            if (openButtonLabel != null)
+            {
+                openButtonLabel.text = MiningLocalization.Text("Inventory", "TÚI ĐỒ");
+            }
             if (titleLabel != null)
             {
                 int occupied = itemSystem != null ? itemSystem.OccupiedSlotCount : 0;
-                titleLabel.text = string.Format(MiningLocalization.Text("INVENTORY  •  {0}/{1} SLOTS"),
+                titleLabel.text = string.Format(MiningLocalization.Text(
+                        "INVENTORY  •  {0}/{1} SLOTS", "TÚI ĐỒ  •  {0}/{1} Ô"),
                     occupied, MiningItemDatabase.InventoryCapacity);
             }
 
@@ -194,7 +203,7 @@ namespace MiningSimulator.Ores
                 {
                     view.nameLabel.text = occupied
                         ? $"{slot.Item.DisplayName}\n{slot.Item.GetInventorySummary()}"
-                        : MiningLocalization.Text("EMPTY");
+                        : MiningLocalization.Text("EMPTY", "TRỐNG");
                 }
                 if (view.countLabel != null)
                 {

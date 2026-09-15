@@ -2224,7 +2224,7 @@ namespace MiningSimulator.Editor
             TextMeshProUGUI boostLabel = EnsureText(hud, "Boost");
             ConfigureTopLeftRect(boostLabel.transform, uiData.RebirthBoostPosition,
                 uiData.RebirthBoostSize);
-            boostLabel.text = "REBIRTH 0  •  x1.00 TIỀN";
+            boostLabel.text = "TÁI SINH 0  •  x1.00 TIỀN";
             boostLabel.fontSize = uiData.RebirthInfoFontSize;
             boostLabel.color = uiData.CardTextColor;
             boostLabel.alignment = TextAlignmentOptions.Center;
@@ -2265,7 +2265,7 @@ namespace MiningSimulator.Editor
             TextMeshProUGUI warning = EnsureText(modal, "Warning");
             ConfigureTopLeftRect(warning.transform, uiData.RebirthWarningPosition,
                 uiData.RebirthWarningSize);
-            warning.text = "CẢNH BÁO!\n\nRebirth sẽ xóa tiền, mọi nâng cấp, cấp thợ mỏ và toàn bộ NPC trên sân.";
+            warning.text = "CẢNH BÁO!\n\nTái sinh sẽ xóa tiền, mọi nâng cấp, cấp thợ mỏ và toàn bộ NPC trên sân.";
             warning.fontSize = uiData.RebirthWarningFontSize;
             warning.color = uiData.CardTextColor;
             warning.alignment = TextAlignmentOptions.Center;
@@ -2274,7 +2274,7 @@ namespace MiningSimulator.Editor
             TextMeshProUGUI nextBoost = EnsureText(modal, "Next Boost");
             ConfigureTopLeftRect(nextBoost.transform, uiData.RebirthNextBoostPosition,
                 uiData.RebirthNextBoostSize);
-            nextBoost.text = "Boost vĩnh viễn sau Rebirth: x1.10 tiền";
+            nextBoost.text = "Tăng vĩnh viễn sau Tái sinh: x1.10 tiền";
             nextBoost.fontSize = uiData.RebirthModalTextFontSize;
             nextBoost.color = uiData.CardTextColor;
             nextBoost.alignment = TextAlignmentOptions.Center;

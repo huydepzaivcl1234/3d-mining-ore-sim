@@ -14,7 +14,7 @@ namespace MiningSimulator.Ores
         private const string LegacyWarning =
             "CẢNH BÁO!\n\nBạn sắp Rebirth! Toàn bộ tiền và mọi nâng cấp hiện tại sẽ bị xóa.";
         private const string CompleteWarning =
-            "CẢNH BÁO!\n\nRebirth sẽ xóa tiền, mọi nâng cấp, cấp thợ mỏ và toàn bộ NPC trên sân.";
+            "CẢNH BÁO!\n\nTái sinh sẽ xóa tiền, mọi nâng cấp, cấp thợ mỏ và toàn bộ NPC trên sân.";
         private const string CompleteWarningEnglish =
             "WARNING!\n\nRebirth resets money, every upgrade, miner level, and all NPCs on the field.";
 
@@ -33,13 +33,19 @@ namespace MiningSimulator.Ores
         [SerializeField] private MiningUiData uiData;
         [SerializeField] private Image rebirthFlashImage;
 
+        private TextMeshProUGUI openButtonLabel;
+        private TextMeshProUGUI rebirthHudTitleLabel;
+        private TextMeshProUGUI confirmationTitleLabel;
+        private TextMeshProUGUI confirmButtonLabel;
+        private TextMeshProUGUI cancelButtonLabel;
+
         [Header("Editable Text")]
         [SerializeField] private string progressFormat = "{0:N0} / {1:N0} TIỀN";
-        [SerializeField] private string boostFormat = "REBIRTH {0}  •  x{1:0.00} TIỀN & XP";
+        [SerializeField] private string boostFormat = "TÁI SINH {0}  •  x{1:0.00} TIỀN & XP";
         [SerializeField]
         private string warningText =
-            "CẢNH BÁO!\n\nRebirth sẽ xóa tiền, mọi nâng cấp, cấp thợ mỏ và toàn bộ NPC trên sân.";
-        [SerializeField] private string nextBoostFormat = "Boost vĩnh viễn sau Rebirth: x{0:0.00} tiền & XP";
+            "CẢNH BÁO!\n\nTái sinh sẽ xóa tiền, mọi nâng cấp, cấp thợ mỏ và toàn bộ NPC trên sân.";
+        [SerializeField] private string nextBoostFormat = "Tăng vĩnh viễn sau Tái sinh: x{0:0.00} tiền & XP";
 
         private bool barInitialized;
         private int initializedRequirement;
@@ -56,6 +62,15 @@ namespace MiningSimulator.Ores
                 uiData = panelCoordinator.UiData;
             }
             EnsureFlashImage();
+            openButtonLabel = FindButtonLabel(openButton);
+            rebirthHudTitleLabel = openButton != null && openButton.transform.parent != null
+                ? openButton.transform.parent.Find("Header/Title")?.GetComponent<TextMeshProUGUI>()
+                : null;
+            confirmationTitleLabel = confirmationPanel != null
+                ? confirmationPanel.transform.Find("Header/Title")?.GetComponent<TextMeshProUGUI>()
+                : null;
+            confirmButtonLabel = FindButtonLabel(confirmButton);
+            cancelButtonLabel = FindButtonLabel(cancelButton);
             SetFlashAlpha(0f, false);
             confirmationPanel?.SetActive(false);
         }
@@ -279,6 +294,27 @@ namespace MiningSimulator.Ores
             float money = wallet != null ? wallet.CurrentMoney : 0f;
             int requirement = rebirthSystem != null ? rebirthSystem.CurrentRequirement : 1;
 
+            if (openButtonLabel != null)
+            {
+                openButtonLabel.text = MiningLocalization.Text("REBIRTH", "TÁI SINH");
+            }
+            if (rebirthHudTitleLabel != null)
+            {
+                rebirthHudTitleLabel.text = MiningLocalization.Text("REBIRTH", "TÁI SINH");
+            }
+            if (confirmationTitleLabel != null)
+            {
+                confirmationTitleLabel.text = MiningLocalization.Text("REBIRTH!", "TÁI SINH!");
+            }
+            if (confirmButtonLabel != null)
+            {
+                confirmButtonLabel.text = MiningLocalization.Text("REBIRTH!", "TÁI SINH!");
+            }
+            if (cancelButtonLabel != null)
+            {
+                cancelButtonLabel.text = MiningLocalization.Text("CANCEL", "ĐỂ SAU");
+            }
+
             if (progressLabel != null)
             {
                 progressLabel.text = string.Format(MiningLocalization.Text(
@@ -317,6 +353,13 @@ namespace MiningSimulator.Ores
         private void HandleLanguageChanged()
         {
             Refresh();
+        }
+
+        private static TextMeshProUGUI FindButtonLabel(Button button)
+        {
+            return button != null
+                ? button.GetComponentInChildren<TextMeshProUGUI>(true)
+                : null;
         }
 
         private void RefreshProgressBar(float current, int maximum)

@@ -39,7 +39,7 @@ MonoBehaviour:
     objective: 2
     targetAmount: 1
     englishName: Rebirth once this week
-    vietnameseName: "Rebirth 1 l\u1EA7n trong tu\u1EA7n"
+    vietnameseName: "T\u00E1i sinh 1 l\u1EA7n trong tu\u1EA7n"
     rewardType: 0
     moneyReward: 5000
     randomMoneyMinimum: 0
