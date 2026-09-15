@@ -277,6 +277,7 @@ namespace MiningSimulator.Ores
 
         private void ToggleLanguage()
         {
+            if (!MiningLocalization.LanguageSwitchingEnabled) return;
             MiningLocalization.ToggleLanguage();
         }
 
@@ -373,6 +374,10 @@ namespace MiningSimulator.Ores
             if (data == null)
             {
                 return;
+            }
+            if (languageButton != null)
+            {
+                languageButton.interactable = MiningLocalization.LanguageSwitchingEnabled;
             }
             SetText(titleLabel, data.EnglishTitle, data.VietnameseTitle);
             SetText(subtitleLabel, data.EnglishSubtitle, data.VietnameseSubtitle);

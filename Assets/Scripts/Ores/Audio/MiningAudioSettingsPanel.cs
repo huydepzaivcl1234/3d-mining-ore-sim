@@ -397,6 +397,7 @@ namespace MiningSimulator.Ores
 
         private void HandleLanguageClicked()
         {
+            if (!MiningLocalization.LanguageSwitchingEnabled) return;
             MiningLocalization.ToggleLanguage();
         }
 
@@ -414,6 +415,10 @@ namespace MiningSimulator.Ores
 
         private void ApplyLanguage()
         {
+            if (languageButton != null)
+            {
+                languageButton.interactable = MiningLocalization.LanguageSwitchingEnabled;
+            }
             MiningLocalization.ApplyToHierarchy(transform.root);
             SetLocalizedChildText(openButton != null ? openButton.transform : null, "Label",
                 "SETTINGS", "CÀI ĐẶT");

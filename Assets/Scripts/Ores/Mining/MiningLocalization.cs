@@ -48,6 +48,9 @@ namespace MiningSimulator.Ores
         private static string currentLanguageName;
         private static bool initialized;
 
+        // Temporary bridge while bilingual call sites are replaced with Lean phrase keys.
+        public static bool LanguageSwitchingEnabled { get; set; }
+
         public static event Action LanguageChanged;
 
         public static MiningLanguage CurrentLanguage
@@ -78,6 +81,7 @@ namespace MiningSimulator.Ores
             currentLanguage = MiningLanguage.English;
             currentLanguageName = EnglishLanguageName;
             initialized = false;
+            LanguageSwitchingEnabled = false;
             LanguageChanged = null;
             LeanLocalization.OnLocalizationChanged -= HandleLeanLocalizationChanged;
             LeanLocalization.OnLocalizationChanged += HandleLeanLocalizationChanged;
@@ -96,6 +100,7 @@ namespace MiningSimulator.Ores
 
         public static void ToggleLanguage()
         {
+            if (!LanguageSwitchingEnabled) return;
             SetLanguage(IsEnglish ? MiningLanguage.Vietnamese : MiningLanguage.English);
         }
 
@@ -109,6 +114,7 @@ namespace MiningSimulator.Ores
         /// <summary>Changes language by Lean language name so additional languages can be added later.</summary>
         public static void SetLanguage(string languageName)
         {
+            if (!LanguageSwitchingEnabled) return;
             EnsureInitialized();
             languageName = string.IsNullOrWhiteSpace(languageName)
                 ? EnglishLanguageName
@@ -217,6 +223,16 @@ namespace MiningSimulator.Ores
                 return;
             }
 
+            if (!LanguageSwitchingEnabled)
+            {
+                currentLanguageName = EnglishLanguageName;
+                currentLanguage = MiningLanguage.English;
+                initialized = true;
+                LeanLocalization.SetCurrentLanguageAll(EnglishLanguageName);
+                LanguageChanged?.Invoke();
+                return;
+            }
+
             string savedName = PlayerPrefs.GetString(LanguageNameSaveKey, string.Empty);
             if (string.IsNullOrWhiteSpace(savedName))
             {
@@ -279,6 +295,17 @@ namespace MiningSimulator.Ores
         {
             if (!initialized)
             {
+                return;
+            }
+
+            if (!LanguageSwitchingEnabled)
+            {
+                if (!string.Equals(LeanLocalization.GetFirstCurrentLanguage(), EnglishLanguageName,
+                    StringComparison.OrdinalIgnoreCase))
+                {
+                    LeanLocalization.SetCurrentLanguageAll(EnglishLanguageName);
+                    LanguageChanged?.Invoke();
+                }
                 return;
             }
 
