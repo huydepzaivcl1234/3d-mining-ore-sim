@@ -25,6 +25,7 @@ namespace MiningSimulator.Ores
         [Header("Play transition")]
         [SerializeField] private Image transitionBar;
         [SerializeField] private Image transitionFlash;
+        [SerializeField] private MiningCinematicTransition cinematicTransition;
 
         [Header("Exit confirmation")]
         [SerializeField] private GameObject exitConfirmation;
@@ -165,6 +166,10 @@ namespace MiningSimulator.Ores
             closing = true;
             SetMainButtonsInteractable(false);
             StopTransition(ref transition);
+            if (cinematicTransition != null && cinematicTransition.TryPlay(this))
+            {
+                return;
+            }
             transitionBar.gameObject.SetActive(true);
             transitionFlash.gameObject.SetActive(true);
             SetGraphicAlpha(transitionBar, 0f);
@@ -302,6 +307,12 @@ namespace MiningSimulator.Ores
         {
             ReleaseGameplayPause();
             gameObject.SetActive(false);
+        }
+
+        /// <summary>Completion hook owned by the presentation-only cinematic component.</summary>
+        internal void CompleteCinematicPlay()
+        {
+            FinishPlay();
         }
 
         private void FinishCancelExit()
@@ -484,6 +495,7 @@ namespace MiningSimulator.Ores
 
         private void ResetPlayTransition()
         {
+            cinematicTransition?.ResetImmediate();
             card.anchoredPosition = cardHomePosition;
             card.localScale = Vector3.one;
             transitionBar.color = data.TransitionBarColor;

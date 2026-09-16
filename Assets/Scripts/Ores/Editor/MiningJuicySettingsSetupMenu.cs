@@ -8,8 +8,8 @@ using UnityEngine;
 namespace MiningSimulator.Ores.Editor
 {
     /// <summary>
-    /// One-shot authoring tool for the gameplay Settings panel. Runtime code keeps ownership of
-    /// volume, language, reset-data and return-to-menu behavior; this tool only authors visuals.
+    /// One-shot authoring tool for both Settings pages. Runtime code keeps ownership of volume,
+    /// language, reset-data and navigation behavior; this tool only authors visuals.
     /// </summary>
     public static class MiningJuicySettingsSetupMenu
     {
@@ -113,6 +113,7 @@ namespace MiningSimulator.Ores.Editor
             Set(presentationFields, "bottomCloseLabel", bottomCloseLabel);
             presentationFields.ApplyModifiedProperties();
 
+            bool mainMenuBuilt = BuildMainMenuSettings();
             header.SetAsLastSibling();
             closeButton.transform.SetAsLastSibling();
             EditorUtility.SetDirty(controller);
@@ -120,7 +121,107 @@ namespace MiningSimulator.Ores.Editor
             EditorSceneManager.MarkSceneDirty(panelObject.scene);
             Selection.activeGameObject = panelObject;
             EditorGUIUtility.PingObject(panelObject);
-            Debug.Log("Juicy gameplay Settings built. Existing volume, localization, reset-data and Back To Main Menu behavior remain wired. Edit the authored RectTransforms freely and save the scene.", panelObject);
+            Debug.Log(mainMenuBuilt
+                ? "Juicy Settings built for both Main Menu and gameplay. Main Menu Back, gameplay Back To Main Menu, volume, localization and reset-data behavior remain wired. Edit the authored RectTransforms freely and save the scene."
+                : "Juicy gameplay Settings built. Main Menu Settings was not found or its wiring is incomplete. Gameplay volume, localization, reset-data and Back To Main Menu behavior remain wired.",
+                panelObject);
+        }
+
+        private static bool BuildMainMenuSettings()
+        {
+            MiningMainMenu mainMenu = Object.FindFirstObjectByType<MiningMainMenu>(
+                FindObjectsInactive.Include);
+            if (mainMenu == null)
+            {
+                return false;
+            }
+
+            SerializedObject fields = new(mainMenu);
+            GameObject viewObject = Reference<GameObject>(fields, "settingsView");
+            RectTransform view = viewObject != null ? viewObject.transform as RectTransform : null;
+            TextMeshProUGUI title = Reference<TextMeshProUGUI>(fields, "settingsTitleLabel");
+            TextMeshProUGUI masterLabel = Reference<TextMeshProUGUI>(fields, "masterLabel");
+            TextMeshProUGUI musicLabel = Reference<TextMeshProUGUI>(fields, "musicLabel");
+            TextMeshProUGUI sfxLabel = Reference<TextMeshProUGUI>(fields, "sfxLabel");
+            TextMeshProUGUI masterValue = Reference<TextMeshProUGUI>(fields, "masterValueLabel");
+            TextMeshProUGUI musicValue = Reference<TextMeshProUGUI>(fields, "musicValueLabel");
+            TextMeshProUGUI sfxValue = Reference<TextMeshProUGUI>(fields, "sfxValueLabel");
+            UnityEngine.UI.Slider master = Reference<UnityEngine.UI.Slider>(fields, "masterSlider");
+            UnityEngine.UI.Slider music = Reference<UnityEngine.UI.Slider>(fields, "musicSlider");
+            UnityEngine.UI.Slider sfx = Reference<UnityEngine.UI.Slider>(fields, "sfxSlider");
+            UnityEngine.UI.Button languageButton = Reference<UnityEngine.UI.Button>(fields, "languageButton");
+            TextMeshProUGUI languageLabel = Reference<TextMeshProUGUI>(fields, "languageLabel");
+            UnityEngine.UI.Button backButton = Reference<UnityEngine.UI.Button>(fields, "backButton");
+            TextMeshProUGUI backLabel = Reference<TextMeshProUGUI>(fields, "backLabel");
+
+            if (view == null || title == null || masterLabel == null || musicLabel == null ||
+                sfxLabel == null || masterValue == null || musicValue == null || sfxValue == null ||
+                master == null || music == null || sfx == null || languageButton == null ||
+                languageLabel == null || backButton == null || backLabel == null)
+            {
+                Debug.LogWarning("Main Menu Settings wiring is incomplete. Run 'Create Or Update Main Menu' first. Gameplay Settings was still built.", mainMenu);
+                return false;
+            }
+
+            viewObject.SetActive(true);
+            StylePanel(view);
+
+            RectTransform header = Child(view, "Settings_Header", new Vector2(600f, 66f),
+                new Vector2(0f, 276f));
+            Style(header, Hex("#B96838"), Hex("#3D1808"), roundedSprite);
+            Border(header.gameObject, Hex("#271004"), new Vector2(2f, -2f));
+            RectTransform medal = Child(header, "Settings_Medal", new Vector2(50f, 50f),
+                new Vector2(-266f, 0f));
+            Style(medal, Hex("#FFE9A3"), Hex("#A45D08"), circleSprite);
+            Border(medal.gameObject, Hex("#3A1A04"), new Vector2(1f, -1f));
+            TextMeshProUGUI emblem = Text(medal, "Emblem", "S", 25f, Hex("#4A1D08"),
+                new Vector2(44f, 42f), Vector2.zero, TextAlignmentOptions.Center);
+            emblem.fontStyle = FontStyles.Bold;
+
+            if (title.transform.parent != header)
+            {
+                Undo.SetTransformParent(title.transform, header, "Move Main Menu Settings title");
+            }
+            Place(title.rectTransform, new Vector2(500f, 50f), new Vector2(18f, 0f));
+            title.fontSize = 28f;
+            title.fontStyle = FontStyles.Bold;
+            title.enableAutoSizing = true;
+            title.fontSizeMin = 18f;
+            title.fontSizeMax = 28f;
+            title.color = Hex("#FFF1C7");
+            title.alignment = TextAlignmentOptions.Center;
+
+            StyleMainMenuSliderRow(masterLabel, master, masterValue, 166f);
+            StyleMainMenuSliderRow(musicLabel, music, musicValue, 66f);
+            StyleMainMenuSliderRow(sfxLabel, sfx, sfxValue, -34f);
+
+            StyleActionButton(languageButton, languageLabel, new Vector2(290f, 68f),
+                new Vector2(-155f, -170f), Hex("#386A45"), Hex("#132819"), "L", 19f);
+            StyleActionButton(backButton, backLabel, new Vector2(290f, 68f),
+                new Vector2(155f, -170f), Hex("#D98B16"), Hex("#6C3207"), "B", 19f);
+
+            header.SetAsLastSibling();
+            EditorUtility.SetDirty(mainMenu);
+            EditorSceneManager.MarkSceneDirty(viewObject.scene);
+            return true;
+        }
+
+        private static void StyleMainMenuSliderRow(TextMeshProUGUI label,
+            UnityEngine.UI.Slider slider, TextMeshProUGUI value, float y)
+        {
+            Place(label.rectTransform, new Vector2(430f, 30f), new Vector2(-78f, y + 28f));
+            label.fontSize = 18f;
+            label.fontStyle = FontStyles.Bold;
+            label.color = Hex("#FFF3D1");
+            label.alignment = TextAlignmentOptions.Left;
+
+            Place(value.rectTransform, new Vector2(95f, 30f), new Vector2(252f, y + 28f));
+            value.fontSize = 18f;
+            value.fontStyle = FontStyles.Bold;
+            value.color = Hex("#FDE68A");
+            value.alignment = TextAlignmentOptions.Right;
+
+            StyleSlider(slider, y);
         }
 
         private static void StylePanel(RectTransform panel)
@@ -216,6 +317,11 @@ namespace MiningSimulator.Ores.Editor
             value.color = Hex("#FDE68A");
             value.alignment = TextAlignmentOptions.Right;
 
+            StyleSlider(slider, y);
+        }
+
+        private static void StyleSlider(UnityEngine.UI.Slider slider, float y)
+        {
             RectTransform sliderRect = slider.transform as RectTransform;
             Place(sliderRect, new Vector2(600f, 38f), new Vector2(0f, y));
             UnityEngine.UI.Image trench = slider.GetComponent<UnityEngine.UI.Image>() ??

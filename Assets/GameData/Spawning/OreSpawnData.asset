@@ -50,7 +50,7 @@ MonoBehaviour:
     zeroChanceUnlockAtOneHundredPercentBonus: 1
   spawnOnEnable: 1
   initialSpawnCount: 8
-  maximumAliveOres: 14
+  maximumAliveOres: 15
   maximumPooledOres: 12
   secondsPerSpawn: 2
   areaCenter: {x: 0, y: 0, z: 0}
