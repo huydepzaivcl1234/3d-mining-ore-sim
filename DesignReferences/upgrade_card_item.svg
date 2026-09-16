@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 80" width="460" height="80">
+  <defs>
+    <linearGradient id="itemLeather" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#914c24" />
+      <stop offset="30%" stop-color="#703618" />
+      <stop offset="75%" stop-color="#4d210d" />
+      <stop offset="100%" stop-color="#341507" />
+    </linearGradient>
+
+    <linearGradient id="itemBrass" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffe58f" />
+      <stop offset="35%" stop-color="#d49a33" />
+      <stop offset="75%" stop-color="#8c5812" />
+      <stop offset="100%" stop-color="#573406" />
+    </linearGradient>
+
+    <linearGradient id="itemPrice" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#241208" />
+      <stop offset="60%" stop-color="#3d1d0c" />
+      <stop offset="100%" stop-color="#1f0e05" />
+    </linearGradient>
+
+    <filter id="itemShadow" x="-5%" y="-5%" width="110%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#000" flood-opacity="0.6"/>
+    </filter>
+  </defs>
+
+  <!-- 3D Underlay Lip -->
+  <rect x="6" y="10" width="448" height="66" rx="20" fill="#140602" />
+
+  <!-- Main Card Body -->
+  <g filter="url(#itemShadow)">
+    <rect x="6" y="4" width="448" height="66" rx="20" fill="url(#itemLeather)" stroke="#381507" stroke-width="2.5" />
+    <!-- Stitched Seam -->
+    <rect x="12" y="10" width="436" height="54" rx="15" fill="none" stroke="#f5d6aa" stroke-width="1.6" stroke-dasharray="5 4" stroke-opacity="0.75" />
+  </g>
+
+  <!-- Left Icon Medal Frame -->
+  <g transform="translate(42, 37)">
+    <circle r="25" fill="url(#itemBrass)" stroke="#3a1805" stroke-width="2"/>
+    <circle r="20" fill="#291307" stroke="#140803" stroke-width="1.5"/>
+  </g>
+
+  <!-- Right Buy Price Tag Slot -->
+  <g transform="translate(315, 14)">
+    <rect width="125" height="46" rx="14" fill="url(#itemPrice)" stroke="#d97706" stroke-width="2" />
+    <rect x="2" y="2" width="121" height="42" rx="12" fill="none" stroke="#120703" stroke-width="1.5" />
+  </g>
+</svg>

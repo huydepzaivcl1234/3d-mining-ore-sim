@@ -1,0 +1,273 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 600" width="1000" height="600">
+  <defs>
+    <!-- Leather Main Background Gradient -->
+    <linearGradient id="panelLeather" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#401e0d" />
+      <stop offset="40%" stop-color="#2a1207" />
+      <stop offset="85%" stop-color="#1f0c04" />
+      <stop offset="100%" stop-color="#140602" />
+    </linearGradient>
+
+    <!-- Header Leather Gradient -->
+    <linearGradient id="headerGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#a65d33" />
+      <stop offset="35%" stop-color="#7d401e" />
+      <stop offset="80%" stop-color="#54260f" />
+      <stop offset="100%" stop-color="#381708" />
+    </linearGradient>
+
+    <!-- Item Card Leather Gradient -->
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#8c4721" />
+      <stop offset="30%" stop-color="#6b3417" />
+      <stop offset="80%" stop-color="#4c210d" />
+      <stop offset="100%" stop-color="#321406" />
+    </linearGradient>
+
+    <!-- Price Tag Inset Gradient -->
+    <linearGradient id="priceBg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#241208" />
+      <stop offset="60%" stop-color="#3b1b0b" />
+      <stop offset="100%" stop-color="#1c0b03" />
+    </linearGradient>
+
+    <!-- Brass Gold Trim -->
+    <linearGradient id="pBrass" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffe58f" />
+      <stop offset="35%" stop-color="#d49a33" />
+      <stop offset="75%" stop-color="#8c5812" />
+      <stop offset="100%" stop-color="#573406" />
+    </linearGradient>
+
+    <!-- Iron Strap -->
+    <linearGradient id="pIron" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#28272d" />
+      <stop offset="40%" stop-color="#585563" />
+      <stop offset="70%" stop-color="#3d3b45" />
+      <stop offset="100%" stop-color="#1c1b21" />
+    </linearGradient>
+
+    <!-- Rivet Gradient -->
+    <radialGradient id="pRivet" cx="35%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#a8a7ad" />
+      <stop offset="45%" stop-color="#535159" />
+      <stop offset="100%" stop-color="#1b1a20" />
+    </radialGradient>
+
+    <!-- Shadows -->
+    <filter id="pShadow" x="-5%" y="-5%" width="110%" height="115%">
+      <feDropShadow dx="0" dy="12" stdDeviation="10" flood-color="#000" flood-opacity="0.8"/>
+    </filter>
+    <filter id="cardShadow">
+      <feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#000" flood-opacity="0.6"/>
+    </filter>
+  </defs>
+
+  <!-- 3D Base Thickness (Bottom Lip) -->
+  <rect x="20" y="28" width="960" height="555" rx="36" fill="#100401" />
+
+  <!-- MAIN LEATHER FRAME -->
+  <g filter="url(#pShadow)">
+    <rect x="20" y="16" width="960" height="555" rx="36" fill="url(#panelLeather)" stroke="#451c09" stroke-width="6" />
+    <!-- Stitched Seam Running along Main Perimeter -->
+    <rect x="32" y="28" width="936" height="531" rx="26" fill="none" stroke="#f5d6aa" stroke-width="2" stroke-dasharray="8 6" stroke-opacity="0.6" />
+  </g>
+
+  <!-- 4 Corner Iron Reinforcement Brackets & Rivets -->
+  <path d="M 22 75 L 22 45 Q 22 22 45 22 L 75 22 L 62 38 L 38 38 L 38 62 Z" fill="url(#pIron)"/>
+  <circle cx="50" cy="50" r="4.5" fill="url(#pRivet)"/>
+
+  <path d="M 978 75 L 978 45 Q 978 22 955 22 L 925 22 L 938 38 L 962 38 L 962 62 Z" fill="url(#pIron)"/>
+  <circle cx="950" cy="50" r="4.5" fill="url(#pRivet)"/>
+
+  <path d="M 22 510 L 22 540 Q 22 568 45 568 L 75 568 L 62 552 L 38 552 L 38 525 Z" fill="url(#pIron)"/>
+  <circle cx="50" cy="540" r="4.5" fill="url(#pRivet)"/>
+
+  <path d="M 978 510 L 978 540 Q 978 568 955 568 L 925 568 L 938 552 L 962 552 L 962 525 Z" fill="url(#pIron)"/>
+  <circle cx="950" cy="540" r="4.5" fill="url(#pRivet)"/>
+
+  <!-- TOP HEADER BAR: "BẢNG NÂNG CẤP HẦM MỎ" -->
+  <g transform="translate(45, 34)">
+    <rect width="840" height="58" rx="29" fill="url(#headerGrad)" stroke="#2f1205" stroke-width="3" filter="url(#cardShadow)"/>
+    <rect x="5" y="5" width="830" height="48" rx="24" fill="none" stroke="#f5d6aa" stroke-width="1.8" stroke-dasharray="6 5" stroke-opacity="0.8"/>
+    
+    <!-- Header Icon -->
+    <circle cx="34" cy="29" r="20" fill="url(#pBrass)" stroke="#3e1b06" stroke-width="2"/>
+    <text x="34" y="36" font-family="sans-serif" font-size="18" text-anchor="middle">⛏️</text>
+
+    <!-- Header Title -->
+    <text x="68" y="36" font-family="'Cinzel', 'Georgia', serif" font-size="22" font-weight="900" fill="#fef3c7" letter-spacing="1.5">
+      BẢNG NÂNG CẤP (MINING UPGRADES)
+    </text>
+
+    <!-- Current Gold Display in Header -->
+    <g transform="translate(620, 11)">
+      <rect width="195" height="36" rx="18" fill="#1f0c04" stroke="#683416" stroke-width="2"/>
+      <circle cx="20" cy="18" r="12" fill="url(#pBrass)"/>
+      <text x="20" y="23" font-family="sans-serif" font-size="12" text-anchor="middle">💰</text>
+      <text x="42" y="24" font-family="'Fredoka', sans-serif" font-size="16" font-weight="900" fill="#fef08a">12,450</text>
+      <text x="142" y="24" font-family="sans-serif" font-size="11" font-weight="bold" fill="#67e8f9">💎 85</text>
+    </g>
+  </g>
+
+  <!-- CLOSE BUTTON [X] ON TOP RIGHT -->
+  <g transform="translate(900, 36)" filter="url(#cardShadow)">
+    <rect width="54" height="54" rx="16" fill="url(#pIron)" stroke="#ffdf78" stroke-width="2"/>
+    <rect x="3" y="3" width="48" height="48" rx="13" fill="#8f1d1d" stroke="#520c0c" stroke-width="2"/>
+    <text x="27" y="34" font-family="'Nunito', sans-serif" font-size="24" font-weight="900" fill="#ffffff" text-anchor="middle">✕</text>
+  </g>
+
+  <!-- ================= GRID OF UPGRADE CARDS (2 COLUMNS x 5 ROWS) ================= -->
+  <!-- COLUMN 1 (X = 45, Spacing Y = 82) -->
+  
+  <!-- Col 1, Item 1: Coin Multiplier -->
+  <g transform="translate(45, 110)" filter="url(#cardShadow)">
+    <rect width="440" height="74" rx="20" fill="url(#cardGrad)" stroke="#381507" stroke-width="2.5"/>
+    <rect x="4" y="4" width="432" height="66" rx="16" fill="none" stroke="#f5d6aa" stroke-width="1.5" stroke-dasharray="5 4" stroke-opacity="0.7"/>
+    <!-- Icon -->
+    <circle cx="40" cy="37" r="26" fill="url(#pBrass)" stroke="#3a1805" stroke-width="2"/>
+    <text x="40" y="45" font-family="sans-serif" font-size="22" text-anchor="middle">🪙</text>
+    <!-- Text -->
+    <text x="78" y="30" font-family="'Nunito', sans-serif" font-size="14" font-weight="900" fill="#fef3c7">Thu Nhập Vàng</text>
+    <text x="78" y="52" font-family="'Nunito', sans-serif" font-size="11" font-weight="700" fill="#86efac">+25% giá quặng [Cấp 2/10]</text>
+    <!-- Price Button -->
+    <g transform="translate(300, 15)">
+      <rect width="125" height="44" rx="14" fill="url(#priceBg)" stroke="#d97706" stroke-width="2"/>
+      <text x="62" y="27" font-family="'Fredoka', sans-serif" font-size="15" font-weight="900" fill="#fef08a" text-anchor="middle">💰 250</text>
+    </g>
+  </g>
+
+  <!-- Col 1, Item 2: Pickaxe Power -->
+  <g transform="translate(45, 192)" filter="url(#cardShadow)">
+    <rect width="440" height="74" rx="20" fill="url(#cardGrad)" stroke="#381507" stroke-width="2.5"/>
+    <rect x="4" y="4" width="432" height="66" rx="16" fill="none" stroke="#f5d6aa" stroke-width="1.5" stroke-dasharray="5 4" stroke-opacity="0.7"/>
+    <circle cx="40" cy="37" r="26" fill="url(#pBrass)" stroke="#3a1805" stroke-width="2"/>
+    <text x="40" y="45" font-family="sans-serif" font-size="22" text-anchor="middle">⛏️</text>
+    <text x="78" y="30" font-family="'Nunito', sans-serif" font-size="14" font-weight="900" fill="#fef3c7">Sức Đập Cúp</text>
+    <text x="78" y="52" font-family="'Nunito', sans-serif" font-size="11" font-weight="700" fill="#86efac">+15 Sát thương đập đá [Cấp 3]</text>
+    <g transform="translate(300, 15)">
+      <rect width="125" height="44" rx="14" fill="url(#priceBg)" stroke="#d97706" stroke-width="2"/>
+      <text x="62" y="27" font-family="'Fredoka', sans-serif" font-size="15" font-weight="900" fill="#fef08a" text-anchor="middle">💰 450</text>
+    </g>
+  </g>
+
+  <!-- Col 1, Item 3: Move Speed Boot -->
+  <g transform="translate(45, 274)" filter="url(#cardShadow)">
+    <rect width="440" height="74" rx="20" fill="url(#cardGrad)" stroke="#381507" stroke-width="2.5"/>
+    <rect x="4" y="4" width="432" height="66" rx="16" fill="none" stroke="#f5d6aa" stroke-width="1.5" stroke-dasharray="5 4" stroke-opacity="0.7"/>
+    <circle cx="40" cy="37" r="26" fill="url(#pBrass)" stroke="#3a1805" stroke-width="2"/>
+    <text x="40" y="45" font-family="sans-serif" font-size="22" text-anchor="middle">🥾</text>
+    <text x="78" y="30" font-family="'Nunito', sans-serif" font-size="14" font-weight="900" fill="#fef3c7">Tốc Độ Di Chuyển</text>
+    <text x="78" y="52" font-family="'Nunito', sans-serif" font-size="11" font-weight="700" fill="#86efac">+20% Chạy nhanh [Cấp 1/5]</text>
+    <g transform="translate(300, 15)">
+      <rect width="125" height="44" rx="14" fill="url(#priceBg)" stroke="#d97706" stroke-width="2"/>
+      <text x="62" y="27" font-family="'Fredoka', sans-serif" font-size="15" font-weight="900" fill="#fef08a" text-anchor="middle">💰 300</text>
+    </g>
+  </g>
+
+  <!-- Col 1, Item 4: Mystery Lucky Box -->
+  <g transform="translate(45, 356)" filter="url(#cardShadow)">
+    <rect width="440" height="74" rx="20" fill="url(#cardGrad)" stroke="#381507" stroke-width="2.5"/>
+    <rect x="4" y="4" width="432" height="66" rx="16" fill="none" stroke="#f5d6aa" stroke-width="1.5" stroke-dasharray="5 4" stroke-opacity="0.7"/>
+    <circle cx="40" cy="37" r="26" fill="url(#pBrass)" stroke="#3a1805" stroke-width="2"/>
+    <text x="40" y="45" font-family="sans-serif" font-size="22" text-anchor="middle">📦</text>
+    <text x="78" y="30" font-family="'Nunito', sans-serif" font-size="14" font-weight="900" fill="#fef3c7">Hộp Quà May Mắn</text>
+    <text x="78" y="52" font-family="'Nunito', sans-serif" font-size="11" font-weight="700" fill="#86efac">+5% Xuất hiện rương vàng</text>
+    <g transform="translate(300, 15)">
+      <rect width="125" height="44" rx="14" fill="url(#priceBg)" stroke="#d97706" stroke-width="2"/>
+      <text x="62" y="27" font-family="'Fredoka', sans-serif" font-size="15" font-weight="900" fill="#fef08a" text-anchor="middle">💰 600</text>
+    </g>
+  </g>
+
+  <!-- Col 1, Item 5: Miner Master Tools -->
+  <g transform="translate(45, 438)" filter="url(#cardShadow)">
+    <rect width="440" height="74" rx="20" fill="url(#cardGrad)" stroke="#381507" stroke-width="2.5"/>
+    <rect x="4" y="4" width="432" height="66" rx="16" fill="none" stroke="#f5d6aa" stroke-width="1.5" stroke-dasharray="5 4" stroke-opacity="0.7"/>
+    <circle cx="40" cy="37" r="26" fill="url(#pBrass)" stroke="#3a1805" stroke-width="2"/>
+    <text x="40" y="45" font-family="sans-serif" font-size="22" text-anchor="middle">👷</text>
+    <text x="78" y="30" font-family="'Nunito', sans-serif" font-size="14" font-weight="900" fill="#fef3c7">Hiệu Suất Thợ Mỏ</text>
+    <text x="78" y="52" font-family="'Nunito', sans-serif" font-size="11" font-weight="700" fill="#86efac">+30% Tự động đào [Cấp 4]</text>
+    <g transform="translate(300, 15)">
+      <rect width="125" height="44" rx="14" fill="url(#priceBg)" stroke="#d97706" stroke-width="2"/>
+      <text x="62" y="27" font-family="'Fredoka', sans-serif" font-size="15" font-weight="900" fill="#fef08a" text-anchor="middle">💰 850</text>
+    </g>
+  </g>
+
+  <!-- ================= COLUMN 2 (X = 515, Spacing Y = 82) ================= -->
+
+  <!-- Col 2, Item 1: Diamond Crystal Multiplier -->
+  <g transform="translate(515, 110)" filter="url(#cardShadow)">
+    <rect width="440" height="74" rx="20" fill="url(#cardGrad)" stroke="#381507" stroke-width="2.5"/>
+    <rect x="4" y="4" width="432" height="66" rx="16" fill="none" stroke="#f5d6aa" stroke-width="1.5" stroke-dasharray="5 4" stroke-opacity="0.7"/>
+    <circle cx="40" cy="37" r="26" fill="url(#pBrass)" stroke="#3a1805" stroke-width="2"/>
+    <text x="40" y="45" font-family="sans-serif" font-size="22" text-anchor="middle">💎</text>
+    <text x="78" y="30" font-family="'Nunito', sans-serif" font-size="14" font-weight="900" fill="#fef3c7">Pha Lê Tinh Thể</text>
+    <text x="78" y="52" font-family="'Nunito', sans-serif" font-size="11" font-weight="700" fill="#67e8f9">+10% Đào ra Kim Cương</text>
+    <g transform="translate(300, 15)">
+      <rect width="125" height="44" rx="14" fill="url(#priceBg)" stroke="#d97706" stroke-width="2"/>
+      <text x="62" y="27" font-family="'Fredoka', sans-serif" font-size="15" font-weight="900" fill="#fef08a" text-anchor="middle">💰 500</text>
+    </g>
+  </g>
+
+  <!-- Col 2, Item 2: Compass & Time Warp -->
+  <g transform="translate(515, 192)" filter="url(#cardShadow)">
+    <rect width="440" height="74" rx="20" fill="url(#cardGrad)" stroke="#381507" stroke-width="2.5"/>
+    <rect x="4" y="4" width="432" height="66" rx="16" fill="none" stroke="#f5d6aa" stroke-width="1.5" stroke-dasharray="5 4" stroke-opacity="0.7"/>
+    <circle cx="40" cy="37" r="26" fill="url(#pBrass)" stroke="#3a1805" stroke-width="2"/>
+    <text x="40" y="45" font-family="sans-serif" font-size="22" text-anchor="middle">⏱️</text>
+    <text x="78" y="30" font-family="'Nunito', sans-serif" font-size="14" font-weight="900" fill="#fef3c7">Gia Tốc Hầm Mỏ</text>
+    <text x="78" y="52" font-family="'Nunito', sans-serif" font-size="11" font-weight="700" fill="#86efac">Giảm thời gian hồi chiêu -15%</text>
+    <g transform="translate(300, 15)">
+      <rect width="125" height="44" rx="14" fill="url(#priceBg)" stroke="#d97706" stroke-width="2"/>
+      <text x="62" y="27" font-family="'Fredoka', sans-serif" font-size="15" font-weight="900" fill="#fef08a" text-anchor="middle">💰 650</text>
+    </g>
+  </g>
+
+  <!-- Col 2, Item 3: Increase Miner Capacity (Theo ảnh của bạn) -->
+  <g transform="translate(515, 274)" filter="url(#cardShadow)">
+    <rect width="440" height="74" rx="20" fill="url(#cardGrad)" stroke="#381507" stroke-width="2.5"/>
+    <rect x="4" y="4" width="432" height="66" rx="16" fill="none" stroke="#f5d6aa" stroke-width="1.5" stroke-dasharray="5 4" stroke-opacity="0.7"/>
+    <circle cx="40" cy="37" r="26" fill="url(#pBrass)" stroke="#3a1805" stroke-width="2"/>
+    <text x="40" y="45" font-family="sans-serif" font-size="22" text-anchor="middle">👷</text>
+    <text x="78" y="30" font-family="'Nunito', sans-serif" font-size="14" font-weight="900" fill="#fef3c7">Miner Capacity</text>
+    <text x="78" y="52" font-family="'Nunito', sans-serif" font-size="11" font-weight="700" fill="#86efac">+1 miners [0/4]</text>
+    <g transform="translate(300, 15)">
+      <rect width="125" height="44" rx="14" fill="url(#priceBg)" stroke="#d97706" stroke-width="2"/>
+      <text x="62" y="27" font-family="'Fredoka', sans-serif" font-size="15" font-weight="900" fill="#fef08a" text-anchor="middle">💰 700</text>
+    </g>
+  </g>
+
+  <!-- Col 2, Item 4: Rainbow Clover Luck -->
+  <g transform="translate(515, 356)" filter="url(#cardShadow)">
+    <rect width="440" height="74" rx="20" fill="url(#cardGrad)" stroke="#381507" stroke-width="2.5"/>
+    <rect x="4" y="4" width="432" height="66" rx="16" fill="none" stroke="#f5d6aa" stroke-width="1.5" stroke-dasharray="5 4" stroke-opacity="0.7"/>
+    <circle cx="40" cy="37" r="26" fill="url(#pBrass)" stroke="#3a1805" stroke-width="2"/>
+    <text x="40" y="45" font-family="sans-serif" font-size="22" text-anchor="middle">🍀</text>
+    <text x="78" y="30" font-family="'Nunito', sans-serif" font-size="14" font-weight="900" fill="#fef3c7">Cỏ May Mắn</text>
+    <text x="78" y="52" font-family="'Nunito', sans-serif" font-size="11" font-weight="700" fill="#86efac">+2x Nhân đôi phần thưởng</text>
+    <g transform="translate(300, 15)">
+      <rect width="125" height="44" rx="14" fill="url(#priceBg)" stroke="#d97706" stroke-width="2"/>
+      <text x="62" y="27" font-family="'Fredoka', sans-serif" font-size="15" font-weight="900" fill="#fef08a" text-anchor="middle">💰 1,000</text>
+    </g>
+  </g>
+
+  <!-- Col 2, Item 5: Item Drop Chance (Theo ảnh của bạn) -->
+  <g transform="translate(515, 438)" filter="url(#cardShadow)">
+    <rect width="440" height="74" rx="20" fill="url(#cardGrad)" stroke="#381507" stroke-width="2.5"/>
+    <rect x="4" y="4" width="432" height="66" rx="16" fill="none" stroke="#f5d6aa" stroke-width="1.5" stroke-dasharray="5 4" stroke-opacity="0.7"/>
+    <circle cx="40" cy="37" r="26" fill="url(#pBrass)" stroke="#3a1805" stroke-width="2"/>
+    <text x="40" y="45" font-family="sans-serif" font-size="22" text-anchor="middle">💰</text>
+    <text x="78" y="30" font-family="'Nunito', sans-serif" font-size="14" font-weight="900" fill="#fef3c7">Item Drop Chance</text>
+    <text x="78" y="52" font-family="'Nunito', sans-serif" font-size="11" font-weight="700" fill="#86efac">+1% [0/100]</text>
+    <g transform="translate(300, 15)">
+      <rect width="125" height="44" rx="14" fill="url(#priceBg)" stroke="#d97706" stroke-width="2"/>
+      <text x="62" y="27" font-family="'Fredoka', sans-serif" font-size="15" font-weight="900" fill="#fef08a" text-anchor="middle">💰 50</text>
+    </g>
+  </g>
+
+  <!-- BOTTOM CLOSE / RETURN BUTTON -->
+  <g transform="translate(425, 526)" filter="url(#cardShadow)">
+    <rect width="150" height="38" rx="19" fill="url(#headerGrad)" stroke="#ffdf78" stroke-width="2"/>
+    <text x="75" y="24" font-family="'Cinzel', serif" font-size="13" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="1">ĐÓNG BẢNG</text>
+  </g>
+</svg>
