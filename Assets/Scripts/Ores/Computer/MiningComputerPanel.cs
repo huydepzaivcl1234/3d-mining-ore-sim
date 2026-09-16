@@ -19,9 +19,11 @@ namespace MiningSimulator.Ores
         [SerializeField] private TextMeshProUGUI costLabel;
         [SerializeField] private TextMeshProUGUI statusLabel;
         [SerializeField] private TextMeshProUGUI upgradeButtonLabel;
+        [SerializeField] private JuicyCoinComputer presentation;
 
         private MiningComputerStation station;
         private PlayerWallet wallet;
+        private bool openingFromInteraction;
 
         public void Configure(RectTransform root, MiningUiPanelCoordinator coordinator,
             Button close, Button upgrade, TextMeshProUGUI title, TextMeshProUGUI level,
@@ -41,10 +43,24 @@ namespace MiningSimulator.Ores
             upgradeButtonLabel = upgradeText;
         }
 
+        public void ConfigurePresentation(JuicyCoinComputer value)
+        {
+            presentation = value;
+        }
+
         private void Awake()
         {
             panelRoot ??= transform as RectTransform;
-            panelRoot?.gameObject.SetActive(false);
+
+            // This panel is commonly saved inactive in the Scene. In that state Unity delays
+            // Awake until Show() activates it for the first time. The old code disabled the
+            // panel again from this delayed Awake, while the coordinator had already hidden the
+            // gameplay HUD for the modal. Only auto-hide when Awake is part of normal scene
+            // startup, never while Show() is opening the panel.
+            if (!openingFromInteraction)
+            {
+                panelRoot?.gameObject.SetActive(false);
+            }
         }
 
         private void OnEnable()
@@ -84,13 +100,21 @@ namespace MiningSimulator.Ores
             }
 
             panelRoot ??= transform as RectTransform;
-            if (panelCoordinator != null)
+            openingFromInteraction = true;
+            try
             {
-                panelCoordinator.OpenPanel(panelRoot);
+                if (panelCoordinator != null)
+                {
+                    panelCoordinator.OpenPanel(panelRoot);
+                }
+                else
+                {
+                    panelRoot?.gameObject.SetActive(true);
+                }
             }
-            else
+            finally
             {
-                panelRoot?.gameObject.SetActive(true);
+                openingFromInteraction = false;
             }
             SubscribeStation();
             Refresh();
@@ -110,7 +134,10 @@ namespace MiningSimulator.Ores
 
         private void Upgrade()
         {
-            station?.TryUpgrade();
+            if (station != null && station.TryUpgrade())
+            {
+                presentation?.PlayUpgradeFeedback();
+            }
             Refresh();
         }
 
@@ -154,6 +181,7 @@ namespace MiningSimulator.Ores
 
             if (titleLabel != null)
                 titleLabel.text = MiningLocalization.Text("COIN COMPUTER");
+            presentation?.SetLevelProgress(station.CurrentLevel, station.MaximumLevel);
             if (levelLabel != null)
                 levelLabel.text = string.Format(MiningLocalization.Text("Level: {0}/{1}"), station.CurrentLevel,
                     station.MaximumLevel);

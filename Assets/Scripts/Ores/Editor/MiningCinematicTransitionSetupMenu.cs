@@ -13,6 +13,14 @@ namespace MiningSimulator.Ores.Editor
         [MenuItem("Mining Simulator/UI/Build Cinematic Menu Transition")]
         public static void Build()
         {
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                EditorUtility.DisplayDialog("Exit Play Mode",
+                    "Stop Play Mode before building the cinematic transition. " +
+                    "Unity discards scene setup changes made while the game is running.", "OK");
+                return;
+            }
+
             MiningMainMenu mainMenu = Object.FindFirstObjectByType<MiningMainMenu>(
                 FindObjectsInactive.Include);
             if (mainMenu == null)
@@ -32,6 +40,15 @@ namespace MiningSimulator.Ores.Editor
             Canvas canvas = mainMenu.GetComponentInParent<Canvas>(true);
             RectTransform canvasRect = canvas != null ? canvas.transform as RectTransform : null;
 
+            // Only fade the Main Menu itself. A stale reference to a CanvasGroup above it would
+            // make every gameplay HUD disappear together with the menu.
+            if (menuGroup == null || menuGroup.transform != mainMenu.transform)
+            {
+                menuGroup = mainMenu.GetComponent<CanvasGroup>() ??
+                            Undo.AddComponent<CanvasGroup>(mainMenu.gameObject);
+                Set(menuFields, "canvasGroup", menuGroup);
+            }
+
             if (menuGroup == null || play == null || settings == null ||
                 exit == null || canvasRect == null)
             {
@@ -39,7 +56,7 @@ namespace MiningSimulator.Ores.Editor
                 return;
             }
 
-            RectTransform overlay = EnsureOverlay(canvasRect);
+            RectTransform overlay = EnsureOverlay(canvasRect, canvas);
             UnityEngine.UI.Image overlayImage = overlay.GetComponent<UnityEngine.UI.Image>();
             CanvasGroup overlayGroup = overlay.GetComponent<CanvasGroup>();
             MiningCinematicTransition cinematic = overlay.GetComponent<MiningCinematicTransition>() ??
@@ -101,7 +118,13 @@ namespace MiningSimulator.Ores.Editor
             Debug.Log("Cinematic Main Menu transition built. Play now performs staggered menu exit, unscaled camera FOV zoom, purple flash, gameplay handoff and HUD fly-in. Existing gameplay/menu logic remains authoritative; save the scene.", overlay.gameObject);
         }
 
-        private static RectTransform EnsureOverlay(RectTransform canvas)
+        [MenuItem("Mining Simulator/UI/Build Cinematic Menu Transition", true)]
+        private static bool CanBuild()
+        {
+            return !EditorApplication.isPlayingOrWillChangePlaymode;
+        }
+
+        private static RectTransform EnsureOverlay(RectTransform canvas, Canvas parentCanvas)
         {
             Transform existing = canvas.Find("Cinematic Transition Overlay");
             GameObject obj;
@@ -117,6 +140,8 @@ namespace MiningSimulator.Ores.Editor
                 obj = existing.gameObject;
                 obj.SetActive(true);
             }
+
+            SetLayerRecursively(obj, canvas.gameObject.layer);
 
             RectTransform rect = obj.GetComponent<RectTransform>();
             Undo.RecordObject(rect, "Stretch Cinematic Transition Overlay");
@@ -139,7 +164,26 @@ namespace MiningSimulator.Ores.Editor
             group.alpha = 0f;
             group.interactable = false;
             group.blocksRaycasts = false;
+            group.ignoreParentGroups = true;
+
+            // Isolate the flash from sibling panels that change their hierarchy order at runtime.
+            // This Canvas affects only the overlay; authored HUD layout stays untouched.
+            Canvas overlayCanvas = obj.GetComponent<Canvas>() ?? Undo.AddComponent<Canvas>(obj);
+            Undo.RecordObject(overlayCanvas, "Configure Cinematic Transition Canvas");
+            overlayCanvas.overrideSorting = true;
+            overlayCanvas.sortingOrder = (parentCanvas != null ? parentCanvas.sortingOrder : 0) + 100;
+            _ = obj.GetComponent<UnityEngine.UI.GraphicRaycaster>() ??
+                Undo.AddComponent<UnityEngine.UI.GraphicRaycaster>(obj);
             return rect;
+        }
+
+        private static void SetLayerRecursively(GameObject root, int layer)
+        {
+            root.layer = layer;
+            foreach (Transform child in root.transform)
+            {
+                SetLayerRecursively(child.gameObject, layer);
+            }
         }
 
         private static void AddFlyIn(Transform root, ICollection<MiningHudFlyIn> results,

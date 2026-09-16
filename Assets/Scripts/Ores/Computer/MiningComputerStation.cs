@@ -125,9 +125,11 @@ namespace MiningSimulator.Ores
             {
                 OpenInfoPanel();
             }
-            else
+            else if (TryPurchase())
             {
-                TryPurchase();
+                // A successful purchase changes the station into its info/upgrade state during
+                // this interaction. Open that state immediately instead of requiring a second F.
+                OpenInfoPanel();
             }
         }
 

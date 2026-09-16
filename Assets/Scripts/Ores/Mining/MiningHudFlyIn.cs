@@ -25,6 +25,9 @@ namespace MiningSimulator.Ores
         private Coroutine routine;
         private bool hasTargetPosition;
 
+        /// <summary>Total unscaled time needed before this HUD reaches its authored position.</summary>
+        public float TotalDuration => delay + duration;
+
         public void Configure(RectTransform authoredTarget, SlideDirection slideDirection,
             float distance, float startDelay, float animationDuration)
         {
@@ -65,6 +68,15 @@ namespace MiningSimulator.Ores
                 target.anchoredPosition = targetPosition;
             }
             hasTargetPosition = false;
+        }
+
+        /// <summary>
+        /// Forces the last cached authored position without starting another animation.
+        /// Safe to call after the fly-in has already completed.
+        /// </summary>
+        public void CompleteImmediately()
+        {
+            StopAndRestore();
         }
 
         private void OnDisable()

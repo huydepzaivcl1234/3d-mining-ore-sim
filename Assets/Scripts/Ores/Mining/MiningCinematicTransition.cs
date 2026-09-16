@@ -111,7 +111,14 @@ namespace MiningSimulator.Ores
             owner?.CompleteCinematicPlay();
             PlayHudAnimations();
 
-            yield return FadeFlash(flashOpacity, 0f, flashOutDuration, EaseInCubic);
+            // Never reveal an empty gameplay frame. The original version faded the flash in
+            // 0.32 seconds even though staggered HUD entries could take about 0.65 seconds.
+            // Keep the flash fade synchronized with the slowest HUD animation, then snap every
+            // target to the exact Scene-authored position as a final safety net.
+            float revealDuration = Mathf.Max(flashOutDuration, GetHudRevealDuration());
+            yield return FadeFlash(flashOpacity, 0f, revealDuration, EaseInCubic);
+            CompleteHudAnimations();
+            Canvas.ForceUpdateCanvases();
             HideOverlay();
             owner = null;
             routine = null;
@@ -264,6 +271,35 @@ namespace MiningSimulator.Ores
             foreach (MiningHudFlyIn flyIn in hudFlyIns)
             {
                 flyIn?.StopAndRestore();
+            }
+        }
+
+        private float GetHudRevealDuration()
+        {
+            float result = 0f;
+            if (hudFlyIns == null)
+            {
+                return result;
+            }
+            foreach (MiningHudFlyIn flyIn in hudFlyIns)
+            {
+                if (flyIn != null)
+                {
+                    result = Mathf.Max(result, flyIn.TotalDuration);
+                }
+            }
+            return result;
+        }
+
+        private void CompleteHudAnimations()
+        {
+            if (hudFlyIns == null)
+            {
+                return;
+            }
+            foreach (MiningHudFlyIn flyIn in hudFlyIns)
+            {
+                flyIn?.CompleteImmediately();
             }
         }
 
