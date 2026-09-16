@@ -248,7 +248,17 @@ namespace MiningSimulator.Ores.Editor
                 styled++;
             }
 
-            if (styled > 0)
+            RectTransform upgradePanel =
+                canvas.transform.Find("Upgrade Panel") as RectTransform;
+            if (upgradePanel != null)
+            {
+                Undo.RegisterFullObjectHierarchyUndo(
+                    upgradePanel.gameObject,
+                    "Preserve Upgrade Card Visual Sizes");
+                MiningUpgradePanelFullscreenMenu.PreserveUpgradeCardVisualSizing(upgradePanel);
+            }
+
+            if (styled > 0 || upgradePanel != null)
             {
                 EditorSceneManager.MarkSceneDirty(canvas.gameObject.scene);
                 Undo.CollapseUndoOperations(undoGroup);

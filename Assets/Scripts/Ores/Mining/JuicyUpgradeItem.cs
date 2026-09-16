@@ -15,6 +15,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private TextMeshProUGUI detailText;
         [SerializeField] private TextMeshProUGUI priceText;
         [SerializeField] private TextMeshProUGUI buyCaptionText;
+        [SerializeField] private UnityEngine.UI.Image priceCoinIcon;
 
         private UnityEngine.UI.Button purchaseButton;
 
@@ -51,6 +52,7 @@ namespace MiningSimulator.Ores
                 if (titleText != null) titleText.text = MiningLocalization.Text("Upgrade unavailable", "Chưa có nâng cấp");
                 if (detailText != null) detailText.text = string.Empty;
                 if (priceText != null) priceText.text = "—";
+                SetCoinVisible(false);
                 purchaseButton.interactable = false;
                 return;
             }
@@ -70,9 +72,17 @@ namespace MiningSimulator.Ores
             }
             if (priceText != null)
                 priceText.text = maximum ? MiningLocalization.Text("MAX", "TỐI ĐA")
-                    : "● " + MiningMoneyFormatter.Format(upgradeSystem.GetCost(upgradeType));
+                    : MiningMoneyFormatter.Format(upgradeSystem.GetCost(upgradeType));
+            SetCoinVisible(!maximum);
             purchaseButton.interactable = upgradeSystem.CanPurchase(upgradeType);
         }
 
+        private void SetCoinVisible(bool visible)
+        {
+            if (priceCoinIcon != null)
+            {
+                priceCoinIcon.gameObject.SetActive(visible);
+            }
+        }
     }
 }
