@@ -428,6 +428,12 @@ namespace MiningSimulator.Ores.Editor
 
             RectTransform row = existing as RectTransform;
             row.gameObject.SetActive(true);
+            // A JuicyQuestItem marks a designer-authored row. Keep its serialized bindings
+            // synchronized, but never overwrite any RectTransform edited in the scene.
+            if (!created && row.GetComponentInChildren<JuicyQuestItem>(true) != null)
+            {
+                return row;
+            }
             row.anchorMin = new Vector2(0.5f, 1f);
             row.anchorMax = new Vector2(0.5f, 1f);
             row.pivot = new Vector2(0.5f, 1f);
