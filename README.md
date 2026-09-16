@@ -1,16 +1,12 @@
-# Juicy Buy Miner Button
+# Leather Miner Progress HUD — next ore unlock
 
-Extract this ZIP into the root of your existing Unity project, keeping the `Assets/` paths.
+Extract this ZIP into the **project root, not inside `Assets`**. The current repository already contains `NpcProgressionHud`, `MicroBar`, `MiningUiGradient` and `JuicyButtonTrim`.
 
 1. Let Unity finish compiling.
-2. Open your own mining scene (the one containing `MiningHud` and the existing buy-miner `Button`).
-3. Run **Mining Simulator > UI > Build Juicy Buy Miner Button**.
-4. Inspect the `BuyMinerButton` object under `NPC Shop`, then save **your own scene**.
+2. Open your own mining scene with `NPC Progress HUD` and its existing `Experience Bar` MicroBar.
+3. Run **Mining Simulator > UI > Build Juicy Miner Progress**.
+4. Review the HUD and save **your own scene**.
 
-The command modifies the existing button in place so the `MiningHud` purchase listener stays wired. The component only renders UI/animations; it does not fake purchases. The price and miner rate come from `NpcShop/NpcData`. If `NpcShop` is missing, the price is shown as a dash until you assign it.
+The existing `NpcProgressionSystem` still awards real mining XP; `NpcProgressionHud` continues to animate the original MicroBar and display actual XP. The new UI uses a leather card, brass miner avatar, XP trench and the next *configured, spawnable* ore at its real mining-power requirement. It does not grant fake gold or invent a rank system. When power crosses a threshold, the existing `MiningUnlockNotifier` announces and spawns that ore.
 
-The ZIP does **not** contain `SampleScene.unity` or any other scene. It uses the miner/coin sprites already referenced by `Assets/GameData/UI/MiningUiData.asset`; no legacy Candy assets are needed.
-
-`MiningUiGradient.cs` is bundled because it is required for the leather/brass uGUI Images and may not yet exist on your `main` branch.
-
-If your project still contains the old `Assets/Scripts/Ores/Editor/MiningCandyUiSetupMenu.cs` with the `CandyGlossAlpha` compile error, remove that obsolete Candy editor script before running the menu command. It is not part of this package.
+The menu generates two neutral UI sprites in `Assets/Generated/MiningUI` only when run; the ZIP contains no Candy assets and **no `.unity` scene, including `SampleScene.unity`**. This package is deliberately separate from the earlier upgrade-button draft PR and does not reinstall the repository's moved setup script under `Assets/Assets`.
