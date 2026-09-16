@@ -82,7 +82,10 @@ namespace MiningSimulator.Ores
                 bool affordable = wallet != null && wallet.CurrentGems >= product.GemCost;
                 bool available = !shopBusy && hasSpace && affordable;
                 if (buyButton != null) buyButton.interactable = available;
-                if (canvasGroup != null) canvasGroup.alpha = available ? 1f : 0.42f;
+                // Keep the product art and information at full opacity. Fading the entire row
+                // made TMP text and detailed icons look blurred in Play Mode whenever the
+                // player lacked Gems. The disabled Buy button already communicates availability.
+                if (canvasGroup != null) canvasGroup.alpha = 1f;
             }
         }
 

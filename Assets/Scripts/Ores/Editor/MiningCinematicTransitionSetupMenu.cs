@@ -102,6 +102,8 @@ namespace MiningSimulator.Ores.Editor
                 : Object.FindFirstObjectByType<Camera>(FindObjectsInactive.Include));
             Set(cinematicFields, "flashOverlay", overlayImage);
             Set(cinematicFields, "flashCanvasGroup", overlayGroup);
+            SetColor(cinematicFields, "flashColor", new Color(0.025f, 0.012f, 0.01f, 1f));
+            SetFloat(cinematicFields, "flashOpacity", 1f);
             SetArray(cinematicFields, "menuButtons", buttons);
             SetArray(cinematicFields, "hudFlyIns", flyIns);
             cinematicFields.ApplyModifiedProperties();
@@ -115,7 +117,7 @@ namespace MiningSimulator.Ores.Editor
             EditorSceneManager.MarkSceneDirty(mainMenu.gameObject.scene);
             Selection.activeGameObject = overlay.gameObject;
             EditorGUIUtility.PingObject(overlay.gameObject);
-            Debug.Log("Cinematic Main Menu transition built. Play now performs staggered menu exit, unscaled camera FOV zoom, purple flash, gameplay handoff and HUD fly-in. Existing gameplay/menu logic remains authoritative; save the scene.", overlay.gameObject);
+            Debug.Log("Cinematic Main Menu transition built. Play now performs one menu exit, an opaque dark loading cover, a two-frame gameplay handoff and HUD fly-in. Existing gameplay/menu logic remains authoritative; save the scene.", overlay.gameObject);
         }
 
         [MenuItem("Mining Simulator/UI/Build Cinematic Menu Transition", true)]
@@ -156,7 +158,7 @@ namespace MiningSimulator.Ores.Editor
                                          Undo.AddComponent<UnityEngine.UI.Image>(obj);
             Undo.RecordObject(image, "Style Cinematic Transition Overlay");
             image.sprite = null;
-            image.color = new Color(0.18f, 0.035f, 0.24f, 1f);
+            image.color = new Color(0.025f, 0.012f, 0.01f, 1f);
             image.raycastTarget = true;
 
             CanvasGroup group = obj.GetComponent<CanvasGroup>() ?? Undo.AddComponent<CanvasGroup>(obj);
@@ -227,6 +229,24 @@ namespace MiningSimulator.Ores.Editor
             if (property != null)
             {
                 property.objectReferenceValue = value;
+            }
+        }
+
+        private static void SetColor(SerializedObject fields, string name, Color value)
+        {
+            SerializedProperty property = fields.FindProperty(name);
+            if (property != null)
+            {
+                property.colorValue = value;
+            }
+        }
+
+        private static void SetFloat(SerializedObject fields, string name, float value)
+        {
+            SerializedProperty property = fields.FindProperty(name);
+            if (property != null)
+            {
+                property.floatValue = value;
             }
         }
 

@@ -19,11 +19,11 @@ namespace MiningSimulator.Ores
         [SerializeField] private Camera mainCamera;
         [Range(15f, 90f), SerializeField] private float targetFieldOfView = 40f;
 
-        [Header("Flash Overlay")]
+        [Header("Loading Cover")]
         [SerializeField] private UnityEngine.UI.Image flashOverlay;
         [SerializeField] private CanvasGroup flashCanvasGroup;
-        [SerializeField] private Color flashColor = new(0.18f, 0.035f, 0.24f, 1f);
-        [Range(0.1f, 1f), SerializeField] private float flashOpacity = 0.94f;
+        [SerializeField] private Color flashColor = new(0.025f, 0.012f, 0.01f, 1f);
+        [Range(0.1f, 1f), SerializeField] private float flashOpacity = 1f;
 
         [Header("HUD Fly In")]
         [SerializeField] private MiningHudFlyIn[] hudFlyIns;
@@ -105,10 +105,17 @@ namespace MiningSimulator.Ores
                 yield return null;
             }
 
-            // Restore authored transforms while the opaque flash hides the swap. This guarantees
-            // that reopening the Main Menu starts from the designer-authored Scene layout.
-            RestoreAuthoredState();
+            // Disable the menu while the cover is fully opaque. Restoring the menu before the
+            // handoff could expose one authored-menu frame, which looked like the game jumped
+            // back to the Play screen.
             owner?.CompleteCinematicPlay();
+            RestoreAuthoredState();
+            Canvas.ForceUpdateCanvases();
+
+            // Give gameplay two rendered frames behind the opaque cover. This prevents the
+            // camera clear colour (the reported white frame) from becoming the first reveal.
+            yield return null;
+            yield return null;
             PlayHudAnimations();
 
             // Never reveal an empty gameplay frame. The original version faded the flash in
@@ -320,6 +327,7 @@ namespace MiningSimulator.Ores
             flashInDuration = Mathf.Max(0.05f, flashInDuration);
             flashHoldDuration = Mathf.Max(0f, flashHoldDuration);
             flashOutDuration = Mathf.Max(0.05f, flashOutDuration);
+            flashOpacity = 1f;
         }
 #endif
     }

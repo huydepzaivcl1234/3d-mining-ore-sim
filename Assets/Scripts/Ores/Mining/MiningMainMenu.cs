@@ -498,8 +498,10 @@ namespace MiningSimulator.Ores
             cinematicTransition?.ResetImmediate();
             card.anchoredPosition = cardHomePosition;
             card.localScale = Vector3.one;
-            transitionBar.color = data.TransitionBarColor;
-            transitionFlash.color = data.TransitionFlashColor;
+            // Safe fallback when the cinematic component has not been wired yet. A dark cover
+            // avoids the old cyan/white frame while the menu hands control to gameplay.
+            transitionBar.color = new Color(0.55f, 0.20f, 0.045f, 1f);
+            transitionFlash.color = new Color(0.025f, 0.012f, 0.01f, 1f);
             SetGraphicAlpha(transitionBar, 0f);
             SetGraphicAlpha(transitionFlash, 0f);
             transitionBar.gameObject.SetActive(false);

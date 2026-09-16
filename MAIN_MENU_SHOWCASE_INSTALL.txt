@@ -1,0 +1,22 @@
+MAIN MENU SHOWCASE + CLEAN PLAY HANDOFF
+
+1. Extract this ZIP into the Unity project root (the folder that contains Assets).
+2. Wait for Unity to finish compiling.
+3. Open your gameplay scene.
+4. Exit Play Mode.
+5. Run: Mining Simulator > UI > Build Showcase Main Menu
+6. Save the scene, then press Play and test the PLAY button.
+
+What the setup keeps:
+- Existing MiningMainMenu gameplay logic
+- Shop, Settings, Exit, audio, gem balance and localization wiring
+- Existing gameplay HUD layout
+
+What it changes:
+- Uses Assets/Ores/Icons/background.png as the full-screen showcase background
+- Makes PLAY the large orange leather primary button
+- Keeps Shop, Settings and Exit as smaller secondary buttons
+- Replaces the purple/pink flash with an opaque dark loading cover
+- Waits for gameplay to render behind the cover before revealing it
+
+This package intentionally contains no .unity scene file.
