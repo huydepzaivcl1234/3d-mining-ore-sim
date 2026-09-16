@@ -3,7 +3,6 @@ using UnityEngine;
 namespace MiningSimulator.Ores
 {
     /// <summary>Keeps an edge-anchored HUD element inside Android/iOS display cutouts.</summary>
-    [ExecuteAlways]
     [DefaultExecutionOrder(-1000)]
     [DisallowMultipleComponent]
     public sealed class MiningSafeAreaInset : MonoBehaviour
@@ -14,33 +13,33 @@ namespace MiningSimulator.Ores
         [SerializeField] private bool protectTop;
         [SerializeField] private bool protectBottom;
         [SerializeField] private float extraPadding = 8f;
-        [SerializeField] private Vector2 authoredPosition;
-        [SerializeField] private bool hasAuthoredPosition;
+        // Kept only so existing scenes deserialize cleanly. Scene RectTransform values are
+        // authoritative now; safe-area state is captured fresh when Play Mode starts.
+        [HideInInspector, SerializeField] private Vector2 authoredPosition;
+        [HideInInspector, SerializeField] private bool hasAuthoredPosition;
 
         private Rect lastSafeArea;
         private int lastScreenWidth;
         private int lastScreenHeight;
+        private Vector2 appliedOffset;
+        private bool initialized;
 
         public void Configure(RectTransform rect, float padding)
         {
-            bool changedTarget = target != rect;
             target = rect;
             extraPadding = Mathf.Max(0f, padding);
             protectLeft = rect != null && rect.anchorMax.x <= 0.5f;
             protectRight = rect != null && rect.anchorMin.x >= 0.5f;
             protectBottom = rect != null && rect.anchorMax.y <= 0.5f;
             protectTop = rect != null && rect.anchorMin.y >= 0.5f;
-            Rect safe = Screen.safeArea;
-            bool fullScreenSafeArea = Mathf.Approximately(safe.xMin, 0f) &&
-                                      Mathf.Approximately(safe.yMin, 0f) &&
-                                      Mathf.Approximately(safe.xMax, Screen.width) &&
-                                      Mathf.Approximately(safe.yMax, Screen.height);
-            if (rect != null && (!hasAuthoredPosition || changedTarget || fullScreenSafeArea))
+            if (Application.isPlaying && rect != null)
             {
-                authoredPosition = rect.anchoredPosition;
+                authoredPosition = rect.anchoredPosition - appliedOffset;
                 hasAuthoredPosition = true;
+                appliedOffset = Vector2.zero;
+                initialized = true;
+                Apply();
             }
-            Apply();
         }
 
         private void OnEnable()
@@ -49,12 +48,27 @@ namespace MiningSimulator.Ores
             {
                 target = transform as RectTransform;
             }
-            if (!hasAuthoredPosition && target != null)
+            if (target == null)
             {
-                authoredPosition = target.anchoredPosition;
-                hasAuthoredPosition = true;
+                return;
             }
+
+            // Always trust the RectTransform position authored and saved in the Scene.
+            authoredPosition = target.anchoredPosition;
+            hasAuthoredPosition = true;
+            appliedOffset = Vector2.zero;
+            initialized = true;
             Apply();
+        }
+
+        private void OnDisable()
+        {
+            if (initialized && target != null)
+            {
+                target.anchoredPosition = authoredPosition;
+            }
+            initialized = false;
+            appliedOffset = Vector2.zero;
         }
 
         private void Update()
@@ -92,7 +106,8 @@ namespace MiningSimulator.Ores
             if (protectRight && right > 0.01f) offset.x -= right + extraPadding;
             if (protectBottom && bottom > 0.01f) offset.y += bottom + extraPadding;
             if (protectTop && top > 0.01f) offset.y -= top + extraPadding;
-            target.anchoredPosition = authoredPosition + offset;
+            appliedOffset = offset;
+            target.anchoredPosition = authoredPosition + appliedOffset;
 
             lastSafeArea = safeArea;
             lastScreenWidth = Screen.width;
