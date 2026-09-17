@@ -56,7 +56,9 @@ namespace MiningSimulator.Ores
                     baseLocalScale * (1f + scaleAmount), halfDuration, Ease.OutQuad))
                 .Group(Tween.LocalPosition(target, liftedPosition, halfDuration, Ease.OutQuad))
                 .Chain(Tween.Scale(target, baseLocalScale, halfDuration, Ease.OutBack))
-                .Group(Tween.LocalPosition(target, baseLocalPosition, halfDuration, Ease.OutBack))
+                // Do not use an overshooting ease for position: ore feedback targets the
+                // root transform, so an OutBack return briefly drove its collider below ground.
+                .Group(Tween.LocalPosition(target, baseLocalPosition, halfDuration, Ease.OutQuad))
                 .OnComplete(this, static punch => punch.animationSequence = default);
         }
 
