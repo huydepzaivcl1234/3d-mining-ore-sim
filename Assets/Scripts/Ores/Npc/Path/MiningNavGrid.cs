@@ -31,7 +31,7 @@ namespace MiningSimulator.Ores
         [Header("Area")]
         [Tooltip("Computes the navigable area automatically from every collider on Obstacle Layers, expanded by Auto Bounds Padding. Turn off to set Area Center/Area Size by hand instead.")]
         [SerializeField] private bool autoBounds = true;
-        [Min(0f)] [SerializeField] private float autoBoundsPadding = 6f;
+        [Min(0f)][SerializeField] private float autoBoundsPadding = 6f;
         [Tooltip("World-space center of the navigable area. Ignored while Auto Bounds is on.")]
         [SerializeField] private Vector3 areaCenter;
         [Tooltip("Width (X) and depth (Z) of the navigable area, in world units. Ignored while Auto Bounds is on.")]
@@ -39,17 +39,19 @@ namespace MiningSimulator.Ores
 
         [Header("Grid")]
         [Tooltip("World size of one grid cell. Smaller = more accurate paths but more memory/CPU per bake.")]
-        [Min(0.05f)] [SerializeField] private float cellSize = 0.4f;
+        [Min(0.05f)][SerializeField] private float cellSize = 0.4f;
         [Tooltip("Obstacles that block a cell. This should match ores/rocks/terrain - NOT the NPC layer itself (NPC-NPC avoidance is already handled by MiningNpc's own separation logic, and NPCs move too often to usefully bake into a periodically-rebaked grid).")]
         [SerializeField] private LayerMask obstacleLayers = ~0;
         [Tooltip("Clearance baked around every obstacle so a 'walkable' cell always physically fits the NPC. Should be >= the NPC capsule radius plus a small margin.")]
-        [Min(0f)] [SerializeField] private float agentRadius = 0.55f;
-        [Tooltip("Vertical size of the obstacle probe box, centered a small height above each cell.")]
-        [Min(0.05f)] [SerializeField] private float probeHeight = 1.4f;
+        [Min(0f)][SerializeField] private float agentRadius = 0.55f;
+        [Tooltip("Vertical size of the obstacle probe box, measured upward from Probe Ground Clearance.")]
+        [Min(0.05f)][SerializeField] private float probeHeight = 1.4f;
+        [Tooltip("How far above the floor the obstacle probe starts. This must be greater than zero, otherwise the walkable floor's own collider is detected as an obstacle in EVERY cell and the whole grid bakes as blocked. Raise it if a thick floor/terrain still blocks everything.")]
+        [Min(0f)][SerializeField] private float probeGroundClearance = 0.2f;
 
         [Header("Rebake")]
         [Tooltip("Minimum time between automatic full rebakes of obstacle occupancy. Obstacles that change between rebakes are still handled by MiningNpc's reactive steering.")]
-        [Min(0.05f)] [SerializeField] private float rebakeInterval = 0.75f;
+        [Min(0.05f)][SerializeField] private float rebakeInterval = 0.75f;
         [SerializeField] private bool rebakeOnStart = true;
 
         [Header("Debug")]
@@ -241,16 +243,27 @@ namespace MiningSimulator.Ores
         private void BakeWalkability()
         {
             Vector3 halfExtents = new(cellSize * 0.5f, probeHeight * 0.5f, cellSize * 0.5f);
+            int blockedCells = 0;
             for (int z = 0; z < height; z++)
             {
                 for (int x = 0; x < width; x++)
                 {
-                    Vector3 center = CellCenter(x, z) + Vector3.up * (probeHeight * 0.5f);
+                    // The probe starts ABOVE the floor. Probing from y = 0 would hit the ground
+                    // collider itself in every single cell and bake the entire grid as blocked.
+                    Vector3 center = CellCenter(x, z) +
+                                     Vector3.up * (probeGroundClearance + probeHeight * 0.5f);
                     int hitCount = Physics.OverlapBoxNonAlloc(center, halfExtents, overlapBuffer,
                         Quaternion.identity, obstacleLayers, QueryTriggerInteraction.Ignore);
-                    rawBlockedBuffer[z * width + x] = hitCount > 0;
+                    bool blocked = hitCount > 0;
+                    rawBlockedBuffer[z * width + x] = blocked;
+                    if (blocked)
+                    {
+                        blockedCells++;
+                    }
                 }
             }
+
+            WarnIfFullyBlocked(blockedCells);
 
             int dilationCells = Mathf.CeilToInt(agentRadius / cellSize);
             for (int i = 0; i < walkable.Length; i++)
@@ -281,6 +294,28 @@ namespace MiningSimulator.Ores
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Shouts once if the bake produced a grid nothing can walk on. Without this the failure is
+        /// invisible: TryFindPath just returns false forever and every miner silently drops back to
+        /// the old reactive steering, which looks like "pathfinding is bad" rather than
+        /// "pathfinding never ran".
+        /// </summary>
+        private void WarnIfFullyBlocked(int blockedCells)
+        {
+            int total = width * height;
+            if (total == 0 || blockedCells < total)
+            {
+                return;
+            }
+
+            Debug.LogError(
+                $"[{nameof(MiningNavGrid)}] Every one of the {total} grid cells baked as blocked, so " +
+                "no path can ever be found and miners fall back to reactive steering. The usual " +
+                "cause is Obstacle Layers including the walkable floor's own layer - set it to the " +
+                "ore/rock layers only, or raise Probe Ground Clearance above the floor's thickness.",
+                this);
         }
 
         // ------------------------------------------------------------------ A*

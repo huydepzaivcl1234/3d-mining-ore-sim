@@ -46,6 +46,12 @@ namespace MiningSimulator.Ores
         [Min(0.05f)][SerializeField] private float repathInterval = 0.4f;
         [Tooltip("How far the stand position has to move before a fresh path is requested early (instead of waiting for Repath Interval).")]
         [Min(0f)][SerializeField] private float repathTargetMoveThreshold = 0.5f;
+        [Tooltip("Within this distance of the mining stand position, the global path is dropped and the miner walks straight in. This exists because the target ore carves itself OUT of the NavMesh, so its own stand position usually is not on the mesh at all - pathing to it either fails or stops on the carve boundary, short of mining range, and the miner stands there forever. Direct steering owns the last leg instead; the target ore is already excluded from obstacle probes, so there is nothing to route around. Roughly ore radius + NPC radius is a good value.")]
+        [Min(0.1f)][SerializeField] private float finalApproachDistance = 2.5f;
+        [Tooltip("How far ahead along the route to aim while path-following. Steering exactly at the next corner makes the miner hug it and then snap to the next heading - that is the visible zig-zag. Aiming at a point further along the polyline cuts corners smoothly. Keep it under the typical corner spacing.")]
+        [Min(0.1f)][SerializeField] private float pathLookAheadDistance = 1.75f;
+        [Tooltip("How many times a stuck miner will force a fresh route before giving up on the target (commanded targets never give up, they just keep re-routing).")]
+        [Min(1)][SerializeField] private int maximumStuckRepathAttempts = 3;
 
         private readonly List<Vector3> currentPath = new();
         private readonly List<Vector3> pathRequestBuffer = new();
@@ -53,6 +59,8 @@ namespace MiningSimulator.Ores
         private float nextRepathTime;
         private Vector3 lastPathTarget;
         private bool hasPathTarget;
+        private bool inFinalApproach;
+        private int stuckRepathAttempts;
 
         private readonly RaycastHit[] obstacleHits = new RaycastHit[32];
         private readonly Collider[] separationHits = new Collider[24];
@@ -602,6 +610,7 @@ namespace MiningSimulator.Ores
 
             SetMiningAnimationState(false);
             nextTargetSwitchTime = Time.time + npcData.TargetSwitchCooldown;
+            stuckRepathAttempts = 0;
             ClearDetour();
             ResetGlobalPath();
             ResetProgressTracking();
@@ -625,6 +634,7 @@ namespace MiningSimulator.Ores
 
             SetMiningAnimationState(false);
             nextTargetSwitchTime = Time.time + npcData.TargetSwitchCooldown;
+            stuckRepathAttempts = 0;
             ClearDetour();
             ResetGlobalPath();
             ResetProgressTracking();
@@ -780,6 +790,7 @@ namespace MiningSimulator.Ores
             reservedSlot = -1;
             hasCommandedTarget = false;
             hasMoveTarget = false;
+            stuckRepathAttempts = 0;
             SetMiningAnimationState(false);
             ClearDetour();
             ResetGlobalPath();
@@ -801,14 +812,27 @@ namespace MiningSimulator.Ores
                 return;
             }
 
+            // First remedy for any stuck miner: force a fresh route. The old route may be stale
+            // (ore mined out from under it, pushed off the path by separation, carve boundary
+            // shifted). This used to permanently disable pathfinding for the rest of the
+            // approach and hand control to the reactive detour layer, which is what produced the
+            // wander-off-and-never-commit behaviour - the final-approach handoff in
+            // UpdateGlobalPath solves that case properly now, so re-routing is enough.
+            if (useGlobalPathfinding && stuckRepathAttempts < maximumStuckRepathAttempts)
+            {
+                stuckRepathAttempts++;
+                ClearDetour();
+                ResetGlobalPath();
+                ResetProgressTracking();
+                return;
+            }
+
             if (hasCommandedTarget)
             {
                 // A player command is stronger than the normal stuck-target timeout: never drop a
-                // middle-clicked target back to the auto AI. Force a fresh route instead.
-                // Flipping avoidanceSide (what this used to do) only meant anything to the
-                // reactive detour layer, which is suppressed while a path is live - so a stuck
-                // commanded miner had literally no recovery and stayed stuck until the player
-                // clicked something else.
+                // middle-clicked target back to the auto AI. Keep re-routing forever instead, and
+                // let the attempt budget refill so the miner never stops trying.
+                stuckRepathAttempts = 0;
                 ClearDetour();
                 ResetGlobalPath();
                 ResetProgressTracking();
@@ -1150,12 +1174,41 @@ namespace MiningSimulator.Ores
         {
             if (!useGlobalPathfinding)
             {
+                inFinalApproach = false;
                 if (currentPath.Count > 0)
                 {
                     currentPath.Clear();
                 }
 
                 return;
+            }
+
+            // Final approach. The target ore carves ITSELF out of the NavMesh, so its own mining
+            // stand position normally isn't on the mesh: the path either fails outright or snaps
+            // to the carve boundary and ends there, still outside mining range - the miner then
+            // "arrives", stops, and never swings. Once inside this radius the route is handed to
+            // plain direct steering, which is safe because TryGetBlockingOre explicitly ignores
+            // the target ore, so there is nothing left to path around anyway.
+            Vector3 toStand = standPosition - currentPosition;
+            toStand.y = 0f;
+            if (toStand.sqrMagnitude <= finalApproachDistance * finalApproachDistance)
+            {
+                inFinalApproach = true;
+                if (currentPath.Count > 0)
+                {
+                    currentPath.Clear();
+                    pathWaypointIndex = 0;
+                }
+
+                return;
+            }
+
+            // Left the final-approach radius (pushed out, or the target moved): allow routing
+            // again immediately instead of waiting out the repath throttle.
+            if (inFinalApproach)
+            {
+                inFinalApproach = false;
+                nextRepathTime = 0f;
             }
 
             bool targetMoved = !hasPathTarget || (standPosition - lastPathTarget).sqrMagnitude >
@@ -1185,9 +1238,11 @@ namespace MiningSimulator.Ores
         }
 
         /// <summary>
-        /// Returns the next point along the global path to steer toward, advancing past any
-        /// waypoints already reached. Falls back to fallbackTarget (the old direct stand-position
-        /// target) when there is no active path.
+        /// Returns the point along the global path to steer toward. Advances past every waypoint
+        /// already reached, then aims pathLookAheadDistance further along the polyline rather than
+        /// exactly at the next corner - steering at the corner itself makes the miner hug it and
+        /// then snap onto the next heading, which is the zig-zag. Falls back to fallbackTarget
+        /// (the direct stand position) when there is no active path or the route is used up.
         /// </summary>
         private Vector3 GetNavigationTarget(Vector3 currentPosition, Vector3 fallbackTarget)
         {
@@ -1197,7 +1252,10 @@ namespace MiningSimulator.Ores
             }
 
             float reach = Mathf.Max(npcData.StoppingDistance, npcData.ColliderRadius * 0.5f);
-            while (pathWaypointIndex < currentPath.Count - 1)
+            // Note this advances past the LAST waypoint too. The previous version stopped at
+            // Count - 1, so an arrived miner kept steering at a corner it was already standing
+            // on: zero movement, and the stuck timer was the only way out.
+            while (pathWaypointIndex < currentPath.Count)
             {
                 Vector3 offset = currentPath[pathWaypointIndex] - currentPosition;
                 offset.y = 0f;
@@ -1209,7 +1267,45 @@ namespace MiningSimulator.Ores
                 pathWaypointIndex++;
             }
 
-            return currentPath[pathWaypointIndex];
+            if (pathWaypointIndex >= currentPath.Count)
+            {
+                // Whole route consumed - whatever is left is the final approach.
+                currentPath.Clear();
+                pathWaypointIndex = 0;
+                return fallbackTarget;
+            }
+
+            return GetLookAheadPoint(currentPosition, fallbackTarget);
+        }
+
+        /// <summary>
+        /// Walks forward along the remaining route accumulating distance, and returns the point
+        /// pathLookAheadDistance along it (interpolated inside whichever segment that lands in).
+        /// Running off the end of the route returns the real destination, so the miner aims at
+        /// where it is actually going rather than at the last corner.
+        /// </summary>
+        private Vector3 GetLookAheadPoint(Vector3 currentPosition, Vector3 fallbackTarget)
+        {
+            float remaining = pathLookAheadDistance;
+            Vector3 segmentStart = currentPosition;
+            for (int index = pathWaypointIndex; index < currentPath.Count; index++)
+            {
+                Vector3 segmentEnd = currentPath[index];
+                Vector3 segment = segmentEnd - segmentStart;
+                segment.y = 0f;
+                float segmentLength = segment.magnitude;
+                if (segmentLength >= remaining)
+                {
+                    return segmentLength <= Mathf.Epsilon
+                        ? segmentEnd
+                        : segmentStart + segment * (remaining / segmentLength);
+                }
+
+                remaining -= segmentLength;
+                segmentStart = segmentEnd;
+            }
+
+            return fallbackTarget;
         }
 
         private void ResetGlobalPath()
@@ -1218,6 +1314,7 @@ namespace MiningSimulator.Ores
             pathWaypointIndex = 0;
             hasPathTarget = false;
             nextRepathTime = 0f;
+            inFinalApproach = false;
         }
 
         private void ClearDetour()

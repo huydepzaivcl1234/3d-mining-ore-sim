@@ -21,7 +21,7 @@ namespace MiningSimulator.Ores
     public sealed class MiningNavMeshObstacle : MonoBehaviour
     {
         [Tooltip("Extra clearance added around the ore's bounds when carving, so miners don't clip the rock while walking past it. Roughly the NPC capsule radius is a good starting point.")]
-        [Min(0f)][SerializeField] private float carvePadding = 0.25f;
+        [Min(0f)] [SerializeField] private float carvePadding = 0.25f;
         [Tooltip("Re-measures the ore's bounds every time it is enabled. Needed if pooled ores are re-scaled or swap meshes between ore types; can be turned off for a fixed-size prefab.")]
         [SerializeField] private bool resizeOnEnable = true;
 
