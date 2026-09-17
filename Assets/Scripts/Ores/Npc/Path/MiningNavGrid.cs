@@ -81,6 +81,7 @@ namespace MiningSimulator.Ores
         private readonly Collider[] overlapBuffer = new Collider[16];
         private readonly List<Vector3> rawPathBuffer = new();
         private readonly List<Vector3> smoothPathBuffer = new();
+        private readonly List<Vector3> smoothPassBuffer = new();
 
         private static readonly (int dx, int dz, float cost)[] Neighbors =
         {
@@ -419,6 +420,13 @@ namespace MiningSimulator.Ores
             result.Reverse();
         }
 
+        /// <summary>
+        /// Turns the raw cell-by-cell A* result into an any-angle route by string-pulling: keep a
+        /// node only when the straight line from the last kept node to the node after it is
+        /// blocked. Repeated until it stops shrinking, because one pass leaves corners that only
+        /// become cuttable once earlier corners are gone - that leftover staircase is what makes
+        /// grid paths look longer and more jagged than the true shortest route.
+        /// </summary>
         private void SmoothPath(List<Vector3> rawPath, List<Vector3> result)
         {
             result.Clear();
@@ -433,34 +441,139 @@ namespace MiningSimulator.Ores
                 return;
             }
 
-            result.Add(rawPath[0]);
-            int anchor = 0;
-            for (int i = 1; i < rawPath.Count - 1; i++)
+            StringPull(rawPath, result);
+
+            // Each extra pass costs one line-of-sight walk per remaining node, and the node count
+            // drops fast, so the cap is just a safety net rather than a real limit.
+            for (int pass = 0; pass < 3 && result.Count > 2; pass++)
             {
-                if (!HasClearGridLine(rawPath[anchor], rawPath[i + 1]))
+                smoothPassBuffer.Clear();
+                smoothPassBuffer.AddRange(result);
+                StringPull(smoothPassBuffer, result);
+                if (result.Count == smoothPassBuffer.Count)
                 {
-                    result.Add(rawPath[i]);
+                    break;
+                }
+            }
+        }
+
+        private void StringPull(List<Vector3> source, List<Vector3> result)
+        {
+            result.Clear();
+            result.Add(source[0]);
+            int anchor = 0;
+            for (int i = 1; i < source.Count - 1; i++)
+            {
+                if (!HasClearGridLine(source[anchor], source[i + 1]))
+                {
+                    result.Add(source[i]);
                     anchor = i;
                 }
             }
 
-            result.Add(rawPath[^1]);
+            result.Add(source[^1]);
         }
 
+        /// <summary>
+        /// Exact line-of-sight between two world points over the walkable grid, used by the
+        /// string-pulling in <see cref="SmoothPath"/> to decide whether a corner can be cut.
+        ///
+        /// This walks the grid cell by cell (Amanatides and Woo voxel traversal) instead of
+        /// sampling points along the line. Point sampling - the previous approach - had two
+        /// real failure modes that both show up as a miner shortcutting into a rock:
+        ///   1. It stepped half a cell at a time, so a line crossing the corner region of a
+        ///      blocked cell could pass between two samples and be reported clear.
+        ///   2. It resolved samples through the clamping WorldToIndex, so a shortcut that left
+        ///      the baked area entirely got clamped onto an edge cell; if that edge cell happened
+        ///      to be walkable the whole off-grid segment was reported clear.
+        /// Leaving the grid is now treated as blocked: unbaked space is unknown, not free.
+        /// </summary>
         private bool HasClearGridLine(Vector3 a, Vector3 b)
         {
-            float distance = Vector3.Distance(a, b);
-            int steps = Mathf.Max(1, Mathf.CeilToInt(distance / (cellSize * 0.5f)));
-            for (int i = 0; i <= steps; i++)
+            if (!TryWorldToCell(a, out int x, out int z) ||
+                !TryWorldToCell(b, out int endX, out int endZ))
             {
-                Vector3 point = Vector3.Lerp(a, b, (float)i / steps);
-                if (!walkable[WorldToIndex(point)])
+                return false;
+            }
+
+            if (!walkable[z * width + x] || !walkable[endZ * width + endX])
+            {
+                return false;
+            }
+
+            // Continuous cell-space coordinates of the segment.
+            float fromX = (a.x - origin.x) / cellSize;
+            float fromZ = (a.z - origin.z) / cellSize;
+            float deltaX = (b.x - origin.x) / cellSize - fromX;
+            float deltaZ = (b.z - origin.z) / cellSize - fromZ;
+
+            int stepX = deltaX > 0f ? 1 : deltaX < 0f ? -1 : 0;
+            int stepZ = deltaZ > 0f ? 1 : deltaZ < 0f ? -1 : 0;
+
+            // Distance along the segment to the next cell boundary on each axis, and how much
+            // more distance each subsequent boundary costs.
+            float nextX = stepX > 0 ? x + 1 : x;
+            float nextZ = stepZ > 0 ? z + 1 : z;
+            float maxX = stepX != 0 ? (nextX - fromX) / deltaX : float.PositiveInfinity;
+            float maxZ = stepZ != 0 ? (nextZ - fromZ) / deltaZ : float.PositiveInfinity;
+            float deltaStepX = stepX != 0 ? stepX / deltaX : float.PositiveInfinity;
+            float deltaStepZ = stepZ != 0 ? stepZ / deltaZ : float.PositiveInfinity;
+
+            int guard = width + height + 2;
+            while (guard-- > 0)
+            {
+                if (x == endX && z == endZ)
+                {
+                    return true;
+                }
+
+                if (Mathf.Abs(maxX - maxZ) <= 0.0001f && stepX != 0 && stepZ != 0)
+                {
+                    // The segment passes exactly through a cell corner. Refuse to squeeze
+                    // diagonally between two blocked cells - same rule the A* itself applies to
+                    // diagonal steps, so smoothing can't undo it.
+                    if (!walkable[z * width + x + stepX] ||
+                        !walkable[(z + stepZ) * width + x])
+                    {
+                        return false;
+                    }
+
+                    x += stepX;
+                    z += stepZ;
+                    maxX += deltaStepX;
+                    maxZ += deltaStepZ;
+                }
+                else if (maxX < maxZ)
+                {
+                    x += stepX;
+                    maxX += deltaStepX;
+                }
+                else
+                {
+                    z += stepZ;
+                    maxZ += deltaStepZ;
+                }
+
+                if (x < 0 || x >= width || z < 0 || z >= height || !walkable[z * width + x])
                 {
                     return false;
                 }
             }
 
-            return true;
+            return false;
+        }
+
+        /// <summary>
+        /// Non-clamping world-to-cell conversion. <see cref="WorldToIndex"/> clamps, which is
+        /// right when snapping a start/end point onto the grid but wrong for line-of-sight,
+        /// where a point outside the grid must be reported as outside rather than silently
+        /// pulled onto the nearest edge cell.
+        /// </summary>
+        private bool TryWorldToCell(Vector3 world, out int x, out int z)
+        {
+            x = Mathf.FloorToInt((world.x - origin.x) / cellSize);
+            z = Mathf.FloorToInt((world.z - origin.z) / cellSize);
+            return x >= 0 && x < width && z >= 0 && z < height;
         }
 
         // ------------------------------------------------------------------ Grid helpers
