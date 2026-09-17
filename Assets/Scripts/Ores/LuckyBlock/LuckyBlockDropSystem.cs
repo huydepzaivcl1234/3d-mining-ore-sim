@@ -26,7 +26,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private MiningOrbitCamera orbitCamera;
 
         private readonly HashSet<LuckyBlock> activeBlocks = new();
-        private readonly Dictionary<LuckyBlockType, Queue<LuckyBlock>> pools = new();
+        private readonly Dictionary<LuckyBlockVariantData, Queue<LuckyBlock>> pools = new();
         private readonly HashSet<LuckyBlock> pooledBlocks = new();
         private readonly Queue<LuckyBlockVariantData> guaranteedVariantQueue = new();
         private readonly Collider[] overlapResults = new Collider[64];
@@ -137,9 +137,10 @@ namespace MiningSimulator.Ores
 
         private IEnumerator DropLoop()
         {
+            WaitForSeconds dropInterval = new(data.DropCheckIntervalSeconds);
             while (enabled)
             {
-                yield return new WaitForSeconds(data.DropCheckIntervalSeconds);
+                yield return dropInterval;
                 if (activeBlocks.Count >= data.MaximumActiveBlocks)
                 {
                     continue;
@@ -517,7 +518,7 @@ namespace MiningSimulator.Ores
 
         private LuckyBlock TakeFromPool(LuckyBlockVariantData variant)
         {
-            if (!pools.TryGetValue(variant.Type, out Queue<LuckyBlock> pool))
+            if (!pools.TryGetValue(variant, out Queue<LuckyBlock> pool))
             {
                 return null;
             }
@@ -549,16 +550,35 @@ namespace MiningSimulator.Ores
             Unsubscribe(block);
             activeBlocks.Remove(block);
 
-            // Broken/expired Lucky Blocks are destroyed immediately instead of being kept
-            // alive in a reuse pool. Keeping the old instance around held onto its already
-            // instantiated variant model, so the next drop kept dequeuing that same old
-            // instance for its type and TryDropOne() could not build a different Lucky
-            // Block type until it happened to roll that exact type again (e.g. two Gold
-            // blocks stayed in rotation and Diamond/Rainbow never appeared). Destroying it
-            // guarantees the next successful roll always creates a brand-new block that
-            // matches the variant that was actually chosen.
-            pooledBlocks.Remove(block);
-            Destroy(block.gameObject);
+            if (pooledBlocks.Contains(block))
+            {
+                return;
+            }
+
+            LuckyBlockVariantData variant = block.Variant;
+            int maximumPooledBlocks = data != null ? data.MaximumPooledBlocks : 0;
+            if (variant == null || maximumPooledBlocks <= 0 ||
+                pooledBlocks.Count >= maximumPooledBlocks)
+            {
+                pooledBlocks.Remove(block);
+                Destroy(block.gameObject);
+                return;
+            }
+
+            if (!pooledBlocks.Add(block))
+            {
+                return;
+            }
+
+            block.gameObject.SetActive(false);
+            block.transform.SetParent(droppedBlockParent != null ? droppedBlockParent : transform,
+                false);
+            if (!pools.TryGetValue(variant, out Queue<LuckyBlock> pool))
+            {
+                pool = new Queue<LuckyBlock>();
+                pools.Add(variant, pool);
+            }
+            pool.Enqueue(block);
         }
 
         private void Subscribe(LuckyBlock block)
