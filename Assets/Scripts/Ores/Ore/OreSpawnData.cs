@@ -122,10 +122,10 @@ namespace MiningSimulator.Ores
         [SerializeField] private Vector2 randomYRotationRange = new(0f, 360f);
         [SerializeField] private Vector2 uniformScaleRange = Vector2.one;
 
-        [Header("NPC Passage")]
-        [Tooltip("Minimum empty horizontal gap kept between ore collider footprints so an NPC can pass.")]
-        [Min(0.1f), SerializeField] private float npcPassageWidth = 1.1f;
-        [Tooltip("Candidate positions tested before a spawn is deferred because the field is too crowded.")]
+        [Header("Ore Spacing")]
+        [Tooltip("Minimum horizontal distance between spawned ore centers. Keeps a walkable gap for NPCs.")]
+        [Min(0.1f), SerializeField] private float npcPassageWidth = 2.5f;
+        [Tooltip("Random positions tested before spawning is deferred because the field is too crowded.")]
         [Min(1), SerializeField] private int placementAttempts = 24;
 
         [Header("Surface Placement")]
