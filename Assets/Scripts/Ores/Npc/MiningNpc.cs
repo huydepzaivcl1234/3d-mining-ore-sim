@@ -1,6 +1,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace MiningSimulator.Ores
 {
@@ -53,6 +56,10 @@ namespace MiningSimulator.Ores
         [Tooltip("How many times a stuck miner will force a fresh route before giving up on the target (commanded targets never give up, they just keep re-routing).")]
         [Min(1)][SerializeField] private int maximumStuckRepathAttempts = 3;
 
+        [Header("Path Debug")]
+        [Tooltip("Draw the current NavMesh/A* route in the Scene view while the game is running.")]
+        [SerializeField] private bool drawPathGizmos = true;
+
         private readonly List<Vector3> currentPath = new();
         private readonly List<Vector3> pathRequestBuffer = new();
         private int pathWaypointIndex;
@@ -60,6 +67,7 @@ namespace MiningSimulator.Ores
         private Vector3 lastPathTarget;
         private bool hasPathTarget;
         private bool inFinalApproach;
+        private MiningPathSource currentPathSource;
         private int stuckRepathAttempts;
 
         private readonly RaycastHit[] obstacleHits = new RaycastHit[32];
@@ -1182,6 +1190,7 @@ namespace MiningSimulator.Ores
             if (!useGlobalPathfinding)
             {
                 inFinalApproach = false;
+                currentPathSource = MiningPathSource.None;
                 if (currentPath.Count > 0)
                 {
                     currentPath.Clear();
@@ -1224,15 +1233,18 @@ namespace MiningSimulator.Ores
             hasPathTarget = true;
 
             if (MiningNavigation.TryFindPath(currentPosition, standPosition, pathRequestBuffer,
-                    UnityEngine.AI.NavMesh.AllAreas, navMeshSampleRadius))
+                    out MiningPathSource pathSource, UnityEngine.AI.NavMesh.AllAreas,
+                    navMeshSampleRadius))
             {
                 currentPath.Clear();
                 currentPath.AddRange(pathRequestBuffer);
                 pathWaypointIndex = 0;
+                currentPathSource = pathSource;
             }
             else
             {
                 currentPath.Clear();
+                currentPathSource = MiningPathSource.None;
             }
         }
 
@@ -1385,6 +1397,71 @@ namespace MiningSimulator.Ores
             hasPathTarget = false;
             nextRepathTime = 0f;
             inFinalApproach = false;
+            currentPathSource = MiningPathSource.None;
+        }
+
+        private void OnDrawGizmos()
+        {
+            if (!drawPathGizmos)
+            {
+                return;
+            }
+
+            Vector3 currentPosition = body != null ? body.position : transform.position;
+            Vector3 routePosition = currentPosition + Vector3.up * 0.08f;
+            Color routeColor = inFinalApproach
+                ? Color.green
+                : currentPathSource == MiningPathSource.NavMesh
+                    ? Color.cyan
+                    : currentPathSource == MiningPathSource.Grid ? Color.yellow : Color.gray;
+
+            Gizmos.color = routeColor;
+            Gizmos.DrawSphere(routePosition, 0.08f);
+
+            if (currentPath.Count > 0)
+            {
+                for (int index = 0; index < currentPath.Count; index++)
+                {
+                    Vector3 waypoint = currentPath[index] + Vector3.up * 0.08f;
+                    Gizmos.color = index < pathWaypointIndex
+                        ? new Color(routeColor.r, routeColor.g, routeColor.b, 0.28f)
+                        : routeColor;
+                    Gizmos.DrawLine(routePosition, waypoint);
+                    Gizmos.DrawSphere(waypoint, index == pathWaypointIndex ? 0.16f : 0.09f);
+                    routePosition = waypoint;
+                }
+
+                if (pathWaypointIndex < currentPath.Count)
+                {
+                    Gizmos.color = Color.magenta;
+                    Gizmos.DrawWireSphere(currentPath[pathWaypointIndex] + Vector3.up * 0.08f,
+                        0.22f);
+                }
+            }
+            else if (hasMoveTarget)
+            {
+                // Gray direct line: no global route is currently available, so this NPC is using
+                // reactive steering. It makes an unbaked/disconnected navigation area obvious.
+                Gizmos.color = inFinalApproach ? Color.green : Color.gray;
+                Gizmos.DrawLine(routePosition, desiredMoveTarget + Vector3.up * 0.08f);
+            }
+
+            if (hasMoveTarget)
+            {
+                Gizmos.color = Color.red;
+                Gizmos.DrawWireCube(desiredMoveTarget + Vector3.up * 0.08f,
+                    Vector3.one * 0.22f);
+            }
+
+#if UNITY_EDITOR
+            string sourceLabel = inFinalApproach
+                ? $"{currentPathSource} final approach"
+                : currentPathSource == MiningPathSource.None
+                ? "Reactive fallback"
+                : currentPathSource.ToString();
+            Handles.Label(currentPosition + Vector3.up * 1.25f,
+                $"Path: {sourceLabel}\nWaypoint: {pathWaypointIndex}/{currentPath.Count}");
+#endif
         }
 
         private void ClearDetour()

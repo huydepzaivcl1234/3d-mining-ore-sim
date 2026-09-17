@@ -151,7 +151,10 @@ namespace MiningSimulator.Ores
             int rewardCount = Mathf.Max(1, giftBox.GiftRewards.Count);
             float step = 360f / rewardCount;
             float startAngle = wheel.localEulerAngles.z;
-            float selectedAngle = Mathf.Repeat(-rewardIndex * step, 360f);
+            // Reward cards are placed clockwise from the top of the wheel. Positive wheel
+            // rotation brings that card back to the top pointer; the previous negative sign
+            // visibly pointed at a different reward even though the selected reward was granted.
+            float selectedAngle = Mathf.Repeat(rewardIndex * step, 360f);
             float alignment = Mathf.Repeat(selectedAngle - Mathf.Repeat(startAngle, 360f), 360f);
             float endAngle = startAngle + giftBox.GiftSpinRotations * 360f + alignment;
             WheelSpinStarted?.Invoke();
