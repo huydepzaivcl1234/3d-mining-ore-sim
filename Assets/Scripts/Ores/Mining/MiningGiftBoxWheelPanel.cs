@@ -11,6 +11,8 @@ namespace MiningSimulator.Ores
     [DisallowMultipleComponent]
     public sealed class MiningGiftBoxWheelPanel : MonoBehaviour
     {
+        private const string RareGiftBoxItemId = "rare_gift_box";
+
         /// <summary>Fires the instant the wheel actually starts spinning (cost already paid,
         /// reward already rolled). Covers every gift box type shown through this one shared
         /// panel, including any added later - nothing gift-specific to wire up per box.</summary>
@@ -205,12 +207,41 @@ namespace MiningSimulator.Ores
                 spinLabel.text = MiningLocalization.Text("REWARD RECEIVED");
                 ShowRewardPopup(selectedReward.GetDisplayName());
                 RewardGranted?.Invoke(selectedReward);
+                PrepareNextRareGiftBox();
             }
             else
             {
                 itemSystem.TryAddItem(giftBox);
                 statusLabel.text = MiningLocalization.Text("Inventory changed during the spin. The gift box was returned.");
                 spinLabel.text = MiningLocalization.Text("SPIN FAILED");
+            }
+        }
+
+        private void PrepareNextRareGiftBox()
+        {
+            if (giftBox == null || giftBox.ItemId != RareGiftBoxItemId || itemSystem == null)
+            {
+                return;
+            }
+
+            // Prefer the current stack, then locate another stack if the first one was emptied.
+            for (int offset = 0; offset < itemSystem.Capacity; offset++)
+            {
+                int slotIndex = (sourceSlotIndex + offset) % itemSystem.Capacity;
+                MiningItemSystem.InventorySlotView slot = itemSystem.GetSlot(slotIndex);
+                if (slot.Item != giftBox || slot.Count <= 0)
+                {
+                    continue;
+                }
+
+                sourceSlotIndex = slotIndex;
+                selectedReward = null;
+                spinButton.interactable = true;
+                statusLabel.text = MiningLocalization.Text(
+                    "Another Rare Gift Box is ready. Press SPIN.",
+                    "Một Hộp Quà Hiếm khác đã sẵn sàng. Nhấn QUAY.");
+                spinLabel.text = MiningLocalization.Text("SPIN AGAIN", "QUAY TIẾP");
+                return;
             }
         }
 

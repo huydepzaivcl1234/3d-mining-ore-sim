@@ -1518,10 +1518,31 @@ namespace MiningSimulator.Ores
         {
             Vector3 currentVelocity = body.linearVelocity;
             Vector3 currentHorizontalVelocity = new(currentVelocity.x, 0f, currentVelocity.z);
-            float response = Vector3.Dot(currentHorizontalVelocity, desiredHorizontalVelocity) <
-                currentHorizontalVelocity.sqrMagnitude ? brakingAcceleration : acceleration;
-            Vector3 nextHorizontalVelocity = Vector3.MoveTowards(currentHorizontalVelocity,
-                desiredHorizontalVelocity, response * Time.fixedDeltaTime);
+            float desiredSpeed = desiredHorizontalVelocity.magnitude;
+            Vector3 nextHorizontalVelocity;
+            if (desiredSpeed <= Mathf.Epsilon)
+            {
+                nextHorizontalVelocity = Vector3.MoveTowards(currentHorizontalVelocity,
+                    Vector3.zero, brakingAcceleration * Time.fixedDeltaTime);
+            }
+            else
+            {
+                Vector3 desiredDirection = desiredHorizontalVelocity / desiredSpeed;
+
+                // The route target can turn abruptly at a path corner. Retaining the old
+                // perpendicular Rigidbody velocity lets a fast miner slide past that corner
+                // before braking catches up. Remove only that sideways momentum immediately;
+                // acceleration and braking still control speed along the new heading.
+                float currentForwardSpeed = Mathf.Max(0f,
+                    Vector3.Dot(currentHorizontalVelocity, desiredDirection));
+                float response = desiredSpeed < currentForwardSpeed
+                    ? brakingAcceleration
+                    : acceleration;
+                float nextSpeed = Mathf.MoveTowards(currentForwardSpeed, desiredSpeed,
+                    response * Time.fixedDeltaTime);
+                nextHorizontalVelocity = desiredDirection * nextSpeed;
+            }
+
             body.linearVelocity = new Vector3(
                 nextHorizontalVelocity.x, currentVelocity.y, nextHorizontalVelocity.z);
         }

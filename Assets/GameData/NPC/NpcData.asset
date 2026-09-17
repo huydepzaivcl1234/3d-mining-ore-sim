@@ -17,12 +17,12 @@ MonoBehaviour:
   spawnSpread: 1.25
   spawnHeightOffset: 0.9
   spawnAttempts: 12
-  moveSpeed: 3.5
+  moveSpeed: 3
   turnSpeed: 720
   miningRange: 1
   stoppingDistance: 0.12
   movementAcceleration: 18
-  brakingAcceleration: 28
+  brakingAcceleration: 35
   targetSwitchDistanceAdvantage: 0.25
   targetSwitchCooldown: 0.75
   standSlotSpacingPadding: 0.12
