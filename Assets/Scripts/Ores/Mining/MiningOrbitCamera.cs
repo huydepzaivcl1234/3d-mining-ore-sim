@@ -5,7 +5,7 @@ using UnityEngine.InputSystem.Controls;
 
 namespace MiningSimulator.Ores
 {
-    /// <summary>Provides 360-degree orbit, keyboard pan, and zoom.</summary>
+    /// <summary>Provides 360-degree orbit, keyboard movement, and mouse-wheel zoom.</summary>
     [DisallowMultipleComponent]
     public sealed class MiningOrbitCamera : MonoBehaviour
     {

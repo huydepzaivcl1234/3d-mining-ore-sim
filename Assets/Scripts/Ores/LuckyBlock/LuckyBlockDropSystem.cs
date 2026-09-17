@@ -94,6 +94,15 @@ namespace MiningSimulator.Ores
             return false;
         }
 
+        /// <summary>Reserves one specific active block for a player-issued NPC command.</summary>
+        public bool TryReserveBlock(MiningNpc miner, LuckyBlock block, int miningPower,
+            out int slotIndex)
+        {
+            slotIndex = -1;
+            return block != null && activeBlocks.Contains(block) &&
+                   block.TryReserveMiner(miner, miningPower, out slotIndex);
+        }
+
         private void OnEnable()
         {
             EnsureDropRoutine();

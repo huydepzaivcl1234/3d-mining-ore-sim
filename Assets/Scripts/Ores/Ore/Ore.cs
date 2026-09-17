@@ -188,6 +188,31 @@ namespace MiningSimulator.Ores
                 : transform.position;
         }
 
+        public bool TryGetWorldBounds(out Bounds bounds)
+        {
+            bool hasBounds = false;
+            bounds = default;
+            foreach (Collider targetCollider in GetMiningColliders())
+            {
+                if (targetCollider == null || !targetCollider.enabled || targetCollider.isTrigger)
+                {
+                    continue;
+                }
+
+                if (!hasBounds)
+                {
+                    bounds = targetCollider.bounds;
+                    hasBounds = true;
+                }
+                else
+                {
+                    bounds.Encapsulate(targetCollider.bounds);
+                }
+            }
+
+            return hasBounds;
+        }
+
         private void Awake()
         {
             miningColliders = GetComponentsInChildren<Collider>();

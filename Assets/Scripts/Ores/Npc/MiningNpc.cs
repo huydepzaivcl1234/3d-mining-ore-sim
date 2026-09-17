@@ -59,7 +59,13 @@ namespace MiningSimulator.Ores
         private Vector3 lastProgressPosition;
         private Vector3 smoothedSeparation;
         private Vector3 detourDirection;
+        private Vector3 detourWaypoint;
+        private Vector3 detourExitWaypoint;
+        private Ore detourWaypointOre;
         private bool hasMoveTarget;
+        private bool hasDetourWaypoint;
+        private bool hasDetourExitWaypoint;
+        private bool hasCommandedTarget;
         private bool isMining;
         private bool isMoving;
         private CapsuleCollider capsule;
@@ -71,6 +77,45 @@ namespace MiningSimulator.Ores
         public void ConfigureTool(Transform targetToolPivot)
         {
             toolPivot = targetToolPivot;
+        }
+
+        /// <summary>
+        /// Immediately replaces the current AI-selected target with the requested ore.
+        /// Commanded targets are kept until they are depleted, disabled, or replaced by
+        /// another player command.
+        /// </summary>
+        public bool CommandMine(Ore ore)
+        {
+            if (oreSpawner == null || !CanMine(ore) ||
+                !oreSpawner.TryReserveOre(this, ore, CurrentMiningPower, out int slotIndex))
+            {
+                return false;
+            }
+
+            ignoredOre = null;
+            ignoredOreUntil = 0f;
+            ignoredLuckyBlock = null;
+            ignoredLuckyBlockUntil = 0f;
+            SetTarget(ore, slotIndex, true);
+            return true;
+        }
+
+        /// <summary>Immediately replaces the current AI-selected target with a Lucky Block.</summary>
+        public bool CommandMine(LuckyBlock block)
+        {
+            if (luckyBlockSystem == null || !CanMine(block) ||
+                !luckyBlockSystem.TryReserveBlock(this, block, CurrentMiningPower,
+                    out int slotIndex))
+            {
+                return false;
+            }
+
+            ignoredOre = null;
+            ignoredOreUntil = 0f;
+            ignoredLuckyBlock = null;
+            ignoredLuckyBlockUntil = 0f;
+            SetTarget(block, slotIndex, true);
+            return true;
         }
 
         public void Initialize(OreSpawner targetSpawner, NpcData targetNpcData)
@@ -259,7 +304,13 @@ namespace MiningSimulator.Ores
             }
 
             Vector3 currentPosition = body.position;
-            Vector3 movementOffset = desiredMoveTarget - currentPosition;
+            Vector3 navigationTarget = desiredMoveTarget;
+            if (TryGetDetourWaypoint(currentPosition, out Vector3 waypoint))
+            {
+                navigationTarget = waypoint;
+            }
+
+            Vector3 movementOffset = navigationTarget - currentPosition;
             movementOffset.y = 0f;
             if (!hasMoveTarget || movementOffset.sqrMagnitude <=
                 npcData.StoppingDistance * npcData.StoppingDistance)
@@ -277,7 +328,8 @@ namespace MiningSimulator.Ores
             if (TryGetBlockingOre(movementDirection, probeDistance, out Ore blockingOre,
                 out Vector3 blockingPoint))
             {
-                if (Time.time >= nextTargetSwitchTime && blockingOre != ignoredOre &&
+                if (!hasCommandedTarget && Time.time >= nextTargetSwitchTime &&
+                    blockingOre != ignoredOre &&
                     CanMine(blockingOre) && IsBlockingOreCloser(blockingOre, currentPosition) &&
                     TrySwitchTarget(blockingOre))
                 {
@@ -498,13 +550,14 @@ namespace MiningSimulator.Ores
             return true;
         }
 
-        private void SetTarget(Ore ore, int slotIndex)
+        private void SetTarget(Ore ore, int slotIndex, bool commandedTarget = false)
         {
             Ore previousOre = targetOre;
             LuckyBlock previousBlock = targetLuckyBlock;
             targetOre = ore;
             targetLuckyBlock = null;
             reservedSlot = slotIndex;
+            hasCommandedTarget = commandedTarget;
             previousBlock?.ReleaseMiner(this);
             if (previousOre != null && previousOre != ore)
             {
@@ -519,13 +572,14 @@ namespace MiningSimulator.Ores
             ResetProgressTracking();
         }
 
-        private void SetTarget(LuckyBlock block, int slotIndex)
+        private void SetTarget(LuckyBlock block, int slotIndex, bool commandedTarget = false)
         {
             Ore previousOre = targetOre;
             LuckyBlock previousBlock = targetLuckyBlock;
             targetOre = null;
             targetLuckyBlock = block;
             reservedSlot = slotIndex;
+            hasCommandedTarget = commandedTarget;
             previousOre?.ReleaseMiner(this);
             if (previousBlock != null && previousBlock != block)
             {
@@ -629,7 +683,7 @@ namespace MiningSimulator.Ores
 
         private void TryAdoptVisibleOre(Vector3 currentPosition)
         {
-            if (targetLuckyBlock != null)
+            if (hasCommandedTarget || targetLuckyBlock != null)
             {
                 return;
             }
@@ -688,6 +742,7 @@ namespace MiningSimulator.Ores
             targetOre = null;
             targetLuckyBlock = null;
             reservedSlot = -1;
+            hasCommandedTarget = false;
             hasMoveTarget = false;
             SetMiningAnimationState(false);
             ClearDetour();
@@ -706,6 +761,16 @@ namespace MiningSimulator.Ores
 
             if (Time.time - lastProgressTime < npcData.StuckTimeout)
             {
+                return;
+            }
+
+            if (hasCommandedTarget)
+            {
+                // A player command is stronger than the normal stuck-target timeout. Keep the
+                // target and retry the path from the other side instead of returning to auto AI.
+                avoidanceSide *= -1f;
+                ClearDetour();
+                ResetProgressTracking();
                 return;
             }
 
@@ -748,7 +813,7 @@ namespace MiningSimulator.Ores
             blockingOre = null;
             blockingPoint = Vector3.zero;
             Vector3 origin = body.position + Vector3.up * npcData.ColliderRadius;
-            int hitCount = Physics.SphereCastNonAlloc(origin, npcData.ObstacleProbeRadius,
+            int hitCount = Physics.SphereCastNonAlloc(origin, GetObstacleProbeRadius(),
                 direction, obstacleHits, distance, npcData.CollisionLayers,
                 QueryTriggerInteraction.Ignore);
             float closestDistance = float.PositiveInfinity;
@@ -793,9 +858,15 @@ namespace MiningSimulator.Ores
         private Vector3 ResolveBlockedPath(Vector3 forward, Vector3 currentPosition,
             Ore blockingOre, Vector3 blockingPoint)
         {
+            if (TryCreateDetourWaypoint(forward, currentPosition, blockingOre,
+                out Vector3 waypointDirection))
+            {
+                return waypointDirection;
+            }
+
             if (Time.time < detourDirectionUntil && detourDirection.sqrMagnitude > Mathf.Epsilon &&
                 GetOreClearance(detourDirection, npcData.DetourProbeDistance) >=
-                npcData.DetourMinimumClearance * 0.5f)
+                npcData.DetourMinimumClearance)
             {
                 return detourDirection;
             }
@@ -820,7 +891,7 @@ namespace MiningSimulator.Ores
                 Vector3 reverseDirection = -forward;
                 float reverseClearance = GetOreClearance(
                     reverseDirection, npcData.DetourProbeDistance);
-                if (reverseClearance >= npcData.DetourMinimumClearance * 0.5f)
+                if (reverseClearance > bestClearance + 0.01f)
                 {
                     bestDirection = reverseDirection;
                 }
@@ -830,6 +901,124 @@ namespace MiningSimulator.Ores
             detourDirectionUntil = Time.time + npcData.DetourDirectionHoldTime;
             ResetProgressTracking();
             return detourDirection;
+        }
+
+        private bool TryCreateDetourWaypoint(Vector3 forward, Vector3 currentPosition,
+            Ore blockingOre, out Vector3 waypointDirection)
+        {
+            waypointDirection = Vector3.zero;
+            if (blockingOre == null || !blockingOre.TryGetWorldBounds(out Bounds bounds))
+            {
+                return false;
+            }
+
+            forward.y = 0f;
+            if (forward.sqrMagnitude <= Mathf.Epsilon)
+            {
+                return false;
+            }
+
+            forward.Normalize();
+            Vector3 side = Vector3.Cross(Vector3.up, forward).normalized;
+            float probeRadius = GetObstacleProbeRadius();
+            float forwardExtent = Mathf.Abs(forward.x) * bounds.extents.x +
+                                  Mathf.Abs(forward.z) * bounds.extents.z;
+            float sideExtent = Mathf.Abs(side.x) * bounds.extents.x +
+                               Mathf.Abs(side.z) * bounds.extents.z;
+            float forwardPadding = probeRadius + npcData.StandSlotSpacingPadding;
+            float sidePadding = probeRadius + npcData.StandSlotSpacingPadding * 2f;
+
+            Vector3 nearCorner = bounds.center - forward * (forwardExtent + forwardPadding);
+            nearCorner.y = currentPosition.y;
+            Vector3 farCorner = bounds.center + forward * (forwardExtent + forwardPadding);
+            farCorner.y = currentPosition.y;
+            Vector3 positiveWaypoint = nearCorner + side * (sideExtent + sidePadding);
+            Vector3 negativeWaypoint = nearCorner - side * (sideExtent + sidePadding);
+            Vector3 positiveExit = farCorner + side * (sideExtent + sidePadding);
+            Vector3 negativeExit = farCorner - side * (sideExtent + sidePadding);
+
+            float positiveClearance = GetWaypointClearance(currentPosition, positiveWaypoint) +
+                                      GetWaypointClearance(positiveWaypoint, positiveExit);
+            float negativeClearance = GetWaypointClearance(currentPosition, negativeWaypoint) +
+                                      GetWaypointClearance(negativeWaypoint, negativeExit);
+            bool choosePositive;
+            if (Mathf.Abs(positiveClearance - negativeClearance) <= 0.05f)
+            {
+                choosePositive = avoidanceSide >= 0f;
+            }
+            else
+            {
+                choosePositive = positiveClearance > negativeClearance;
+            }
+
+            detourWaypoint = choosePositive ? positiveWaypoint : negativeWaypoint;
+            detourExitWaypoint = choosePositive ? positiveExit : negativeExit;
+            avoidanceSide = choosePositive ? 1f : -1f;
+            detourWaypointOre = blockingOre;
+            hasDetourWaypoint = true;
+            hasDetourExitWaypoint = true;
+            avoidanceOre = blockingOre;
+            detourDirectionUntil = Time.time + npcData.DetourDirectionHoldTime;
+
+            waypointDirection = detourWaypoint - currentPosition;
+            waypointDirection.y = 0f;
+            if (waypointDirection.sqrMagnitude <= Mathf.Epsilon)
+            {
+                ClearDetour();
+                return false;
+            }
+
+            waypointDirection.Normalize();
+            detourDirection = waypointDirection;
+            ResetProgressTracking();
+            return true;
+        }
+
+        private bool TryGetDetourWaypoint(Vector3 currentPosition, out Vector3 waypoint)
+        {
+            waypoint = default;
+            if (!hasDetourWaypoint || detourWaypointOre == null ||
+                !detourWaypointOre.isActiveAndEnabled || detourWaypointOre.IsDepleted)
+            {
+                ClearDetour();
+                return false;
+            }
+
+            Vector3 waypointOffset = detourWaypoint - currentPosition;
+            waypointOffset.y = 0f;
+            float reachedDistance = Mathf.Max(npcData.StoppingDistance,
+                npcData.ColliderRadius * 0.35f);
+            if (waypointOffset.sqrMagnitude <= reachedDistance * reachedDistance)
+            {
+                if (!hasDetourExitWaypoint)
+                {
+                    ClearDetour();
+                    return false;
+                }
+
+                detourWaypoint = detourExitWaypoint;
+                hasDetourExitWaypoint = false;
+                waypointOffset = detourWaypoint - currentPosition;
+                waypointOffset.y = 0f;
+                if (waypointOffset.sqrMagnitude <= reachedDistance * reachedDistance)
+                {
+                    ClearDetour();
+                    return false;
+                }
+            }
+
+            waypoint = detourWaypoint;
+            return true;
+        }
+
+        private float GetWaypointClearance(Vector3 currentPosition, Vector3 waypoint)
+        {
+            Vector3 offset = waypoint - currentPosition;
+            offset.y = 0f;
+            float distance = offset.magnitude;
+            return distance <= Mathf.Epsilon
+                ? 0f
+                : GetOreClearanceFrom(currentPosition, offset / distance, distance);
         }
 
         private void EvaluateDetourCandidate(Vector3 forward, float angle,
@@ -853,8 +1042,14 @@ namespace MiningSimulator.Ores
                 return 0f;
             }
 
-            Vector3 origin = body.position + Vector3.up * npcData.ColliderRadius;
-            int hitCount = Physics.SphereCastNonAlloc(origin, npcData.ObstacleProbeRadius,
+            return GetOreClearanceFrom(body.position, direction, distance);
+        }
+
+        private float GetOreClearanceFrom(Vector3 worldPosition, Vector3 direction,
+            float distance)
+        {
+            Vector3 origin = worldPosition + Vector3.up * npcData.ColliderRadius;
+            int hitCount = Physics.SphereCastNonAlloc(origin, GetObstacleProbeRadius(),
                 direction.normalized, obstacleHits, distance, npcData.CollisionLayers,
                 QueryTriggerInteraction.Ignore);
             float nearestDistance = distance;
@@ -873,10 +1068,24 @@ namespace MiningSimulator.Ores
             return nearestDistance;
         }
 
+        private float GetObstacleProbeRadius()
+        {
+            // The route probe must be at least as wide as the physical capsule. The authored
+            // data currently uses a 0.32 probe for a 0.5-radius NPC, which lets the query report
+            // a clear route that the Rigidbody cannot physically fit through.
+            return Mathf.Max(npcData.ObstacleProbeRadius,
+                npcData.ColliderRadius + npcData.StandSlotSpacingPadding);
+        }
+
         private void ClearDetour()
         {
             detourDirection = Vector3.zero;
             detourDirectionUntil = 0f;
+            detourWaypoint = Vector3.zero;
+            detourExitWaypoint = Vector3.zero;
+            detourWaypointOre = null;
+            hasDetourWaypoint = false;
+            hasDetourExitWaypoint = false;
         }
 
         private Vector3 CalculateNpcSeparation(Vector3 currentPosition)
