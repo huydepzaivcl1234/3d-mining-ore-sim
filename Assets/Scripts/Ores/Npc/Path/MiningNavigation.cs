@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Unity.AI.Navigation;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -33,6 +34,8 @@ namespace MiningSimulator.Ores
         // immediately before the next query can overwrite them.
         private static NavMeshPath sharedPath;
         private static Vector3[] cornerBuffer = new Vector3[64];
+        private static float nextNavigationRecoveryAttempt;
+        private static bool navigationRecoveryLogged;
 
         /// <summary>True when NavMesh path queries are expected to succeed.</summary>
         public static bool NavMeshAvailable =>
@@ -51,6 +54,7 @@ namespace MiningSimulator.Ores
             int areaMask = NavMesh.AllAreas, float sampleRadius = 2f)
         {
             resultWaypoints.Clear();
+            TryRecoverDisabledNavMeshBuilder();
 
             if (TryFindNavMeshPath(start, end, resultWaypoints, areaMask, sampleRadius))
             {
@@ -71,6 +75,7 @@ namespace MiningSimulator.Ores
             out MiningPathSource source, int areaMask = NavMesh.AllAreas, float sampleRadius = 2f)
         {
             resultWaypoints.Clear();
+            TryRecoverDisabledNavMeshBuilder();
 
             if (TryFindNavMeshPath(start, end, resultWaypoints, areaMask, sampleRadius))
             {
@@ -87,6 +92,51 @@ namespace MiningSimulator.Ores
 
             source = MiningPathSource.None;
             return false;
+        }
+
+        /// <summary>
+        /// Recovers the common scene-authoring mistake where the NavMeshSurface and its builder
+        /// exist but were disabled. Without this, every NPC silently falls through to reactive
+        /// steering and a commanded target can oscillate between two obstacles indefinitely.
+        /// The builder's Start method performs the actual bake on the next frame; callers simply
+        /// retry their throttled path request after that.
+        /// </summary>
+        private static void TryRecoverDisabledNavMeshBuilder()
+        {
+            if (NavMeshAvailable || Time.unscaledTime < nextNavigationRecoveryAttempt)
+            {
+                return;
+            }
+
+            nextNavigationRecoveryAttempt = Time.unscaledTime + 1f;
+            MiningNavMeshBuilder builder = Object.FindFirstObjectByType<MiningNavMeshBuilder>(
+                FindObjectsInactive.Include);
+            if (builder == null || !builder.gameObject.activeInHierarchy)
+            {
+                return;
+            }
+
+            NavMeshSurface surface = builder.GetComponent<NavMeshSurface>();
+            bool enabledAnything = false;
+            if (surface != null && !surface.enabled)
+            {
+                surface.enabled = true;
+                enabledAnything = true;
+            }
+
+            if (!builder.enabled)
+            {
+                builder.enabled = true;
+                enabledAnything = true;
+            }
+
+            if (enabledAnything && !navigationRecoveryLogged)
+            {
+                navigationRecoveryLogged = true;
+                Debug.LogWarning(
+                    "[MiningNavigation] Enabled the scene NavMesh builder and surface so miners " +
+                    "can use global paths instead of reactive obstacle steering.", builder);
+            }
         }
 
         private static bool TryFindNavMeshPath(Vector3 start, Vector3 end,

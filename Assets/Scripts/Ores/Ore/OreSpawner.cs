@@ -217,6 +217,7 @@ namespace MiningSimulator.Ores
                 Mathf.Max(0.01f, Mathf.Max(spawnData.UniformScaleRange.x, spawnData.UniformScaleRange.y)));
             instance.transform.localScale = data.Prefab.transform.localScale * scale;
             ore.Initialize(data, wallet, upgradeSystem, false);
+            EnsureNavigationObstacle(ore);
             instance.SetActive(true);
             KeepAboveSurface(instance, position.y);
             instance.transform.position += Vector3.up * data.SpawnHeightOffset;
@@ -507,11 +508,25 @@ namespace MiningSimulator.Ores
                 }
 
                 ore.ConfigureRuntime(wallet, upgradeSystem);
+                EnsureNavigationObstacle(ore);
                 ore.Depleted -= HandleOreDepleted;
                 ore.Depleted += HandleOreDepleted;
                 ore.RewardGranted -= HandleRewardGranted;
                 ore.RewardGranted += HandleRewardGranted;
                 activeOres.Add(ore);
+            }
+        }
+
+        /// <summary>
+        /// Ores are dynamic, pooled obstacles. Ensure each live instance carves the NavMesh so
+        /// a global path is planned around its real footprint instead of into its collider.
+        /// Adding this at runtime also repairs older prefabs authored before navigation support.
+        /// </summary>
+        private static void EnsureNavigationObstacle(Ore ore)
+        {
+            if (ore != null && ore.GetComponent<MiningNavMeshObstacle>() == null)
+            {
+                ore.gameObject.AddComponent<MiningNavMeshObstacle>();
             }
         }
 

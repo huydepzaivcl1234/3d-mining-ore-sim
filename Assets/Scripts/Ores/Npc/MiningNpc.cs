@@ -46,7 +46,7 @@ namespace MiningSimulator.Ores
         [Min(0.05f)][SerializeField] private float repathInterval = 0.4f;
         [Tooltip("How far the stand position has to move before a fresh path is requested early (instead of waiting for Repath Interval).")]
         [Min(0f)][SerializeField] private float repathTargetMoveThreshold = 0.5f;
-        [Tooltip("Within this distance of the mining stand position, the global path is dropped and the miner walks straight in. This exists because the target ore carves itself OUT of the NavMesh, so its own stand position usually is not on the mesh at all - pathing to it either fails or stops on the carve boundary, short of mining range, and the miner stands there forever. Direct steering owns the last leg instead; the target ore is already excluded from obstacle probes, so there is nothing to route around. Roughly ore radius + NPC radius is a good value.")]
+        [Tooltip("Within this distance of the mining stand position, the miner may walk straight in only when no other ore blocks that final segment. The target ore carves itself out of the NavMesh, so direct steering owns the last leg; a neighbouring ore still keeps the global route active so the miner does not bounce left and right around a cluster.")]
         [Min(0.1f)][SerializeField] private float finalApproachDistance = 2.5f;
         [Tooltip("How far ahead along the route to aim while path-following. Steering exactly at the next corner makes the miner hug it and then snap to the next heading - that is the visible zig-zag. Aiming at a point further along the polyline cuts corners smoothly. Keep it under the typical corner spacing.")]
         [Min(0.1f)][SerializeField] private float pathLookAheadDistance = 1.75f;
@@ -331,6 +331,12 @@ namespace MiningSimulator.Ores
             }
 
             Vector3 currentPosition = body.position;
+            float speedMultiplier = GetMoveSpeedMultiplier();
+            // Speed upgrades change the desired velocity. Scale acceleration linearly and braking
+            // quadratically so acceleration time and stopping distance stay the same at every
+            // upgrade level instead of making a fast NPC coast through turns and targets.
+            float movementAcceleration = npcData.MovementAcceleration * speedMultiplier;
+            float brakingAcceleration = npcData.BrakingAcceleration * speedMultiplier * speedMultiplier;
 
             // A global path already routes around every known ore. The reactive detour system
             // solves that same problem locally and badly, so running both means two controllers
@@ -338,8 +344,11 @@ namespace MiningSimulator.Ores
             // (middle-clicked) target jitter in place: the path says "go left around the rock",
             // the detour says "go right", and the NPC averages into standing still.
             // While a path is live the detour layer is suppressed entirely.
-            bool hasGlobalPath = currentPath.Count > 0;
             Vector3 navigationTarget = GetNavigationTarget(currentPosition, desiredMoveTarget);
+            // GetNavigationTarget can consume the final waypoint and clear the route. Read this
+            // after it runs so local recovery is enabled in that same physics step instead of
+            // using one stale frame of "path is active" state.
+            bool hasGlobalPath = currentPath.Count > 0;
             if (!hasGlobalPath && TryGetDetourWaypoint(currentPosition, out Vector3 waypoint))
             {
                 navigationTarget = waypoint;
@@ -353,7 +362,7 @@ namespace MiningSimulator.Ores
                 SetMovingAnimationState(false);
                 smoothedSeparation = Vector3.MoveTowards(smoothedSeparation, Vector3.zero,
                     npcData.NpcSeparationResponsiveness * Time.fixedDeltaTime);
-                ApplyHorizontalVelocity(Vector3.zero, npcData.BrakingAcceleration);
+                ApplyHorizontalVelocity(Vector3.zero, movementAcceleration, brakingAcceleration);
                 RotateTowards(desiredFacingDirection);
                 return;
             }
@@ -402,13 +411,14 @@ namespace MiningSimulator.Ores
             movementDirection = (movementDirection +
                 smoothedSeparation * npcData.NpcSeparationStrength).normalized;
 
-            float speedMultiplier = progressionSystem != null
-                ? progressionSystem.CurrentMoveSpeedMultiplier
-                : oreSpawner != null && oreSpawner.UpgradeSystem != null
-                    ? oreSpawner.UpgradeSystem.GetMultiplier(MiningUpgradeType.NpcMoveSpeed)
-                    : 1f;
-            Vector3 desiredVelocity = movementDirection * (npcData.MoveSpeed * speedMultiplier);
-            ApplyHorizontalVelocity(desiredVelocity, npcData.MovementAcceleration);
+            float maximumSpeed = npcData.MoveSpeed * speedMultiplier;
+            // Start easing off before the stop radius. This prevents a high-level NPC from
+            // overshooting a narrow waypoint and having to reverse back and forth to recover.
+            float brakingDistance = Mathf.Max(0f,
+                movementOffset.magnitude - npcData.StoppingDistance);
+            float arrivalSpeed = Mathf.Sqrt(2f * brakingAcceleration * brakingDistance);
+            Vector3 desiredVelocity = movementDirection * Mathf.Min(maximumSpeed, arrivalSpeed);
+            ApplyHorizontalVelocity(desiredVelocity, movementAcceleration, brakingAcceleration);
             SetMovingAnimationState(true);
             RotateTowards(movementDirection);
         }
@@ -1183,15 +1193,11 @@ namespace MiningSimulator.Ores
                 return;
             }
 
-            // Final approach. The target ore carves ITSELF out of the NavMesh, so its own mining
-            // stand position normally isn't on the mesh: the path either fails outright or snaps
-            // to the carve boundary and ends there, still outside mining range - the miner then
-            // "arrives", stops, and never swings. Once inside this radius the route is handed to
-            // plain direct steering, which is safe because TryGetBlockingOre explicitly ignores
-            // the target ore, so there is nothing left to path around anyway.
-            Vector3 toStand = standPosition - currentPosition;
-            toStand.y = 0f;
-            if (toStand.sqrMagnitude <= finalApproachDistance * finalApproachDistance)
+            // The target ore itself is deliberately ignored by TryGetBlockingOre, but another
+            // ore can be between the miner and its reserved stand position. Do not abandon a
+            // route just because it is close: doing that hands steering to the local detour code
+            // in exactly the dense-cluster case where it can keep choosing opposite sides.
+            if (CanUseDirectFinalApproach(currentPosition, standPosition))
             {
                 inFinalApproach = true;
                 if (currentPath.Count > 0)
@@ -1235,6 +1241,35 @@ namespace MiningSimulator.Ores
             {
                 currentPath.Clear();
             }
+        }
+
+        private float GetMoveSpeedMultiplier()
+        {
+            float multiplier = progressionSystem != null
+                ? progressionSystem.CurrentMoveSpeedMultiplier
+                : oreSpawner != null && oreSpawner.UpgradeSystem != null
+                    ? oreSpawner.UpgradeSystem.GetMultiplier(MiningUpgradeType.NpcMoveSpeed)
+                    : 1f;
+            return Mathf.Max(0.01f, multiplier);
+        }
+
+        private bool CanUseDirectFinalApproach(Vector3 currentPosition, Vector3 standPosition)
+        {
+            Vector3 toStand = standPosition - currentPosition;
+            toStand.y = 0f;
+            float distance = toStand.magnitude;
+            if (distance > finalApproachDistance)
+            {
+                return false;
+            }
+
+            // There is no meaningful segment to test when already at the chosen stand point.
+            if (distance <= npcData.StoppingDistance)
+            {
+                return true;
+            }
+
+            return !TryGetBlockingOre(toStand / distance, distance, out _, out _);
         }
 
         /// <summary>
@@ -1366,12 +1401,17 @@ namespace MiningSimulator.Ores
             return Vector3.ClampMagnitude(separation, 1f);
         }
 
-        private void ApplyHorizontalVelocity(Vector3 desiredHorizontalVelocity, float acceleration)
+        private void ApplyHorizontalVelocity(Vector3 desiredHorizontalVelocity, float acceleration,
+            float brakingAcceleration)
         {
             Vector3 currentVelocity = body.linearVelocity;
             Vector3 currentHorizontalVelocity = new(currentVelocity.x, 0f, currentVelocity.z);
+            // Use braking response whenever the new command removes forward speed. This covers
+            // stopping, arrival slowdown, and sharp route corners at high upgrade levels.
+            float response = Vector3.Dot(currentHorizontalVelocity, desiredHorizontalVelocity) <
+                currentHorizontalVelocity.sqrMagnitude ? brakingAcceleration : acceleration;
             Vector3 nextHorizontalVelocity = Vector3.MoveTowards(currentHorizontalVelocity,
-                desiredHorizontalVelocity, acceleration * Time.fixedDeltaTime);
+                desiredHorizontalVelocity, response * Time.fixedDeltaTime);
             body.linearVelocity = new Vector3(
                 nextHorizontalVelocity.x, currentVelocity.y, nextHorizontalVelocity.z);
         }
