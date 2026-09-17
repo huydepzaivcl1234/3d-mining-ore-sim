@@ -65,6 +65,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 8365c1c1ea8a16a42b4dc6b2f0ad6b22, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7379683657480140894}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 8365c1c1ea8a16a42b4dc6b2f0ad6b22, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -9094820945159059081}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 8365c1c1ea8a16a42b4dc6b2f0ad6b22, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -3473947944169437531}
   m_SourcePrefab: {fileID: 100100000, guid: 8365c1c1ea8a16a42b4dc6b2f0ad6b22, type: 3}
 --- !u!4 &7232248282891572145 stripped
 Transform:
@@ -113,6 +119,36 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1.9297267, y: 1.6586415, z: 1.5783324}
   m_Center: {x: -0.011648059, y: -0.020545363, z: 0.010052917}
+--- !u!208 &-9094820945159059081
+NavMeshObstacle:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8004528017128687883}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Shape: 1
+  m_Extents: {x: 0.5, y: 0.5, z: 0.5}
+  m_MoveThreshold: 0.1
+  m_Carve: 0
+  m_CarveOnlyStationary: 1
+  m_Center: {x: 0, y: 0, z: 0}
+  m_TimeToStationary: 0.5
+--- !u!114 &-3473947944169437531
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8004528017128687883}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82acf501f5c525d4f94271bcf5c18c29, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningNavMeshObstacle
+  carvePadding: 0.4
+  resizeOnEnable: 1
 --- !u!1001 &7460408428238378122
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -239,6 +275,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.OreHealthBar
   ore: {fileID: 3542805688531807421}
   healthBar: {fileID: 756497859469312944}
+  healthText: {fileID: 0}
   visualRoot: {fileID: 6581311462926675452}
   targetCamera: {fileID: 0}
 --- !u!4 &6581311462926675452 stripped

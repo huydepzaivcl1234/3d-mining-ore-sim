@@ -37,6 +37,23 @@ namespace MiningSimulator.Ores
         [Tooltip("How far a foot may sit above or below the NPC's true local ground level (bottom of the Capsule Collider, not local Y = 0) before it is treated as floating/clipping and corrected.")]
         [SerializeField, Min(0f)] private float groundClampEpsilon = 0.01f;
 
+        [Header("Global Pathfinding")]
+        [Tooltip("Routes through MiningNavigation for the actual shortest route to the target instead of only reacting to whatever is directly ahead. Uses Unity NavMesh when a MiningNavMeshBuilder exists, otherwise the MiningNavGrid A* fallback, otherwise the old direct-line reactive steering.")]
+        [SerializeField] private bool useGlobalPathfinding = true;
+        [Tooltip("How far from the miner / its stand position the NavMesh query may search for a valid point on the mesh. Miners stand right beside carved-out ores, so a little slack here avoids failed queries.")]
+        [Min(0.1f)][SerializeField] private float navMeshSampleRadius = 2f;
+        [Tooltip("Minimum time between path requests to MiningNavGrid for the same target.")]
+        [Min(0.05f)][SerializeField] private float repathInterval = 0.4f;
+        [Tooltip("How far the stand position has to move before a fresh path is requested early (instead of waiting for Repath Interval).")]
+        [Min(0f)][SerializeField] private float repathTargetMoveThreshold = 0.5f;
+
+        private readonly List<Vector3> currentPath = new();
+        private readonly List<Vector3> pathRequestBuffer = new();
+        private int pathWaypointIndex;
+        private float nextRepathTime;
+        private Vector3 lastPathTarget;
+        private bool hasPathTarget;
+
         private readonly RaycastHit[] obstacleHits = new RaycastHit[32];
         private readonly Collider[] separationHits = new Collider[24];
         private Ore targetOre;
@@ -210,6 +227,7 @@ namespace MiningSimulator.Ores
             smoothedSeparation = Vector3.zero;
             detourDirection = Vector3.zero;
             detourDirectionUntil = 0f;
+            ResetGlobalPath();
             SetMovingAnimationState(false);
             StopHorizontalMovement();
         }
@@ -259,6 +277,7 @@ namespace MiningSimulator.Ores
             }
 
             Vector3 standPosition = GetReservedStandPosition();
+            UpdateGlobalPath(currentPosition, standPosition);
             Vector3 oreOffset = GetTargetPosition() - currentPosition;
             oreOffset.y = 0f;
             desiredFacingDirection = oreOffset;
@@ -304,8 +323,16 @@ namespace MiningSimulator.Ores
             }
 
             Vector3 currentPosition = body.position;
-            Vector3 navigationTarget = desiredMoveTarget;
-            if (TryGetDetourWaypoint(currentPosition, out Vector3 waypoint))
+
+            // A global path already routes around every known ore. The reactive detour system
+            // solves that same problem locally and badly, so running both means two controllers
+            // fighting for the heading every frame - that fight is what made a commanded
+            // (middle-clicked) target jitter in place: the path says "go left around the rock",
+            // the detour says "go right", and the NPC averages into standing still.
+            // While a path is live the detour layer is suppressed entirely.
+            bool hasGlobalPath = currentPath.Count > 0;
+            Vector3 navigationTarget = GetNavigationTarget(currentPosition, desiredMoveTarget);
+            if (!hasGlobalPath && TryGetDetourWaypoint(currentPosition, out Vector3 waypoint))
             {
                 navigationTarget = waypoint;
             }
@@ -338,10 +365,17 @@ namespace MiningSimulator.Ores
                     return;
                 }
 
-                movementDirection = ResolveBlockedPath(
-                    movementDirection, currentPosition, blockingOre, blockingPoint);
+                // With a global path the route around this ore is already planned, so the heading
+                // is left alone. The probe above still runs purely so a non-commanded miner can
+                // opportunistically claim a closer ore it happens to walk past (handled in the
+                // branch above) - that is a gameplay feature, not steering.
+                if (!hasGlobalPath)
+                {
+                    movementDirection = ResolveBlockedPath(
+                        movementDirection, currentPosition, blockingOre, blockingPoint);
+                }
             }
-            else
+            else if (!hasGlobalPath)
             {
                 avoidanceOre = null;
                 if (Time.time < detourDirectionUntil && detourDirection.sqrMagnitude > Mathf.Epsilon)
@@ -569,6 +603,7 @@ namespace MiningSimulator.Ores
             SetMiningAnimationState(false);
             nextTargetSwitchTime = Time.time + npcData.TargetSwitchCooldown;
             ClearDetour();
+            ResetGlobalPath();
             ResetProgressTracking();
         }
 
@@ -591,6 +626,7 @@ namespace MiningSimulator.Ores
             SetMiningAnimationState(false);
             nextTargetSwitchTime = Time.time + npcData.TargetSwitchCooldown;
             ClearDetour();
+            ResetGlobalPath();
             ResetProgressTracking();
         }
 
@@ -746,6 +782,7 @@ namespace MiningSimulator.Ores
             hasMoveTarget = false;
             SetMiningAnimationState(false);
             ClearDetour();
+            ResetGlobalPath();
         }
 
         private void TrackMovementProgress(Vector3 currentPosition)
@@ -766,10 +803,14 @@ namespace MiningSimulator.Ores
 
             if (hasCommandedTarget)
             {
-                // A player command is stronger than the normal stuck-target timeout. Keep the
-                // target and retry the path from the other side instead of returning to auto AI.
-                avoidanceSide *= -1f;
+                // A player command is stronger than the normal stuck-target timeout: never drop a
+                // middle-clicked target back to the auto AI. Force a fresh route instead.
+                // Flipping avoidanceSide (what this used to do) only meant anything to the
+                // reactive detour layer, which is suppressed while a path is live - so a stuck
+                // commanded miner had literally no recovery and stayed stuck until the player
+                // clicked something else.
                 ClearDetour();
+                ResetGlobalPath();
                 ResetProgressTracking();
                 return;
             }
@@ -1096,6 +1137,87 @@ namespace MiningSimulator.Ores
             // a clear route that the Rigidbody cannot physically fit through.
             return Mathf.Max(npcData.ObstacleProbeRadius,
                 npcData.ColliderRadius + npcData.StandSlotSpacingPadding);
+        }
+
+        /// <summary>
+        /// Requests (or reuses) a global shortest-path route to standPosition via
+        /// MiningNavigation (NavMesh first, MiningNavGrid A* as fallback). Throttled by
+        /// repathInterval/repathTargetMoveThreshold so it doesn't re-query every frame. If no
+        /// backend can produce a route, currentPath is cleared and FixedUpdate falls straight back
+        /// to the old direct-line reactive steering for standPosition.
+        /// </summary>
+        private void UpdateGlobalPath(Vector3 currentPosition, Vector3 standPosition)
+        {
+            if (!useGlobalPathfinding)
+            {
+                if (currentPath.Count > 0)
+                {
+                    currentPath.Clear();
+                }
+
+                return;
+            }
+
+            bool targetMoved = !hasPathTarget || (standPosition - lastPathTarget).sqrMagnitude >
+                repathTargetMoveThreshold * repathTargetMoveThreshold;
+            bool pathExhausted = currentPath.Count == 0 || pathWaypointIndex >= currentPath.Count;
+
+            if (Time.time < nextRepathTime && !targetMoved && !pathExhausted)
+            {
+                return;
+            }
+
+            nextRepathTime = Time.time + repathInterval;
+            lastPathTarget = standPosition;
+            hasPathTarget = true;
+
+            if (MiningNavigation.TryFindPath(currentPosition, standPosition, pathRequestBuffer,
+                    UnityEngine.AI.NavMesh.AllAreas, navMeshSampleRadius))
+            {
+                currentPath.Clear();
+                currentPath.AddRange(pathRequestBuffer);
+                pathWaypointIndex = 0;
+            }
+            else
+            {
+                currentPath.Clear();
+            }
+        }
+
+        /// <summary>
+        /// Returns the next point along the global path to steer toward, advancing past any
+        /// waypoints already reached. Falls back to fallbackTarget (the old direct stand-position
+        /// target) when there is no active path.
+        /// </summary>
+        private Vector3 GetNavigationTarget(Vector3 currentPosition, Vector3 fallbackTarget)
+        {
+            if (currentPath.Count == 0)
+            {
+                return fallbackTarget;
+            }
+
+            float reach = Mathf.Max(npcData.StoppingDistance, npcData.ColliderRadius * 0.5f);
+            while (pathWaypointIndex < currentPath.Count - 1)
+            {
+                Vector3 offset = currentPath[pathWaypointIndex] - currentPosition;
+                offset.y = 0f;
+                if (offset.sqrMagnitude > reach * reach)
+                {
+                    break;
+                }
+
+                pathWaypointIndex++;
+            }
+
+            return currentPath[pathWaypointIndex];
+        }
+
+        private void ResetGlobalPath()
+        {
+            currentPath.Clear();
+            pathWaypointIndex = 0;
+            hasPathTarget = false;
+            nextRepathTime = 0f;
         }
 
         private void ClearDetour()

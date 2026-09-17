@@ -81,6 +81,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 7054a05c92a24d79b54e59c77d9f35af, type: 3}
       insertIndex: -1
       addedObject: {fileID: -6874150550197932150}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 7054a05c92a24d79b54e59c77d9f35af, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -4153679231715566392}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 7054a05c92a24d79b54e59c77d9f35af, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -4687350276175837247}
   m_SourcePrefab: {fileID: 100100000, guid: 7054a05c92a24d79b54e59c77d9f35af, type: 3}
 --- !u!1 &7888907797540685395 stripped
 GameObject:
@@ -149,3 +155,33 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.LuckyBlock
   type: 2
   currentDurability: 0
+--- !u!208 &-4153679231715566392
+NavMeshObstacle:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7888907797540685395}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Shape: 1
+  m_Extents: {x: 0.011000001, y: 0.011000001, z: 0.011000001}
+  m_MoveThreshold: 0.1
+  m_Carve: 0
+  m_CarveOnlyStationary: 1
+  m_Center: {x: 0, y: 0, z: 0.011000001}
+  m_TimeToStationary: 0.5
+--- !u!114 &-4687350276175837247
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7888907797540685395}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82acf501f5c525d4f94271bcf5c18c29, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningNavMeshObstacle
+  carvePadding: 0.25
+  resizeOnEnable: 1

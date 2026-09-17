@@ -12468,6 +12468,7 @@ GameObject:
   - component: {fileID: 1658054589522100076}
   - component: {fileID: 6810176017158699080}
   - component: {fileID: 8871868058287256622}
+  - component: {fileID: -7870371229352672911}
   m_Layer: 0
   m_Name: MiningRuntime
   m_TagString: Untagged
@@ -12505,7 +12506,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b684b75a86fb4654fbe50f4aad7c0ce1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.PlayerWallet
+  gameData: {fileID: 0}
   currentMoney: 0
+  currentGems: 0
 --- !u!114 &7999392227225844688
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12691,6 +12694,7 @@ MonoBehaviour:
   rebirthSystem: {fileID: 2324561397310624886}
   rebirthPanel: {fileID: 8840111787548688324}
   audioSettingsPanel: {fileID: 7794858288780390671}
+  giftBoxWheelPanel: {fileID: 0}
   musicSource: {fileID: 5305833074054256447}
   sfxSource: {fileID: 540886640895760224}
 --- !u!114 &2324561397310624886
@@ -12711,6 +12715,8 @@ MonoBehaviour:
   npcProgressionSystem: {fileID: 8555801525767881973}
   npcShop: {fileID: 5806623442641212862}
   itemSystem: {fileID: 1658054589522100076}
+  achievementSystem: {fileID: 0}
+  questSystem: {fileID: 0}
 --- !u!114 &8840111787548688324
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12771,6 +12777,9 @@ MonoBehaviour:
   resetDataLabel: {fileID: 256920649336015518}
   languageButton: {fileID: 0}
   languageLabel: {fileID: 0}
+  mainMenu: {fileID: 0}
+  returnToMenuButton: {fileID: 0}
+  returnToMenuLabel: {fileID: 0}
 --- !u!114 &3120030093326673056
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12793,6 +12802,11 @@ MonoBehaviour:
   npcProgressHud: {fileID: 0}
   inventoryMenuButton: {fileID: 8057436650392543239}
   inventoryPanel: {fileID: 6524725651721815231}
+  effectToast: {fileID: 0}
+  gemHud: {fileID: 0}
+  shopMenuButton: {fileID: 0}
+  questMenuButton: {fileID: 0}
+  orbitCamera: {fileID: 0}
 --- !u!114 &8555801525767881973
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12863,6 +12877,20 @@ MonoBehaviour:
   uiData: {fileID: 11400000, guid: 0fc641ac29720e2837d73e6212818c58, type: 2}
   toastRoot: {fileID: 7040626982718719617}
   effectLabel: {fileID: 8728835751433530761}
+--- !u!114 &-7870371229352672911
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2565732122295331608}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 711ef7ea66e42a4409cced884947f486, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningNavigationValidator
+  checkDelay: 1
+  logOnSuccess: 1
 --- !u!1 &2619236225951043456
 GameObject:
   m_ObjectHideFlags: 0

@@ -14,6 +14,8 @@ GameObject:
   - component: {fileID: 7211019654428482581}
   - component: {fileID: 6416332616997334822}
   - component: {fileID: 7855007247803850680}
+  - component: {fileID: 6703311191599593499}
+  - component: {fileID: -3432593627543041384}
   m_Layer: 0
   m_Name: Light Stone
   m_TagString: Untagged
@@ -153,6 +155,36 @@ MonoBehaviour:
   auraRenderers:
   - {fileID: 3132561432846434249}
   - {fileID: 4158196605143244846}
+--- !u!208 &6703311191599593499
+NavMeshObstacle:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1790450977438034744}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Shape: 1
+  m_Extents: {x: 0.013, y: 0.011000001, z: 0.011000001}
+  m_MoveThreshold: 0.1
+  m_Carve: 0
+  m_CarveOnlyStationary: 1
+  m_Center: {x: 0, y: 0, z: 0.011000001}
+  m_TimeToStationary: 0.5
+--- !u!114 &-3432593627543041384
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1790450977438034744}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82acf501f5c525d4f94271bcf5c18c29, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningNavMeshObstacle
+  carvePadding: 0.4
+  resizeOnEnable: 1
 --- !u!1 &3555259848610731583
 GameObject:
   m_ObjectHideFlags: 0
@@ -563,6 +595,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.OreHealthBar
   ore: {fileID: 7211019654428482581}
   healthBar: {fileID: 823921942800899172}
+  healthText: {fileID: 0}
   visualRoot: {fileID: 6504664095973470760}
   targetCamera: {fileID: 0}
 --- !u!212 &5205358221274755498 stripped

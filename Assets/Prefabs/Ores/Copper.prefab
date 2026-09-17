@@ -120,6 +120,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.OreHealthBar
   ore: {fileID: 8328351534451423085}
   healthBar: {fileID: 7090193541143846600}
+  healthText: {fileID: 0}
   visualRoot: {fileID: 3697297349405945988}
   targetCamera: {fileID: 0}
 --- !u!114 &7090193541143846600 stripped
@@ -198,6 +199,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 48b2a71b7c1f3b24fb80755320d2e09d, type: 3}
       insertIndex: -1
       addedObject: {fileID: 686755459722494085}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 48b2a71b7c1f3b24fb80755320d2e09d, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -4152493347090580417}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 48b2a71b7c1f3b24fb80755320d2e09d, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -6639294547635730689}
   m_SourcePrefab: {fileID: 100100000, guid: 48b2a71b7c1f3b24fb80755320d2e09d, type: 3}
 --- !u!1 &8129024029718066874 stripped
 GameObject:
@@ -241,6 +248,36 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1.976673, y: 1.8534124, z: 1.6237406}
   m_Center: {x: -0.08085722, y: 0.0054144897, z: -0.038123544}
+--- !u!208 &-4152493347090580417
+NavMeshObstacle:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8129024029718066874}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Shape: 1
+  m_Extents: {x: 0.5, y: 0.5, z: 0.5}
+  m_MoveThreshold: 0.1
+  m_Carve: 0
+  m_CarveOnlyStationary: 1
+  m_Center: {x: 0, y: 0, z: 0}
+  m_TimeToStationary: 0.5
+--- !u!114 &-6639294547635730689
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8129024029718066874}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82acf501f5c525d4f94271bcf5c18c29, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningNavMeshObstacle
+  carvePadding: 0.4
+  resizeOnEnable: 1
 --- !u!4 &8906933576197860352 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 48b2a71b7c1f3b24fb80755320d2e09d, type: 3}
