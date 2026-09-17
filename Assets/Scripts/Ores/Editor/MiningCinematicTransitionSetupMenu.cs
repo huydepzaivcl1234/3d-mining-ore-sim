@@ -31,6 +31,7 @@ namespace MiningSimulator.Ores.Editor
 
             SerializedObject menuFields = new(mainMenu);
             CanvasGroup menuGroup = Reference<CanvasGroup>(menuFields, "canvasGroup");
+            CanvasGroup presentationGroup = Reference<CanvasGroup>(menuFields, "mainViewGroup");
             TextMeshProUGUI title = Reference<TextMeshProUGUI>(menuFields, "titleLabel");
             GameObject mainView = Reference<GameObject>(menuFields, "mainView");
             UnityEngine.UI.Button play = Reference<UnityEngine.UI.Button>(menuFields, "playButton");
@@ -57,8 +58,16 @@ namespace MiningSimulator.Ores.Editor
             }
 
             RectTransform overlay = EnsureOverlay(canvasRect, canvas);
-            UnityEngine.UI.Image overlayImage = overlay.GetComponent<UnityEngine.UI.Image>();
-            CanvasGroup overlayGroup = overlay.GetComponent<CanvasGroup>();
+            RectTransform rays = EnsureBurst(overlay, "Radiant Rays",
+                MiningRadialBurstGraphic.BurstStyle.Rays, new Vector2(0.53f, 0.54f),
+                new Vector2(1900f, 1900f));
+            RectTransform flare = EnsureBurst(overlay, "Radiant Flare",
+                MiningRadialBurstGraphic.BurstStyle.Flare, new Vector2(0.53f, 0.54f),
+                new Vector2(1600f, 1600f));
+            RectTransform flash = EnsureFlash(overlay);
+            SetLayerRecursively(overlay.gameObject, canvasRect.gameObject.layer);
+            UnityEngine.UI.Image overlayImage = flash.GetComponent<UnityEngine.UI.Image>();
+            CanvasGroup overlayGroup = flash.GetComponent<CanvasGroup>();
             MiningCinematicTransition cinematic = overlay.GetComponent<MiningCinematicTransition>() ??
                                                    Undo.AddComponent<MiningCinematicTransition>(overlay.gameObject);
 
@@ -93,6 +102,9 @@ namespace MiningSimulator.Ores.Editor
 
             SerializedObject cinematicFields = new(cinematic);
             Set(cinematicFields, "mainMenuCanvasGroup", menuGroup);
+            Set(cinematicFields, "menuPresentationCanvasGroup", presentationGroup);
+            Set(cinematicFields, "menuPresentationRect",
+                mainView != null ? mainView.transform as RectTransform : null);
             RectTransform logo = title != null
                 ? title.rectTransform
                 : mainView != null ? mainView.transform.Find("Title") as RectTransform : null;
@@ -102,8 +114,25 @@ namespace MiningSimulator.Ores.Editor
                 : Object.FindFirstObjectByType<Camera>(FindObjectsInactive.Include));
             Set(cinematicFields, "flashOverlay", overlayImage);
             Set(cinematicFields, "flashCanvasGroup", overlayGroup);
-            SetColor(cinematicFields, "flashColor", new Color(0.025f, 0.012f, 0.01f, 1f));
+            Set(cinematicFields, "backgroundRect", Find(mainMenu.transform,
+                "Showcase Background") as RectTransform);
+            Set(cinematicFields, "showcaseMotion",
+                mainMenu.GetComponent<MiningMainMenuShowcaseMotion>());
+            Set(cinematicFields, "flareRect", flare);
+            Set(cinematicFields, "flareCanvasGroup", flare.GetComponent<CanvasGroup>());
+            Set(cinematicFields, "raysRect", rays);
+            Set(cinematicFields, "raysCanvasGroup", rays.GetComponent<CanvasGroup>());
+            SetColor(cinematicFields, "flashColor", new Color(1f, 0.86f, 1f, 1f));
             SetFloat(cinematicFields, "flashOpacity", 1f);
+            SetFloat(cinematicFields, "backgroundZoom", 2.6f);
+            SetFloat(cinematicFields, "rumbleStrength", 5f);
+            SetFloat(cinematicFields, "menuExitDuration", 0.4f);
+            SetFloat(cinematicFields, "cameraZoomDuration", 0.85f);
+            SetFloat(cinematicFields, "flashStartDelay", 0.45f);
+            SetFloat(cinematicFields, "flashInDuration", 0.15f);
+            SetFloat(cinematicFields, "handoffDelayAfterFlash", 0.25f);
+            SetFloat(cinematicFields, "flashHoldAfterHandoff", 0.4f);
+            SetFloat(cinematicFields, "flashOutDuration", 1.35f);
             SetArray(cinematicFields, "menuButtons", buttons);
             SetArray(cinematicFields, "hudFlyIns", flyIns);
             cinematicFields.ApplyModifiedProperties();
@@ -117,7 +146,10 @@ namespace MiningSimulator.Ores.Editor
             EditorSceneManager.MarkSceneDirty(mainMenu.gameObject.scene);
             Selection.activeGameObject = overlay.gameObject;
             EditorGUIUtility.PingObject(overlay.gameObject);
-            Debug.Log("Cinematic Main Menu transition built. Play now performs one menu exit, an opaque dark loading cover, a two-frame gameplay handoff and HUD fly-in. Existing gameplay/menu logic remains authoritative; save the scene.", overlay.gameObject);
+            Debug.Log("Radiant Main Menu transition built. It now performs the reference " +
+                      "camera dive, rumble, amethyst flare, 0.65 second whiteout window, hidden " +
+                      "gameplay handoff, 1.35 second dissolve and HUD fly-in. Existing buttons " +
+                      "and gameplay logic remain unchanged; save the scene.", overlay.gameObject);
         }
 
         [MenuItem("Mining Simulator/UI/Build Cinematic Menu Transition", true)]
@@ -158,12 +190,12 @@ namespace MiningSimulator.Ores.Editor
                                          Undo.AddComponent<UnityEngine.UI.Image>(obj);
             Undo.RecordObject(image, "Style Cinematic Transition Overlay");
             image.sprite = null;
-            image.color = new Color(0.025f, 0.012f, 0.01f, 1f);
-            image.raycastTarget = true;
+            image.color = Color.clear;
+            image.raycastTarget = false;
 
             CanvasGroup group = obj.GetComponent<CanvasGroup>() ?? Undo.AddComponent<CanvasGroup>(obj);
             Undo.RecordObject(group, "Configure Cinematic Transition Overlay");
-            group.alpha = 0f;
+            group.alpha = 1f;
             group.interactable = false;
             group.blocksRaycasts = false;
             group.ignoreParentGroups = true;
@@ -176,6 +208,99 @@ namespace MiningSimulator.Ores.Editor
             overlayCanvas.sortingOrder = (parentCanvas != null ? parentCanvas.sortingOrder : 0) + 100;
             _ = obj.GetComponent<UnityEngine.UI.GraphicRaycaster>() ??
                 Undo.AddComponent<UnityEngine.UI.GraphicRaycaster>(obj);
+            return rect;
+        }
+
+        private static RectTransform EnsureBurst(Transform parent, string name,
+            MiningRadialBurstGraphic.BurstStyle style, Vector2 anchor, Vector2 size)
+        {
+            Transform existing = parent.Find(name);
+            GameObject obj;
+            if (existing == null)
+            {
+                obj = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer),
+                    typeof(MiningRadialBurstGraphic), typeof(CanvasGroup));
+                Undo.RegisterCreatedObjectUndo(obj, "Create " + name);
+                obj.transform.SetParent(parent, false);
+            }
+            else
+            {
+                obj = existing.gameObject;
+            }
+
+            RectTransform rect = obj.GetComponent<RectTransform>();
+            Undo.RecordObject(rect, "Layout " + name);
+            rect.anchorMin = anchor;
+            rect.anchorMax = anchor;
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = Vector2.zero;
+            rect.sizeDelta = size;
+            rect.localScale = Vector3.one;
+
+            MiningRadialBurstGraphic graphic = obj.GetComponent<MiningRadialBurstGraphic>() ??
+                                                Undo.AddComponent<MiningRadialBurstGraphic>(obj);
+            Undo.RecordObject(graphic, "Style " + name);
+            if (style == MiningRadialBurstGraphic.BurstStyle.Flare)
+            {
+                graphic.Configure(style, Color.white,
+                    new Color(0.96f, 0.56f, 1f, 0.9f),
+                    new Color(0.50f, 0.06f, 0.92f, 0f));
+            }
+            else
+            {
+                graphic.Configure(style, new Color(1f, 1f, 1f, 0.5f),
+                    new Color(0.92f, 0.55f, 1f, 0.5f),
+                    new Color(0.75f, 0.18f, 1f, 0f));
+            }
+
+            CanvasGroup group = obj.GetComponent<CanvasGroup>() ?? Undo.AddComponent<CanvasGroup>(obj);
+            Undo.RecordObject(group, "Configure " + name);
+            group.alpha = 0f;
+            group.interactable = false;
+            group.blocksRaycasts = false;
+            return rect;
+        }
+
+        private static RectTransform EnsureFlash(Transform parent)
+        {
+            const string name = "Radiant Flash";
+            Transform existing = parent.Find(name);
+            GameObject obj;
+            if (existing == null)
+            {
+                obj = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer),
+                    typeof(UnityEngine.UI.Image), typeof(CanvasGroup));
+                Undo.RegisterCreatedObjectUndo(obj, "Create " + name);
+                obj.transform.SetParent(parent, false);
+            }
+            else
+            {
+                obj = existing.gameObject;
+            }
+
+            RectTransform rect = obj.GetComponent<RectTransform>();
+            Undo.RecordObject(rect, "Stretch " + name);
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+            rect.localScale = Vector3.one;
+
+            UnityEngine.UI.Image image = obj.GetComponent<UnityEngine.UI.Image>() ??
+                                         Undo.AddComponent<UnityEngine.UI.Image>(obj);
+            Undo.RecordObject(image, "Style " + name);
+            image.sprite = null;
+            image.color = new Color(1f, 0.86f, 1f, 1f);
+            image.raycastTarget = true;
+
+            CanvasGroup group = obj.GetComponent<CanvasGroup>() ?? Undo.AddComponent<CanvasGroup>(obj);
+            Undo.RecordObject(group, "Configure " + name);
+            group.alpha = 0f;
+            group.interactable = false;
+            group.blocksRaycasts = false;
+            group.ignoreParentGroups = true;
+            rect.SetAsLastSibling();
             return rect;
         }
 

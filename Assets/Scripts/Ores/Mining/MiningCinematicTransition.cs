@@ -12,37 +12,50 @@ namespace MiningSimulator.Ores
     {
         [Header("Main Menu")]
         [SerializeField] private CanvasGroup mainMenuCanvasGroup;
+        [SerializeField] private CanvasGroup menuPresentationCanvasGroup;
+        [SerializeField] private RectTransform menuPresentationRect;
         [SerializeField] private RectTransform logoRect;
         [SerializeField] private RectTransform[] menuButtons;
+
+        [Header("Showcase Background")]
+        [SerializeField] private MiningMainMenuShowcaseMotion showcaseMotion;
+        [SerializeField] private RectTransform backgroundRect;
+        [Min(1f), SerializeField] private float backgroundZoom = 2.6f;
+        [Min(0f), SerializeField] private float rumbleStrength = 5f;
 
         [Header("Camera Zoom")]
         [SerializeField] private Camera mainCamera;
         [Range(15f, 90f), SerializeField] private float targetFieldOfView = 40f;
 
-        [Header("Loading Cover")]
+        [Header("Radiant Transition")]
         [SerializeField] private UnityEngine.UI.Image flashOverlay;
         [SerializeField] private CanvasGroup flashCanvasGroup;
-        [SerializeField] private Color flashColor = new(0.025f, 0.012f, 0.01f, 1f);
+        [SerializeField] private RectTransform flareRect;
+        [SerializeField] private CanvasGroup flareCanvasGroup;
+        [SerializeField] private RectTransform raysRect;
+        [SerializeField] private CanvasGroup raysCanvasGroup;
+        [SerializeField] private Color flashColor = new(1f, 0.86f, 1f, 1f);
         [Range(0.1f, 1f), SerializeField] private float flashOpacity = 1f;
 
         [Header("HUD Fly In")]
         [SerializeField] private MiningHudFlyIn[] hudFlyIns;
 
         [Header("Timing")]
-        [Min(0.1f), SerializeField] private float menuExitDuration = 0.38f;
+        [Min(0.1f), SerializeField] private float menuExitDuration = 0.4f;
         [Min(0.1f), SerializeField] private float cameraZoomDuration = 0.85f;
-        [Min(0f), SerializeField] private float buttonStagger = 0.055f;
-        [Min(100f), SerializeField] private float buttonSlideDistance = 650f;
-        [Min(50f), SerializeField] private float logoFlyDistance = 220f;
-        [Min(0.05f), SerializeField] private float flashInDuration = 0.24f;
-        [Min(0f), SerializeField] private float flashHoldDuration = 0.12f;
-        [Min(0.05f), SerializeField] private float flashOutDuration = 0.32f;
+        [Min(0f), SerializeField] private float flashStartDelay = 0.45f;
+        [Min(0.05f), SerializeField] private float flashInDuration = 0.15f;
+        [Min(0f), SerializeField] private float handoffDelayAfterFlash = 0.25f;
+        [Min(0f), SerializeField] private float flashHoldAfterHandoff = 0.4f;
+        [Min(0.05f), SerializeField] private float flashOutDuration = 1.35f;
 
         private MiningMainMenu owner;
         private Coroutine routine;
-        private Vector2 logoPosition;
-        private Vector2[] buttonPositions;
         private float menuAlpha = 1f;
+        private float presentationAlpha = 1f;
+        private Vector3 presentationScale = Vector3.one;
+        private Vector2 backgroundPosition;
+        private Vector3 backgroundScale = Vector3.one;
         private float cameraFieldOfView;
         private bool cached;
 
@@ -59,6 +72,7 @@ namespace MiningSimulator.Ores
             }
 
             owner = menu;
+            showcaseMotion?.BeginCinematic();
             CacheAuthoredState();
             PrepareOverlay();
             routine = StartCoroutine(Run());
@@ -85,45 +99,24 @@ namespace MiningSimulator.Ores
 
         private IEnumerator Run()
         {
-            float elapsed = 0f;
-            while (elapsed < cameraZoomDuration)
-            {
-                elapsed += Time.unscaledDeltaTime;
-                AnimateMenu(elapsed);
-                AnimateCamera(elapsed);
-                yield return null;
-            }
+            // Reference timing: 0.45 seconds of build-up, then a 0.15 second radiant whiteout.
+            yield return AnimateBuildUp(0f, flashStartDelay, false);
+            float handoffTime = flashStartDelay + handoffDelayAfterFlash;
+            yield return AnimateBuildUp(flashStartDelay, handoffTime, true);
+            flashCanvasGroup.alpha = flashOpacity;
 
-            AnimateMenu(cameraZoomDuration);
-            AnimateCamera(cameraZoomDuration);
-            yield return FadeFlash(0f, flashOpacity, flashInDuration, EaseOutCubic);
-
-            float hold = 0f;
-            while (hold < flashHoldDuration)
-            {
-                hold += Time.unscaledDeltaTime;
-                yield return null;
-            }
-
-            // Disable the menu while the cover is fully opaque. Restoring the menu before the
-            // handoff could expose one authored-menu frame, which looked like the game jumped
-            // back to the Play screen.
+            // Swap to gameplay only while the cover is fully opaque. Buttons are never moved,
+            // resized or restyled by this component.
             owner?.CompleteCinematicPlay();
             RestoreAuthoredState();
             Canvas.ForceUpdateCanvases();
+            yield return null;
+            yield return null;
 
-            // Give gameplay two rendered frames behind the opaque cover. This prevents the
-            // camera clear colour (the reported white frame) from becoming the first reveal.
-            yield return null;
-            yield return null;
+            yield return HoldRadiance(handoffTime, flashHoldAfterHandoff);
             PlayHudAnimations();
-
-            // Never reveal an empty gameplay frame. The original version faded the flash in
-            // 0.32 seconds even though staggered HUD entries could take about 0.65 seconds.
-            // Keep the flash fade synchronized with the slowest HUD animation, then snap every
-            // target to the exact Scene-authored position as a final safety net.
             float revealDuration = Mathf.Max(flashOutDuration, GetHudRevealDuration());
-            yield return FadeFlash(flashOpacity, 0f, revealDuration, EaseInCubic);
+            yield return FadeRadiance(revealDuration);
             CompleteHudAnimations();
             Canvas.ForceUpdateCanvases();
             HideOverlay();
@@ -134,18 +127,18 @@ namespace MiningSimulator.Ores
         private void CacheAuthoredState()
         {
             menuAlpha = mainMenuCanvasGroup.alpha;
-            if (logoRect != null)
+            if (menuPresentationCanvasGroup != null)
             {
-                logoPosition = logoRect.anchoredPosition;
+                presentationAlpha = menuPresentationCanvasGroup.alpha;
             }
-            int count = menuButtons != null ? menuButtons.Length : 0;
-            buttonPositions = new Vector2[count];
-            for (int index = 0; index < count; index++)
+            if (menuPresentationRect != null)
             {
-                if (menuButtons[index] != null)
-                {
-                    buttonPositions[index] = menuButtons[index].anchoredPosition;
-                }
+                presentationScale = menuPresentationRect.localScale;
+            }
+            if (backgroundRect != null)
+            {
+                backgroundPosition = backgroundRect.anchoredPosition;
+                backgroundScale = backgroundRect.localScale;
             }
             if (mainCamera != null)
             {
@@ -154,32 +147,98 @@ namespace MiningSimulator.Ores
             cached = true;
         }
 
-        private void AnimateMenu(float elapsed)
+        private IEnumerator AnimateBuildUp(float startTime, float endTime, bool animateFlash)
         {
-            float logoT = Mathf.Clamp01(elapsed / menuExitDuration);
-            if (logoRect != null)
+            float elapsed = startTime;
+            while (elapsed < endTime)
             {
-                logoRect.anchoredPosition = Vector2.LerpUnclamped(logoPosition,
-                    logoPosition + Vector2.up * logoFlyDistance, EaseOutCubic(logoT));
-            }
-
-            int count = menuButtons != null ? menuButtons.Length : 0;
-            for (int index = 0; index < count; index++)
-            {
-                RectTransform button = menuButtons[index];
-                if (button == null)
+                elapsed = Mathf.Min(endTime, elapsed + Time.unscaledDeltaTime);
+                AnimateMenuPresentation(elapsed);
+                AnimateBackground(elapsed);
+                AnimateCamera(elapsed);
+                AnimateRadiance(elapsed);
+                if (animateFlash)
                 {
-                    continue;
+                    float flashT = Mathf.Clamp01((elapsed - flashStartDelay) / flashInDuration);
+                    flashCanvasGroup.alpha = Mathf.Lerp(0f, flashOpacity,
+                        EaseOutCubic(flashT));
                 }
-                float localT = Mathf.Clamp01((elapsed - index * buttonStagger) /
-                                             menuExitDuration);
-                button.anchoredPosition = Vector2.LerpUnclamped(buttonPositions[index],
-                    buttonPositions[index] + Vector2.left * buttonSlideDistance,
-                    EaseInCubic(localT));
+                yield return null;
+            }
+        }
+
+        private IEnumerator HoldRadiance(float startTime, float duration)
+        {
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                AnimateRadiance(startTime + elapsed);
+                flashCanvasGroup.alpha = flashOpacity;
+                yield return null;
+            }
+        }
+
+        private void AnimateMenuPresentation(float elapsed)
+        {
+            float fadeT = Mathf.Clamp01(elapsed / Mathf.Max(menuExitDuration, 0.01f));
+            float eased = EaseOutCubic(fadeT);
+            if (menuPresentationCanvasGroup != null)
+            {
+                menuPresentationCanvasGroup.alpha = Mathf.Lerp(presentationAlpha, 0f, eased);
+            }
+            else
+            {
+                mainMenuCanvasGroup.alpha = Mathf.Lerp(menuAlpha, 0f, eased);
+            }
+            if (menuPresentationRect != null)
+            {
+                menuPresentationRect.localScale = Vector3.LerpUnclamped(presentationScale,
+                    presentationScale * 0.92f, eased);
+            }
+        }
+
+        private void AnimateBackground(float elapsed)
+        {
+            if (backgroundRect == null)
+            {
+                return;
             }
 
-            float fadeT = Mathf.Clamp01(elapsed / Mathf.Max(menuExitDuration, 0.01f));
-            mainMenuCanvasGroup.alpha = Mathf.Lerp(menuAlpha, 0f, fadeT);
+            float t = Mathf.Clamp01(elapsed / cameraZoomDuration);
+            float eased = EaseInOutQuad(t);
+            float width = Mathf.Max(1f, backgroundRect.rect.width);
+            float height = Mathf.Max(1f, backgroundRect.rect.height);
+            Vector2 dive = new(-width * 0.03f, -height * 0.02f);
+            float rumbleT = Mathf.Clamp01(elapsed / 0.75f);
+            float strength = rumbleStrength * (1f - rumbleT);
+            Vector2 rumble = new(Mathf.Sin(elapsed * 67f), Mathf.Sin(elapsed * 83f + 1.3f));
+            backgroundRect.anchoredPosition = Vector2.LerpUnclamped(backgroundPosition,
+                backgroundPosition + dive, eased) + rumble * strength;
+            backgroundRect.localScale = Vector3.LerpUnclamped(backgroundScale,
+                backgroundScale * backgroundZoom, eased);
+        }
+
+        private void AnimateRadiance(float elapsed)
+        {
+            float t = Mathf.Clamp01(elapsed / cameraZoomDuration);
+            float eased = EaseOutCubic(t);
+            if (flareCanvasGroup != null)
+            {
+                flareCanvasGroup.alpha = eased;
+            }
+            if (flareRect != null)
+            {
+                flareRect.localScale = Vector3.one * Mathf.Lerp(0.05f, 1.15f, eased);
+            }
+            if (raysCanvasGroup != null)
+            {
+                raysCanvasGroup.alpha = Mathf.Lerp(0f, 0.9f, eased);
+            }
+            if (raysRect != null)
+            {
+                raysRect.localRotation = Quaternion.Euler(0f, 0f, elapsed * 115f);
+            }
         }
 
         private void AnimateCamera(float elapsed)
@@ -193,18 +252,32 @@ namespace MiningSimulator.Ores
                 EaseInOutQuad(t));
         }
 
-        private IEnumerator FadeFlash(float from, float to, float duration,
-            System.Func<float, float> easing)
+        private IEnumerator FadeRadiance(float duration)
         {
             float elapsed = 0f;
+            float flareStart = flareCanvasGroup != null ? flareCanvasGroup.alpha : 0f;
+            float raysStart = raysCanvasGroup != null ? raysCanvasGroup.alpha : 0f;
             while (elapsed < duration)
             {
                 elapsed += Time.unscaledDeltaTime;
                 float t = Mathf.Clamp01(elapsed / duration);
-                flashCanvasGroup.alpha = Mathf.Lerp(from, to, easing(t));
+                float eased = EaseOutCubic(t);
+                flashCanvasGroup.alpha = Mathf.Lerp(flashOpacity, 0f, eased);
+                if (flareCanvasGroup != null)
+                {
+                    flareCanvasGroup.alpha = Mathf.Lerp(flareStart, 0f, eased);
+                }
+                if (raysCanvasGroup != null)
+                {
+                    raysCanvasGroup.alpha = Mathf.Lerp(raysStart, 0f, eased);
+                }
+                if (raysRect != null)
+                {
+                    raysRect.Rotate(0f, 0f, Time.unscaledDeltaTime * 90f);
+                }
                 yield return null;
             }
-            flashCanvasGroup.alpha = to;
+            flashCanvasGroup.alpha = 0f;
         }
 
         private void PrepareOverlay()
@@ -214,6 +287,14 @@ namespace MiningSimulator.Ores
             flashCanvasGroup.alpha = 0f;
             flashCanvasGroup.interactable = true;
             flashCanvasGroup.blocksRaycasts = true;
+            if (flareCanvasGroup != null)
+            {
+                flareCanvasGroup.alpha = 0f;
+            }
+            if (raysCanvasGroup != null)
+            {
+                raysCanvasGroup.alpha = 0f;
+            }
         }
 
         private void HideOverlay()
@@ -225,6 +306,14 @@ namespace MiningSimulator.Ores
             flashCanvasGroup.alpha = 0f;
             flashCanvasGroup.interactable = false;
             flashCanvasGroup.blocksRaycasts = false;
+            if (flareCanvasGroup != null)
+            {
+                flareCanvasGroup.alpha = 0f;
+            }
+            if (raysCanvasGroup != null)
+            {
+                raysCanvasGroup.alpha = 0f;
+            }
         }
 
         private void RestoreAuthoredState()
@@ -237,23 +326,24 @@ namespace MiningSimulator.Ores
             {
                 mainMenuCanvasGroup.alpha = menuAlpha;
             }
-            if (logoRect != null)
+            if (menuPresentationCanvasGroup != null)
             {
-                logoRect.anchoredPosition = logoPosition;
+                menuPresentationCanvasGroup.alpha = presentationAlpha;
             }
-            int count = Mathf.Min(menuButtons != null ? menuButtons.Length : 0,
-                buttonPositions != null ? buttonPositions.Length : 0);
-            for (int index = 0; index < count; index++)
+            if (menuPresentationRect != null)
             {
-                if (menuButtons[index] != null)
-                {
-                    menuButtons[index].anchoredPosition = buttonPositions[index];
-                }
+                menuPresentationRect.localScale = presentationScale;
+            }
+            if (backgroundRect != null)
+            {
+                backgroundRect.anchoredPosition = backgroundPosition;
+                backgroundRect.localScale = backgroundScale;
             }
             if (mainCamera != null)
             {
                 mainCamera.fieldOfView = cameraFieldOfView;
             }
+            showcaseMotion?.EndCinematic();
             cached = false;
         }
 
@@ -311,7 +401,6 @@ namespace MiningSimulator.Ores
         }
 
         private static float EaseOutCubic(float t) => 1f - Mathf.Pow(1f - t, 3f);
-        private static float EaseInCubic(float t) => t * t * t;
         private static float EaseInOutQuad(float t) => t < 0.5f
             ? 2f * t * t
             : 1f - Mathf.Pow(-2f * t + 2f, 2f) * 0.5f;
@@ -321,11 +410,12 @@ namespace MiningSimulator.Ores
         {
             menuExitDuration = Mathf.Max(0.1f, menuExitDuration);
             cameraZoomDuration = Mathf.Max(0.1f, cameraZoomDuration);
-            buttonStagger = Mathf.Max(0f, buttonStagger);
-            buttonSlideDistance = Mathf.Max(100f, buttonSlideDistance);
-            logoFlyDistance = Mathf.Max(50f, logoFlyDistance);
+            backgroundZoom = Mathf.Max(1f, backgroundZoom);
+            rumbleStrength = Mathf.Max(0f, rumbleStrength);
+            flashStartDelay = Mathf.Max(0f, flashStartDelay);
             flashInDuration = Mathf.Max(0.05f, flashInDuration);
-            flashHoldDuration = Mathf.Max(0f, flashHoldDuration);
+            handoffDelayAfterFlash = Mathf.Max(flashInDuration, handoffDelayAfterFlash);
+            flashHoldAfterHandoff = Mathf.Max(0f, flashHoldAfterHandoff);
             flashOutDuration = Mathf.Max(0.05f, flashOutDuration);
             flashOpacity = 1f;
         }

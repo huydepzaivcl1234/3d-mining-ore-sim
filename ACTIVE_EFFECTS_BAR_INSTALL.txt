@@ -1,0 +1,9 @@
+ACTIVE EFFECTS BAR - INSTALL
+
+1. Extract this ZIP directly into the Unity project root (the folder containing Assets).
+2. Allow Unity to compile the scripts.
+3. Enter Play Mode and use Apple, Banana, or Grape from Inventory.
+
+The existing Active Item Effects root position and size are preserved.
+No scene file is included or replaced.
+The bar reads the existing MiningItemSystem effects and project item icons.

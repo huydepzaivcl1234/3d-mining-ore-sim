@@ -11,7 +11,9 @@ namespace MiningSimulator.Ores.Editor
     /// <summary>Restyles the existing wired Main Menu without replacing its gameplay controller.</summary>
     public static class MiningMainMenuShowcaseSetupMenu
     {
-        private const string BackgroundPath = "Assets/Ores/Icons/background.png";
+        private const string BackgroundPath =
+            "Assets/Ores/Icons/MainMenuShowcaseBackground.jpg";
+        private const string LogoPath = "Assets/Ores/Icons/MainMenuShowcaseLogo.jpg";
 
         [MenuItem("Mining Simulator/UI/Build Showcase Main Menu")]
         public static void Build()
@@ -37,16 +39,11 @@ namespace MiningSimulator.Ores.Editor
             RectTransform card = Reference<RectTransform>(fields, "card");
             GameObject mainViewObject = Reference<GameObject>(fields, "mainView");
             GameObject settingsViewObject = Reference<GameObject>(fields, "settingsView");
-            Button play = Reference<Button>(fields, "playButton");
-            Button shop = Reference<Button>(fields, "shopButton");
-            Button settings = Reference<Button>(fields, "settingsButton");
-            Button exit = Reference<Button>(fields, "exitButton");
             TextMeshProUGUI title = Reference<TextMeshProUGUI>(fields, "titleLabel");
             TextMeshProUGUI subtitle = Reference<TextMeshProUGUI>(fields, "subtitleLabel");
             TextMeshProUGUI gemAmount = Reference<TextMeshProUGUI>(fields, "gemAmountLabel");
 
-            if (card == null || mainViewObject == null || settingsViewObject == null ||
-                play == null || settings == null || exit == null)
+            if (card == null || mainViewObject == null || settingsViewObject == null)
             {
                 EditorUtility.DisplayDialog("Main Menu Wiring Incomplete",
                     "Run Mining Simulator > Setup > Create Or Update Main Menu, then run this tool again.",
@@ -62,7 +59,10 @@ namespace MiningSimulator.Ores.Editor
             rootImage.color = new Color(0.025f, 0.012f, 0.01f, 1f);
             rootImage.raycastTarget = true;
 
+            EnsureSpriteImport(BackgroundPath);
+            EnsureSpriteImport(LogoPath);
             Sprite backgroundSprite = LoadFirstSprite(BackgroundPath);
+            Sprite logoSprite = LoadFirstSprite(LogoPath);
             RectTransform background = EnsureImage(menu.transform, "Showcase Background");
             Stretch(background, 24f);
             Image backgroundImage = background.GetComponent<Image>();
@@ -73,10 +73,9 @@ namespace MiningSimulator.Ores.Editor
             backgroundImage.raycastTarget = false;
             background.SetAsFirstSibling();
 
-            MiningMainMenuShowcaseMotion motion = menu.GetComponent<MiningMainMenuShowcaseMotion>() ??
-                                                   Undo.AddComponent<MiningMainMenuShowcaseMotion>(menu.gameObject);
-            Undo.RecordObject(motion, "Configure Main Menu Motion");
-            motion.Configure(background);
+            RectTransform ambientFx = EnsureAmbientFx(menu.transform);
+            Stretch(ambientFx);
+            ambientFx.SetSiblingIndex(Mathf.Min(1, menu.transform.childCount - 1));
 
             Undo.RecordObject(card, "Expand Main Menu Card");
             Stretch(card);
@@ -104,23 +103,25 @@ namespace MiningSimulator.Ores.Editor
                 new Color(0.015f, 0.004f, 0.008f, 0.88f));
             bottomShade.SetSiblingIndex(Mathf.Min(1, mainView.childCount - 1));
 
-            // The background art already contains the polished Mining Simulator logo.
+            RectTransform logo = EnsureImage(mainView, "Showcase Logo");
+            SetRect(logo, new Vector2(0.5f, 1f), new Vector2(0f, -220f),
+                new Vector2(430f, 430f));
+            Image logoImage = logo.GetComponent<Image>();
+            Undo.RecordObject(logoImage, "Assign Showcase Logo");
+            logoImage.sprite = logoSprite;
+            logoImage.color = Color.white;
+            logoImage.preserveAspect = true;
+            logoImage.raycastTarget = false;
+            logo.SetAsLastSibling();
+
+            MiningMainMenuShowcaseMotion motion = menu.GetComponent<MiningMainMenuShowcaseMotion>() ??
+                                                   Undo.AddComponent<MiningMainMenuShowcaseMotion>(menu.gameObject);
+            Undo.RecordObject(motion, "Configure Main Menu Motion");
+            motion.Configure(background, logo);
+
             SetActive(title != null ? title.gameObject : null, false, "Hide Duplicate Menu Title");
             SetActive(subtitle != null ? subtitle.gameObject : null, false,
                 "Hide Duplicate Menu Subtitle");
-
-            StyleButton(play, new Vector2(0f, 138f), new Vector2(400f, 94f),
-                new Color(0.91f, 0.31f, 0.055f, 1f),
-                new Color(0.43f, 0.055f, 0.018f, 1f), 36f, true);
-            StyleButton(shop, new Vector2(-220f, 45f), new Vector2(200f, 58f),
-                new Color(0.39f, 0.20f, 0.08f, 1f),
-                new Color(0.13f, 0.055f, 0.025f, 1f), 22f, false);
-            StyleButton(settings, new Vector2(0f, 45f), new Vector2(200f, 58f),
-                new Color(0.39f, 0.20f, 0.08f, 1f),
-                new Color(0.13f, 0.055f, 0.025f, 1f), 22f, false);
-            StyleButton(exit, new Vector2(220f, 45f), new Vector2(200f, 58f),
-                new Color(0.39f, 0.20f, 0.08f, 1f),
-                new Color(0.13f, 0.055f, 0.025f, 1f), 22f, false);
 
             StyleGemBalance(mainView, gemAmount);
             StyleSettings(settingsView);
@@ -133,9 +134,10 @@ namespace MiningSimulator.Ores.Editor
             MiningCinematicTransitionSetupMenu.Build();
             Selection.activeGameObject = menu.gameObject;
             EditorGUIUtility.PingObject(menu.gameObject);
-            Debug.Log("Showcase Main Menu built from the existing project background. " +
-                      "Play now uses a dark covered handoff with no white/pink flash. " +
-                      "Settings, Shop, Exit, localization and gameplay logic remain wired. Save the scene.",
+            Debug.Log("Showcase Main Menu motion upgraded without changing any button. " +
+                      "Play now uses the radiant camera-dive transition and hidden gameplay " +
+                      "handoff. Settings, Shop, Exit, localization and gameplay logic remain wired. " +
+                      "Save the scene.",
                 menu.gameObject);
         }
 
@@ -185,66 +187,6 @@ namespace MiningSimulator.Ores.Editor
             plate.SetAsFirstSibling();
         }
 
-        private static void StyleButton(Button button, Vector2 position, Vector2 size,
-            Color top, Color bottom, float fontSize, bool primary)
-        {
-            if (button == null)
-            {
-                return;
-            }
-
-            RectTransform rect = button.transform as RectTransform;
-            SetRect(rect, new Vector2(0.5f, 0f), position, size);
-            Image image = button.targetGraphic as Image ?? button.GetComponent<Image>();
-            if (image != null)
-            {
-                Undo.RecordObject(image, "Style Main Menu Button");
-                image.color = Color.white;
-                image.raycastTarget = true;
-            }
-
-            MiningUiGradient gradient = button.GetComponent<MiningUiGradient>() ??
-                                        Undo.AddComponent<MiningUiGradient>(button.gameObject);
-            Undo.RecordObject(gradient, "Style Main Menu Button Gradient");
-            gradient.SetColors(top, bottom);
-
-            JuicyButtonTrim trim = button.GetComponent<JuicyButtonTrim>() ??
-                                   Undo.AddComponent<JuicyButtonTrim>(button.gameObject);
-            Undo.RecordObject(trim, "Style Main Menu Button Trim");
-            trim.SetMedalRivets(false);
-
-            Shadow shadow = button.GetComponent<Shadow>() ?? Undo.AddComponent<Shadow>(button.gameObject);
-            Undo.RecordObject(shadow, "Style Main Menu Button Shadow");
-            shadow.effectColor = new Color(0.08f, 0.015f, 0.005f, 0.9f);
-            shadow.effectDistance = new Vector2(0f, primary ? -8f : -5f);
-            shadow.useGraphicAlpha = true;
-            AddOrStyleOutline(button.gameObject,
-                primary ? new Color(1f, 0.67f, 0.27f, 1f) : new Color(0.78f, 0.43f, 0.16f, 1f),
-                new Vector2(2f, -2f));
-
-            ColorBlock colors = button.colors;
-            colors.normalColor = Color.white;
-            colors.highlightedColor = new Color(1f, 1f, 1f, 0.93f);
-            colors.selectedColor = colors.highlightedColor;
-            colors.pressedColor = new Color(0.78f, 0.78f, 0.78f, 1f);
-            colors.disabledColor = new Color(0.45f, 0.45f, 0.45f, 0.75f);
-            colors.colorMultiplier = 1f;
-            button.colors = colors;
-
-            TextMeshProUGUI label = button.GetComponentInChildren<TextMeshProUGUI>(true);
-            if (label != null)
-            {
-                Undo.RecordObject(label, "Style Main Menu Button Label");
-                label.fontSize = fontSize;
-                label.fontStyle = FontStyles.Bold;
-                label.color = new Color(1f, 0.96f, 0.83f, 1f);
-                label.alignment = TextAlignmentOptions.Center;
-                label.enableAutoSizing = true;
-                label.fontSizeMin = Mathf.Max(14f, fontSize * 0.6f);
-                label.fontSizeMax = fontSize;
-            }
-        }
-
         private static RectTransform EnsureImage(Transform parent, string name)
         {
             Transform existing = parent.Find(name);
@@ -257,6 +199,26 @@ namespace MiningSimulator.Ores.Editor
             GameObject obj = new(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
             Undo.RegisterCreatedObjectUndo(obj, "Create " + name);
             obj.transform.SetParent(parent, false);
+            return obj.GetComponent<RectTransform>();
+        }
+
+        private static RectTransform EnsureAmbientFx(Transform parent)
+        {
+            const string name = "Showcase Amethyst Dust";
+            Transform existing = parent.Find(name);
+            if (existing is RectTransform existingRect)
+            {
+                MiningMenuAmbientFx existingFx = existingRect.GetComponent<MiningMenuAmbientFx>() ??
+                                                       Undo.AddComponent<MiningMenuAmbientFx>(existingRect.gameObject);
+                existingFx.raycastTarget = false;
+                return existingRect;
+            }
+
+            GameObject obj = new(name, typeof(RectTransform), typeof(CanvasRenderer),
+                typeof(MiningMenuAmbientFx));
+            Undo.RegisterCreatedObjectUndo(obj, "Create Showcase Amethyst Dust");
+            obj.transform.SetParent(parent, false);
+            obj.GetComponent<MiningMenuAmbientFx>().raycastTarget = false;
             return obj.GetComponent<RectTransform>();
         }
 
@@ -334,6 +296,25 @@ namespace MiningSimulator.Ores.Editor
             return sprite != null
                 ? sprite
                 : AssetDatabase.LoadAllAssetsAtPath(path).OfType<Sprite>().FirstOrDefault();
+        }
+
+        private static void EnsureSpriteImport(string path)
+        {
+            TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
+            if (importer == null ||
+                (importer.textureType == TextureImporterType.Sprite &&
+                 importer.spriteImportMode == SpriteImportMode.Single &&
+                 !importer.mipmapEnabled))
+            {
+                return;
+            }
+
+            importer.textureType = TextureImporterType.Sprite;
+            importer.spriteImportMode = SpriteImportMode.Single;
+            importer.mipmapEnabled = false;
+            importer.alphaIsTransparency = false;
+            importer.textureCompression = TextureImporterCompression.CompressedHQ;
+            importer.SaveAndReimport();
         }
 
         private static Transform Find(Transform root, string name)
