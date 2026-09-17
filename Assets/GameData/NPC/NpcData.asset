@@ -19,7 +19,7 @@ MonoBehaviour:
   spawnAttempts: 12
   moveSpeed: 3.5
   turnSpeed: 720
-  miningRange: 1.8
+  miningRange: 1
   stoppingDistance: 0.12
   movementAcceleration: 18
   brakingAcceleration: 28
@@ -59,13 +59,3 @@ MonoBehaviour:
   stuckTimeout: 1.25
   stuckProgressDistance: 0.08
   ignoredTargetDuration: 1.5
-  toolSwingAngle: 43
-  toolReturnSpeed: 14
-  bodyScale: {x: 0.8, y: 0.9, z: 0.8}
-  helmetLocalPosition: {x: 0, y: 0.86, z: 0.08}
-  helmetLocalScale: {x: 0.9, y: 0.18, z: 0.92}
-  toolLocalPosition: {x: 0.65, y: 0, z: 0}
-  toolLocalEulerAngles: {x: 0, y: 0, z: -25}
-  toolLocalScale: {x: 0.08, y: 0.85, z: 0.08}
-  toolHeadLocalPosition: {x: 0, y: 0.55, z: 0}
-  toolHeadLocalScale: {x: 3.8, y: 0.18, z: 0.65}

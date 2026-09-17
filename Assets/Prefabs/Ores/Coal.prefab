@@ -8,6 +8,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 8187893833377695969}
     m_Modifications:
+    - target: {fileID: 2335520794196699053, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
+      propertyPath: m_fontSize
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 2335520794196699053, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
+      propertyPath: m_sharedMaterial
+      value: 
+      objectReference: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+    - target: {fileID: 2335520794196699053, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
     - target: {fileID: 4385716689640749430, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.65
@@ -64,6 +76,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Ore Health Bar
       objectReference: {fileID: 0}
+    - target: {fileID: 5632212856069202798, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
     - target: {fileID: 7923854003312105274, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
       propertyPath: simpleBar._healAnim
       value: 1
@@ -186,6 +202,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Coal
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 911145bf8350b9545870e830961352a0, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
@@ -198,13 +218,7 @@ PrefabInstance:
       addedObject: {fileID: 4716780323429164427}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 911145bf8350b9545870e830961352a0, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 1480878408682620511}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 911145bf8350b9545870e830961352a0, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 8495144224422058803}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 911145bf8350b9545870e830961352a0, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 3925691614946399447}
+      addedObject: {fileID: 6297088948056578762}
   m_SourcePrefab: {fileID: 100100000, guid: 911145bf8350b9545870e830961352a0, type: 3}
 --- !u!4 &8187893833377695969 stripped
 Transform:
@@ -232,8 +246,8 @@ MonoBehaviour:
   wallet: {fileID: 0}
   upgradeSystem: {fileID: 0}
   currentDurability: 20
---- !u!65 &1480878408682620511
-BoxCollider:
+--- !u!64 &6297088948056578762
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -250,36 +264,7 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1.9085793, y: 1.763716, z: 1.4835299}
-  m_Center: {x: -0.056331396, y: -0.006367623, z: -0.0024369964}
---- !u!208 &8495144224422058803
-NavMeshObstacle:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8857154005313688155}
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Shape: 1
-  m_Extents: {x: 0.5, y: 0.5, z: 0.5}
-  m_MoveThreshold: 0.1
-  m_Carve: 1
-  m_CarveOnlyStationary: 1
-  m_Center: {x: 0, y: 0, z: 0}
-  m_TimeToStationary: 0.5
---- !u!114 &3925691614946399447
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8857154005313688155}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 82acf501f5c525d4f94271bcf5c18c29, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningNavMeshObstacle
-  carvePadding: 0.4
-  resizeOnEnable: 1
+  serializedVersion: 5
+  m_Convex: 1
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 1957298004166672968, guid: 911145bf8350b9545870e830961352a0, type: 3}

@@ -71,21 +71,7 @@ namespace MiningSimulator.Ores
         [Min(0.1f), SerializeField] private float stuckTimeout = 1.25f;
         [Min(0.001f), SerializeField] private float stuckProgressDistance = 0.08f;
         [Min(0.1f), SerializeField] private float ignoredTargetDuration = 1.5f;
-
-        [Header("Tool Animation")]
-        [Min(0f), SerializeField] private float toolSwingAngle = 42f;
-        [Min(0f), SerializeField] private float toolReturnSpeed = 14f;
-
-        [Header("Generated Prefab Presentation")]
-        [SerializeField] private Vector3 bodyScale = new(0.8f, 0.9f, 0.8f);
-        [SerializeField] private Vector3 helmetLocalPosition = new(0f, 0.86f, 0.08f);
-        [SerializeField] private Vector3 helmetLocalScale = new(0.9f, 0.18f, 0.92f);
-        [SerializeField] private Vector3 toolLocalPosition = new(0.65f, 0f, 0f);
-        [SerializeField] private Vector3 toolLocalEulerAngles = new(0f, 0f, -25f);
-        [SerializeField] private Vector3 toolLocalScale = new(0.08f, 0.85f, 0.08f);
-        [SerializeField] private Vector3 toolHeadLocalPosition = new(0f, 0.55f, 0f);
-        [SerializeField] private Vector3 toolHeadLocalScale = new(3.8f, 0.18f, 0.65f);
-
+                             
         public int PurchaseCost => purchaseCost;
         public int StartingMaximumMiners => startingMaximumMiners;
         public float SpawnSpread => spawnSpread;
@@ -131,17 +117,8 @@ namespace MiningSimulator.Ores
         public float StuckTimeout => stuckTimeout;
         public float StuckProgressDistance => stuckProgressDistance;
         public float IgnoredTargetDuration => ignoredTargetDuration;
-        public float ToolSwingAngle => toolSwingAngle;
-        public float ToolReturnSpeed => toolReturnSpeed;
-        public Vector3 BodyScale => bodyScale;
-        public Vector3 HelmetLocalPosition => helmetLocalPosition;
-        public Vector3 HelmetLocalScale => helmetLocalScale;
-        public Vector3 ToolLocalPosition => toolLocalPosition;
-        public Vector3 ToolLocalEulerAngles => toolLocalEulerAngles;
-        public Vector3 ToolLocalScale => toolLocalScale;
-        public Vector3 ToolHeadLocalPosition => toolHeadLocalPosition;
-        public Vector3 ToolHeadLocalScale => toolHeadLocalScale;
-
+       
+       
         public int GetExperienceRequirement(int level)
         {
             int safeLevel = Mathf.Max(1, level);
@@ -193,8 +170,8 @@ namespace MiningSimulator.Ores
             stuckTimeout = Mathf.Max(0.1f, stuckTimeout);
             stuckProgressDistance = Mathf.Max(0.001f, stuckProgressDistance);
             ignoredTargetDuration = Mathf.Max(0.1f, ignoredTargetDuration);
-            toolSwingAngle = Mathf.Max(0f, toolSwingAngle);
-            toolReturnSpeed = Mathf.Max(0f, toolReturnSpeed);
+            
+            
         }
     }
 }

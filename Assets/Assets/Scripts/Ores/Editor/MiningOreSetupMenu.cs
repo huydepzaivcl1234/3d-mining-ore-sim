@@ -985,30 +985,28 @@ namespace MiningSimulator.Editor
             try
             {
                 npcObject.name = "Mining NPC";
-                npcObject.transform.localScale = npcData.BodyScale;
+                
                 MiningNpc miningNpc = npcObject.AddComponent<MiningNpc>();
                 ConfigureNpcPrefab(npcObject, miningNpc, npcData);
 
                 GameObject helmet = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 helmet.name = "Miner Helmet";
                 helmet.transform.SetParent(npcObject.transform, false);
-                helmet.transform.localPosition = npcData.HelmetLocalPosition;
-                helmet.transform.localScale = npcData.HelmetLocalScale;
+               
+                
                 UnityEngine.Object.DestroyImmediate(helmet.GetComponent<Collider>());
 
                 GameObject pickaxeHandle = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 pickaxeHandle.name = "Pickaxe Handle";
                 pickaxeHandle.transform.SetParent(npcObject.transform, false);
-                pickaxeHandle.transform.localPosition = npcData.ToolLocalPosition;
-                pickaxeHandle.transform.localRotation = Quaternion.Euler(npcData.ToolLocalEulerAngles);
-                pickaxeHandle.transform.localScale = npcData.ToolLocalScale;
+               
+               
                 UnityEngine.Object.DestroyImmediate(pickaxeHandle.GetComponent<Collider>());
 
                 GameObject pickaxeHead = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 pickaxeHead.name = "Pickaxe Head";
                 pickaxeHead.transform.SetParent(pickaxeHandle.transform, false);
-                pickaxeHead.transform.localPosition = npcData.ToolHeadLocalPosition;
-                pickaxeHead.transform.localScale = npcData.ToolHeadLocalScale;
+               
                 UnityEngine.Object.DestroyImmediate(pickaxeHead.GetComponent<Collider>());
                 miningNpc.ConfigureTool(pickaxeHandle.transform);
 

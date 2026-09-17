@@ -64,13 +64,7 @@ PrefabInstance:
       addedObject: {fileID: 3261153886570024188}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: cec495ecdc881a44aa7f9454e5b4118f, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 6717816819111551439}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: cec495ecdc881a44aa7f9454e5b4118f, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: -1540773376318813817}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: cec495ecdc881a44aa7f9454e5b4118f, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: -2466993859316000282}
+      addedObject: {fileID: 345877819605198635}
   m_SourcePrefab: {fileID: 100100000, guid: cec495ecdc881a44aa7f9454e5b4118f, type: 3}
 --- !u!1 &1644942082788155708 stripped
 GameObject:
@@ -93,8 +87,8 @@ MonoBehaviour:
   wallet: {fileID: 0}
   upgradeSystem: {fileID: 0}
   currentDurability: 90
---- !u!65 &6717816819111551439
-BoxCollider:
+--- !u!64 &345877819605198635
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -111,39 +105,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 2.0907142, y: 1.8172379, z: 1.5934931}
-  m_Center: {x: -0.06660056, y: -0.010598477, z: -0.041125175}
---- !u!208 &-1540773376318813817
-NavMeshObstacle:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1644942082788155708}
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Shape: 1
-  m_Extents: {x: 0.5, y: 0.5, z: 0.5}
-  m_MoveThreshold: 0.1
-  m_Carve: 1
-  m_CarveOnlyStationary: 1
-  m_Center: {x: 0, y: 0, z: 0}
-  m_TimeToStationary: 0.5
---- !u!114 &-2466993859316000282
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1644942082788155708}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 82acf501f5c525d4f94271bcf5c18c29, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningNavMeshObstacle
-  carvePadding: 0.4
-  resizeOnEnable: 1
+  serializedVersion: 5
+  m_Convex: 1
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 6222876766992494290, guid: cec495ecdc881a44aa7f9454e5b4118f, type: 3}
 --- !u!4 &2134656433732303750 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: cec495ecdc881a44aa7f9454e5b4118f, type: 3}
@@ -157,6 +122,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 2134656433732303750}
     m_Modifications:
+    - target: {fileID: 2335520794196699053, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
+      propertyPath: m_fontSize
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 2335520794196699053, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
+      propertyPath: m_sharedMaterial
+      value: 
+      objectReference: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+    - target: {fileID: 2335520794196699053, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
     - target: {fileID: 4385716689640749430, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.65
@@ -213,6 +190,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Ore Health Bar
       objectReference: {fileID: 0}
+    - target: {fileID: 5632212856069202798, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
     - target: {fileID: 7923854003312105274, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
       propertyPath: simpleBar._healAnim
       value: 1

@@ -192,10 +192,8 @@ GameObject:
   - component: {fileID: 7806730407845122260}
   - component: {fileID: 97770446348028671}
   - component: {fileID: 4398815199468254653}
-  - component: {fileID: 698529776287324003}
   - component: {fileID: 869197623415428992}
-  - component: {fileID: -2727820336656512956}
-  - component: {fileID: -7832167713560011679}
+  - component: {fileID: 4894764459169729755}
   m_Layer: 0
   m_Name: Dark Stone
   m_TagString: Untagged
@@ -294,27 +292,6 @@ MonoBehaviour:
   wallet: {fileID: 0}
   upgradeSystem: {fileID: 0}
   currentDurability: 1000
---- !u!65 &698529776287324003
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4888310733400738421}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 0.027937917, y: 0.024683656, z: 0.022116084}
-  m_Center: {x: 0.0000071111135, y: 0.0011742192, z: 0.011058042}
 --- !u!114 &869197623415428992
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -336,36 +313,28 @@ MonoBehaviour:
   - {fileID: 484007835300809283}
   - {fileID: 7251136827073717580}
   - {fileID: 7720378309731304950}
---- !u!208 &-2727820336656512956
-NavMeshObstacle:
+--- !u!64 &4894764459169729755
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4888310733400738421}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Shape: 1
-  m_Extents: {x: 0.014, y: 0.012, z: 0.011000001}
-  m_MoveThreshold: 0.1
-  m_Carve: 1
-  m_CarveOnlyStationary: 1
-  m_Center: {x: 0, y: 0.001, z: 0.011000001}
-  m_TimeToStationary: 0.5
---- !u!114 &-7832167713560011679
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4888310733400738421}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 82acf501f5c525d4f94271bcf5c18c29, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningNavMeshObstacle
-  carvePadding: 0.4
-  resizeOnEnable: 1
+  serializedVersion: 5
+  m_Convex: 1
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 7776038017598026227, guid: 9c847c344c7c4a60abfa3e0718dd607d, type: 3}
 --- !u!1 &7638012262490113842
 GameObject:
   m_ObjectHideFlags: 0
@@ -498,6 +467,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5232360447912759503}
     m_Modifications:
+    - target: {fileID: 2335520794196699053, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
+      propertyPath: m_fontSize
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 2335520794196699053, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
+      propertyPath: m_sharedMaterial
+      value: 
+      objectReference: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+    - target: {fileID: 2335520794196699053, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
     - target: {fileID: 4385716689640749430, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -542,6 +523,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Ore Health Bar
       objectReference: {fileID: 0}
+    - target: {fileID: 5632212856069202798, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
     - target: {fileID: 7923854003312105274, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
       propertyPath: simpleBar._healAnim
       value: 1
