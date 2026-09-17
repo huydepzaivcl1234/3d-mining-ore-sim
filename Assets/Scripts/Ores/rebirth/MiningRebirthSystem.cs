@@ -77,6 +77,7 @@ namespace MiningSimulator.Ores
             upgradeSystem?.ResetAllUpgrades();
             npcProgressionSystem?.ResetProgression();
             npcShop?.ResetAllNpcs();
+            MiningComputerStation.ResetAllLoadedStations();
             wallet.ResetMoney();
             RebirthCompleted?.Invoke(completedRebirths);
             StateChanged?.Invoke();

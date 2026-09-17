@@ -30,6 +30,7 @@ namespace MiningSimulator.Ores
         private readonly Dictionary<MiningNpc, int> reservedMiners = new();
 
         public LuckyBlockType Type => type;
+        public LuckyBlockVariantData Variant => variant;
         public int CurrentDurability => currentDurability;
         public int MaximumDurability => variant != null ? variant.Durability : 0;
         public LuckyBlockData Settings => settings;

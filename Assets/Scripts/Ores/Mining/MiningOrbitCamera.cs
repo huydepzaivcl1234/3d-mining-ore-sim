@@ -5,7 +5,7 @@ using UnityEngine.InputSystem.Controls;
 
 namespace MiningSimulator.Ores
 {
-    /// <summary>Provides 360-degree orbit, keyboard pan, mouse pan, and zoom.</summary>
+    /// <summary>Provides 360-degree orbit, keyboard pan, and zoom.</summary>
     [DisallowMultipleComponent]
     public sealed class MiningOrbitCamera : MonoBehaviour
     {
@@ -164,14 +164,6 @@ namespace MiningSimulator.Ores
                 yaw += delta.x * gameData.CameraRotationDegreesPerPixel;
                 pitch = Mathf.Clamp(pitch - delta.y * gameData.CameraRotationDegreesPerPixel,
                     gameData.CameraMinimumPitch, gameData.CameraMaximumPitch);
-            }
-
-            if (mouse.middleButton.isPressed && controlledCamera != null)
-            {
-                float scale = distance * gameData.CameraMousePanSpeed;
-                focusPoint -= controlledCamera.transform.right * (delta.x * scale);
-                Vector3 flatForward = Vector3.ProjectOnPlane(controlledCamera.transform.forward, Vector3.up).normalized;
-                focusPoint -= flatForward * (delta.y * scale);
             }
 
             float scroll = mouse.scroll.ReadValue().y;
