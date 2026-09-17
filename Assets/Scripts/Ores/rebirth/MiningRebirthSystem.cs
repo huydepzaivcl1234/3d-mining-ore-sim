@@ -88,6 +88,7 @@ namespace MiningSimulator.Ores
         {
             FindResetTargetsIfMissing();
             completedRebirths = 0;
+            PlayerPrefs.DeleteKey("MiningSimulator.SaveExists.v1");
             if (rebirthData != null)
             {
                 PlayerPrefs.DeleteKey(rebirthData.RebirthCountSaveKey);

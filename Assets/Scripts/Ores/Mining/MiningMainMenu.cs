@@ -26,6 +26,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private Image transitionBar;
         [SerializeField] private Image transitionFlash;
         [SerializeField] private MiningCinematicTransition cinematicTransition;
+        [SerializeField] private JuicyPlaySelection playSelection;
 
         [Header("Exit confirmation")]
         [SerializeField] private GameObject exitConfirmation;
@@ -163,6 +164,23 @@ namespace MiningSimulator.Ores
                 return;
             }
 
+            ResolvePlaySelection();
+            if (playSelection != null && playSelection.HandlePlayRequest())
+            {
+                return;
+            }
+
+            PlaySelectedGame();
+        }
+
+        /// <summary>Starts gameplay after the player chooses Load Game or New Game.</summary>
+        internal void PlaySelectedGame()
+        {
+            if (closing || data == null)
+            {
+                return;
+            }
+
             closing = true;
             SetMainButtonsInteractable(false);
             StopTransition(ref transition);
@@ -197,6 +215,8 @@ namespace MiningSimulator.Ores
             }
 
             gameObject.SetActive(true);
+            ResolvePlaySelection();
+            playSelection?.MarkGameStarted();
             PauseGameplay();
             mainView.SetActive(true);
             settingsView.SetActive(false);
@@ -305,6 +325,8 @@ namespace MiningSimulator.Ores
 
         private void FinishPlay()
         {
+            ResolvePlaySelection();
+            playSelection?.MarkGameStarted();
             ReleaseGameplayPause();
             gameObject.SetActive(false);
         }
@@ -452,6 +474,7 @@ namespace MiningSimulator.Ores
             {
                 wallet = FindFirstObjectByType<PlayerWallet>(FindObjectsInactive.Include);
             }
+            ResolvePlaySelection();
             gameData ??= wallet != null ? wallet.GameData : null;
             return data != null && canvasGroup != null && card != null &&
                    mainView != null && settingsView != null && mainViewGroup != null &&
@@ -461,6 +484,15 @@ namespace MiningSimulator.Ores
                    exitConfirmation != null && exitConfirmationGroup != null &&
                    exitConfirmationDialog != null && confirmExitButton != null &&
                    cancelExitButton != null;
+        }
+
+        private void ResolvePlaySelection()
+        {
+            if (playSelection == null)
+            {
+                playSelection = GetComponent<JuicyPlaySelection>() ??
+                                GetComponentInChildren<JuicyPlaySelection>(true);
+            }
         }
 
         private void HandleGemsChanged(float amount)

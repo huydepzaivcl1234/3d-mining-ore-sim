@@ -7,6 +7,8 @@ namespace MiningSimulator.Ores
     [DisallowMultipleComponent]
     public sealed class NpcShop : MonoBehaviour
     {
+        private const string PurchasedCountSaveKey = "MiningSimulator.NpcCount.v1";
+
         [SerializeField] private PlayerWallet wallet;
         [SerializeField] private OreSpawner oreSpawner;
         [SerializeField] private MiningNpc npcPrefab;
@@ -49,6 +51,11 @@ namespace MiningSimulator.Ores
             FindProgressionSystemIfMissing();
         }
 
+        private void Start()
+        {
+            RestorePurchasedNpcs();
+        }
+
         private void OnEnable()
         {
             if (upgradeSystem != null)
@@ -74,29 +81,18 @@ namespace MiningSimulator.Ores
                 return false;
             }
 
-            Vector3 origin = spawnPoint != null ? spawnPoint.position : transform.position;
-            if (!TryFindAvailableSpawnPosition(origin, out Vector3 position))
-            {
-                return false;
-            }
-
             if (!wallet.TrySpend(NpcCost))
             {
                 return false;
             }
 
-            MiningNpc npc = Instantiate(npcPrefab, position, Quaternion.identity);
-            if (npc == null)
+            if (!TrySpawnNpc(out MiningNpc npc))
             {
                 wallet.AddMoney(NpcCost);
                 return false;
             }
 
-            npc.name = $"Mining NPC {purchasedCount + 1}";
-            FindLuckyBlockSystemIfMissing();
-            FindProgressionSystemIfMissing();
-            npc.Initialize(oreSpawner, npcData, luckyBlockSystem, progressionSystem);
-            purchasedCount++;
+            SavePurchasedCount();
             NpcCountChanged?.Invoke(purchasedCount);
             NpcPurchased?.Invoke(npc);
             return true;
@@ -120,12 +116,72 @@ namespace MiningSimulator.Ores
             }
 
             purchasedCount = 0;
+            PlayerPrefs.DeleteKey(PurchasedCountSaveKey);
+            PlayerPrefs.Save();
             NpcCountChanged?.Invoke(purchasedCount);
         }
 
         private void HandleUpgradesChanged()
         {
             NpcCountChanged?.Invoke(purchasedCount);
+        }
+
+        private void RestorePurchasedNpcs()
+        {
+            if (!PlayerPrefs.HasKey(PurchasedCountSaveKey) || npcData == null ||
+                oreSpawner == null || npcPrefab == null)
+            {
+                NpcCountChanged?.Invoke(purchasedCount);
+                return;
+            }
+
+            int savedCount = Mathf.Clamp(PlayerPrefs.GetInt(PurchasedCountSaveKey, 0), 0,
+                MaximumMiners);
+            while (purchasedCount < savedCount)
+            {
+                // Restored miners must not charge money or fire purchase rewards/quests.
+                if (!TrySpawnNpc(out _))
+                {
+                    break;
+                }
+            }
+
+            NpcCountChanged?.Invoke(purchasedCount);
+        }
+
+        private bool TrySpawnNpc(out MiningNpc npc)
+        {
+            npc = null;
+            if (oreSpawner == null || npcPrefab == null || npcData == null ||
+                purchasedCount >= MaximumMiners)
+            {
+                return false;
+            }
+
+            Vector3 origin = spawnPoint != null ? spawnPoint.position : transform.position;
+            if (!TryFindAvailableSpawnPosition(origin, out Vector3 position))
+            {
+                return false;
+            }
+
+            npc = Instantiate(npcPrefab, position, Quaternion.identity);
+            if (npc == null)
+            {
+                return false;
+            }
+
+            npc.name = $"Mining NPC {purchasedCount + 1}";
+            FindLuckyBlockSystemIfMissing();
+            FindProgressionSystemIfMissing();
+            npc.Initialize(oreSpawner, npcData, luckyBlockSystem, progressionSystem);
+            purchasedCount++;
+            return true;
+        }
+
+        private void SavePurchasedCount()
+        {
+            PlayerPrefs.SetInt(PurchasedCountSaveKey, Mathf.Max(0, purchasedCount));
+            PlayerPrefs.Save();
         }
 
         private bool TryFindAvailableSpawnPosition(Vector3 origin, out Vector3 position)

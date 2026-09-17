@@ -29,6 +29,7 @@ namespace MiningSimulator.Ores
         private readonly SlotView[] slotViews =
             new SlotView[MiningItemDatabase.InventoryCapacity];
         private TextMeshProUGUI openButtonLabel;
+        private JuicyInventoryButton openButtonPresentation;
         private MiningGiftBoxWheelPanel giftBoxWheelPanel;
 
         public event Action PanelOpened;
@@ -43,12 +44,38 @@ namespace MiningSimulator.Ores
             panelCoordinator?.RegisterInventoryUi(
                 openButton != null ? openButton.GetComponent<RectTransform>() : null,
                 inventoryPanel != null ? inventoryPanel.GetComponent<RectTransform>() : null);
-            openButtonLabel = openButton != null
-                ? openButton.GetComponentInChildren<TextMeshProUGUI>(true)
-                : null;
+            openButtonLabel = FindOpenButtonLabel(openButton);
+            if (openButton != null)
+            {
+                openButtonPresentation = openButton.GetComponent<JuicyInventoryButton>() ??
+                                         openButton.gameObject.AddComponent<JuicyInventoryButton>();
+                openButtonPresentation.Configure(openButton, openButtonLabel);
+            }
             CacheSlotViews();
             EnsureGiftBoxWheelPanel();
             inventoryPanel?.SetActive(false);
+        }
+
+        private static TextMeshProUGUI FindOpenButtonLabel(Button button)
+        {
+            if (button == null) return null;
+
+            Transform named = button.transform.Find("Text (TMP)");
+            if (named != null && named.TryGetComponent(out TextMeshProUGUI namedLabel))
+            {
+                return namedLabel;
+            }
+
+            Transform presentation = button.transform.Find("Juicy Inventory Visuals");
+            foreach (TextMeshProUGUI label in
+                     button.GetComponentsInChildren<TextMeshProUGUI>(true))
+            {
+                if (presentation == null || !label.transform.IsChildOf(presentation))
+                {
+                    return label;
+                }
+            }
+            return null;
         }
 
         private void OnEnable()
