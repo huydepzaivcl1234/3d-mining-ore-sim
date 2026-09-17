@@ -907,6 +907,27 @@ namespace MiningSimulator.Ores
             Ore blockingOre, out Vector3 waypointDirection)
         {
             waypointDirection = Vector3.zero;
+
+            // Already mid-route around this exact ore - keep following that route instead of
+            // recalculating from the current position/heading every frame. Recomputing here
+            // was the actual pathfinding bug: inside a dense cluster, tiny frame-to-frame shifts
+            // in position/forward flip the positive-vs-negative clearance comparison below back
+            // and forth, so the NPC kept switching which side to go around on and never actually
+            // made progress past the ore (looked "stuck"/jittering in place, most noticeable on
+            // a middle-click commanded target since commanded NPCs aren't allowed to just switch
+            // to a different ore instead - see the `!hasCommandedTarget` check in FixedUpdate).
+            if (hasDetourWaypoint && blockingOre == detourWaypointOre && blockingOre != null &&
+                blockingOre.isActiveAndEnabled && !blockingOre.IsDepleted)
+            {
+                waypointDirection = detourWaypoint - currentPosition;
+                waypointDirection.y = 0f;
+                if (waypointDirection.sqrMagnitude > Mathf.Epsilon)
+                {
+                    waypointDirection.Normalize();
+                    return true;
+                }
+            }
+
             if (blockingOre == null || !blockingOre.TryGetWorldBounds(out Bounds bounds))
             {
                 return false;
