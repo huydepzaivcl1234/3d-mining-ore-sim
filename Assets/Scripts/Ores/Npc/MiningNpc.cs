@@ -332,9 +332,8 @@ namespace MiningSimulator.Ores
 
             Vector3 currentPosition = body.position;
             float speedMultiplier = GetMoveSpeedMultiplier();
-            // Speed upgrades change the desired velocity. Scale acceleration linearly and braking
-            // quadratically so acceleration time and stopping distance stay the same at every
-            // upgrade level instead of making a fast NPC coast through turns and targets.
+            // Scale acceleration linearly and braking quadratically with speed upgrades so fast
+            // miners keep the same acceleration time and stopping distance as normal-speed ones.
             float movementAcceleration = npcData.MovementAcceleration * speedMultiplier;
             float brakingAcceleration = npcData.BrakingAcceleration * speedMultiplier * speedMultiplier;
 
@@ -345,9 +344,6 @@ namespace MiningSimulator.Ores
             // the detour says "go right", and the NPC averages into standing still.
             // While a path is live the detour layer is suppressed entirely.
             Vector3 navigationTarget = GetNavigationTarget(currentPosition, desiredMoveTarget);
-            // GetNavigationTarget can consume the final waypoint and clear the route. Read this
-            // after it runs so local recovery is enabled in that same physics step instead of
-            // using one stale frame of "path is active" state.
             bool hasGlobalPath = currentPath.Count > 0;
             if (!hasGlobalPath && TryGetDetourWaypoint(currentPosition, out Vector3 waypoint))
             {
@@ -412,12 +408,13 @@ namespace MiningSimulator.Ores
                 smoothedSeparation * npcData.NpcSeparationStrength).normalized;
 
             float maximumSpeed = npcData.MoveSpeed * speedMultiplier;
-            // Start easing off before the stop radius. This prevents a high-level NPC from
-            // overshooting a narrow waypoint and having to reverse back and forth to recover.
             float brakingDistance = Mathf.Max(0f,
                 movementOffset.magnitude - npcData.StoppingDistance);
             float arrivalSpeed = Mathf.Sqrt(2f * brakingAcceleration * brakingDistance);
-            Vector3 desiredVelocity = movementDirection * Mathf.Min(maximumSpeed, arrivalSpeed);
+            float cornerSpeed = GetCornerSpeedLimit(currentPosition, maximumSpeed,
+                brakingAcceleration);
+            Vector3 desiredVelocity = movementDirection * Mathf.Min(maximumSpeed, arrivalSpeed,
+                cornerSpeed);
             ApplyHorizontalVelocity(desiredVelocity, movementAcceleration, brakingAcceleration);
             SetMovingAnimationState(true);
             RotateTowards(movementDirection);
@@ -1193,10 +1190,6 @@ namespace MiningSimulator.Ores
                 return;
             }
 
-            // The target ore itself is deliberately ignored by TryGetBlockingOre, but another
-            // ore can be between the miner and its reserved stand position. Do not abandon a
-            // route just because it is close: doing that hands steering to the local detour code
-            // in exactly the dense-cluster case where it can keep choosing opposite sides.
             if (CanUseDirectFinalApproach(currentPosition, standPosition))
             {
                 inFinalApproach = true;
@@ -1263,13 +1256,55 @@ namespace MiningSimulator.Ores
                 return false;
             }
 
-            // There is no meaningful segment to test when already at the chosen stand point.
             if (distance <= npcData.StoppingDistance)
             {
                 return true;
             }
 
             return !TryGetBlockingOre(toStand / distance, distance, out _, out _);
+        }
+
+        /// <summary>
+        /// Limits velocity before the next route corner. A NavMeshAgent normally provides this
+        /// steering internally; this NPC deliberately uses a Rigidbody, so its route follower
+        /// must perform the equivalent slowdown itself to avoid overshooting a left/right turn.
+        /// </summary>
+        private float GetCornerSpeedLimit(Vector3 currentPosition, float maximumSpeed,
+            float brakingAcceleration)
+        {
+            if (pathWaypointIndex >= currentPath.Count - 1)
+            {
+                return maximumSpeed;
+            }
+
+            Vector3 corner = currentPath[pathWaypointIndex];
+            Vector3 approach = corner - currentPosition;
+            approach.y = 0f;
+            float cornerDistance = approach.magnitude;
+            if (cornerDistance <= Mathf.Epsilon)
+            {
+                return maximumSpeed;
+            }
+
+            Vector3 exit = currentPath[pathWaypointIndex + 1] - corner;
+            exit.y = 0f;
+            if (exit.sqrMagnitude <= Mathf.Epsilon)
+            {
+                return maximumSpeed;
+            }
+
+            float turnAmount = Mathf.InverseLerp(15f, 150f,
+                Vector3.Angle(approach, exit));
+            if (turnAmount <= Mathf.Epsilon)
+            {
+                return maximumSpeed;
+            }
+
+            // Keep enough motion to round gentle corners, while tight turns slow substantially.
+            float turnSpeed = Mathf.Lerp(maximumSpeed, maximumSpeed * 0.2f, turnAmount);
+            float turnRadius = Mathf.Max(npcData.ColliderRadius, npcData.StoppingDistance);
+            return Mathf.Sqrt(turnSpeed * turnSpeed + 2f * brakingAcceleration *
+                Mathf.Max(0f, cornerDistance - turnRadius));
         }
 
         /// <summary>
@@ -1406,8 +1441,6 @@ namespace MiningSimulator.Ores
         {
             Vector3 currentVelocity = body.linearVelocity;
             Vector3 currentHorizontalVelocity = new(currentVelocity.x, 0f, currentVelocity.z);
-            // Use braking response whenever the new command removes forward speed. This covers
-            // stopping, arrival slowdown, and sharp route corners at high upgrade levels.
             float response = Vector3.Dot(currentHorizontalVelocity, desiredHorizontalVelocity) <
                 currentHorizontalVelocity.sqrMagnitude ? brakingAcceleration : acceleration;
             Vector3 nextHorizontalVelocity = Vector3.MoveTowards(currentHorizontalVelocity,

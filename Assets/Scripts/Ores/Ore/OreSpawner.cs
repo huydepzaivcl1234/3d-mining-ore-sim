@@ -517,11 +517,6 @@ namespace MiningSimulator.Ores
             }
         }
 
-        /// <summary>
-        /// Ores are dynamic, pooled obstacles. Ensure each live instance carves the NavMesh so
-        /// a global path is planned around its real footprint instead of into its collider.
-        /// Adding this at runtime also repairs older prefabs authored before navigation support.
-        /// </summary>
         private static void EnsureNavigationObstacle(Ore ore)
         {
             if (ore != null && ore.GetComponent<MiningNavMeshObstacle>() == null)

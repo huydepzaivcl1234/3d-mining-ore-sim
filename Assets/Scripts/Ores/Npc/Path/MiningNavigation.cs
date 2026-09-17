@@ -94,13 +94,6 @@ namespace MiningSimulator.Ores
             return false;
         }
 
-        /// <summary>
-        /// Recovers the common scene-authoring mistake where the NavMeshSurface and its builder
-        /// exist but were disabled. Without this, every NPC silently falls through to reactive
-        /// steering and a commanded target can oscillate between two obstacles indefinitely.
-        /// The builder's Start method performs the actual bake on the next frame; callers simply
-        /// retry their throttled path request after that.
-        /// </summary>
         private static void TryRecoverDisabledNavMeshBuilder()
         {
             if (NavMeshAvailable || Time.unscaledTime < nextNavigationRecoveryAttempt)
