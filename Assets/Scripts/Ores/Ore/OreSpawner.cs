@@ -180,19 +180,13 @@ namespace MiningSimulator.Ores
                 return false;
             }
 
-            OreData data = guaranteedOreQueue.Count > 0 ? guaranteedOreQueue.Dequeue() : ChooseOre();
+            bool isGuaranteedSpawn = guaranteedOreQueue.Count > 0;
+            OreData data = isGuaranteedSpawn ? guaranteedOreQueue.Peek() : ChooseOre();
             if (data == null || data.Prefab == null)
             {
                 return false;
             }
 
-            Vector3 position = ChoosePosition();
-            Vector2 yRange = spawnData.RandomYRotationRange;
-            float randomY = spawnData.RandomYRotation
-                ? UnityEngine.Random.Range(Mathf.Min(yRange.x, yRange.y), Mathf.Max(yRange.x, yRange.y))
-                : 0f;
-            Quaternion rotation = Quaternion.Euler(0f, randomY, 0f) *
-                                  Quaternion.Euler(data.SpawnRotationOffset);
             Transform parent = spawnedOreParent != null ? spawnedOreParent : transform;
             Ore ore = TakeOreFromPool(data, parent);
             if (ore == null)
@@ -211,20 +205,88 @@ namespace MiningSimulator.Ores
             }
 
             GameObject instance = ore.gameObject;
-            instance.transform.SetPositionAndRotation(position, rotation);
-            float scale = UnityEngine.Random.Range(
-                Mathf.Max(0.01f, Mathf.Min(spawnData.UniformScaleRange.x, spawnData.UniformScaleRange.y)),
-                Mathf.Max(0.01f, Mathf.Max(spawnData.UniformScaleRange.x, spawnData.UniformScaleRange.y)));
-            instance.transform.localScale = data.Prefab.transform.localScale * scale;
+            instance.SetActive(true);
+            if (!TryPlaceOreWithNpcPassage(ore, data))
+            {
+                ReturnOreToPool(ore);
+                return false;
+            }
+
             ore.Initialize(data, wallet, upgradeSystem, false);
             EnsureNavigationObstacle(ore);
-            instance.SetActive(true);
-            KeepAboveSurface(instance, position.y);
-            instance.transform.position += Vector3.up * data.SpawnHeightOffset;
             ore.Depleted += HandleOreDepleted;
             ore.RewardGranted += HandleRewardGranted;
             activeOres.Add(ore);
+            if (isGuaranteedSpawn)
+            {
+                guaranteedOreQueue.Dequeue();
+            }
             return true;
+        }
+
+        private bool TryPlaceOreWithNpcPassage(Ore ore, OreData data)
+        {
+            GameObject instance = ore.gameObject;
+            Vector2 yRange = spawnData.RandomYRotationRange;
+            float minimumScale = Mathf.Max(0.01f,
+                Mathf.Min(spawnData.UniformScaleRange.x, spawnData.UniformScaleRange.y));
+            float maximumScale = Mathf.Max(0.01f,
+                Mathf.Max(spawnData.UniformScaleRange.x, spawnData.UniformScaleRange.y));
+
+            for (int attempt = 0; attempt < spawnData.PlacementAttempts; attempt++)
+            {
+                Vector3 position = ChoosePosition();
+                float randomY = spawnData.RandomYRotation
+                    ? UnityEngine.Random.Range(Mathf.Min(yRange.x, yRange.y), Mathf.Max(yRange.x, yRange.y))
+                    : 0f;
+                Quaternion rotation = Quaternion.Euler(0f, randomY, 0f) *
+                                      Quaternion.Euler(data.SpawnRotationOffset);
+                float scale = UnityEngine.Random.Range(minimumScale, maximumScale);
+                instance.transform.SetPositionAndRotation(position, rotation);
+                instance.transform.localScale = data.Prefab.transform.localScale * scale;
+                KeepAboveSurface(instance, position.y);
+                instance.transform.position += Vector3.up * data.SpawnHeightOffset;
+
+                if (HasNpcPassageAround(ore))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool HasNpcPassageAround(Ore candidate)
+        {
+            if (!candidate.TryGetWorldBounds(out Bounds candidateBounds))
+            {
+                return true;
+            }
+
+            float candidateRadius = GetHorizontalBoundsRadius(candidateBounds);
+            foreach (Ore activeOre in activeOres)
+            {
+                if (activeOre == null || !activeOre.TryGetWorldBounds(out Bounds activeBounds))
+                {
+                    continue;
+                }
+
+                Vector3 offset = candidateBounds.center - activeBounds.center;
+                offset.y = 0f;
+                float requiredDistance = candidateRadius + GetHorizontalBoundsRadius(activeBounds) +
+                                         spawnData.NpcPassageWidth;
+                if (offset.sqrMagnitude < requiredDistance * requiredDistance)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private static float GetHorizontalBoundsRadius(Bounds bounds)
+        {
+            return new Vector2(bounds.extents.x, bounds.extents.z).magnitude;
         }
 
         private Ore TakeOreFromPool(OreData data, Transform parent)

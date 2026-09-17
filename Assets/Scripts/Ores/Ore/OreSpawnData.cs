@@ -122,6 +122,12 @@ namespace MiningSimulator.Ores
         [SerializeField] private Vector2 randomYRotationRange = new(0f, 360f);
         [SerializeField] private Vector2 uniformScaleRange = Vector2.one;
 
+        [Header("NPC Passage")]
+        [Tooltip("Minimum empty horizontal gap kept between ore collider footprints so an NPC can pass.")]
+        [Min(0.1f), SerializeField] private float npcPassageWidth = 1.1f;
+        [Tooltip("Candidate positions tested before a spawn is deferred because the field is too crowded.")]
+        [Min(1), SerializeField] private int placementAttempts = 24;
+
         [Header("Surface Placement")]
         [SerializeField] private bool keepOreAboveSurface = true;
         [Min(0f), SerializeField] private float surfaceClearance = 0.05f;
@@ -148,6 +154,8 @@ namespace MiningSimulator.Ores
         public bool RandomYRotation => randomYRotation;
         public Vector2 RandomYRotationRange => randomYRotationRange;
         public Vector2 UniformScaleRange => uniformScaleRange;
+        public float NpcPassageWidth => npcPassageWidth;
+        public int PlacementAttempts => placementAttempts;
         public bool KeepOreAboveSurface => keepOreAboveSurface;
         public float SurfaceClearance => surfaceClearance;
         public bool AlignToGround => alignToGround;
@@ -175,6 +183,8 @@ namespace MiningSimulator.Ores
             maximumPooledOres = Mathf.Max(0, maximumPooledOres);
             secondsPerSpawn = Mathf.Max(0.05f, secondsPerSpawn);
             areaSize = new Vector3(Mathf.Abs(areaSize.x), Mathf.Abs(areaSize.y), Mathf.Abs(areaSize.z));
+            npcPassageWidth = Mathf.Max(0.1f, npcPassageWidth);
+            placementAttempts = Mathf.Max(1, placementAttempts);
             surfaceClearance = Mathf.Max(0f, surfaceClearance);
             groundRayStartHeight = Mathf.Max(0.1f, groundRayStartHeight);
             groundRayDistance = Mathf.Max(0.1f, groundRayDistance);
