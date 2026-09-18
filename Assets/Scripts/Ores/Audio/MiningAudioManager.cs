@@ -21,7 +21,9 @@ namespace MiningSimulator.Ores
         [SerializeField] private MiningRebirthPanel rebirthPanel;
         [SerializeField] private MiningAudioSettingsPanel audioSettingsPanel;
         [SerializeField] private MiningGiftBoxWheelPanel giftBoxWheelPanel;
-        [SerializeField] private DayNightSystem dayNightSystem;
+        // Runtime lookup avoids storing a scene object reference in audio data.
+        // This keeps the audio feature independent of authored UI and scene layout.
+        private DayNightSystem dayNightSystem;
         [SerializeField] private AudioSource musicSource;
         [SerializeField] private AudioSource sfxSource;
         [SerializeField] private AudioSource ambienceSource;
