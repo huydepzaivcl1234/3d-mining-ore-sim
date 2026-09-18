@@ -14,6 +14,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private Light sun;
         [Tooltip("Existing scene Global Volume. Auto-found once when left empty.")]
         [SerializeField] private Volume cinematicVolume;
+        [SerializeField] private CoinRainEventSystem coinRainEvent;
 
         private static readonly int SkyTintId = Shader.PropertyToID("_SkyTint");
         private static readonly int TintId = Shader.PropertyToID("_Tint");
@@ -93,6 +94,12 @@ namespace MiningSimulator.Ores
             PrepareCinematicVolume();
             EnsureCelestialDisc();
             ApplyLighting(daylight);
+            EnsureCoinRainEvent();
+        }
+
+        private void OnEnable()
+        {
+            EnsureCoinRainEvent();
         }
 
         private void OnDisable()
@@ -111,6 +118,22 @@ namespace MiningSimulator.Ores
             if (RenderSettings.skybox == runtimeSkybox) RenderSettings.skybox = originalSkybox;
             Destroy(runtimeSkybox);
             RestoreCinematicVolume();
+        }
+
+        private void EnsureCoinRainEvent()
+        {
+            if (data == null)
+            {
+                return;
+            }
+
+            coinRainEvent ??= GetComponent<CoinRainEventSystem>();
+            if (coinRainEvent == null)
+            {
+                coinRainEvent = gameObject.AddComponent<CoinRainEventSystem>();
+            }
+
+            coinRainEvent.Configure(this, data);
         }
 
         private void Update()

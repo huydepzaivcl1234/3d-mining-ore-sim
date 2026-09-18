@@ -27,6 +27,7 @@ MonoBehaviour:
   - {fileID: 8300000, guid: eace74d809a0af24eae240309a6f1d13, type: 3}
   nightAmbiencePauseRange: {x: 2, y: 5}
   sunriseRoosterSfx: {fileID: 8300000, guid: 4caad48eb5424c0f9bb4cc6172f006fd, type: 3}
+  coinRainAmbience: {fileID: 8300000, guid: 256f376d46cc5504985640d35469ad3a, type: 3}
   ambienceVolume: 0.45
   ambienceFadeDuration: 2.5
   oreHitSfx: {fileID: 8300000, guid: 37b621765db9a9a41b987b6dbcaeeb8e, type: 3}

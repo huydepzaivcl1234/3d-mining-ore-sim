@@ -116,6 +116,18 @@ namespace MiningSimulator.Ores
         [Min(0f), SerializeField] private float dayFogDensity = 0.002f;
         [Min(0f), SerializeField] private float nightFogDensity = 0.012f;
 
+        [Header("Coin Rain Event")]
+        [SerializeField] private bool coinRainEnabled = true;
+        [Range(0f, 100f), SerializeField] private float coinRainChancePerMorningPercent = 35f;
+        [Min(0f), SerializeField] private float coinRainWarningSeconds = 4f;
+        [Min(0.01f), SerializeField] private float coinRainRewardIntervalSeconds = 2f;
+        [Min(0f), SerializeField] private float coinRainRewardPerInterval = 20f;
+        [Min(1f), SerializeField] private float coinRainCameraFarClip = 65f;
+        [Min(0f), SerializeField] private float coinRainFogDensity = 0.035f;
+        [SerializeField] private Color coinRainFogColor = new(0.35f, 0.38f, 0.42f, 1f);
+        [SerializeField] private Color coinRainAmbientColor = new(0.42f, 0.44f, 0.47f, 1f);
+        [Range(1f, 250f), SerializeField] private float coinRainParticlesPerSecond = 75f;
+
         [Header("Cinematic Post Processing")]
         [SerializeField] private bool controlCinematicPostProcessing = true;
         [Tooltip("Use the filmic ACES tonemapper on the existing Global Volume.")]
@@ -235,6 +247,16 @@ namespace MiningSimulator.Ores
         public Color NightFogColor => nightFogColor;
         public float DayFogDensity => dayFogDensity;
         public float NightFogDensity => nightFogDensity;
+        public bool CoinRainEnabled => coinRainEnabled;
+        public float CoinRainChancePerMorningPercent => coinRainChancePerMorningPercent;
+        public float CoinRainWarningSeconds => coinRainWarningSeconds;
+        public float CoinRainRewardIntervalSeconds => coinRainRewardIntervalSeconds;
+        public float CoinRainRewardPerInterval => coinRainRewardPerInterval;
+        public float CoinRainCameraFarClip => coinRainCameraFarClip;
+        public float CoinRainFogDensity => coinRainFogDensity;
+        public Color CoinRainFogColor => coinRainFogColor;
+        public Color CoinRainAmbientColor => coinRainAmbientColor;
+        public float CoinRainParticlesPerSecond => coinRainParticlesPerSecond;
         public bool ControlCinematicPostProcessing => controlCinematicPostProcessing;
         public bool UseAcesTonemapping => useAcesTonemapping;
         public float DayBloomIntensity => dayBloomIntensity;
@@ -296,6 +318,13 @@ namespace MiningSimulator.Ores
             nightSkyFogSmoothness = Mathf.Clamp(nightSkyFogSmoothness, 0.01f, 1f);
             dayFogDensity = Mathf.Max(0f, dayFogDensity);
             nightFogDensity = Mathf.Max(0f, nightFogDensity);
+            coinRainChancePerMorningPercent = Mathf.Clamp(coinRainChancePerMorningPercent, 0f, 100f);
+            coinRainWarningSeconds = Mathf.Max(0f, coinRainWarningSeconds);
+            coinRainRewardIntervalSeconds = Mathf.Max(0.01f, coinRainRewardIntervalSeconds);
+            coinRainRewardPerInterval = Mathf.Max(0f, coinRainRewardPerInterval);
+            coinRainCameraFarClip = Mathf.Max(1f, coinRainCameraFarClip);
+            coinRainFogDensity = Mathf.Max(0f, coinRainFogDensity);
+            coinRainParticlesPerSecond = Mathf.Clamp(coinRainParticlesPerSecond, 1f, 250f);
             dayBloomIntensity = Mathf.Max(0f, dayBloomIntensity);
             nightBloomIntensity = Mathf.Max(0f, nightBloomIntensity);
             bloomThreshold = Mathf.Max(0f, bloomThreshold);

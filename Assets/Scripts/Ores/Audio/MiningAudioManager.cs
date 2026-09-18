@@ -40,6 +40,7 @@ namespace MiningSimulator.Ores
         private float nextAllowedMiningSfxTime;
         private bool shopThemeActive;
         private bool mainMenuMusicActive;
+        private bool coinRainAmbienceActive;
         private bool ambienceFadedForPeriodChange;
         private MiningMainMenu mainMenu;
         private Tween ambienceFade;
@@ -205,7 +206,8 @@ namespace MiningSimulator.Ores
             SynchronizeMainMenuMusic();
 
             if (audioData == null || dayNightSystem == null || ambienceSource == null ||
-                mainMenuMusicActive || shopThemeActive || ambienceFadedForPeriodChange ||
+                mainMenuMusicActive || shopThemeActive || coinRainAmbienceActive ||
+                ambienceFadedForPeriodChange ||
                 !ambienceSource.isPlaying || audioData.AmbienceFadeDuration <= 0f)
             {
                 return;
@@ -638,6 +640,7 @@ namespace MiningSimulator.Ores
                 EnsureClipLoaded(audioData.GetNightAmbienceAt(index));
             }
             EnsureClipLoaded(audioData.SunriseRoosterSfx);
+            EnsureClipLoaded(audioData.CoinRainAmbience);
             EnsureClipLoaded(audioData.OreHitSfx);
             EnsureClipLoaded(audioData.OreBreakSfx);
             EnsureClipLoaded(audioData.ButtonClickSfx);
@@ -730,6 +733,11 @@ namespace MiningSimulator.Ores
         private void HandlePeriodChanged(MiningTimePeriod period)
         {
             ambienceFadedForPeriodChange = false;
+            if (coinRainAmbienceActive)
+            {
+                return;
+            }
+
             if (period == MiningTimePeriod.Day)
             {
                 PlaySunriseRooster();
@@ -756,6 +764,12 @@ namespace MiningSimulator.Ores
                 FadeMusicTo(0f, true);
             }
 
+            if (coinRainAmbienceActive)
+            {
+                PlayCoinRainAmbience();
+                return;
+            }
+
             if (audioData == null || ambienceSource == null || musicMuted)
             {
                 return;
@@ -776,6 +790,41 @@ namespace MiningSimulator.Ores
             PlayAmbienceClip(ambience, fadeIn);
             currentPlaylistAmbience = ambience;
             ambiencePlaylist = StartCoroutine(PlayAmbiencePlaylist(isNight));
+        }
+
+        /// <summary>Uses the normal ambience crossfade, but keeps rain active until the event ends.</summary>
+        public void PlayCoinRainAmbience()
+        {
+            coinRainAmbienceActive = true;
+            if (audioData == null || ambienceSource == null || musicMuted || shopThemeActive ||
+                mainMenuMusicActive || !EnsureClipLoaded(audioData.CoinRainAmbience))
+            {
+                return;
+            }
+
+            if (ambienceSource.isPlaying && ambienceSource.clip == audioData.CoinRainAmbience)
+            {
+                return;
+            }
+
+            StopAmbiencePlaylist();
+            PlayAmbienceClip(audioData.CoinRainAmbience, true);
+            ambienceSource.loop = true;
+        }
+
+        /// <summary>Returns to the current day/night ambience with the same smooth crossfade.</summary>
+        public void StopCoinRainAmbience()
+        {
+            if (!coinRainAmbienceActive)
+            {
+                return;
+            }
+
+            coinRainAmbienceActive = false;
+            if (!shopThemeActive && !mainMenuMusicActive)
+            {
+                PlayWorldAmbience(true);
+            }
         }
 
         private void PlayAmbienceClip(AudioClip clip, bool fadeIn)
@@ -799,7 +848,8 @@ namespace MiningSimulator.Ores
         private IEnumerator PlayAmbiencePlaylist(bool isNight)
         {
             while (audioData != null && ambienceSource != null && !musicMuted &&
-                   !mainMenuMusicActive && !shopThemeActive && dayNightSystem != null &&
+                   !mainMenuMusicActive && !shopThemeActive && !coinRainAmbienceActive &&
+                   dayNightSystem != null &&
                    (dayNightSystem.CurrentPeriod == MiningTimePeriod.Night) == isNight)
             {
                 while (ambienceSource.isPlaying)
@@ -815,7 +865,8 @@ namespace MiningSimulator.Ores
                     yield return new WaitForSecondsRealtime(pause);
                 }
 
-                if (mainMenuMusicActive || shopThemeActive || dayNightSystem == null ||
+                if (mainMenuMusicActive || shopThemeActive || coinRainAmbienceActive ||
+                    dayNightSystem == null ||
                     (dayNightSystem.CurrentPeriod == MiningTimePeriod.Night) != isNight)
                 {
                     yield break;

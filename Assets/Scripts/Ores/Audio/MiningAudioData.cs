@@ -31,6 +31,8 @@ namespace MiningSimulator.Ores
         [SerializeField] private Vector2 nightAmbiencePauseRange = new(2f, 5f);
         [Tooltip("One-shot cue played as the world changes from night to morning.")]
         [SerializeField] private AudioClip sunriseRoosterSfx;
+        [Tooltip("Loop played only while the Coin Rain event is active.")]
+        [SerializeField] private AudioClip coinRainAmbience;
         [Range(0f, 1f), SerializeField] private float ambienceVolume = 0.45f;
         [Min(0f), SerializeField] private float ambienceFadeDuration = 2.5f;
 
@@ -72,6 +74,7 @@ namespace MiningSimulator.Ores
         public int MorningAmbienceCount => 1 + additionalMorningAmbiences.Length;
         public int NightAmbienceCount => 1 + additionalNightAmbiences.Length;
         public AudioClip SunriseRoosterSfx => sunriseRoosterSfx;
+        public AudioClip CoinRainAmbience => coinRainAmbience;
         public float AmbienceVolume => ambienceVolume;
         public float AmbienceFadeDuration => ambienceFadeDuration;
 

@@ -94,6 +94,16 @@ MonoBehaviour:
   nightFogColor: {r: 0.07, g: 0.1, b: 0.2, a: 1}
   dayFogDensity: 0.005
   nightFogDensity: 0.012
+  coinRainEnabled: 1
+  coinRainChancePerMorningPercent: 0.5
+  coinRainWarningSeconds: 6
+  coinRainRewardIntervalSeconds: 3
+  coinRainRewardPerInterval: 10
+  coinRainCameraFarClip: 65
+  coinRainFogDensity: 0.05
+  coinRainFogColor: {r: 0.35, g: 0.38, b: 0.42, a: 1}
+  coinRainAmbientColor: {r: 0.42, g: 0.44, b: 0.47, a: 1}
+  coinRainParticlesPerSecond: 193
   controlCinematicPostProcessing: 1
   useAcesTonemapping: 1
   dayBloomIntensity: 0.18

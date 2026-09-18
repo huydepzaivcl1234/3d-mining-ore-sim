@@ -84966,6 +84966,7 @@ MonoBehaviour:
   data: {fileID: 11400000, guid: ec5bd0b5e6ac9ae48ad0132289643558, type: 2}
   sun: {fileID: 410087040}
   cinematicVolume: {fileID: 0}
+  coinRainEvent: {fileID: 0}
 --- !u!4 &1889411265
 Transform:
   m_ObjectHideFlags: 0
