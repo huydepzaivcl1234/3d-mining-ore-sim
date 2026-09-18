@@ -18,6 +18,10 @@ MonoBehaviour:
   loopMusic: 1
   musicVolume: 0.05
   musicMixerGroup: {fileID: 0}
+  morningAmbience: {fileID: 8300000, guid: 8f4807570f294534ae0d678339307aa1, type: 3}
+  nightAmbience: {fileID: 8300000, guid: c4d34d8d0d95414e8b5e6a853d0dca6d, type: 3}
+  sunriseRoosterSfx: {fileID: 8300000, guid: 4caad48eb5424c0f9bb4cc6172f006fd, type: 3}
+  ambienceVolume: 0.45
   oreHitSfx: {fileID: 8300000, guid: 37b621765db9a9a41b987b6dbcaeeb8e, type: 3}
   oreBreakSfx: {fileID: 8300000, guid: 7e9ae525bc06a984cab34bcad20ca10a, type: 3}
   npcPurchasedSfx: {fileID: 8300000, guid: c062f16ffb3abca46b7717172158c05e, type: 3}

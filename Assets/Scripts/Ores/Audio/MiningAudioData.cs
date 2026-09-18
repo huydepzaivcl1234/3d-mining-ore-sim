@@ -16,6 +16,15 @@ namespace MiningSimulator.Ores
         [Range(0f, 1f), SerializeField] private float musicVolume = 0.55f;
         [SerializeField] private AudioMixerGroup musicMixerGroup;
 
+        [Header("World Ambience")]
+        [Tooltip("Loop played while the DayNightSystem is in its Day period.")]
+        [SerializeField] private AudioClip morningAmbience;
+        [Tooltip("Loop played while the DayNightSystem is in its Night period.")]
+        [SerializeField] private AudioClip nightAmbience;
+        [Tooltip("One-shot cue played as the world changes from night to morning.")]
+        [SerializeField] private AudioClip sunriseRoosterSfx;
+        [Range(0f, 1f), SerializeField] private float ambienceVolume = 0.45f;
+
         [Header("Gameplay SFX")]
         [SerializeField] private AudioClip oreHitSfx;
         [SerializeField] private AudioClip oreBreakSfx;
@@ -49,6 +58,10 @@ namespace MiningSimulator.Ores
         public bool LoopMusic => loopMusic;
         public float MusicVolume => musicVolume;
         public AudioMixerGroup MusicMixerGroup => musicMixerGroup;
+        public AudioClip MorningAmbience => morningAmbience;
+        public AudioClip NightAmbience => nightAmbience;
+        public AudioClip SunriseRoosterSfx => sunriseRoosterSfx;
+        public float AmbienceVolume => ambienceVolume;
         public AudioClip OreHitSfx => oreHitSfx;
         public AudioClip OreBreakSfx => oreBreakSfx;
         public AudioClip NpcPurchasedSfx => npcPurchasedSfx;
@@ -70,6 +83,7 @@ namespace MiningSimulator.Ores
         private void OnValidate()
         {
             musicVolume = Mathf.Clamp01(musicVolume);
+            ambienceVolume = Mathf.Clamp01(ambienceVolume);
             sfxVolume = Mathf.Clamp01(sfxVolume);
             minimumPitch = Mathf.Clamp(minimumPitch, 0.1f, 3f);
             maximumPitch = Mathf.Clamp(maximumPitch, minimumPitch, 3f);

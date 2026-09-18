@@ -21,8 +21,11 @@ namespace MiningSimulator.Ores
         [SerializeField] private MiningRebirthPanel rebirthPanel;
         [SerializeField] private MiningAudioSettingsPanel audioSettingsPanel;
         [SerializeField] private MiningGiftBoxWheelPanel giftBoxWheelPanel;
+        [SerializeField] private DayNightSystem dayNightSystem;
         [SerializeField] private AudioSource musicSource;
         [SerializeField] private AudioSource sfxSource;
+        [SerializeField] private AudioSource ambienceSource;
+        [SerializeField] private AudioSource ambienceCueSource;
 
         private bool musicMuted;
         private bool sfxMuted;
@@ -31,6 +34,7 @@ namespace MiningSimulator.Ores
         private float sfxVolume = 1f;
         private AudioClip requestedMusic;
         private float nextAllowedMiningSfxTime;
+        private bool shopThemeActive;
 
         public MiningAudioData AudioData => audioData;
         public bool MusicMuted => musicMuted;
@@ -85,6 +89,10 @@ namespace MiningSimulator.Ores
             if (giftBoxWheelPanel == null)
             {
                 giftBoxWheelPanel = FindFirstObjectByType<MiningGiftBoxWheelPanel>(FindObjectsInactive.Include);
+            }
+            if (dayNightSystem == null)
+            {
+                dayNightSystem = FindFirstObjectByType<DayNightSystem>(FindObjectsInactive.Include);
             }
         }
 
@@ -152,6 +160,12 @@ namespace MiningSimulator.Ores
                 giftBoxWheelPanel.RewardGranted += HandleWheelRewardGranted;
             }
 
+            if (dayNightSystem != null)
+            {
+                dayNightSystem.PeriodChanged -= HandlePeriodChanged;
+                dayNightSystem.PeriodChanged += HandlePeriodChanged;
+            }
+
             ResolveSources();
             ConfigureSources();
         }
@@ -160,7 +174,7 @@ namespace MiningSimulator.Ores
         {
             if (audioData != null && audioData.PlayMusicOnStart)
             {
-                PlayBackgroundMusic();
+                PlayWorldAmbience();
             }
         }
 
@@ -214,16 +228,25 @@ namespace MiningSimulator.Ores
                 giftBoxWheelPanel.WheelSpinStarted -= HandleWheelSpinStarted;
                 giftBoxWheelPanel.RewardGranted -= HandleWheelRewardGranted;
             }
+
+            if (dayNightSystem != null)
+            {
+                dayNightSystem.PeriodChanged -= HandlePeriodChanged;
+            }
         }
 
         public void PlayBackgroundMusic()
         {
-            PlayMusic(audioData != null ? audioData.BackgroundMusic : null);
+            shopThemeActive = false;
+            musicSource?.Stop();
+            PlayWorldAmbience();
         }
 
         /// <summary>Switches the shared music source to the shop theme without changing volume settings.</summary>
         public void PlayShopMusic()
         {
+            shopThemeActive = true;
+            ambienceSource?.Pause();
             AudioClip shopTheme = audioData != null && audioData.ShopMusic != null
                 ? audioData.ShopMusic
                 : audioData != null ? audioData.BackgroundMusic : null;
@@ -253,6 +276,8 @@ namespace MiningSimulator.Ores
         public void StopBackgroundMusic()
         {
             musicSource?.Stop();
+            ambienceSource?.Stop();
+            ambienceCueSource?.Stop();
         }
 
         public void SetMusicMuted(bool muted)
@@ -262,10 +287,25 @@ namespace MiningSimulator.Ores
             {
                 musicSource.mute = muted;
             }
+            if (ambienceSource != null)
+            {
+                ambienceSource.mute = muted;
+            }
+            if (ambienceCueSource != null)
+            {
+                ambienceCueSource.mute = muted;
+            }
 
             if (!muted)
             {
-                PlayMusic(requestedMusic != null ? requestedMusic : audioData?.BackgroundMusic);
+                if (shopThemeActive)
+                {
+                    PlayMusic(requestedMusic != null ? requestedMusic : audioData?.ShopMusic);
+                }
+                else
+                {
+                    PlayWorldAmbience();
+                }
             }
         }
 
@@ -388,6 +428,26 @@ namespace MiningSimulator.Ores
                 sfxSource.mute = sfxMuted;
                 sfxSource.outputAudioMixerGroup = audioData.SfxMixerGroup;
             }
+
+            if (ambienceSource != null)
+            {
+                ambienceSource.playOnAwake = false;
+                ambienceSource.loop = true;
+                ambienceSource.volume = audioData.AmbienceVolume * masterVolume * musicVolume;
+                ambienceSource.spatialBlend = 0f;
+                ambienceSource.mute = musicMuted;
+                ambienceSource.outputAudioMixerGroup = audioData.MusicMixerGroup;
+            }
+
+            if (ambienceCueSource != null)
+            {
+                ambienceCueSource.playOnAwake = false;
+                ambienceCueSource.loop = false;
+                ambienceCueSource.volume = masterVolume * musicVolume;
+                ambienceCueSource.spatialBlend = 0f;
+                ambienceCueSource.mute = musicMuted;
+                ambienceCueSource.outputAudioMixerGroup = audioData.MusicMixerGroup;
+            }
         }
 
         private void LoadVolumeSettings()
@@ -436,9 +496,19 @@ namespace MiningSimulator.Ores
 
             musicSource = ResolveSource(musicSource, audioRoot, "Music Source");
             sfxSource = ResolveSource(sfxSource, audioRoot, "SFX Source");
+            ambienceSource = ResolveSource(ambienceSource, audioRoot, "Ambience Source");
+            ambienceCueSource = ResolveSource(ambienceCueSource, audioRoot, "Ambience Cue Source");
             if (sfxSource == musicSource)
             {
                 sfxSource = ResolveSource(null, audioRoot, "SFX Source");
+            }
+            if (ambienceSource == musicSource || ambienceSource == sfxSource)
+            {
+                ambienceSource = ResolveSource(null, audioRoot, "Ambience Source");
+            }
+            if (ambienceCueSource == musicSource || ambienceCueSource == sfxSource || ambienceCueSource == ambienceSource)
+            {
+                ambienceCueSource = ResolveSource(null, audioRoot, "Ambience Cue Source");
             }
         }
 
@@ -475,6 +545,9 @@ namespace MiningSimulator.Ores
 
             EnsureClipLoaded(audioData.BackgroundMusic);
             EnsureClipLoaded(audioData.ShopMusic);
+            EnsureClipLoaded(audioData.MorningAmbience);
+            EnsureClipLoaded(audioData.NightAmbience);
+            EnsureClipLoaded(audioData.SunriseRoosterSfx);
             EnsureClipLoaded(audioData.OreHitSfx);
             EnsureClipLoaded(audioData.OreBreakSfx);
             EnsureClipLoaded(audioData.ButtonClickSfx);
@@ -562,6 +635,57 @@ namespace MiningSimulator.Ores
         private void HandleWheelRewardGranted(MiningGiftReward reward)
         {
             PlayWheelRewardSfx();
+        }
+
+        private void HandlePeriodChanged(MiningTimePeriod period)
+        {
+            if (period == MiningTimePeriod.Day)
+            {
+                PlaySunriseRooster();
+            }
+
+            if (!shopThemeActive)
+            {
+                PlayWorldAmbience();
+            }
+        }
+
+        private void PlayWorldAmbience()
+        {
+            if (audioData == null || ambienceSource == null || musicMuted || shopThemeActive)
+            {
+                return;
+            }
+
+            AudioClip ambience = dayNightSystem != null && dayNightSystem.CurrentPeriod == MiningTimePeriod.Night
+                ? audioData.NightAmbience
+                : audioData.MorningAmbience;
+            ambience ??= audioData.BackgroundMusic;
+            if (!EnsureClipLoaded(ambience))
+            {
+                return;
+            }
+
+            ConfigureSources();
+            if (ambienceSource.clip != ambience)
+            {
+                ambienceSource.clip = ambience;
+            }
+            if (!ambienceSource.isPlaying)
+            {
+                ambienceSource.Play();
+            }
+        }
+
+        private void PlaySunriseRooster()
+        {
+            AudioClip rooster = audioData != null ? audioData.SunriseRoosterSfx : null;
+            if (ambienceCueSource == null || musicMuted || !EnsureClipLoaded(rooster))
+            {
+                return;
+            }
+
+            ambienceCueSource.PlayOneShot(rooster);
         }
     }
 }
