@@ -209,10 +209,23 @@ namespace MiningSimulator.Ores
 
         private void OnCollisionEnter(Collision collision)
         {
-            if (!resolved && collision.collider != null)
+            if (resolved || hasLanded || collision.collider == null)
             {
-                hasLanded = true;
+                return;
             }
+
+            hasLanded = true;
+            body ??= GetComponent<Rigidbody>();
+            if (body == null)
+            {
+                return;
+            }
+
+            // The block is mineable once it reaches its first landing surface. Freeze the
+            // dynamic body here so leftover drop velocity and spin cannot roll it away.
+            body.linearVelocity = Vector3.zero;
+            body.angularVelocity = Vector3.zero;
+            body.isKinematic = true;
         }
 
         public bool MineOnce()

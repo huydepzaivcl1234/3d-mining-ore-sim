@@ -327,8 +327,11 @@ namespace MiningSimulator.Ores
 
             requestedMusic = clip;
             ConfigureSources();
-            if (musicSource.clip != clip)
+            StopMusicFade();
+            bool clipChanged = musicSource.clip != clip;
+            if (clipChanged)
             {
+                musicSource.Stop();
                 musicSource.clip = clip;
             }
 
@@ -340,6 +343,10 @@ namespace MiningSimulator.Ores
             {
                 musicSource.volume = 0f;
                 FadeMusicTo(GetMusicVolume(), false);
+            }
+            else
+            {
+                musicSource.volume = GetMusicVolume();
             }
         }
 
