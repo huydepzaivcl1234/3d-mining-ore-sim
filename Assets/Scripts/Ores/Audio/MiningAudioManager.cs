@@ -1,3 +1,4 @@
+using System.Collections;
 using PrimeTween;
 using UnityEngine;
 
@@ -43,6 +44,8 @@ namespace MiningSimulator.Ores
         private MiningMainMenu mainMenu;
         private Tween ambienceFade;
         private Tween musicFade;
+        private Coroutine ambiencePlaylist;
+        private AudioClip currentPlaylistAmbience;
 
         public MiningAudioData AudioData => audioData;
         public bool MusicMuted => musicMuted;
@@ -217,6 +220,7 @@ namespace MiningSimulator.Ores
 
         private void OnDisable()
         {
+            StopAmbiencePlaylist();
             if (oreSpawner != null)
             {
                 oreSpawner.OreRewardGranted -= HandleOreRewardGranted;
@@ -295,6 +299,7 @@ namespace MiningSimulator.Ores
 
             shopThemeActive = false;
             mainMenuMusicActive = true;
+            StopAmbiencePlaylist();
             ambienceFadedForPeriodChange = false;
             FadeAmbienceTo(0f, true);
             ambienceCueSource?.Stop();
@@ -305,6 +310,7 @@ namespace MiningSimulator.Ores
         public void PlayShopMusic()
         {
             shopThemeActive = true;
+            StopAmbiencePlaylist();
             FadeAmbienceTo(0f, true);
             AudioClip shopTheme = audioData != null && audioData.ShopMusic != null
                 ? audioData.ShopMusic
@@ -339,6 +345,7 @@ namespace MiningSimulator.Ores
 
         public void StopBackgroundMusic()
         {
+            StopAmbiencePlaylist();
             StopAudioFades();
             musicSource?.Stop();
             ambienceSource?.Stop();
@@ -501,7 +508,7 @@ namespace MiningSimulator.Ores
             if (ambienceSource != null)
             {
                 ambienceSource.playOnAwake = false;
-                ambienceSource.loop = true;
+                ambienceSource.loop = ambiencePlaylist == null;
                 ambienceSource.volume = GetAmbienceVolume();
                 ambienceSource.spatialBlend = 0f;
                 ambienceSource.mute = musicMuted;
@@ -615,7 +622,14 @@ namespace MiningSimulator.Ores
             EnsureClipLoaded(audioData.BackgroundMusic);
             EnsureClipLoaded(audioData.ShopMusic);
             EnsureClipLoaded(audioData.MorningAmbience);
-            EnsureClipLoaded(audioData.NightAmbience);
+            for (int index = 0; index < audioData.MorningAmbienceCount; index++)
+            {
+                EnsureClipLoaded(audioData.GetMorningAmbienceAt(index));
+            }
+            for (int index = 0; index < audioData.NightAmbienceCount; index++)
+            {
+                EnsureClipLoaded(audioData.GetNightAmbienceAt(index));
+            }
             EnsureClipLoaded(audioData.SunriseRoosterSfx);
             EnsureClipLoaded(audioData.OreHitSfx);
             EnsureClipLoaded(audioData.OreBreakSfx);
@@ -740,32 +754,87 @@ namespace MiningSimulator.Ores
                 return;
             }
 
-            AudioClip ambience = dayNightSystem != null && dayNightSystem.CurrentPeriod == MiningTimePeriod.Night
-                ? audioData.NightAmbience
-                : audioData.MorningAmbience;
+            bool isNight = dayNightSystem != null &&
+                dayNightSystem.CurrentPeriod == MiningTimePeriod.Night;
+            StopAmbiencePlaylist();
+            AudioClip ambience = isNight
+                ? audioData.GetRandomNightAmbience(currentPlaylistAmbience)
+                : audioData.GetRandomMorningAmbience(currentPlaylistAmbience);
             ambience ??= audioData.BackgroundMusic;
             if (!EnsureClipLoaded(ambience))
             {
                 return;
             }
 
+            PlayAmbienceClip(ambience, fadeIn);
+            currentPlaylistAmbience = ambience;
+            ambiencePlaylist = StartCoroutine(PlayAmbiencePlaylist(isNight));
+        }
+
+        private void PlayAmbienceClip(AudioClip clip, bool fadeIn)
+        {
             ConfigureSources();
             StopAmbienceFade();
-            if (ambienceSource.clip != ambience)
-            {
-                ambienceSource.clip = ambience;
-            }
+            ambienceSource.loop = false;
+            ambienceSource.clip = clip;
             if (fadeIn && audioData.AmbienceFadeDuration > 0f)
             {
                 ambienceSource.volume = 0f;
             }
-            if (!ambienceSource.isPlaying)
-            {
-                ambienceSource.Play();
-            }
+
+            ambienceSource.Play();
             if (fadeIn)
             {
                 FadeAmbienceTo(GetAmbienceVolume(), false);
+            }
+        }
+
+        private IEnumerator PlayAmbiencePlaylist(bool isNight)
+        {
+            while (audioData != null && ambienceSource != null && !musicMuted &&
+                   !mainMenuMusicActive && !shopThemeActive && dayNightSystem != null &&
+                   (dayNightSystem.CurrentPeriod == MiningTimePeriod.Night) == isNight)
+            {
+                while (ambienceSource.isPlaying)
+                {
+                    yield return null;
+                }
+
+                float pause = isNight
+                    ? audioData.GetRandomNightAmbiencePause()
+                    : audioData.GetRandomMorningAmbiencePause();
+                if (pause > 0f)
+                {
+                    yield return new WaitForSecondsRealtime(pause);
+                }
+
+                if (mainMenuMusicActive || shopThemeActive || dayNightSystem == null ||
+                    (dayNightSystem.CurrentPeriod == MiningTimePeriod.Night) != isNight)
+                {
+                    yield break;
+                }
+
+                AudioClip nextClip = isNight
+                    ? audioData.GetRandomNightAmbience(currentPlaylistAmbience)
+                    : audioData.GetRandomMorningAmbience(currentPlaylistAmbience);
+                if (!EnsureClipLoaded(nextClip))
+                {
+                    yield break;
+                }
+
+                currentPlaylistAmbience = nextClip;
+                PlayAmbienceClip(nextClip, true);
+            }
+
+            ambiencePlaylist = null;
+        }
+
+        private void StopAmbiencePlaylist()
+        {
+            if (ambiencePlaylist != null)
+            {
+                StopCoroutine(ambiencePlaylist);
+                ambiencePlaylist = null;
             }
         }
 

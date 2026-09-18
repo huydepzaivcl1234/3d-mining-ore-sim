@@ -19,7 +19,13 @@ MonoBehaviour:
   musicVolume: 0.05
   musicMixerGroup: {fileID: 0}
   morningAmbience: {fileID: 8300000, guid: 8f4807570f294534ae0d678339307aa1, type: 3}
+  additionalMorningAmbiences:
+  - {fileID: 8300000, guid: 9a1d8a42638ce4a40bd954823f777eee, type: 3}
+  morningAmbiencePauseRange: {x: 2, y: 5}
   nightAmbience: {fileID: 8300000, guid: c4d34d8d0d95414e8b5e6a853d0dca6d, type: 3}
+  additionalNightAmbiences:
+  - {fileID: 8300000, guid: eace74d809a0af24eae240309a6f1d13, type: 3}
+  nightAmbiencePauseRange: {x: 2, y: 5}
   sunriseRoosterSfx: {fileID: 8300000, guid: 4caad48eb5424c0f9bb4cc6172f006fd, type: 3}
   ambienceVolume: 0.45
   ambienceFadeDuration: 2.5

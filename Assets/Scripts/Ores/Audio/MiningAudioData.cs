@@ -19,8 +19,16 @@ namespace MiningSimulator.Ores
         [Header("World Ambience")]
         [Tooltip("Loop played while the DayNightSystem is in its Day period.")]
         [SerializeField] private AudioClip morningAmbience;
+        [Tooltip("Optional extra day clips. The main Morning Ambience above is always track 1; these are picked randomly after a day track ends.")]
+        [SerializeField] private AudioClip[] additionalMorningAmbiences = System.Array.Empty<AudioClip>();
+        [Tooltip("Silent time after a day ambience track ends, before the next random day clip fades in.")]
+        [SerializeField] private Vector2 morningAmbiencePauseRange = new(2f, 5f);
         [Tooltip("Loop played while the DayNightSystem is in its Night period.")]
         [SerializeField] private AudioClip nightAmbience;
+        [Tooltip("Optional extra night clips. The main Night Ambience above is always track 1; these are picked randomly after a night track ends.")]
+        [SerializeField] private AudioClip[] additionalNightAmbiences = System.Array.Empty<AudioClip>();
+        [Tooltip("Silent time after a night ambience track ends, before the next random night clip fades in.")]
+        [SerializeField] private Vector2 nightAmbiencePauseRange = new(2f, 5f);
         [Tooltip("One-shot cue played as the world changes from night to morning.")]
         [SerializeField] private AudioClip sunriseRoosterSfx;
         [Range(0f, 1f), SerializeField] private float ambienceVolume = 0.45f;
@@ -61,9 +69,93 @@ namespace MiningSimulator.Ores
         public AudioMixerGroup MusicMixerGroup => musicMixerGroup;
         public AudioClip MorningAmbience => morningAmbience;
         public AudioClip NightAmbience => nightAmbience;
+        public int MorningAmbienceCount => 1 + additionalMorningAmbiences.Length;
+        public int NightAmbienceCount => 1 + additionalNightAmbiences.Length;
         public AudioClip SunriseRoosterSfx => sunriseRoosterSfx;
         public float AmbienceVolume => ambienceVolume;
         public float AmbienceFadeDuration => ambienceFadeDuration;
+
+        public AudioClip GetMorningAmbienceAt(int index)
+        {
+            if (index == 0)
+            {
+                return morningAmbience;
+            }
+
+            int additionalIndex = index - 1;
+            return additionalIndex >= 0 && additionalIndex < additionalMorningAmbiences.Length
+                ? additionalMorningAmbiences[additionalIndex]
+                : null;
+        }
+
+        public AudioClip GetNightAmbienceAt(int index)
+        {
+            if (index == 0)
+            {
+                return nightAmbience;
+            }
+
+            int additionalIndex = index - 1;
+            return additionalIndex >= 0 && additionalIndex < additionalNightAmbiences.Length
+                ? additionalNightAmbiences[additionalIndex]
+                : null;
+        }
+
+        public AudioClip GetRandomMorningAmbience(AudioClip previousClip)
+        {
+            return GetRandomAmbience(false, previousClip);
+        }
+
+        public AudioClip GetRandomNightAmbience(AudioClip previousClip)
+        {
+            return GetRandomAmbience(true, previousClip);
+        }
+
+        public float GetRandomMorningAmbiencePause()
+        {
+            return Random.Range(morningAmbiencePauseRange.x, morningAmbiencePauseRange.y);
+        }
+
+        public float GetRandomNightAmbiencePause()
+        {
+            return Random.Range(nightAmbiencePauseRange.x, nightAmbiencePauseRange.y);
+        }
+
+        private AudioClip GetRandomAmbience(bool night, AudioClip previousClip)
+        {
+            int count = night ? NightAmbienceCount : MorningAmbienceCount;
+            int availableCount = 0;
+            for (int index = 0; index < count; index++)
+            {
+                AudioClip candidate = night ? GetNightAmbienceAt(index) : GetMorningAmbienceAt(index);
+                if (candidate != null && candidate != previousClip)
+                {
+                    availableCount++;
+                }
+            }
+
+            if (availableCount == 0)
+            {
+                return night ? nightAmbience : morningAmbience;
+            }
+
+            int selectedIndex = Random.Range(0, availableCount);
+            for (int index = 0; index < count; index++)
+            {
+                AudioClip candidate = night ? GetNightAmbienceAt(index) : GetMorningAmbienceAt(index);
+                if (candidate == null || candidate == previousClip)
+                {
+                    continue;
+                }
+
+                if (selectedIndex-- == 0)
+                {
+                    return candidate;
+                }
+            }
+
+            return night ? nightAmbience : morningAmbience;
+        }
         public AudioClip OreHitSfx => oreHitSfx;
         public AudioClip OreBreakSfx => oreBreakSfx;
         public AudioClip NpcPurchasedSfx => npcPurchasedSfx;
@@ -87,6 +179,12 @@ namespace MiningSimulator.Ores
             musicVolume = Mathf.Clamp01(musicVolume);
             ambienceVolume = Mathf.Clamp01(ambienceVolume);
             ambienceFadeDuration = Mathf.Max(0f, ambienceFadeDuration);
+            morningAmbiencePauseRange.x = Mathf.Max(0f, morningAmbiencePauseRange.x);
+            morningAmbiencePauseRange.y = Mathf.Max(morningAmbiencePauseRange.x,
+                morningAmbiencePauseRange.y);
+            nightAmbiencePauseRange.x = Mathf.Max(0f, nightAmbiencePauseRange.x);
+            nightAmbiencePauseRange.y = Mathf.Max(nightAmbiencePauseRange.x,
+                nightAmbiencePauseRange.y);
             sfxVolume = Mathf.Clamp01(sfxVolume);
             minimumPitch = Mathf.Clamp(minimumPitch, 0.1f, 3f);
             maximumPitch = Mathf.Clamp(maximumPitch, minimumPitch, 3f);
