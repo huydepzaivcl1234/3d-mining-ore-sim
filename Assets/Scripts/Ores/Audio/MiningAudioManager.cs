@@ -805,7 +805,8 @@ namespace MiningSimulator.Ores
             }
 
             ambienceFade = Tween.Custom(this, ambienceSource.volume, targetVolume, duration,
-                static (manager, volume) => manager.ambienceSource.volume = volume, Ease.InOutSine)
+                static (manager, volume) => manager.ambienceSource.volume = volume, Ease.InOutSine,
+                useUnscaledTime: true)
                 .OnComplete(this, manager =>
                 {
                     if (stopWhenSilent && targetVolume <= 0f)
@@ -832,7 +833,8 @@ namespace MiningSimulator.Ores
             }
 
             musicFade = Tween.Custom(this, musicSource.volume, targetVolume, duration,
-                static (manager, volume) => manager.musicSource.volume = volume, Ease.InOutSine)
+                static (manager, volume) => manager.musicSource.volume = volume, Ease.InOutSine,
+                useUnscaledTime: true)
                 .OnComplete(this, manager =>
                 {
                     if (stopWhenSilent && targetVolume <= 0f)
