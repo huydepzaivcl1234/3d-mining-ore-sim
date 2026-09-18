@@ -29,6 +29,7 @@ namespace MiningSimulator.Ores
         private float masterVolume = 1f;
         private float musicVolume = 1f;
         private float sfxVolume = 1f;
+        private AudioClip requestedMusic;
         private float nextAllowedMiningSfxTime;
 
         public MiningAudioData AudioData => audioData;
@@ -217,16 +218,30 @@ namespace MiningSimulator.Ores
 
         public void PlayBackgroundMusic()
         {
-            if (audioData == null || musicSource == null ||
-                !EnsureClipLoaded(audioData.BackgroundMusic) || musicMuted)
+            PlayMusic(audioData != null ? audioData.BackgroundMusic : null);
+        }
+
+        /// <summary>Switches the shared music source to the shop theme without changing volume settings.</summary>
+        public void PlayShopMusic()
+        {
+            AudioClip shopTheme = audioData != null && audioData.ShopMusic != null
+                ? audioData.ShopMusic
+                : audioData != null ? audioData.BackgroundMusic : null;
+            PlayMusic(shopTheme);
+        }
+
+        private void PlayMusic(AudioClip clip)
+        {
+            if (audioData == null || musicSource == null || !EnsureClipLoaded(clip) || musicMuted)
             {
                 return;
             }
 
+            requestedMusic = clip;
             ConfigureSources();
-            if (musicSource.clip != audioData.BackgroundMusic)
+            if (musicSource.clip != clip)
             {
-                musicSource.clip = audioData.BackgroundMusic;
+                musicSource.clip = clip;
             }
 
             if (!musicSource.isPlaying)
@@ -250,7 +265,7 @@ namespace MiningSimulator.Ores
 
             if (!muted)
             {
-                PlayBackgroundMusic();
+                PlayMusic(requestedMusic != null ? requestedMusic : audioData?.BackgroundMusic);
             }
         }
 
@@ -459,6 +474,7 @@ namespace MiningSimulator.Ores
             }
 
             EnsureClipLoaded(audioData.BackgroundMusic);
+            EnsureClipLoaded(audioData.ShopMusic);
             EnsureClipLoaded(audioData.OreHitSfx);
             EnsureClipLoaded(audioData.OreBreakSfx);
             EnsureClipLoaded(audioData.ButtonClickSfx);

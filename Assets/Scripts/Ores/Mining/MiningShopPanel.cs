@@ -218,6 +218,7 @@ namespace MiningSimulator.Ores
             panelRoot.SetAsLastSibling();
             if (panelCoordinator != null) panelCoordinator.OpenPanel(panelRoot);
             else panelRoot.gameObject.SetActive(true);
+            audioManager?.PlayShopMusic();
             EventSystem.current?.SetSelectedGameObject(spinOnceButton != null
                 ? spinOnceButton.gameObject
                 : buyRareGiftButton != null ? buyRareGiftButton.gameObject : null);
@@ -226,6 +227,7 @@ namespace MiningSimulator.Ores
         public void Close()
         {
             if (spinning) return;
+            audioManager?.PlayBackgroundMusic();
             if (panelCoordinator != null) panelCoordinator.ClosePanel(panelRoot);
             else panelRoot?.gameObject.SetActive(false);
         }

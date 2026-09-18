@@ -119,6 +119,7 @@ namespace MiningSimulator.Ores
         public float IgnoredTargetDuration => ignoredTargetDuration;
        
        
+
         public int GetExperienceRequirement(int level)
         {
             int safeLevel = Mathf.Max(1, level);

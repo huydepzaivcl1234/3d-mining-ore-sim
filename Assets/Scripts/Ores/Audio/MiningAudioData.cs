@@ -9,6 +9,8 @@ namespace MiningSimulator.Ores
     {
         [Header("Background Music")]
         [SerializeField] private AudioClip backgroundMusic;
+        [Tooltip("Theme played while the full-screen Gem Shop is open.")]
+        [SerializeField] private AudioClip shopMusic;
         [SerializeField] private bool playMusicOnStart = true;
         [SerializeField] private bool loopMusic = true;
         [Range(0f, 1f), SerializeField] private float musicVolume = 0.55f;
@@ -42,6 +44,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private bool muteAudioOnLostFocus = true;
 
         public AudioClip BackgroundMusic => backgroundMusic;
+        public AudioClip ShopMusic => shopMusic;
         public bool PlayMusicOnStart => playMusicOnStart;
         public bool LoopMusic => loopMusic;
         public float MusicVolume => musicVolume;
