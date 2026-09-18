@@ -79,6 +79,8 @@ namespace MiningSimulator.Ores
         private Vector2 cardHomePosition;
         private readonly MiningAnimatedCurrencyValue gemCounter = new();
 
+        public bool IsOpen => isActiveAndEnabled && gameObject.activeInHierarchy;
+
         private void Awake()
         {
             if (!ResolveReferences())
@@ -127,6 +129,7 @@ namespace MiningSimulator.Ores
             }
 
             RefreshAudioControls();
+            audioManager?.PlayMainMenuMusic();
             PlayEntrance();
             SelectButton(playButton);
         }
@@ -224,6 +227,7 @@ namespace MiningSimulator.Ores
             ResetPlayTransition();
             ShowImmediately();
             RefreshAudioControls();
+            audioManager?.PlayMainMenuMusic();
             PlayEntrance();
             SelectButton(playButton);
         }
@@ -327,6 +331,7 @@ namespace MiningSimulator.Ores
         {
             ResolvePlaySelection();
             playSelection?.MarkGameStarted();
+            audioManager?.PlayWorldAmbience();
             ReleaseGameplayPause();
             gameObject.SetActive(false);
         }

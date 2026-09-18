@@ -1,3 +1,4 @@
+using PrimeTween;
 using UnityEngine;
 
 namespace MiningSimulator.Ores
@@ -37,6 +38,11 @@ namespace MiningSimulator.Ores
         private AudioClip requestedMusic;
         private float nextAllowedMiningSfxTime;
         private bool shopThemeActive;
+        private bool mainMenuMusicActive;
+        private bool ambienceFadedForPeriodChange;
+        private MiningMainMenu mainMenu;
+        private Tween ambienceFade;
+        private Tween musicFade;
 
         public MiningAudioData AudioData => audioData;
         public bool MusicMuted => musicMuted;
@@ -95,6 +101,10 @@ namespace MiningSimulator.Ores
             if (dayNightSystem == null)
             {
                 dayNightSystem = FindFirstObjectByType<DayNightSystem>(FindObjectsInactive.Include);
+            }
+            if (mainMenu == null)
+            {
+                mainMenu = FindFirstObjectByType<MiningMainMenu>(FindObjectsInactive.Include);
             }
         }
 
@@ -176,7 +186,32 @@ namespace MiningSimulator.Ores
         {
             if (audioData != null && audioData.PlayMusicOnStart)
             {
-                PlayWorldAmbience();
+                if (IsMainMenuVisible())
+                {
+                    PlayMainMenuMusic();
+                }
+                else
+                {
+                    PlayWorldAmbience(false);
+                }
+            }
+        }
+
+        private void Update()
+        {
+            SynchronizeMainMenuMusic();
+
+            if (audioData == null || dayNightSystem == null || ambienceSource == null ||
+                mainMenuMusicActive || shopThemeActive || ambienceFadedForPeriodChange ||
+                !ambienceSource.isPlaying || audioData.AmbienceFadeDuration <= 0f)
+            {
+                return;
+            }
+
+            if (dayNightSystem.CurrentPeriodRemainingSeconds <= audioData.AmbienceFadeDuration)
+            {
+                ambienceFadedForPeriodChange = true;
+                FadeAmbienceTo(0f, true);
             }
         }
 
@@ -240,22 +275,44 @@ namespace MiningSimulator.Ores
         public void PlayBackgroundMusic()
         {
             shopThemeActive = false;
-            musicSource?.Stop();
-            PlayWorldAmbience();
+            if (IsMainMenuVisible())
+            {
+                PlayMainMenuMusic();
+            }
+            else
+            {
+                PlayWorldAmbience();
+            }
+        }
+
+        /// <summary>Crossfades from world ambience to the main-menu background track.</summary>
+        public void PlayMainMenuMusic()
+        {
+            if (audioData == null)
+            {
+                return;
+            }
+
+            shopThemeActive = false;
+            mainMenuMusicActive = true;
+            ambienceFadedForPeriodChange = false;
+            FadeAmbienceTo(0f, true);
+            ambienceCueSource?.Stop();
+            PlayMusic(audioData.BackgroundMusic, true);
         }
 
         /// <summary>Switches the shared music source to the shop theme without changing volume settings.</summary>
         public void PlayShopMusic()
         {
             shopThemeActive = true;
-            ambienceSource?.Pause();
+            FadeAmbienceTo(0f, true);
             AudioClip shopTheme = audioData != null && audioData.ShopMusic != null
                 ? audioData.ShopMusic
                 : audioData != null ? audioData.BackgroundMusic : null;
-            PlayMusic(shopTheme);
+            PlayMusic(shopTheme, false);
         }
 
-        private void PlayMusic(AudioClip clip)
+        private void PlayMusic(AudioClip clip, bool fadeIn = false)
         {
             if (audioData == null || musicSource == null || !EnsureClipLoaded(clip) || musicMuted)
             {
@@ -273,10 +330,16 @@ namespace MiningSimulator.Ores
             {
                 musicSource.Play();
             }
+            if (fadeIn)
+            {
+                musicSource.volume = 0f;
+                FadeMusicTo(GetMusicVolume(), false);
+            }
         }
 
         public void StopBackgroundMusic()
         {
+            StopAudioFades();
             musicSource?.Stop();
             ambienceSource?.Stop();
             ambienceCueSource?.Stop();
@@ -302,7 +365,11 @@ namespace MiningSimulator.Ores
             {
                 if (shopThemeActive)
                 {
-                    PlayMusic(requestedMusic != null ? requestedMusic : audioData?.ShopMusic);
+                    PlayMusic(requestedMusic != null ? requestedMusic : audioData?.ShopMusic, false);
+                }
+                else if (mainMenuMusicActive || IsMainMenuVisible())
+                {
+                    PlayMainMenuMusic();
                 }
                 else
                 {
@@ -415,7 +482,7 @@ namespace MiningSimulator.Ores
             {
                 musicSource.playOnAwake = false;
                 musicSource.loop = audioData.LoopMusic;
-                musicSource.volume = audioData.MusicVolume * masterVolume * musicVolume;
+                musicSource.volume = GetMusicVolume();
                 musicSource.spatialBlend = 0f;
                 musicSource.mute = musicMuted;
                 musicSource.outputAudioMixerGroup = audioData.MusicMixerGroup;
@@ -435,7 +502,7 @@ namespace MiningSimulator.Ores
             {
                 ambienceSource.playOnAwake = false;
                 ambienceSource.loop = true;
-                ambienceSource.volume = audioData.AmbienceVolume * masterVolume * musicVolume;
+                ambienceSource.volume = GetAmbienceVolume();
                 ambienceSource.spatialBlend = 0f;
                 ambienceSource.mute = musicMuted;
                 ambienceSource.outputAudioMixerGroup = audioData.MusicMixerGroup;
@@ -641,20 +708,34 @@ namespace MiningSimulator.Ores
 
         private void HandlePeriodChanged(MiningTimePeriod period)
         {
+            ambienceFadedForPeriodChange = false;
             if (period == MiningTimePeriod.Day)
             {
                 PlaySunriseRooster();
             }
 
-            if (!shopThemeActive)
+            if (!shopThemeActive && !mainMenuMusicActive)
             {
-                PlayWorldAmbience();
+                PlayWorldAmbience(true);
             }
         }
 
-        private void PlayWorldAmbience()
+        /// <summary>Crossfades from menu or shop music to the active world ambience.</summary>
+        public void PlayWorldAmbience()
         {
-            if (audioData == null || ambienceSource == null || musicMuted || shopThemeActive)
+            PlayWorldAmbience(true);
+        }
+
+        private void PlayWorldAmbience(bool fadeIn)
+        {
+            mainMenuMusicActive = false;
+            shopThemeActive = false;
+            if (musicSource != null && musicSource.isPlaying)
+            {
+                FadeMusicTo(0f, true);
+            }
+
+            if (audioData == null || ambienceSource == null || musicMuted)
             {
                 return;
             }
@@ -669,13 +750,121 @@ namespace MiningSimulator.Ores
             }
 
             ConfigureSources();
+            StopAmbienceFade();
             if (ambienceSource.clip != ambience)
             {
                 ambienceSource.clip = ambience;
             }
+            if (fadeIn && audioData.AmbienceFadeDuration > 0f)
+            {
+                ambienceSource.volume = 0f;
+            }
             if (!ambienceSource.isPlaying)
             {
                 ambienceSource.Play();
+            }
+            if (fadeIn)
+            {
+                FadeAmbienceTo(GetAmbienceVolume(), false);
+            }
+        }
+
+        private void SynchronizeMainMenuMusic()
+        {
+            bool menuVisible = IsMainMenuVisible();
+            if (menuVisible && !mainMenuMusicActive && !shopThemeActive)
+            {
+                PlayMainMenuMusic();
+            }
+            else if (!menuVisible && mainMenuMusicActive && !shopThemeActive)
+            {
+                PlayWorldAmbience();
+            }
+        }
+
+        private bool IsMainMenuVisible()
+        {
+            mainMenu ??= FindFirstObjectByType<MiningMainMenu>(FindObjectsInactive.Include);
+            return mainMenu != null && mainMenu.IsOpen;
+        }
+
+        private void FadeAmbienceTo(float targetVolume, bool stopWhenSilent)
+        {
+            if (ambienceSource == null)
+            {
+                return;
+            }
+
+            StopAmbienceFade();
+            float duration = audioData != null ? audioData.AmbienceFadeDuration : 0f;
+            if (duration <= 0f)
+            {
+                ambienceSource.volume = targetVolume;
+                if (stopWhenSilent && targetVolume <= 0f) ambienceSource.Stop();
+                return;
+            }
+
+            ambienceFade = Tween.Custom(this, ambienceSource.volume, targetVolume, duration,
+                static (manager, volume) => manager.ambienceSource.volume = volume, Ease.InOutSine)
+                .OnComplete(this, manager =>
+                {
+                    if (stopWhenSilent && targetVolume <= 0f)
+                    {
+                        manager.ambienceSource.Stop();
+                    }
+                });
+        }
+
+        private void FadeMusicTo(float targetVolume, bool stopWhenSilent)
+        {
+            if (musicSource == null)
+            {
+                return;
+            }
+
+            StopMusicFade();
+            float duration = audioData != null ? audioData.AmbienceFadeDuration : 0f;
+            if (duration <= 0f)
+            {
+                musicSource.volume = targetVolume;
+                if (stopWhenSilent && targetVolume <= 0f) musicSource.Stop();
+                return;
+            }
+
+            musicFade = Tween.Custom(this, musicSource.volume, targetVolume, duration,
+                static (manager, volume) => manager.musicSource.volume = volume, Ease.InOutSine)
+                .OnComplete(this, manager =>
+                {
+                    if (stopWhenSilent && targetVolume <= 0f)
+                    {
+                        manager.musicSource.Stop();
+                    }
+                });
+        }
+
+        private float GetMusicVolume() => audioData.MusicVolume * masterVolume * musicVolume;
+
+        private float GetAmbienceVolume() => audioData.AmbienceVolume * masterVolume * musicVolume;
+
+        private void StopAudioFades()
+        {
+            StopAmbienceFade();
+            StopMusicFade();
+        }
+
+        private void StopAmbienceFade()
+        {
+            if (ambienceFade.isAlive)
+            {
+                ambienceFade.Stop();
+            }
+        }
+
+        private void StopMusicFade()
+        {
+            if (musicFade.isAlive)
+            {
+                musicFade.Stop();
             }
         }
 

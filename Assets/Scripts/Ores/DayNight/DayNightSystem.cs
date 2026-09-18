@@ -74,6 +74,16 @@ namespace MiningSimulator.Ores
             }
         }
 
+        /// <summary>Remaining scaled seconds before the current period changes.</summary>
+        public float CurrentPeriodRemainingSeconds
+        {
+            get
+            {
+                float duration = GetPeriodDuration(currentPeriod);
+                return Mathf.Max(0f, duration - periodElapsed);
+            }
+        }
+
         public event Action<MiningTimePeriod> PeriodChanged;
 
         private void Awake()

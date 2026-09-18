@@ -24,6 +24,7 @@ namespace MiningSimulator.Ores
         [Tooltip("One-shot cue played as the world changes from night to morning.")]
         [SerializeField] private AudioClip sunriseRoosterSfx;
         [Range(0f, 1f), SerializeField] private float ambienceVolume = 0.45f;
+        [Min(0f), SerializeField] private float ambienceFadeDuration = 2.5f;
 
         [Header("Gameplay SFX")]
         [SerializeField] private AudioClip oreHitSfx;
@@ -62,6 +63,7 @@ namespace MiningSimulator.Ores
         public AudioClip NightAmbience => nightAmbience;
         public AudioClip SunriseRoosterSfx => sunriseRoosterSfx;
         public float AmbienceVolume => ambienceVolume;
+        public float AmbienceFadeDuration => ambienceFadeDuration;
         public AudioClip OreHitSfx => oreHitSfx;
         public AudioClip OreBreakSfx => oreBreakSfx;
         public AudioClip NpcPurchasedSfx => npcPurchasedSfx;
@@ -84,6 +86,7 @@ namespace MiningSimulator.Ores
         {
             musicVolume = Mathf.Clamp01(musicVolume);
             ambienceVolume = Mathf.Clamp01(ambienceVolume);
+            ambienceFadeDuration = Mathf.Max(0f, ambienceFadeDuration);
             sfxVolume = Mathf.Clamp01(sfxVolume);
             minimumPitch = Mathf.Clamp(minimumPitch, 0.1f, 3f);
             maximumPitch = Mathf.Clamp(maximumPitch, minimumPitch, 3f);
