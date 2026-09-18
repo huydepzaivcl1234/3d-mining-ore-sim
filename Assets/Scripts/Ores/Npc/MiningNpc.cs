@@ -31,6 +31,13 @@ namespace MiningSimulator.Ores
         [Tooltip("Name of the Animator state that plays the mining swing (the 'Mine' box in the controller graph). Once fully inside this state (after any Idle->Mine blend finishes), its playback SPEED is adjusted every frame so exactly one loop of the clip takes the same time as one hit (SecondsPerHit) - so the swing and the mining SFX stay roughly in step without ever forcing the pose/time directly (which can distort the rig).")]
         [SerializeField] private string mineAnimatorStateName = "Mine";
 
+        [Header("Night Headlamp")]
+        [Tooltip("Offset from the miner head. When no head exists yet, this is placed above the NPC root instead.")]
+        [SerializeField] private Vector3 headlampOffset = new(0f, 0.08f, 0.12f);
+        [Min(0f), SerializeField] private float headlampIntensity = 5.5f;
+        [Min(0.1f), SerializeField] private float headlampRange = 12f;
+        [SerializeField] private Color headlampColor = new(1f, 0.93f, 0.72f);
+
         [Header("Ground Clamp (floating-feet safety net)")]
         [Tooltip("Assign the visual model's root (the object holding the Animator/skeleton) to enable the runtime fix below. Leave empty to disable.")]
         [SerializeField] private Transform visualModelRoot;
@@ -178,6 +185,7 @@ namespace MiningSimulator.Ores
             ConfigureShadows();
             RegisterNpcCollisionPairing();
             ResetProgressTracking();
+            EnsureNightHeadlamp();
         }
 
         private int CurrentMiningPower => progressionSystem != null
@@ -227,6 +235,29 @@ namespace MiningSimulator.Ores
             ConfigurePhysics();
             ConfigureShadows();
             ResetProgressTracking();
+            EnsureNightHeadlamp();
+        }
+
+        private void OnValidate()
+        {
+            headlampIntensity = Mathf.Max(0f, headlampIntensity);
+            headlampRange = Mathf.Max(0.1f, headlampRange);
+
+            if (Application.isPlaying)
+            {
+                EnsureNightHeadlamp();
+            }
+        }
+
+        private void EnsureNightHeadlamp()
+        {
+            MiningNpcHeadlamp headlamp = GetComponent<MiningNpcHeadlamp>();
+            if (headlamp == null)
+            {
+                headlamp = gameObject.AddComponent<MiningNpcHeadlamp>();
+            }
+
+            headlamp.Configure(headlampOffset, headlampIntensity, headlampRange, headlampColor);
         }
 
         private void OnEnable()

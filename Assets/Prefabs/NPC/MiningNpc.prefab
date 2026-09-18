@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 8997413567910028629}
   - component: {fileID: 6240163918479986620}
   - component: {fileID: 7082575674608149571}
+  - component: {fileID: -9129890683092950411}
   m_Layer: 0
   m_Name: MiningNpc
   m_TagString: Untagged
@@ -107,6 +108,10 @@ MonoBehaviour:
   miningAnimatorBoolParameter: IsMining
   movingAnimatorBoolParameter: IsMoving
   mineAnimatorStateName: Mine
+  headlampOffset: {x: 0, y: 1, z: 0.12}
+  headlampIntensity: 9
+  headlampRange: 15
+  headlampColor: {r: 1, g: 1, b: 1, a: 1}
   visualModelRoot: {fileID: 4976706783355569380}
   leftFootBone: {fileID: 8323151205542282700}
   rightFootBone: {fileID: 7143922415596964074}
@@ -118,6 +123,7 @@ MonoBehaviour:
   finalApproachDistance: 2.5
   pathLookAheadDistance: 1.75
   maximumStuckRepathAttempts: 3
+  drawPathGizmos: 1
 --- !u!114 &7082575674608149571
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -130,6 +136,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 83c237431ea02dd4ca01aed1657e54da, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningNpcAnimationEventRelay
+--- !u!114 &-9129890683092950411
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2496966258743808721}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7de21d4f00ab4cb5a390fc022e0d5c1f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningNpcHeadlamp
 --- !u!1001 &937211361659594278
 PrefabInstance:
   m_ObjectHideFlags: 0
