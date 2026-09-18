@@ -445,7 +445,7 @@ namespace MiningSimulator.Ores.Editor
                 data.PlayButtonPosition, data.PlayButtonSize, data.PlayButtonColor,
                 data.PlayTextColor, data.PlayFontSize);
             CreateButton(parent, "Shop Button", "Shop Label", data.EnglishShopLabel,
-                data.ShopButtonPosition, data.PlayButtonSize, data.ShopButtonColor,
+                GetShopButtonPosition(data), data.PlayButtonSize, data.ShopButtonColor,
                 data.PlayTextColor, data.PlayFontSize);
             CreateButton(parent, "Settings Button", "Settings Label", data.EnglishSettingsLabel,
                 data.SettingsButtonPosition, data.PlayButtonSize, data.SettingsButtonColor,
@@ -453,6 +453,14 @@ namespace MiningSimulator.Ores.Editor
             CreateButton(parent, "Exit Button", "Exit Label", data.EnglishExitLabel,
                 data.ExitButtonPosition, data.PlayButtonSize, data.ExitButtonColor,
                 data.PlayTextColor, data.PlayFontSize);
+        }
+
+        private static Vector2 GetShopButtonPosition(MiningMainMenuData data)
+        {
+            // Keep this editor helper compatible with older MainMenuData assets/scripts
+            // that predate ShopButtonPosition. The original default was 300 units
+            // below the Play button (Play: y 100, Shop: y -200).
+            return data.PlayButtonPosition + new Vector2(0f, -300f);
         }
 
         private static void CreateSettingsView(Transform parent, MiningMainMenuData data)
@@ -655,7 +663,7 @@ namespace MiningSimulator.Ores.Editor
 
             Undo.RecordObject(mainView, "Add Main Menu Shop Button");
             CreateButton(mainView, "Shop Button", "Shop Label", data.EnglishShopLabel,
-                data.ShopButtonPosition, data.PlayButtonSize, data.ShopButtonColor,
+                GetShopButtonPosition(data), data.PlayButtonSize, data.ShopButtonColor,
                 data.PlayTextColor, data.PlayFontSize);
         }
 

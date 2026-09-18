@@ -23,43 +23,13 @@ namespace MiningSimulator.Ores.Editor
         private const string GemIconPath = "Assets/Ores/Icons/GemCurrencyIcon.png";
         private const string GeneratedUiFolder = "Assets/Generated/MiningUI";
         private const string WheelSpritePath = GeneratedUiFolder + "/LuckyWheelCircle.png";
-        private static bool syncQueued;
-
-        [InitializeOnLoadMethod]
-        private static void QueueSyncAfterScriptsReload()
-        {
-            QueueOpenPanelSync();
-        }
-
         [MenuItem("Mining Simulator/Setup/Create Or Update Shop Panel")]
         public static void CreateOrUpdateShopPanel()
         {
-            CreateOrUpdateShopPanelInternal(true);
-        }
-
-        internal static void QueueOpenPanelSync()
-        {
-            if (syncQueued) return;
-            syncQueued = true;
-            EditorApplication.delayCall += () =>
-            {
-                syncQueued = false;
-                SyncOpenShopPanelFromData();
-            };
-        }
-
-        private static void SyncOpenShopPanelFromData()
-        {
-            if (EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isCompiling)
-            {
-                return;
-            }
-            Canvas canvas = FindHudCanvas();
-            if (canvas == null || canvas.transform.Find(PanelName) == null)
-            {
-                return;
-            }
-            CreateOrUpdateShopPanelInternal(false);
+            EditorUtility.DisplayDialog("Shop Layout Protected",
+                "Automatic Shop setup is disabled for existing scenes because it can " +
+                "overwrite the authored Shop Card, wheel, product, and button layout.",
+                "OK");
         }
 
         private static void CreateOrUpdateShopPanelInternal(bool showDialogs)
@@ -1094,18 +1064,12 @@ namespace MiningSimulator.Ores.Editor
     {
         public override void OnInspectorGUI()
         {
-            if (DrawDefaultInspector())
-            {
-                MiningShopSetupMenu.QueueOpenPanelSync();
-            }
+            DrawDefaultInspector();
             EditorGUILayout.Space();
-            if (GUILayout.Button("Sync Shop UI In Open Scene"))
-            {
-                MiningShopSetupMenu.QueueOpenPanelSync();
-            }
             EditorGUILayout.HelpBox(
                 "Add products under Shop Products. Each entry accepts any MiningItemData, " +
-                "quantity and Gem price. The open Shop Panel syncs automatically.",
+                "quantity and Gem price. The authored Shop layout is never changed " +
+                "automatically.",
                 MessageType.Info);
         }
     }

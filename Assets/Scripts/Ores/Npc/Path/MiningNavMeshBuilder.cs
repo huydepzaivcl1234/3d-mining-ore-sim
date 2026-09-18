@@ -57,6 +57,8 @@ namespace MiningSimulator.Ores
             {
                 surface = GetComponent<NavMeshSurface>();
             }
+
+            ConfigureRuntimeBuildGeometry();
         }
 
         private void OnDestroy()
@@ -115,6 +117,7 @@ namespace MiningSimulator.Ores
                 return;
             }
 
+            ConfigureRuntimeBuildGeometry();
             lastBuildTime = Time.time;
 
             // UpdateNavMesh reuses the existing NavMeshData instance, so agents and in-flight
@@ -130,6 +133,19 @@ namespace MiningSimulator.Ores
             }
 
             HasNavMesh = HasNavMeshData();
+        }
+
+        private void ConfigureRuntimeBuildGeometry()
+        {
+            if (surface == null)
+            {
+                return;
+            }
+
+            // Player builds cannot read every imported render mesh. The playable ground
+            // already has colliders, so baking from them prevents unreadable ore meshes
+            // from breaking the runtime NavMesh update.
+            surface.useGeometry = NavMeshCollectGeometry.PhysicsColliders;
         }
 
         private static bool HasNavMeshData()

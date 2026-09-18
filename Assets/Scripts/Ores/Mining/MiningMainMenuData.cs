@@ -23,7 +23,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private Vector2 subtitlePosition = new(-250f, -132f);
         [SerializeField] private Vector2 playButtonSize = new(330f, 78f);
         [SerializeField] private Vector2 playButtonPosition = new(250f, 100f);
-        [SerializeField] private Vector2 shopButtonPosition = new(250f, -200f);
+       
         [SerializeField] private Vector2 settingsButtonPosition = new(250f, 0f);
         [SerializeField] private Vector2 exitButtonPosition = new(250f, -100f);
         [SerializeField] private Vector2 settingsTitlePosition = new(0f, 225f);
@@ -123,7 +123,7 @@ namespace MiningSimulator.Ores
         public Vector2 SubtitlePosition => subtitlePosition;
         public Vector2 PlayButtonSize => playButtonSize;
         public Vector2 PlayButtonPosition => playButtonPosition;
-        public Vector2 ShopButtonPosition => shopButtonPosition;
+        
         public Vector2 SettingsButtonPosition => settingsButtonPosition;
         public Vector2 ExitButtonPosition => exitButtonPosition;
         public Vector2 SettingsTitlePosition => settingsTitlePosition;
