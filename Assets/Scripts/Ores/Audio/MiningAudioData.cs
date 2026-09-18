@@ -33,6 +33,9 @@ namespace MiningSimulator.Ores
         [SerializeField] private AudioClip sunriseRoosterSfx;
         [Tooltip("Loop played only while the Coin Rain event is active.")]
         [SerializeField] private AudioClip coinRainAmbience;
+        [Header("Being Stalked Event")]
+        [SerializeField] private AudioClip stalkedCatchSfx;
+        [SerializeField] private AudioClip stalkedJumpscareSfx;
         [Range(0f, 1f), SerializeField] private float ambienceVolume = 0.45f;
         [Min(0f), SerializeField] private float ambienceFadeDuration = 2.5f;
 
@@ -75,6 +78,8 @@ namespace MiningSimulator.Ores
         public int NightAmbienceCount => 1 + additionalNightAmbiences.Length;
         public AudioClip SunriseRoosterSfx => sunriseRoosterSfx;
         public AudioClip CoinRainAmbience => coinRainAmbience;
+        public AudioClip StalkedCatchSfx => stalkedCatchSfx;
+        public AudioClip StalkedJumpscareSfx => stalkedJumpscareSfx;
         public float AmbienceVolume => ambienceVolume;
         public float AmbienceFadeDuration => ambienceFadeDuration;
 

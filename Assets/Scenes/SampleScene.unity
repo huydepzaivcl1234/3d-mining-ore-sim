@@ -84967,6 +84967,7 @@ MonoBehaviour:
   sun: {fileID: 410087040}
   cinematicVolume: {fileID: 0}
   coinRainEvent: {fileID: 0}
+  stalkedEvent: {fileID: 0}
 --- !u!4 &1889411265
 Transform:
   m_ObjectHideFlags: 0

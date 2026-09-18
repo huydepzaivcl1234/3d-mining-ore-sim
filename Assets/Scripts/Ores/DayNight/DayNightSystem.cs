@@ -15,6 +15,7 @@ namespace MiningSimulator.Ores
         [Tooltip("Existing scene Global Volume. Auto-found once when left empty.")]
         [SerializeField] private Volume cinematicVolume;
         [SerializeField] private CoinRainEventSystem coinRainEvent;
+        [SerializeField] private StalkedEventSystem stalkedEvent;
 
         private static readonly int SkyTintId = Shader.PropertyToID("_SkyTint");
         private static readonly int TintId = Shader.PropertyToID("_Tint");
@@ -95,11 +96,13 @@ namespace MiningSimulator.Ores
             EnsureCelestialDisc();
             ApplyLighting(daylight);
             EnsureCoinRainEvent();
+            EnsureStalkedEvent();
         }
 
         private void OnEnable()
         {
             EnsureCoinRainEvent();
+            EnsureStalkedEvent();
         }
 
         private void OnDisable()
@@ -134,6 +137,14 @@ namespace MiningSimulator.Ores
             }
 
             coinRainEvent.Configure(this, data);
+        }
+
+        private void EnsureStalkedEvent()
+        {
+            if (data == null) return;
+            stalkedEvent ??= GetComponent<StalkedEventSystem>();
+            if (stalkedEvent == null) stalkedEvent = gameObject.AddComponent<StalkedEventSystem>();
+            stalkedEvent.Configure(this, data);
         }
 
         private void Update()

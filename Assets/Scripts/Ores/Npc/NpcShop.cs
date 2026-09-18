@@ -121,6 +121,17 @@ namespace MiningSimulator.Ores
             NpcCountChanged?.Invoke(purchasedCount);
         }
 
+        public bool TryRemoveNpc(MiningNpc npc)
+        {
+            if (npc == null || !npc.gameObject.scene.IsValid() || purchasedCount <= 0) return false;
+            npc.gameObject.SetActive(false);
+            Destroy(npc.gameObject);
+            purchasedCount = Mathf.Max(0, purchasedCount - 1);
+            SavePurchasedCount();
+            NpcCountChanged?.Invoke(purchasedCount);
+            return true;
+        }
+
         private void HandleUpgradesChanged()
         {
             NpcCountChanged?.Invoke(purchasedCount);

@@ -178,6 +178,24 @@ namespace MiningSimulator.Ores
             }));
         }
 
+        /// <summary>Uses the same base-HUD slide as modal panels without opening a modal.</summary>
+        public void SetBaseHudVisible(bool visible)
+        {
+            EnsureInitialized();
+            if (!visible)
+            {
+                StopAllCoroutines();
+                HideModalImmediately(upgradePanel);
+                HideModalImmediately(rebirthPanel);
+                HideModalImmediately(audioSettingsPanel);
+                HideModalImmediately(inventoryPanel);
+                activeModal = null;
+                orbitCamera?.SetInputLocked(false);
+                HideBackdrop();
+            }
+            AnimateBasePanels(visible);
+        }
+
         private void CacheHomePositions()
         {
             if (initialized)

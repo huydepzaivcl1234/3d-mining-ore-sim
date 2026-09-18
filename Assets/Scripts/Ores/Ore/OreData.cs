@@ -12,7 +12,11 @@ namespace MiningSimulator.Ores
         Diamond = 5,
         LightStone = 6,
         DarkStone = 7,
-        Gem = 8
+        Gem = 8,
+
+        Netherite = 9,
+
+
     }
 
     public enum OreRarity

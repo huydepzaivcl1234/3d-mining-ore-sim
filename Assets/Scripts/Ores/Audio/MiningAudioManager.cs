@@ -431,13 +431,18 @@ namespace MiningSimulator.Ores
 
         public void PlaySfx(AudioClip clip)
         {
+            PlaySfx(clip, 1f);
+        }
+
+        public void PlaySfx(AudioClip clip, float volumeMultiplier)
+        {
             if (audioData == null || sfxSource == null || sfxMuted || !EnsureClipLoaded(clip))
             {
                 return;
             }
 
             sfxSource.pitch = Random.Range(audioData.MinimumPitch, audioData.MaximumPitch);
-            sfxSource.PlayOneShot(clip, audioData.SfxVolume);
+            sfxSource.PlayOneShot(clip, audioData.SfxVolume * Mathf.Max(0f, volumeMultiplier));
         }
 
         public void PlayButtonSfx()
@@ -641,6 +646,8 @@ namespace MiningSimulator.Ores
             }
             EnsureClipLoaded(audioData.SunriseRoosterSfx);
             EnsureClipLoaded(audioData.CoinRainAmbience);
+            EnsureClipLoaded(audioData.StalkedCatchSfx);
+            EnsureClipLoaded(audioData.StalkedJumpscareSfx);
             EnsureClipLoaded(audioData.OreHitSfx);
             EnsureClipLoaded(audioData.OreBreakSfx);
             EnsureClipLoaded(audioData.ButtonClickSfx);

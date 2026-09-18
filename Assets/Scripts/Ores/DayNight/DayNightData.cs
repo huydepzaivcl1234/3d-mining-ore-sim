@@ -128,6 +128,24 @@ namespace MiningSimulator.Ores
         [SerializeField] private Color coinRainAmbientColor = new(0.42f, 0.44f, 0.47f, 1f);
         [Range(1f, 250f), SerializeField] private float coinRainParticlesPerSecond = 75f;
 
+        [Header("Being Stalked Event")]
+        [SerializeField] private bool stalkedEventEnabled = true;
+        [Range(0f,100f), SerializeField] private float stalkedEventChanceAtSceneStartPercent = 8f;
+        [Min(0f), SerializeField] private float stalkedWarningSeconds = 6f;
+        [Min(1f), SerializeField] private float stalkedCornerFlickersPerSecond = 7f;
+        [Min(0.1f), SerializeField] private float stalkedCreatureSprintSpeed = 22f;
+        [Min(0.1f), SerializeField] private float stalkedCaptureDistance = 1.2f;
+        [Range(0f,100f), SerializeField] private float stalkedJumpscareChancePercent = 0.5f;
+        [Min(0.1f), SerializeField] private float stalkedJumpscareSeconds = 1.2f;
+        [SerializeField] private Sprite[] stalkedJumpscareImages = System.Array.Empty<Sprite>();
+        [Header("Being Stalked Canvas")]
+        [SerializeField] private Vector2 stalkedToastPosition = new(0f, -210f);
+        [SerializeField] private Vector2 stalkedToastSize = new(420f, 100f);
+        [SerializeField] private Color stalkedToastColor = new(0.16f, 0f, 0.01f, 0.94f);
+        [SerializeField] private Color stalkedTitleColor = new(1f, 0.16f, 0.08f, 1f);
+        [SerializeField] private Color stalkedTextColor = new(1f, 0.76f, 0.72f, 1f);
+        [SerializeField] private Color stalkedCornerColor = new(0.82f, 0.01f, 0.01f, 1f);
+
         [Header("Cinematic Post Processing")]
         [SerializeField] private bool controlCinematicPostProcessing = true;
         [Tooltip("Use the filmic ACES tonemapper on the existing Global Volume.")]
@@ -257,6 +275,26 @@ namespace MiningSimulator.Ores
         public Color CoinRainFogColor => coinRainFogColor;
         public Color CoinRainAmbientColor => coinRainAmbientColor;
         public float CoinRainParticlesPerSecond => coinRainParticlesPerSecond;
+        public bool StalkedEventEnabled => stalkedEventEnabled;
+        public float StalkedEventChanceAtSceneStartPercent => stalkedEventChanceAtSceneStartPercent;
+        public float StalkedWarningSeconds => stalkedWarningSeconds;
+        public float StalkedCornerFlickersPerSecond => stalkedCornerFlickersPerSecond;
+        public float StalkedCreatureSprintSpeed => stalkedCreatureSprintSpeed;
+        public float StalkedCaptureDistance => stalkedCaptureDistance;
+        public float StalkedJumpscareChancePercent => stalkedJumpscareChancePercent;
+        public float StalkedJumpscareSeconds => stalkedJumpscareSeconds;
+        public Vector2 StalkedToastPosition => stalkedToastPosition;
+        public Vector2 StalkedToastSize => stalkedToastSize;
+        public Color StalkedToastColor => stalkedToastColor;
+        public Color StalkedTitleColor => stalkedTitleColor;
+        public Color StalkedTextColor => stalkedTextColor;
+        public Color StalkedCornerColor => stalkedCornerColor;
+
+        public Sprite GetRandomStalkedJumpscareImage()
+        {
+            if (stalkedJumpscareImages == null || stalkedJumpscareImages.Length == 0) return null;
+            return stalkedJumpscareImages[Random.Range(0, stalkedJumpscareImages.Length)];
+        }
         public bool ControlCinematicPostProcessing => controlCinematicPostProcessing;
         public bool UseAcesTonemapping => useAcesTonemapping;
         public float DayBloomIntensity => dayBloomIntensity;
