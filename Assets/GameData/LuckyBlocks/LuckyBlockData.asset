@@ -30,6 +30,12 @@ MonoBehaviour:
   hitPunchScale: 0.1
   hitPunchLift: 0.12
   hitPunchDuration: 0.16
+  rareRewardCameraShake: 1
+  minimumShakeType: 1
+  rareShakeStrength: 0.1
+  rareShakeDuration: 0.32
+  rareShakeFrequency: 24
+  rainbowShakeMultiplier: 1.65
   healthBarWorldOffset: {x: 0, y: 0.25, z: 0}
   healthBarScale: 0.65
   showCountdownLabel: 1
@@ -50,7 +56,7 @@ MonoBehaviour:
     moneyReward: 250
     sizeMultiplier: 1
     miningPowerRequired: 7
-    maximumMiningNpcs: 3
+    maximumMiningNpcs: 5
     npcStandDistance: 1.25
   - type: 1
     displayName: Diamond Lucky Block
@@ -61,7 +67,7 @@ MonoBehaviour:
     moneyReward: 1000
     sizeMultiplier: 1
     miningPowerRequired: 15
-    maximumMiningNpcs: 3
+    maximumMiningNpcs: 5
     npcStandDistance: 1.25
   - type: 2
     displayName: Rainbow Lucky Block
@@ -72,5 +78,5 @@ MonoBehaviour:
     moneyReward: 3500
     sizeMultiplier: 1
     miningPowerRequired: 30
-    maximumMiningNpcs: 3
+    maximumMiningNpcs: 5
     npcStandDistance: 1.25

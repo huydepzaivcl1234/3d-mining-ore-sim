@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace MiningSimulator.Ores
@@ -7,6 +8,7 @@ namespace MiningSimulator.Ores
     [DisallowMultipleComponent]
     public sealed class MiningNpcHeadlamp : MonoBehaviour
     {
+        private static readonly List<MiningNpcHeadlamp> ActiveHeadlamps = new();
         private const string LampName = "Miner Headlamp";
         private const float FallbackHeadHeight = 1.45f;
         private const float FlickerDuration = 2f;
@@ -37,6 +39,14 @@ namespace MiningSimulator.Ores
             CreateHeadlamp();
         }
 
+        private void OnEnable()
+        {
+            if (!ActiveHeadlamps.Contains(this))
+            {
+                ActiveHeadlamps.Add(this);
+            }
+        }
+
         private void Start()
         {
             dayNightSystem = FindFirstObjectByType<DayNightSystem>(FindObjectsInactive.Include);
@@ -53,6 +63,7 @@ namespace MiningSimulator.Ores
 
         private void OnDisable()
         {
+            ActiveHeadlamps.Remove(this);
             if (dayNightSystem != null)
             {
                 dayNightSystem.PeriodChanged -= HandlePeriodChanged;
@@ -60,6 +71,17 @@ namespace MiningSimulator.Ores
 
             StopFlicker();
             SetOff();
+        }
+
+        private void LateUpdate()
+        {
+            // Several miners can reserve the same Lucky Block. Their point lights used to
+            // add together and wash every nearby miner into solid white. Share the authored
+            // brightness between nearby active lamps, while a lone miner keeps its full value.
+            if (headlamp != null && headlamp.enabled && flickerRoutine == null)
+            {
+                headlamp.intensity = GetBalancedIntensity();
+            }
         }
 
         private void OnDestroy()
@@ -167,7 +189,7 @@ namespace MiningSimulator.Ores
                 bool lit = Random.value > 0.34f;
                 headlamp.enabled = lit;
                 headlamp.intensity = lit
-                    ? steadyIntensity * Random.Range(0.45f, 1f)
+                    ? GetBalancedIntensity() * Random.Range(0.45f, 1f)
                     : 0f;
 
                 float interval = Random.Range(MinimumFlickerInterval, MaximumFlickerInterval);
@@ -178,7 +200,7 @@ namespace MiningSimulator.Ores
             if (headlamp != null)
             {
                 headlamp.enabled = true;
-                headlamp.intensity = steadyIntensity;
+                headlamp.intensity = GetBalancedIntensity();
             }
 
             flickerRoutine = null;
@@ -202,6 +224,26 @@ namespace MiningSimulator.Ores
 
             headlamp.enabled = false;
             headlamp.intensity = steadyIntensity;
+        }
+
+        private float GetBalancedIntensity()
+        {
+            int nearbyLampCount = 1;
+            float sharingDistanceSqr = lightRange * lightRange;
+            Vector3 position = transform.position;
+            foreach (MiningNpcHeadlamp other in ActiveHeadlamps)
+            {
+                if (other == null || other == this || other.headlamp == null ||
+                    !other.headlamp.enabled ||
+                    (other.transform.position - position).sqrMagnitude > sharingDistanceSqr)
+                {
+                    continue;
+                }
+
+                nearbyLampCount++;
+            }
+
+            return steadyIntensity / nearbyLampCount;
         }
     }
 }

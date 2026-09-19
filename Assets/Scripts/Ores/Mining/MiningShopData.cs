@@ -8,13 +8,21 @@ namespace MiningSimulator.Ores
     public sealed class MiningShopProduct
     {
         [SerializeField] private MiningItemData item;
+        [SerializeField] private MiningCosmeticData cosmetic;
         [Min(1), SerializeField] private int itemAmount = 1;
         [Min(0f), SerializeField] private float gemCost = 100f;
 
         public MiningItemData Item => item;
+        public MiningCosmeticData Cosmetic => cosmetic;
+        public bool IsCosmetic => cosmetic != null;
         public int ItemAmount => Mathf.Max(1, itemAmount);
         public float GemCost => Mathf.Max(0f, gemCost);
-        public bool IsValid => item != null && ItemAmount > 0;
+        public bool IsValid => (item != null && ItemAmount > 0) || cosmetic != null;
+        public string DisplayName => cosmetic != null ? cosmetic.DisplayName : item != null ? item.DisplayName : string.Empty;
+        public string Description => cosmetic != null ? cosmetic.Description : item != null ? item.Description : string.Empty;
+        public Sprite Icon => cosmetic != null ? cosmetic.Icon : item != null ? item.InventoryIcon : null;
+        public string IconFallback => cosmetic != null ? cosmetic.IconFallback : item != null ? item.IconFallback : "?";
+        public Color FallbackColor => cosmetic != null ? cosmetic.FallbackColor : item != null ? item.FallbackColor : Color.white;
 
         public void Validate()
         {

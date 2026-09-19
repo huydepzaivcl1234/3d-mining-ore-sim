@@ -61,7 +61,10 @@ namespace MiningSimulator.Ores
                 return true;
             }
 
-            if (MiningNavGrid.Instance != null &&
+            // Once a baked NavMesh is available it is authoritative. Falling back to the grid
+            // after an incomplete NavMesh route sends miners through unbaked space and can be
+            // longer than a connected baked route around the ore field.
+            if (!NavMeshAvailable && MiningNavGrid.Instance != null &&
                 MiningNavGrid.Instance.TryFindPath(start, end, resultWaypoints))
             {
                 return true;
@@ -83,7 +86,8 @@ namespace MiningSimulator.Ores
                 return true;
             }
 
-            if (MiningNavGrid.Instance != null &&
+            // Keep the route source consistent: never replace a baked NavMesh with a grid path.
+            if (!NavMeshAvailable && MiningNavGrid.Instance != null &&
                 MiningNavGrid.Instance.TryFindPath(start, end, resultWaypoints))
             {
                 source = MiningPathSource.Grid;
@@ -152,10 +156,10 @@ namespace MiningSimulator.Ores
                 return false;
             }
 
-            // A partial path stops at the closest reachable point rather than the target. That is
-            // still worth walking (it makes real progress, and the miner re-paths on arrival), but
-            // an invalid path is not.
-            if (sharedPath.status == NavMeshPathStatus.PathInvalid)
+            // A partial path stops at the closest reachable point rather than the target. Treat
+            // it as no route: otherwise the miner follows that dead end, then switches to the
+            // unbaked grid/direct steering instead of selecting the complete baked route.
+            if (sharedPath.status != NavMeshPathStatus.PathComplete)
             {
                 return false;
             }

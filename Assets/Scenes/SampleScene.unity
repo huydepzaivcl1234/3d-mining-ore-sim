@@ -21906,7 +21906,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.39607844}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -46623,6 +46623,7 @@ MonoBehaviour:
   upgradeSystem: {fileID: 1144114548}
   rebirthData: {fileID: 11400000, guid: e4bc10a8240fb92b2a3fc866d38e6f13, type: 2}
   npcProgressionSystem: {fileID: 655586588}
+  oreSpawner: {fileID: 0}
   npcShop: {fileID: 655586586}
   itemSystem: {fileID: 1388648154}
   achievementSystem: {fileID: 0}
@@ -85138,7 +85139,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1896077275
 RectTransform:
   m_ObjectHideFlags: 0
