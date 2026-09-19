@@ -18,7 +18,7 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 7e2cd410799e4fc4b12e4d20947aa0d6, type: 3}
   iconFallback: P
   fallbackColor: {r: 1, g: 0.76, b: 0.08, a: 1}
-  toolPrefab: {fileID: 4532038966814627177, guid: aa981ff2d3a1bf345a082a9aa2626f20, type: 3}
+  toolPrefab: {fileID: 0}
   particlePrefab: {fileID: 4705464461609500708, guid: 94b5b6a88da2eb445bc11ba948f588f4, type: 3}
   toolLocalPosition: {x: 0, y: 0, z: 0}
   toolLocalEulerAngles: {x: 0, y: 0, z: 0}

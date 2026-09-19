@@ -68,6 +68,11 @@ namespace MiningSimulator.Ores
                 }
                 if (nameLabel != null) nameLabel.text = product.DisplayName;
                 if (descriptionLabel != null) descriptionLabel.text = product.Description;
+                // This fifth row is created from the last authored product at runtime.
+                // Update its visible text directly so it cannot retain the source
+                // product's Grape label and description.
+                SetTextByObjectName("Item Name", product.DisplayName);
+                SetTextByObjectName("Item Description", product.Description);
                 if (amountLabel != null) amountLabel.text = product.IsCosmetic ? MiningLocalization.Text("SKIN") : $"x{product.ItemAmount}";
                 if (priceLabel != null)
                 {
@@ -88,6 +93,25 @@ namespace MiningSimulator.Ores
                 // made TMP text and detailed icons look blurred in Play Mode whenever the
                 // player lacked Gems. The disabled Buy button already communicates availability.
                 if (canvasGroup != null) canvasGroup.alpha = 1f;
+            }
+
+            public void RefreshCosmeticText(MiningShopProduct product)
+            {
+                if (product == null || !product.IsCosmetic) return;
+                SetTextByObjectName("Item Name", product.DisplayName);
+                SetTextByObjectName("Item Description", product.Description);
+            }
+
+            private void SetTextByObjectName(string objectName, string value)
+            {
+                if (root == null) return;
+                foreach (TextMeshProUGUI label in root.GetComponentsInChildren<TextMeshProUGUI>(true))
+                {
+                    if (label != null && label.gameObject.name == objectName)
+                    {
+                        label.text = value ?? string.Empty;
+                    }
+                }
             }
 
             public ShopProductView CloneRuntime()
@@ -262,6 +286,22 @@ namespace MiningSimulator.Ores
             if (gemCounter.Tick(Time.unscaledDeltaTime))
             {
                 RefreshGemBalance();
+            }
+        }
+
+        private void LateUpdate()
+        {
+            // Other UI updates may occur after Refresh. Reapply the configured
+            // cosmetic label at the end of each visible Shop frame.
+            if (panelRoot == null || !panelRoot.gameObject.activeInHierarchy || data == null) return;
+            int count = Mathf.Min(productViews.Count, data.Products.Count);
+            for (int index = 0; index < count; index++)
+            {
+                MiningShopProduct product = data.Products[index];
+                if (product != null && product.IsCosmetic)
+                {
+                    productViews[index]?.RefreshCosmeticText(product);
+                }
             }
         }
 
