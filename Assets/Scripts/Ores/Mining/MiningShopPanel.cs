@@ -119,17 +119,17 @@ namespace MiningSimulator.Ores
             private T FindClone<T>(T source, Transform cloneRoot) where T : Component
             {
                 if (source == null || cloneRoot == null) return null;
-                Transform sourceTransform = source.transform;
-                if (sourceTransform == root.transform) return cloneRoot.GetComponent<T>();
-                var path = new Stack<string>();
-                while (sourceTransform != null && sourceTransform != root.transform)
+                // A runtime product row is a full clone, so the matching component has
+                // the same component order as it had below the authored source row.
+                // Mapping this way is unaffected by nested UI object names and ensures
+                // a cosmetic row cannot retain the copied product's title or description.
+                T[] sourceComponents = root.GetComponentsInChildren<T>(true);
+                T[] clonedComponents = cloneRoot.GetComponentsInChildren<T>(true);
+                for (int index = 0; index < sourceComponents.Length && index < clonedComponents.Length; index++)
                 {
-                    path.Push(sourceTransform.name);
-                    sourceTransform = sourceTransform.parent;
+                    if (sourceComponents[index] == source) return clonedComponents[index];
                 }
-                Transform target = cloneRoot;
-                while (path.Count > 0 && target != null) target = target.Find(path.Pop());
-                return target != null ? target.GetComponent<T>() : null;
+                return null;
             }
         }
 
@@ -213,9 +213,12 @@ namespace MiningSimulator.Ores
                 FindObjectsSortMode.None);
             foreach (TMP_Text label in labels)
             {
-                if (label != null && label.text.IndexOf('\u25C6') >= 0)
+                // Text can be null during Awake on an inactive UI object. Do not let
+                // glyph cleanup stop Shop initialization.
+                string labelText = label != null ? label.text : null;
+                if (!string.IsNullOrEmpty(labelText) && labelText.IndexOf('\u25C6') >= 0)
                 {
-                    label.text = label.text.Replace('\u25C6', '*');
+                    label.text = labelText.Replace('\u25C6', '*');
                 }
             }
         }
