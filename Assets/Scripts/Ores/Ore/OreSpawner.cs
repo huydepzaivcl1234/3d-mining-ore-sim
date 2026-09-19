@@ -172,6 +172,46 @@ namespace MiningSimulator.Ores
             return SpawnOne();
         }
 
+        /// <summary>
+        /// Removes active ores that require more power than the supplied value. This is used
+        /// when progression is reset so an ore spawned before a Rebirth cannot remain visible
+        /// after it becomes locked again.
+        /// </summary>
+        public void RemoveOresAboveMiningPower(int miningPower)
+        {
+            miningPower = Mathf.Max(0, miningPower);
+            guaranteedOreQueue.Clear();
+
+            var oresToRemove = new List<Ore>();
+            foreach (Ore ore in activeOres)
+            {
+                if (ore != null && ore.Data != null &&
+                    ore.Data.MiningPowerRequired > miningPower)
+                {
+                    oresToRemove.Add(ore);
+                }
+            }
+
+            foreach (Ore ore in oresToRemove)
+            {
+                ore.Depleted -= HandleOreDepleted;
+                ore.RewardGranted -= HandleRewardGranted;
+                activeOres.Remove(ore);
+                pendingPoolReturns.Remove(ore);
+
+                if (poolOwnedOres.ContainsKey(ore))
+                {
+                    ReturnOreToPool(ore);
+                    continue;
+                }
+
+                // An authored/legacy ore is not part of the runtime pool. Disable it before
+                // destroying it so any miner reservation is released immediately.
+                ore.gameObject.SetActive(false);
+                Destroy(ore.gameObject);
+            }
+        }
+
         public bool SpawnOne()
         {
             if (spawnData == null || spawnData.MaximumAliveOres <= 0 ||

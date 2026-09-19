@@ -11,6 +11,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private MiningUpgradeSystem upgradeSystem;
         [SerializeField] private MiningRebirthData rebirthData;
         [SerializeField] private NpcProgressionSystem npcProgressionSystem;
+        [SerializeField] private OreSpawner oreSpawner;
         [SerializeField] private NpcShop npcShop;
         [SerializeField] private MiningItemSystem itemSystem;
         [SerializeField] private MiningAchievementSystem achievementSystem;
@@ -76,6 +77,9 @@ namespace MiningSimulator.Ores
             ApplyPermanentBoost();
             upgradeSystem?.ResetAllUpgrades();
             npcProgressionSystem?.ResetProgression();
+            oreSpawner?.RemoveOresAboveMiningPower(npcProgressionSystem != null
+                ? npcProgressionSystem.CurrentMiningPower
+                : 0);
             npcShop?.ResetAllNpcs();
             MiningComputerStation.ResetAllLoadedStations();
             wallet.ResetMoney();
@@ -98,6 +102,9 @@ namespace MiningSimulator.Ores
 
             upgradeSystem?.ResetAllUpgrades();
             npcProgressionSystem?.ResetProgression();
+            oreSpawner?.RemoveOresAboveMiningPower(npcProgressionSystem != null
+                ? npcProgressionSystem.CurrentMiningPower
+                : 0);
             npcShop?.ResetAllNpcs();
             itemSystem?.ResetAllData();
             achievementSystem?.ResetAllData();
@@ -139,6 +146,10 @@ namespace MiningSimulator.Ores
             {
                 npcProgressionSystem = FindFirstObjectByType<NpcProgressionSystem>(
                     FindObjectsInactive.Include);
+            }
+            if (oreSpawner == null)
+            {
+                oreSpawner = FindFirstObjectByType<OreSpawner>(FindObjectsInactive.Include);
             }
             if (npcShop == null)
             {
