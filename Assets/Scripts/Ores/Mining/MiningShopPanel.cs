@@ -28,6 +28,8 @@ namespace MiningSimulator.Ores
 
             private UnityAction buyAction;
 
+            public RectTransform Root => root != null ? root.transform as RectTransform : null;
+
             public void Bind(int productIndex, System.Action<int> purchase)
             {
                 Unbind();
@@ -153,6 +155,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private Button closeButton;
         [SerializeField] private Button buyRareGiftButton;
         [SerializeField] private List<ShopProductView> productViews = new();
+        private ScrollRect productScrollRect;
 
         [Header("Lucky Wheel")]
         [SerializeField] private RectTransform wheelRoot;
@@ -192,16 +195,36 @@ namespace MiningSimulator.Ores
 
         private void Awake()
         {
+            RepairUnsupportedUiGlyphs();
             cosmeticSystem = GetComponent<MiningCosmeticSystem>();
             if (cosmeticSystem == null) cosmeticSystem = gameObject.AddComponent<MiningCosmeticSystem>();
             RegisterBaseHud();
             panelRoot?.gameObject.SetActive(false);
         }
 
+        /// <summary>
+        /// The authored Gem_Symbol uses ◆, but the project's LiberationSans SDF has no glyph
+        /// or fallback for it. Replace only that unsupported character before the Shop UI starts
+        /// rebuilding, preserving all authored RectTransforms and image-based gem icons.
+        /// </summary>
+        private static void RepairUnsupportedUiGlyphs()
+        {
+            TMP_Text[] labels = FindObjectsByType<TMP_Text>(FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+            foreach (TMP_Text label in labels)
+            {
+                if (label != null && label.text.IndexOf('\u25C6') >= 0)
+                {
+                    label.text = label.text.Replace('\u25C6', '*');
+                }
+            }
+        }
+
         private void OnEnable()
         {
             productViews ??= new List<ShopProductView>();
             EnsureProductViews();
+            StabilizeProductScroll();
             RegisterCosmetics();
             gameData ??= wallet != null ? wallet.GameData : null;
             RegisterBaseHud();
@@ -605,6 +628,46 @@ namespace MiningSimulator.Ores
                 if (clone == null) break;
                 productViews.Add(clone);
             }
+        }
+
+        /// <summary>
+        /// Keeps the product list responsive without saving any RectTransform or ScrollRect
+        /// changes to the scene. Elastic scrolling was fighting the extra runtime cosmetic row:
+        /// when the content was shorter than its final row, Unity repeatedly pulled it upward.
+        /// </summary>
+        private void StabilizeProductScroll()
+        {
+            if (productViews.Count == 0) return;
+            RectTransform firstRow = productViews[0]?.Root;
+            RectTransform content = firstRow != null ? firstRow.parent as RectTransform : null;
+            if (content == null) return;
+
+            productScrollRect ??= FindProductScrollRect(content);
+            if (productScrollRect == null) return;
+
+            float requiredHeight = content.rect.height;
+            foreach (ShopProductView view in productViews)
+            {
+                RectTransform row = view?.Root;
+                if (row == null || !row.gameObject.activeSelf) continue;
+                requiredHeight = Mathf.Max(requiredHeight, -row.anchoredPosition.y + row.rect.height + 8f);
+            }
+            content.sizeDelta = new Vector2(content.sizeDelta.x, requiredHeight);
+
+            productScrollRect.movementType = ScrollRect.MovementType.Clamped;
+            productScrollRect.inertia = true;
+            productScrollRect.decelerationRate = 0.08f;
+            productScrollRect.scrollSensitivity = 12f;
+            productScrollRect.StopMovement();
+        }
+
+        private ScrollRect FindProductScrollRect(RectTransform content)
+        {
+            foreach (ScrollRect candidate in GetComponentsInChildren<ScrollRect>(true))
+            {
+                if (candidate != null && candidate.content == content) return candidate;
+            }
+            return null;
         }
 
         private void RegisterCosmetics()
