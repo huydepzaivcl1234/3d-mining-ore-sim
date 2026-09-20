@@ -11,6 +11,8 @@ namespace MiningSimulator.Ores
     [DisallowMultipleComponent]
     public sealed class WanderingTraderSystem : MonoBehaviour
     {
+        private const int RequiredOfferCount = 3;
+
         [Header("Scene References")]
         [SerializeField] private NpcShop npcShop;
 
@@ -38,7 +40,8 @@ namespace MiningSimulator.Ores
 
         [Header("Offers")]
         [Range(1, 8), SerializeField] private int maximumItemsRequested = 3;
-        [Range(1, 3), SerializeField] private int offerCount = 3;
+        // Preserved for existing Scene serialization; the shop now always displays three per page.
+        [SerializeField, HideInInspector] private int offerCount = RequiredOfferCount;
         [Min(1f), SerializeField] private float offerRefreshSeconds = 60f;
         [Min(1f), SerializeField] private float baseMoneyValue = 30f;
         [Min(1f), SerializeField] private float baseGemValue = 1f;
@@ -145,8 +148,6 @@ namespace MiningSimulator.Ores
                 return false;
             }
 
-            // The sell page always reflects the inventory at the moment the player opens it.
-            RefreshSellOffers();
             panel.Show(currentOffers, currentSellOffers, OfferSecondsRemaining, CanAcceptOffer,
                 TryAcceptOffer, () => HandleTradeClosed(trader));
             trader.SetTrading(true);
@@ -398,7 +399,6 @@ namespace MiningSimulator.Ores
                     return false;
                 wallet.AddGems(offer.Price);
             }
-            RefreshOffer();
             return true;
         }
 
@@ -422,10 +422,10 @@ namespace MiningSimulator.Ores
             }
             Shuffle(eligibleItems);
 
-            int visibleBuyCount = Mathf.Min(Mathf.Clamp(offerCount, 1, 3), eligibleItems.Count);
-            for (int index = 0; index < visibleBuyCount; index++)
+            for (int index = 0; index < RequiredOfferCount && eligibleItems.Count > 0; index++)
             {
-                if (TryCreateBuyOffer(eligibleItems[index], out TraderOffer offer))
+                MiningItemData item = eligibleItems[index % eligibleItems.Count];
+                if (TryCreateBuyOffer(item, out TraderOffer offer))
                     currentOffers.Add(offer);
             }
 
@@ -442,16 +442,17 @@ namespace MiningSimulator.Ores
             sellCandidates.Clear();
             foreach (MiningItemData item in database.Items)
             {
-                if (item != null && item.TraderCanSell && itemSystem.GetItemCount(item) > 0)
+                if (item != null && item.TraderCanSell)
                     sellCandidates.Add(item);
             }
             Shuffle(sellCandidates);
-            int visibleSellCount = Mathf.Min(Mathf.Clamp(offerCount, 1, 3), sellCandidates.Count);
-            for (int index = 0; index < visibleSellCount; index++)
+            for (int index = 0; index < RequiredOfferCount && sellCandidates.Count > 0; index++)
             {
-                MiningItemData item = sellCandidates[index];
+                MiningItemData item = sellCandidates[index % sellCandidates.Count];
                 int owned = itemSystem.GetItemCount(item);
-                int amount = RollOfferAmount(item, owned);
+                int amount = owned > 0
+                    ? RollOfferAmount(item, owned)
+                    : RollOfferAmount(item);
                 int rarityStep = (int)item.Rarity + 1;
                 float value = RollPrice(item.TraderSellValue,
                     item.TraderGemSellMaximum, rarityStep * baseGemValue);
@@ -475,7 +476,7 @@ namespace MiningSimulator.Ores
         private void OnValidate()
         {
             maximumItemsRequested = Mathf.Max(1, maximumItemsRequested);
-            offerCount = Mathf.Clamp(offerCount, 1, 3);
+            offerCount = RequiredOfferCount;
             offerRefreshSeconds = Mathf.Max(1f, offerRefreshSeconds);
             baseMoneyValue = Mathf.Max(1f, baseMoneyValue);
             baseGemValue = Mathf.Max(1f, baseGemValue);

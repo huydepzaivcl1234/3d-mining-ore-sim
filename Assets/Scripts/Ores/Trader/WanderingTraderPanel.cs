@@ -42,15 +42,17 @@ namespace MiningSimulator.Ores
         [SerializeField] private Sprite gemIcon;
 
         [Header("Smooth Animation")]
-        [Tooltip("Seconds used by the panel fade-and-pop opening animation.")]
+        [Tooltip("Seconds used by the scale-only panel opening animation.")]
         [Min(0.01f), SerializeField] private float panelOpenDuration = 0.24f;
-        [Tooltip("Seconds used by the panel fade-and-shrink closing animation.")]
+        [Tooltip("Seconds used by the scale-only panel closing animation.")]
         [Min(0.01f), SerializeField] private float panelCloseDuration = 0.16f;
         [Tooltip("Starting scale used when the trader panel pops open.")]
         [Range(0.5f, 1f), SerializeField] private float panelStartScale = 0.84f;
-        [Tooltip("Seconds used to fade the current Buy or Sell page out.")]
+        [InspectorName("Page Scale Out Duration")]
+        [Tooltip("Seconds used to scale the current Buy or Sell page down.")]
         [Min(0.01f), SerializeField] private float pageFadeOutDuration = 0.1f;
-        [Tooltip("Seconds used to fade the next Buy or Sell page in.")]
+        [InspectorName("Page Scale In Duration")]
+        [Tooltip("Seconds used to scale the next Buy or Sell page back to full size.")]
         [Min(0.01f), SerializeField] private float pageFadeInDuration = 0.18f;
         [Tooltip("Small scale dip used between Buy and Sell pages.")]
         [Range(0.8f, 1f), SerializeField] private float pageSwapScale = 0.96f;
@@ -229,7 +231,7 @@ namespace MiningSimulator.Ores
 
         private IEnumerator AnimatePanelOpened()
         {
-            rootCanvasGroup.alpha = 0f;
+            rootCanvasGroup.alpha = 1f;
             rootCanvasGroup.interactable = false;
             rootCanvasGroup.blocksRaycasts = false;
             if (cardRect != null) cardRect.localScale = Vector3.one * panelStartScale;
@@ -239,7 +241,6 @@ namespace MiningSimulator.Ores
             {
                 float progress = Mathf.Clamp01(elapsed / duration);
                 float eased = EaseOutBack(progress);
-                rootCanvasGroup.alpha = Mathf.Clamp01(progress * 1.35f);
                 if (cardRect != null)
                     cardRect.localScale = Vector3.one * Mathf.LerpUnclamped(
                         panelStartScale, 1f, eased);
@@ -258,7 +259,7 @@ namespace MiningSimulator.Ores
             rootCanvasGroup ??= GetOrAdd<CanvasGroup>(gameObject);
             rootCanvasGroup.interactable = false;
             rootCanvasGroup.blocksRaycasts = false;
-            float startAlpha = rootCanvasGroup.alpha;
+            rootCanvasGroup.alpha = 1f;
             Vector3 startScale = cardRect != null ? cardRect.localScale : Vector3.one;
             float duration = Mathf.Max(0.01f, panelCloseDuration);
 
@@ -266,7 +267,6 @@ namespace MiningSimulator.Ores
             {
                 float progress = Mathf.Clamp01(elapsed / duration);
                 float eased = progress * progress;
-                rootCanvasGroup.alpha = Mathf.Lerp(startAlpha, 0f, eased);
                 if (cardRect != null)
                     cardRect.localScale = Vector3.Lerp(startScale,
                         Vector3.one * panelStartScale, eased);
@@ -288,26 +288,25 @@ namespace MiningSimulator.Ores
             }
 
             cardCanvasGroup ??= GetOrAdd<CanvasGroup>(cardRect.gameObject);
+            cardCanvasGroup.alpha = 1f;
             cardCanvasGroup.interactable = false;
             float outDuration = Mathf.Max(0.01f, pageFadeOutDuration);
             for (float elapsed = 0f; elapsed < outDuration; elapsed += Time.unscaledDeltaTime)
             {
                 float progress = Smooth01(elapsed / outDuration);
-                cardCanvasGroup.alpha = Mathf.Lerp(1f, 0.35f, progress);
                 cardRect.localScale = Vector3.one * Mathf.Lerp(1f, pageSwapScale, progress);
                 yield return null;
             }
 
             showingSellPage = !showingSellPage;
             RenderCurrentPage();
-            cardCanvasGroup.alpha = 0.35f;
+            cardCanvasGroup.alpha = 1f;
             cardRect.localScale = Vector3.one * pageSwapScale;
 
             float inDuration = Mathf.Max(0.01f, pageFadeInDuration);
             for (float elapsed = 0f; elapsed < inDuration; elapsed += Time.unscaledDeltaTime)
             {
                 float progress = Smooth01(elapsed / inDuration);
-                cardCanvasGroup.alpha = Mathf.Lerp(0.35f, 1f, progress);
                 cardRect.localScale = Vector3.one * Mathf.Lerp(pageSwapScale, 1f, progress);
                 yield return null;
             }
