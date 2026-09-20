@@ -46,6 +46,14 @@ namespace MiningSimulator.Ores
         [Min(1f), SerializeField] private float baseMoneyValue = 30f;
         [Min(1f), SerializeField] private float baseGemValue = 1f;
 
+        [Header("Offer Stock Per Restock")]
+        [Tooltip("Maximum number of times a Common offer can be bought or sold before restocking.")]
+        [Min(1), SerializeField] private int commonStock = 8;
+        [Min(1), SerializeField] private int uncommonStock = 6;
+        [Min(1), SerializeField] private int rareStock = 4;
+        [Min(1), SerializeField] private int epicStock = 2;
+        [Min(1), SerializeField] private int legendaryStock = 1;
+
         private readonly List<MiningItemData> eligibleItems = new();
         private readonly List<MiningItemData> sellCandidates = new();
         private OreSpawner oreSpawner;
@@ -327,8 +335,21 @@ namespace MiningSimulator.Ores
                 price = perItem * amount;
             }
             price = Mathf.Max(1f, Mathf.Round(price));
-            offer = new TraderOffer(item, amount, price, currency, TraderOfferType.BuyItem);
+            offer = new TraderOffer(item, amount, price, currency,
+                TraderOfferType.BuyItem, GetStockForRarity(item.Rarity));
             return true;
+        }
+
+        private int GetStockForRarity(MiningItemRarity rarity)
+        {
+            return rarity switch
+            {
+                MiningItemRarity.Legendary => legendaryStock,
+                MiningItemRarity.Epic => epicStock,
+                MiningItemRarity.Rare => rareStock,
+                MiningItemRarity.Uncommon => uncommonStock,
+                _ => commonStock
+            };
         }
 
         private int RollOfferAmount(MiningItemData item, int owned = int.MaxValue)
@@ -353,7 +374,8 @@ namespace MiningSimulator.Ores
 
         private bool CanAcceptOffer(TraderOffer offer)
         {
-            if (itemSystem == null || wallet == null || offer.Item == null)
+            if (itemSystem == null || wallet == null || offer == null ||
+                offer.Item == null || offer.IsOutOfStock)
             {
                 return false;
             }
@@ -372,7 +394,7 @@ namespace MiningSimulator.Ores
 
         private bool TryAcceptOffer(TraderOffer offer)
         {
-            if (itemSystem == null || wallet == null)
+            if (!CanAcceptOffer(offer))
             {
                 return false;
             }
@@ -399,7 +421,7 @@ namespace MiningSimulator.Ores
                     return false;
                 wallet.AddGems(offer.Price);
             }
-            return true;
+            return offer.TryConsumeStock();
         }
 
         private void RefreshOffer()
@@ -458,7 +480,8 @@ namespace MiningSimulator.Ores
                     item.TraderGemSellMaximum, rarityStep * baseGemValue);
                 float gems = Mathf.Max(1f, Mathf.Round(value * amount));
                 currentSellOffers.Add(new TraderOffer(item, amount, gems,
-                    TraderCurrency.Gem, TraderOfferType.SellItem));
+                    TraderCurrency.Gem, TraderOfferType.SellItem,
+                    GetStockForRarity(item.Rarity)));
             }
         }
 
@@ -480,6 +503,11 @@ namespace MiningSimulator.Ores
             offerRefreshSeconds = Mathf.Max(1f, offerRefreshSeconds);
             baseMoneyValue = Mathf.Max(1f, baseMoneyValue);
             baseGemValue = Mathf.Max(1f, baseGemValue);
+            legendaryStock = Mathf.Max(1, legendaryStock);
+            epicStock = Mathf.Max(legendaryStock + 1, epicStock);
+            rareStock = Mathf.Max(epicStock + 1, rareStock);
+            uncommonStock = Mathf.Max(rareStock + 1, uncommonStock);
+            commonStock = Mathf.Max(uncommonStock + 1, commonStock);
             destinationAttempts = Mathf.Max(1, destinationAttempts);
         }
 
@@ -607,16 +635,18 @@ namespace MiningSimulator.Ores
             SellItem = 1
         }
 
-        public readonly struct TraderOffer
+        public sealed class TraderOffer
         {
             public TraderOffer(MiningItemData item, int itemAmount, float price,
-                TraderCurrency currency, TraderOfferType offerType)
+                TraderCurrency currency, TraderOfferType offerType, int maximumStock)
             {
                 Item = item;
                 ItemAmount = itemAmount;
                 Price = price;
                 Currency = currency;
                 OfferType = offerType;
+                MaximumStock = Mathf.Max(1, maximumStock);
+                RemainingStock = MaximumStock;
             }
 
             public MiningItemData Item { get; }
@@ -624,6 +654,20 @@ namespace MiningSimulator.Ores
             public float Price { get; }
             public TraderCurrency Currency { get; }
             public TraderOfferType OfferType { get; }
+            public int MaximumStock { get; }
+            public int RemainingStock { get; private set; }
+            public bool IsOutOfStock => RemainingStock <= 0;
+
+            public bool TryConsumeStock()
+            {
+                if (IsOutOfStock)
+                {
+                    return false;
+                }
+
+                RemainingStock--;
+                return true;
+            }
         }
     }
 }

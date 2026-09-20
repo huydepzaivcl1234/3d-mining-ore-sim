@@ -407,7 +407,6 @@ namespace MiningSimulator.Ores
                     view.ReceiveValue, offer.Item.InventoryIcon, offer.Item.IconFallback,
                     TraderText("TRADER_RECEIVE", "RECEIVE"),
                     $"{offer.Item.DisplayName} x{offer.ItemAmount}");
-                SetButtonLabel(view.ActionButton, TraderText("TRADER_BUY", "BUY"));
             }
             else
             {
@@ -419,9 +418,17 @@ namespace MiningSimulator.Ores
                     view.ReceiveValue, gemIcon, TraderText("TRADER_GEM", "GEM"),
                     TraderText("TRADER_RECEIVE", "RECEIVE"),
                     $"{TraderText("TRADER_GEM", "GEM")} {FormatAmount(offer.Price)}");
-                SetButtonLabel(view.ActionButton, TraderText("TRADER_SELL", "SELL"));
             }
+            SetButtonLabel(view.ActionButton, GetOfferActionLabel(offer));
             if (view.Arrow != null) view.Arrow.text = ">";
+        }
+
+        private static string GetOfferActionLabel(WanderingTraderSystem.TraderOffer offer)
+        {
+            string action = offer.OfferType == WanderingTraderSystem.TraderOfferType.BuyItem
+                ? TraderText("TRADER_BUY", "BUY")
+                : TraderText("TRADER_SELL", "SELL");
+            return $"{action}  {offer.RemainingStock}/{offer.MaximumStock}";
         }
 
         private static void SetWell(Image icon, TMP_Text fallback, TMP_Text heading,
@@ -447,7 +454,8 @@ namespace MiningSimulator.Ores
         {
             if (acceptOfferAction != null && acceptOfferAction(offer))
             {
-                Hide();
+                RefreshBalance();
+                RenderCurrentPage();
                 return;
             }
             if (feedbackText != null)
@@ -477,6 +485,7 @@ namespace MiningSimulator.Ores
                 if (view?.ActionButton == null || !view.Root.activeSelf) continue;
                 bool canTrade = canAcceptOfferAction == null || canAcceptOfferAction(view.Offer);
                 view.ActionButton.interactable = canTrade;
+                SetButtonLabel(view.ActionButton, GetOfferActionLabel(view.Offer));
                 if (view.ActionBackground != null)
                     view.ActionBackground.color = canTrade ? Green : DisabledGreen;
                 if (view.ActionLabel != null)
