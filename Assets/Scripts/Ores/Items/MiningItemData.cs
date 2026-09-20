@@ -89,6 +89,10 @@ namespace MiningSimulator.Ores
         [Range(0f, 100f), SerializeField] private float selectionChancePercent = 33.33f;
         [Range(1, 64), SerializeField] private int maximumStack = 64;
 
+        [Header("Wandering Trader Values")]
+        [Min(0f), SerializeField] private float traderBuyValue = 25f;
+        [Min(0f), SerializeField] private float traderSellValue = 15f;
+
         [Header("Use")]
         [SerializeField] private MiningItemUseType useType = MiningItemUseType.TimedEffect;
 
@@ -116,6 +120,8 @@ namespace MiningSimulator.Ores
         public Vector3 ModelLocalEulerAngles => modelLocalEulerAngles;
         public float SelectionChancePercent => selectionChancePercent;
         public int MaximumStack => maximumStack;
+        public float TraderBuyValue => traderBuyValue;
+        public float TraderSellValue => traderSellValue;
         public MiningItemUseType UseType => useType;
         public MiningItemEffectType EffectType => effectType;
         public float EffectPercent => effectPercent;
@@ -204,6 +210,8 @@ namespace MiningSimulator.Ores
                 displayName = name;
             }
             maximumStack = Mathf.Clamp(maximumStack, 1, 64);
+            traderBuyValue = Mathf.Max(0f, traderBuyValue);
+            traderSellValue = Mathf.Max(0f, traderSellValue);
             selectionChancePercent = Mathf.Clamp(selectionChancePercent, 0f, 100f);
             effectPercent = Mathf.Max(0f, effectPercent);
             effectDurationSeconds = Mathf.Max(0.1f, effectDurationSeconds);

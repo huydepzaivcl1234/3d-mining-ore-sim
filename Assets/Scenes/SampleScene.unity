@@ -42953,9 +42953,11 @@ MonoBehaviour:
   miningAreaPadding: 4
   destinationAttempts: 24
   maximumItemsRequested: 3
+  offerCount: 3
   offerRefreshSeconds: 60
   baseMoneyValue: 30
   baseGemValue: 1
+  sceneTrader: {fileID: 1056186110}
 --- !u!4 &939271481
 Transform:
   m_ObjectHideFlags: 0
@@ -42965,7 +42967,7 @@ Transform:
   m_GameObject: {fileID: 939271479}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 35.9}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -48564,6 +48566,17 @@ MonoBehaviour:
   m_EffectColor: {r: 0.24, g: 0.18, b: 0.12, a: 1}
   m_EffectDistance: {x: 1.8, y: -1.8}
   m_UseGraphicAlpha: 1
+--- !u!114 &1056186110 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: -7352229535592786382, guid: 9044a6a3adaeb794f8f305d8bb876487, type: 3}
+  m_PrefabInstance: {fileID: 2064017330}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 771c298cafed53e49b13a489ebfbbb57, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.WanderingTraderAgent
 --- !u!1 &1059887218
 GameObject:
   m_ObjectHideFlags: 0
@@ -94155,6 +94168,63 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningButtonSfx
   audioManager: {fileID: 2127211622}
+--- !u!1001 &2064017330
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 2496966258743808721, guid: 9044a6a3adaeb794f8f305d8bb876487, type: 3}
+      propertyPath: m_Name
+      value: Wander
+      objectReference: {fileID: 0}
+    - target: {fileID: 2959469947840653621, guid: 9044a6a3adaeb794f8f305d8bb876487, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -13.078805
+      objectReference: {fileID: 0}
+    - target: {fileID: 2959469947840653621, guid: 9044a6a3adaeb794f8f305d8bb876487, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -0.00000047683716
+      objectReference: {fileID: 0}
+    - target: {fileID: 2959469947840653621, guid: 9044a6a3adaeb794f8f305d8bb876487, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 18.751524
+      objectReference: {fileID: 0}
+    - target: {fileID: 2959469947840653621, guid: 9044a6a3adaeb794f8f305d8bb876487, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.026353873
+      objectReference: {fileID: 0}
+    - target: {fileID: 2959469947840653621, guid: 9044a6a3adaeb794f8f305d8bb876487, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2959469947840653621, guid: 9044a6a3adaeb794f8f305d8bb876487, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0.9996527
+      objectReference: {fileID: 0}
+    - target: {fileID: 2959469947840653621, guid: 9044a6a3adaeb794f8f305d8bb876487, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2959469947840653621, guid: 9044a6a3adaeb794f8f305d8bb876487, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2959469947840653621, guid: 9044a6a3adaeb794f8f305d8bb876487, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 176.98
+      objectReference: {fileID: 0}
+    - target: {fileID: 2959469947840653621, guid: 9044a6a3adaeb794f8f305d8bb876487, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 9044a6a3adaeb794f8f305d8bb876487, type: 3}
 --- !u!1 &2064186785
 GameObject:
   m_ObjectHideFlags: 0
@@ -110416,3 +110486,4 @@ SceneRoots:
   - {fileID: 566203702}
   - {fileID: 1293138317}
   - {fileID: 939271481}
+  - {fileID: 2064017330}

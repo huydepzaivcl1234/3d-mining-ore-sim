@@ -38,6 +38,7 @@ namespace MiningSimulator.Ores
 
         [Header("Offers")]
         [Range(1, 8), SerializeField] private int maximumItemsRequested = 3;
+        [Range(1, 8), SerializeField] private int offerCount = 3;
         [Min(1f), SerializeField] private float offerRefreshSeconds = 60f;
         [Min(1f), SerializeField] private float baseMoneyValue = 30f;
         [Min(1f), SerializeField] private float baseGemValue = 1f;
@@ -47,10 +48,13 @@ namespace MiningSimulator.Ores
         private MiningItemSystem itemSystem;
         private PlayerWallet wallet;
         private WanderingTraderAgent trader;
+        [SerializeField] private WanderingTraderAgent sceneTrader;
         private WanderingTraderPanel panel;
-        private TraderOffer currentOffer;
+        private readonly List<TraderOffer> currentOffers = new();
         private float nextOfferRefreshTime;
         private bool hasCurrentOffer;
+        public IReadOnlyList<TraderOffer> CurrentOffers => currentOffers;
+        public float OfferSecondsRemaining => Mathf.Max(0f, nextOfferRefreshTime - Time.time);
 
         public static void EnsureRuntime(NpcShop shop)
         {
@@ -88,8 +92,22 @@ namespace MiningSimulator.Ores
 
         private void Start()
         {
+            if (sceneTrader != null)
+            {
+                trader = sceneTrader;
+                trader.Initialize(this);
+                RefreshOffer();
+                return;
+            }
             SpawnTrader();
             RefreshOffer();
+        }
+
+        public GameObject TraderModelPrefab => traderModelPrefab;
+
+        public void AssignSceneTrader(WanderingTraderAgent value)
+        {
+            sceneTrader = value;
         }
 
         private void Update()
@@ -119,8 +137,7 @@ namespace MiningSimulator.Ores
                 return false;
             }
 
-            TraderOffer visibleOffer = currentOffer;
-            panel.Show(visibleOffer, () => TryAcceptOffer(visibleOffer),
+            panel.Show(currentOffers, OfferSecondsRemaining, offer => TryAcceptOffer(offer),
                 () => HandleTradeClosed(trader));
             trader.SetTrading(true);
             return true;
@@ -299,30 +316,45 @@ namespace MiningSimulator.Ores
             MiningItemData requestedItem = eligibleItems[UnityEngine.Random.Range(0,
                 eligibleItems.Count)];
             int amount = UnityEngine.Random.Range(1, maximumItemsRequested + 1);
-            bool paysGems = UnityEngine.Random.value < 0.5f;
+            bool traderSellsItem = UnityEngine.Random.value < 0.5f;
+            bool paysGems = false;
             int rarityStep = (int)requestedItem.Rarity + 1;
-            float reward = paysGems
-                ? Mathf.Max(1f, Mathf.Round(rarityStep * baseGemValue * amount))
-                : Mathf.Max(1f, Mathf.Round(rarityStep * baseMoneyValue * amount));
-            offer = new TraderOffer(requestedItem, amount, reward, paysGems);
+            float configuredValue = traderSellsItem
+                ? requestedItem.TraderBuyValue
+                : requestedItem.TraderSellValue;
+            float fallbackValue = traderSellsItem
+                ? rarityStep * baseMoneyValue
+                : rarityStep * baseMoneyValue;
+            float reward = Mathf.Max(1f, Mathf.Round((configuredValue > 0f ? configuredValue : fallbackValue) * amount));
+            offer = new TraderOffer(requestedItem, amount, reward, paysGems, traderSellsItem);
             return true;
         }
 
         private bool TryAcceptOffer(TraderOffer offer)
         {
-            if (itemSystem == null || wallet == null || !itemSystem.TryRemoveItem(offer.Item,
-                offer.ItemAmount))
+            if (itemSystem == null || wallet == null)
             {
                 return false;
             }
 
-            if (offer.PaysGems)
+            if (offer.TraderSellsItem)
             {
-                wallet.AddGems(offer.RewardAmount);
+                if (!wallet.TrySpend(offer.RewardAmount))
+                {
+                    return false;
+                }
+                if (!itemSystem.TryAddItem(offer.Item, offer.ItemAmount))
+                {
+                    wallet.AddMoney(offer.RewardAmount);
+                    return false;
+                }
             }
             else
             {
-                wallet.AddMoney(offer.RewardAmount);
+                if (!itemSystem.TryRemoveItem(offer.Item, offer.ItemAmount))
+                    return false;
+                if (offer.PaysGems) wallet.AddGems(offer.RewardAmount);
+                else wallet.AddMoney(offer.RewardAmount);
             }
             RefreshOffer();
             return true;
@@ -330,13 +362,20 @@ namespace MiningSimulator.Ores
 
         private void RefreshOffer()
         {
-            hasCurrentOffer = TryCreateOffer(out currentOffer);
+            currentOffers.Clear();
+            for (int index = 0; index < Mathf.Max(1, offerCount); index++)
+            {
+                if (TryCreateOffer(out TraderOffer offer))
+                    currentOffers.Add(offer);
+            }
+            hasCurrentOffer = currentOffers.Count > 0;
             nextOfferRefreshTime = Time.time + Mathf.Max(1f, offerRefreshSeconds);
         }
 
         private void OnValidate()
         {
             maximumItemsRequested = Mathf.Max(1, maximumItemsRequested);
+            offerCount = Mathf.Max(1, offerCount);
             offerRefreshSeconds = Mathf.Max(1f, offerRefreshSeconds);
             baseMoneyValue = Mathf.Max(1f, baseMoneyValue);
             baseGemValue = Mathf.Max(1f, baseGemValue);
@@ -458,18 +497,20 @@ namespace MiningSimulator.Ores
         public readonly struct TraderOffer
         {
             public TraderOffer(MiningItemData item, int itemAmount, float rewardAmount,
-                bool paysGems)
+                bool paysGems, bool traderSellsItem = false)
             {
                 Item = item;
                 ItemAmount = itemAmount;
                 RewardAmount = rewardAmount;
                 PaysGems = paysGems;
+                TraderSellsItem = traderSellsItem;
             }
 
             public MiningItemData Item { get; }
             public int ItemAmount { get; }
             public float RewardAmount { get; }
             public bool PaysGems { get; }
+            public bool TraderSellsItem { get; }
         }
     }
 }
