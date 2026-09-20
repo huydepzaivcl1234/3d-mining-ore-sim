@@ -327,7 +327,6 @@ namespace MiningSimulator.Ores
             }
 
             Vector3 standPosition = GetReservedStandPosition();
-            UpdateGlobalPath(currentPosition, standPosition);
             Vector3 oreOffset = GetTargetPosition() - currentPosition;
             oreOffset.y = 0f;
             desiredFacingDirection = oreOffset;
@@ -340,10 +339,14 @@ namespace MiningSimulator.Ores
                 SetMiningAnimationState(false);
                 desiredMoveTarget = standPosition;
                 hasMoveTarget = true;
+                UpdateGlobalPath(currentPosition, standPosition);
                 TrackMovementProgress(currentPosition);
                 return;
             }
 
+            // Do not keep an old route alive once this miner is already close enough to mine.
+            // A stale final waypoint can otherwise pull it away from its assigned ore slot.
+            ResetGlobalPath();
             ResetProgressTracking();
             SetMiningAnimationState(true);
         }

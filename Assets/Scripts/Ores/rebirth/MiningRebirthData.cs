@@ -9,11 +9,14 @@ namespace MiningSimulator.Ores
         [Min(1), SerializeField] private int startingMoneyRequirement = 1000;
         [Min(1f), SerializeField] private float requirementGrowthMultiplier = 2f;
         [Min(0f), SerializeField] private float moneyBoostPercentPerRebirth = 10f;
+        [Tooltip("Permanent ore-damage bonus granted by each completed Rebirth.")]
+        [Min(0f), SerializeField] private float miningStrengthBoostPercentPerRebirth = 10f;
         [SerializeField] private string rebirthCountSaveKey = "MiningSimulator.RebirthCount.v1";
 
         public int StartingMoneyRequirement => startingMoneyRequirement;
         public float RequirementGrowthMultiplier => requirementGrowthMultiplier;
         public float MoneyBoostPercentPerRebirth => moneyBoostPercentPerRebirth;
+        public float MiningStrengthBoostPercentPerRebirth => miningStrengthBoostPercentPerRebirth;
         public string RebirthCountSaveKey => rebirthCountSaveKey;
 
         public int GetRequirement(int completedRebirths)
@@ -30,11 +33,19 @@ namespace MiningSimulator.Ores
             return 1f + Mathf.Max(0, completedRebirths) * moneyBoostPercentPerRebirth * 0.01f;
         }
 
+        public float GetMiningStrengthMultiplier(int completedRebirths)
+        {
+            return 1f + Mathf.Max(0, completedRebirths) *
+                miningStrengthBoostPercentPerRebirth * 0.01f;
+        }
+
         private void OnValidate()
         {
             startingMoneyRequirement = Mathf.Max(1, startingMoneyRequirement);
             requirementGrowthMultiplier = Mathf.Max(1f, requirementGrowthMultiplier);
             moneyBoostPercentPerRebirth = Mathf.Max(0f, moneyBoostPercentPerRebirth);
+            miningStrengthBoostPercentPerRebirth =
+                Mathf.Max(0f, miningStrengthBoostPercentPerRebirth);
             if (string.IsNullOrWhiteSpace(rebirthCountSaveKey))
             {
                 rebirthCountSaveKey = "MiningSimulator.RebirthCount.v1";

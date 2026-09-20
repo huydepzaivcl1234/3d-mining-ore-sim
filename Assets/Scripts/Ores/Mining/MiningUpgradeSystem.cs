@@ -24,6 +24,7 @@ namespace MiningSimulator.Ores
 
         private float permanentMoneyMultiplier = 1f;
         private float permanentExperienceMultiplier = 1f;
+        private float permanentMiningStrengthMultiplier = 1f;
         private float achievementMoneyMultiplier = 1f;
         private float achievementExperienceMultiplier = 1f;
 
@@ -33,6 +34,8 @@ namespace MiningSimulator.Ores
         public float PermanentMoneyMultiplier => permanentMoneyMultiplier * achievementMoneyMultiplier;
         public float PermanentExperienceMultiplier =>
             permanentExperienceMultiplier * achievementExperienceMultiplier;
+        /// <summary>Permanent Rebirth multiplier for all ore damage, including NPC mining.</summary>
+        public float PermanentMiningStrengthMultiplier => permanentMiningStrengthMultiplier;
         public float AchievementMoneyMultiplier => achievementMoneyMultiplier;
         public float AchievementExperienceMultiplier => achievementExperienceMultiplier;
 
@@ -138,7 +141,10 @@ namespace MiningSimulator.Ores
             }
 
             MiningUpgradeDefinition definition = upgradeData.GetDefinition(type);
-            return 1f + definition.PercentPerStack * GetStacks(type) * 0.01f;
+            float multiplier = 1f + definition.PercentPerStack * GetStacks(type) * 0.01f;
+            return type == MiningUpgradeType.OreDamage
+                ? multiplier * PermanentMiningStrengthMultiplier
+                : multiplier;
         }
 
         public float GetAddedPercent(MiningUpgradeType type)
@@ -188,6 +194,19 @@ namespace MiningSimulator.Ores
         public void SetPermanentExperienceMultiplier(float multiplier)
         {
             permanentExperienceMultiplier = Mathf.Max(1f, multiplier);
+        }
+
+        /// <summary>Applies the permanent mining-strength bonus earned from Rebirth.</summary>
+        public void SetPermanentMiningStrengthMultiplier(float multiplier)
+        {
+            float safeMultiplier = Mathf.Max(1f, multiplier);
+            if (Mathf.Approximately(permanentMiningStrengthMultiplier, safeMultiplier))
+            {
+                return;
+            }
+
+            permanentMiningStrengthMultiplier = safeMultiplier;
+            UpgradesChanged?.Invoke();
         }
 
         /// <summary>Applies the cumulative permanent rewards earned from achievements.</summary>

@@ -15,4 +15,5 @@ MonoBehaviour:
   startingMoneyRequirement: 5000
   requirementGrowthMultiplier: 2.5
   moneyBoostPercentPerRebirth: 25
+  miningStrengthBoostPercentPerRebirth: 25
   rebirthCountSaveKey: MiningSimulator.RebirthCount.v1
