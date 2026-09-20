@@ -11,6 +11,7 @@ namespace MiningSimulator.Ores
         private WanderingTraderSystem owner;
         private bool isTrading;
         private Animator animator;
+        private Rigidbody body;
 
         public string InteractionLabel => MiningLocalization.Text("WANDERING TRADER", "THƯƠNG NHÂN LANG THANG");
         public bool CanInteract => owner != null && !isTrading;
@@ -19,6 +20,7 @@ namespace MiningSimulator.Ores
         {
             owner = traderSystem;
             animator = GetComponentInChildren<Animator>(true);
+            body = GetComponent<Rigidbody>();
         }
 
         private void Update()
@@ -29,8 +31,8 @@ namespace MiningSimulator.Ores
 
         private void FixedUpdate()
         {
-            // The merchant is intentionally stationary. This prevents route jitter and keeps
-            // the interaction target reliable while an offer is viewed.
+            // The merchant is intentionally stationary. This prevents route jitter and makes
+            // the interaction target reliable while an offer is being viewed.
         }
 
         private void OnMouseDown()

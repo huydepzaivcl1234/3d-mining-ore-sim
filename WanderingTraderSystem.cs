@@ -6,7 +6,8 @@ namespace MiningSimulator.Ores
 {
     /// <summary>
     /// Creates one stationary civilian trader from the existing humanoid miner prefab. The trader
-    /// stays outside the ore spawn area and owns one item-for-currency offer at a time.
+    /// stays outside the ore spawn area and owns one item-for-currency offer at a time. This
+    /// component is added at runtime by NpcShop so no Shop UI layout needs to be changed.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class WanderingTraderSystem : MonoBehaviour
@@ -119,6 +120,8 @@ namespace MiningSimulator.Ores
                 return false;
             }
 
+            // Keep this panel tied to the visible offer. A timer refresh while the panel is
+            // open must not make the Trade button spend a different item than the one shown.
             TraderOffer visibleOffer = currentOffer;
             panel.Show(visibleOffer, () => TryAcceptOffer(visibleOffer),
                 () => HandleTradeClosed(trader));
