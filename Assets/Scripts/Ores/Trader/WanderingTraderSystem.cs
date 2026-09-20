@@ -117,8 +117,8 @@ namespace MiningSimulator.Ores
                 RefreshOffer();
                 if (panel != null && panel.IsOpen)
                 {
-                    panel.Show(currentOffers, OfferSecondsRemaining, offer => TryAcceptOffer(offer),
-                        () => HandleTradeClosed(trader));
+                    panel.Show(currentOffers, OfferSecondsRemaining, CanAcceptOffer,
+                        TryAcceptOffer, () => HandleTradeClosed(trader));
                 }
             }
         }
@@ -142,8 +142,8 @@ namespace MiningSimulator.Ores
                 return false;
             }
 
-            panel.Show(currentOffers, OfferSecondsRemaining, offer => TryAcceptOffer(offer),
-                () => HandleTradeClosed(trader));
+            panel.Show(currentOffers, OfferSecondsRemaining, CanAcceptOffer,
+                TryAcceptOffer, () => HandleTradeClosed(trader));
             trader.SetTrading(true);
             return true;
         }
@@ -333,6 +333,22 @@ namespace MiningSimulator.Ores
             float reward = Mathf.Max(1f, Mathf.Round((configuredValue > 0f ? configuredValue : fallbackValue) * amount));
             offer = new TraderOffer(requestedItem, amount, reward, paysGems, traderSellsItem);
             return true;
+        }
+
+        private bool CanAcceptOffer(TraderOffer offer)
+        {
+            if (itemSystem == null || wallet == null || offer.Item == null)
+            {
+                return false;
+            }
+
+            if (offer.TraderSellsItem)
+            {
+                return wallet.CurrentMoney >= offer.RewardAmount &&
+                       itemSystem.CanAddItem(offer.Item, offer.ItemAmount);
+            }
+
+            return itemSystem.GetItemCount(offer.Item) >= offer.ItemAmount;
         }
 
         private bool TryAcceptOffer(TraderOffer offer)
