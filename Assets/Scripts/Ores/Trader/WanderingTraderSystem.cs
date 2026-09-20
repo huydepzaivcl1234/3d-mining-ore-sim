@@ -115,6 +115,11 @@ namespace MiningSimulator.Ores
             if (Time.time >= nextOfferRefreshTime)
             {
                 RefreshOffer();
+                if (panel != null && panel.IsOpen)
+                {
+                    panel.Show(currentOffers, OfferSecondsRemaining, offer => TryAcceptOffer(offer),
+                        () => HandleTradeClosed(trader));
+                }
             }
         }
 

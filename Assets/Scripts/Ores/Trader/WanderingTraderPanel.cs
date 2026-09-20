@@ -19,11 +19,17 @@ namespace MiningSimulator.Ores
         private readonly List<GameObject> offerRows = new();
         private float resetAt;
         private bool isOpen;
+        public bool IsOpen => isOpen;
 
         private void Awake()
         {
             BindButtons();
             ApplyShopStyle();
+        }
+
+        private void OnEnable()
+        {
+            BindButtons();
         }
 
         public static WanderingTraderPanel EnsureRuntime()
@@ -87,7 +93,10 @@ namespace MiningSimulator.Ores
         private void UpdateCountdown()
         {
             if (feedbackText != null)
-                feedbackText.text = $"OFFERS RESET IN {Mathf.CeilToInt(Mathf.Max(0f, resetAt - Time.unscaledTime))}s";
+            {
+                int remaining = Mathf.CeilToInt(Mathf.Max(0f, resetAt - Time.unscaledTime));
+                feedbackText.text = $"RESTOCK IN {remaining / 60:00}:{remaining % 60:00}";
+            }
         }
 
         private void CreateOfferRow(Transform parent, WanderingTraderSystem.TraderOffer offer, int index)
@@ -97,28 +106,86 @@ namespace MiningSimulator.Ores
             RectTransform rect = row.GetComponent<RectTransform>();
             rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
             rect.pivot = new Vector2(0.5f, 0.5f);
-            rect.anchoredPosition = new Vector2(0f, 72f - index * 62f);
-            rect.sizeDelta = new Vector2(540f, 54f);
+            rect.anchoredPosition = new Vector2(0f, 82f - index * 124f);
+            rect.sizeDelta = new Vector2(900f, 108f);
             Image image = row.AddComponent<Image>();
-            image.color = new Color(0.1f, 0.1f, 0.1f, 0.96f);
+            image.color = new Color(0.09f, 0.025f, 0.008f, 0.98f);
             Button button = row.AddComponent<Button>();
             button.onClick.AddListener(() =>
             {
                 if (acceptOfferAction != null && acceptOfferAction(offer)) Hide();
                 else if (feedbackText != null) feedbackText.text = "You cannot complete this trade.";
             });
-            TMP_Text label = CreateLabel("Offer Text", row.transform, FormatOffer(offer), 19f,
-                Vector2.zero, rect.sizeDelta, Color.white);
-            label.alignment = TextAlignmentOptions.Center;
+            CreateOfferWell(row.transform, "Give Well", new Vector2(-245f, 0f),
+                offer.TraderSellsItem ? "GIVE" : "GIVE",
+                offer.TraderSellsItem ? "MONEY" : offer.Item.DisplayName,
+                offer.TraderSellsItem ? MiningMoneyFormatter.Format(offer.RewardAmount) : $"x{offer.ItemAmount}",
+                offer.TraderSellsItem ? null : GetItemIcon(offer.Item), new Color(0.56f, 0.22f, 0.06f));
+            CreateLabel("Arrow", row.transform, ">", 40f, new Vector2(-22f, 0f),
+                new Vector2(52f, 56f), new Color(1f, 0.78f, 0.27f));
+            CreateOfferWell(row.transform, "Receive Well", new Vector2(165f, 0f),
+                "RECEIVE",
+                offer.TraderSellsItem ? offer.Item.DisplayName : (offer.PaysGems ? "GEMS" : "MONEY"),
+                offer.TraderSellsItem ? $"x{offer.ItemAmount}" : FormatCurrencyAmount(offer),
+                offer.TraderSellsItem ? GetItemIcon(offer.Item) : null, new Color(0.75f, 0.45f, 0.08f));
+
+            Button trade = CreateButton("Trade Button", row.transform, "TRADE",
+                new Vector2(356f, 0f), new Color(0.08f, 0.45f, 0.16f));
+            RectTransform tradeRect = trade.GetComponent<RectTransform>();
+            tradeRect.sizeDelta = new Vector2(140f, 62f);
+            trade.onClick.AddListener(() =>
+            {
+                if (acceptOfferAction != null && acceptOfferAction(offer)) Hide();
+                else if (feedbackText != null) feedbackText.text = "You cannot complete this trade.";
+            });
         }
 
-        private static string FormatOffer(WanderingTraderSystem.TraderOffer offer)
+        private static void CreateOfferWell(Transform parent, string name, Vector2 position,
+            string heading, string itemName, string amount, Sprite icon, Color border)
         {
-            if (offer.TraderSellsItem)
-                return $"GIVE {MiningMoneyFormatter.Format(offer.RewardAmount)} MONEY   →   RECEIVE {offer.Item.DisplayName} x{offer.ItemAmount}";
-            string currency = offer.PaysGems ? "GEMS" : "MONEY";
-            string reward = offer.PaysGems ? offer.RewardAmount.ToString("0") : MiningMoneyFormatter.Format(offer.RewardAmount);
-            return $"GIVE {offer.Item.DisplayName} x{offer.ItemAmount}   →   RECEIVE {reward} {currency}";
+            GameObject well = CreateUiObject(name, parent);
+            RectTransform rect = well.GetComponent<RectTransform>();
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = position;
+            rect.sizeDelta = new Vector2(300f, 76f);
+            Image background = well.AddComponent<Image>();
+            background.color = new Color(0.035f, 0.01f, 0.003f, 1f);
+
+            GameObject iconObject = CreateUiObject("Icon", well.transform);
+            RectTransform iconRect = iconObject.GetComponent<RectTransform>();
+            iconRect.anchorMin = iconRect.anchorMax = new Vector2(0f, 0.5f);
+            iconRect.pivot = new Vector2(0f, 0.5f);
+            iconRect.anchoredPosition = new Vector2(12f, 0f);
+            iconRect.sizeDelta = new Vector2(58f, 58f);
+            Image iconImage = iconObject.AddComponent<Image>();
+            iconImage.sprite = icon;
+            iconImage.color = icon != null ? Color.white : border;
+            iconImage.preserveAspect = true;
+            if (icon == null)
+            {
+                TMP_Text currency = CreateLabel("Currency Mark", iconObject.transform,
+                    itemName == "GEMS" ? "G" : "M", 28f, Vector2.zero,
+                    iconRect.sizeDelta, Color.white);
+                currency.fontStyle = FontStyles.Bold;
+            }
+
+            TMP_Text giveReceive = CreateLabel("Heading", well.transform, heading, 13f,
+                new Vector2(-46f, 20f), new Vector2(180f, 24f), new Color(0.75f, 0.48f, 0.23f));
+            giveReceive.alignment = TextAlignmentOptions.Left;
+            TMP_Text value = CreateLabel("Value", well.transform, $"{itemName} {amount}", 20f,
+                new Vector2(-46f, -11f), new Vector2(210f, 32f), Color.white);
+            value.alignment = TextAlignmentOptions.Left;
+        }
+
+        private static string FormatCurrencyAmount(WanderingTraderSystem.TraderOffer offer) =>
+            offer.PaysGems ? offer.RewardAmount.ToString("0") : MiningMoneyFormatter.Format(offer.RewardAmount);
+
+        private static Sprite GetItemIcon(MiningItemData item)
+        {
+            if (item == null) return null;
+            var property = item.GetType().GetProperty("Icon");
+            return property?.GetValue(item) as Sprite;
         }
 
         private void ClearOfferRows()
@@ -171,9 +238,35 @@ namespace MiningSimulator.Ores
 
             Transform card = transform.Find("Offer Card");
             if (card == null) card = transform.Find("Trade Card");
+            RectTransform cardRect = card != null ? card.GetComponent<RectTransform>() : null;
+            if (cardRect != null) cardRect.sizeDelta = new Vector2(1000f, 660f);
             Image cardImage = card != null ? card.GetComponent<Image>() : null;
             if (cardImage != null)
                 cardImage.color = new Color(0.18f, 0.08f, 0.03f, 0.98f);
+            if (titleText != null)
+            {
+                RectTransform titleRect = titleText.rectTransform;
+                titleRect.anchoredPosition = new Vector2(-250f, 270f);
+                titleRect.sizeDelta = new Vector2(500f, 52f);
+                titleText.alignment = TextAlignmentOptions.Left;
+                titleText.fontSize = 29f;
+                titleText.color = new Color(1f, 0.87f, 0.58f);
+            }
+            if (feedbackText != null)
+            {
+                RectTransform timerRect = feedbackText.rectTransform;
+                timerRect.anchoredPosition = new Vector2(-275f, 205f);
+                timerRect.sizeDelta = new Vector2(360f, 36f);
+                feedbackText.alignment = TextAlignmentOptions.Left;
+                feedbackText.fontSize = 19f;
+                feedbackText.color = new Color(1f, 0.67f, 0.30f);
+            }
+            if (closeButton != null)
+            {
+                RectTransform closeRect = closeButton.GetComponent<RectTransform>();
+                closeRect.anchoredPosition = new Vector2(430f, 270f);
+                closeRect.sizeDelta = new Vector2(62f, 48f);
+            }
         }
 
         private static Canvas FindHudCanvas()

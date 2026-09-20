@@ -90,7 +90,9 @@ namespace MiningSimulator.Ores
         [Range(1, 64), SerializeField] private int maximumStack = 64;
 
         [Header("Wandering Trader Values")]
+        [Tooltip("Money the player pays the wandering trader to receive one of this item.")]
         [Min(0f), SerializeField] private float traderBuyValue = 25f;
+        [Tooltip("Money the player receives from the wandering trader for one of this item.")]
         [Min(0f), SerializeField] private float traderSellValue = 15f;
 
         [Header("Use")]
