@@ -25,6 +25,7 @@ namespace MiningSimulator.Ores
         private readonly HashSet<Ore> inactivePooledOres = new();
         private readonly HashSet<Ore> pendingPoolReturns = new();
         private readonly Queue<OreData> guaranteedOreQueue = new();
+        private readonly RaycastHit[] groundHitBuffer = new RaycastHit[32];
         private Coroutine spawnRoutine;
         private bool initialSpawnCompleted;
 
@@ -309,7 +310,7 @@ namespace MiningSimulator.Ores
                 }
             }
 
-            return true;
+            return MiningNpc.IsSpawnPositionClear(position, minimumSpacing);
         }
 
         private Ore TakeOreFromPool(OreData data, Transform parent)
@@ -524,15 +525,33 @@ namespace MiningSimulator.Ores
             if (spawnData.AlignToGround)
             {
                 Vector3 rayOrigin = world + Vector3.up * spawnData.GroundRayStartHeight;
-                if (Physics.Raycast(rayOrigin, Vector3.down, out RaycastHit hit,
-                    spawnData.GroundRayDistance, spawnData.GroundLayers, QueryTriggerInteraction.Ignore))
+                int hitCount = Physics.RaycastNonAlloc(rayOrigin, Vector3.down, groundHitBuffer,
+                    spawnData.GroundRayDistance, spawnData.GroundLayers,
+                    QueryTriggerInteraction.Ignore);
+                float closestDistance = float.PositiveInfinity;
+                for (int index = 0; index < hitCount; index++)
                 {
+                    RaycastHit hit = groundHitBuffer[index];
+                    if (hit.collider == null || hit.distance >= closestDistance ||
+                        IsDynamicSpawnBlocker(hit.collider))
+                    {
+                        continue;
+                    }
+
+                    closestDistance = hit.distance;
                     world = hit.point;
                 }
             }
 
             world.y += spawnData.HeightOffset;
             return world;
+        }
+
+        private static bool IsDynamicSpawnBlocker(Collider targetCollider)
+        {
+            return targetCollider.GetComponentInParent<MiningNpc>() != null ||
+                   targetCollider.GetComponentInParent<Ore>() != null ||
+                   targetCollider.GetComponentInParent<LuckyBlock>() != null;
         }
 
         private void HandleOreDepleted(Ore ore)

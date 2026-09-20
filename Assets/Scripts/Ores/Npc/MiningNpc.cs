@@ -326,7 +326,7 @@ namespace MiningSimulator.Ores
                 TryAdoptVisibleOre(currentPosition);
             }
 
-            Vector3 standPosition = GetReservedStandPosition();
+            Vector3 pathTarget = GetPathTargetPosition(currentPosition);
             Vector3 oreOffset = GetTargetPosition() - currentPosition;
             oreOffset.y = 0f;
             desiredFacingDirection = oreOffset;
@@ -337,9 +337,9 @@ namespace MiningSimulator.Ores
             if (!isWithinMiningRange)
             {
                 SetMiningAnimationState(false);
-                desiredMoveTarget = standPosition;
+                desiredMoveTarget = pathTarget;
                 hasMoveTarget = true;
-                UpdateGlobalPath(currentPosition, standPosition);
+                UpdateGlobalPath(currentPosition, pathTarget);
                 TrackMovementProgress(currentPosition);
                 return;
             }
@@ -690,7 +690,7 @@ namespace MiningSimulator.Ores
             ResetProgressTracking();
         }
 
-        private Vector3 GetReservedStandPosition()
+        private Vector3 GetPathTargetPosition(Vector3 currentPosition)
         {
             if (targetLuckyBlock != null)
             {
@@ -699,9 +699,42 @@ namespace MiningSimulator.Ores
             }
 
             return targetOre != null
-                ? targetOre.GetMiningStandPosition(
-                    reservedSlot, npcData.ColliderRadius, npcData.StandSlotSpacingPadding)
+                ? targetOre.GetClosestSurfacePoint(currentPosition)
                 : transform.position;
+        }
+
+        /// <summary>Prevents runtime ore placement on or directly beside an active miner.</summary>
+        public static bool IsSpawnPositionClear(Vector3 position, float clearance)
+        {
+            clearance = Mathf.Max(0f, clearance);
+            for (int index = ActiveNpcs.Count - 1; index >= 0; index--)
+            {
+                MiningNpc npc = ActiveNpcs[index];
+                if (npc == null)
+                {
+                    ActiveNpcs.RemoveAt(index);
+                    continue;
+                }
+
+                if (!npc.isActiveAndEnabled)
+                {
+                    continue;
+                }
+
+                Vector3 npcPosition = npc.body != null ? npc.body.position : npc.transform.position;
+                Vector3 offset = position - npcPosition;
+                offset.y = 0f;
+                float npcRadius = npc.npcData != null
+                    ? Mathf.Max(0f, npc.npcData.ColliderRadius)
+                    : 0.5f;
+                float requiredDistance = clearance + npcRadius;
+                if (offset.sqrMagnitude < requiredDistance * requiredDistance)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         private bool IsTargetValid()
@@ -1656,11 +1689,6 @@ namespace MiningSimulator.Ores
         private void RegisterNpcCollisionPairing()
         {
             capsule ??= GetComponent<CapsuleCollider>();
-            if (capsule == null || npcData == null || !npcData.IgnoreNpcPhysicalCollisions)
-            {
-                return;
-            }
-
             for (int index = ActiveNpcs.Count - 1; index >= 0; index--)
             {
                 MiningNpc other = ActiveNpcs[index];
@@ -1675,10 +1703,13 @@ namespace MiningSimulator.Ores
                     continue;
                 }
 
-                other.capsule ??= other.GetComponent<CapsuleCollider>();
-                if (other.capsule != null)
+                if (capsule != null && npcData != null && npcData.IgnoreNpcPhysicalCollisions)
                 {
-                    Physics.IgnoreCollision(capsule, other.capsule, true);
+                    other.capsule ??= other.GetComponent<CapsuleCollider>();
+                    if (other.capsule != null)
+                    {
+                        Physics.IgnoreCollision(capsule, other.capsule, true);
+                    }
                 }
             }
 

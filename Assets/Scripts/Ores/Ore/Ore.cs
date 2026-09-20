@@ -161,6 +161,46 @@ namespace MiningSimulator.Ores
             return offset.sqrMagnitude;
         }
 
+        /// <summary>
+        /// Returns the closest horizontal point on this ore's enabled mining colliders.
+        /// NPC navigation uses this as its final destination instead of an artificial
+        /// radial stand slot around the ore.
+        /// </summary>
+        public Vector3 GetClosestSurfacePoint(Vector3 worldPosition)
+        {
+            float closestDistance = float.PositiveInfinity;
+            Vector3 closestSurfacePoint = transform.position;
+            bool foundCollider = false;
+
+            foreach (Collider targetCollider in GetMiningColliders())
+            {
+                if (targetCollider == null || !targetCollider.enabled || targetCollider.isTrigger)
+                {
+                    continue;
+                }
+
+                Vector3 candidate = targetCollider.ClosestPoint(worldPosition);
+                candidate.y = worldPosition.y;
+                float sqrDistance = (candidate - worldPosition).sqrMagnitude;
+                if (sqrDistance >= closestDistance)
+                {
+                    continue;
+                }
+
+                closestDistance = sqrDistance;
+                closestSurfacePoint = candidate;
+                foundCollider = true;
+            }
+
+            if (!foundCollider)
+            {
+                closestSurfacePoint = transform.position;
+                closestSurfacePoint.y = worldPosition.y;
+            }
+
+            return closestSurfacePoint;
+        }
+
         public Vector3 GetWorldTopCenter()
         {
             bool hasBounds = false;
