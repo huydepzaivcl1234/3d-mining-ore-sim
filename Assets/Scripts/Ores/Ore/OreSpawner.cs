@@ -36,6 +36,20 @@ namespace MiningSimulator.Ores
         public MiningUpgradeSystem UpgradeSystem => upgradeSystem;
         public event System.Action<Ore, float> OreRewardGranted;
 
+        /// <summary>Copies immutable gameplay references for a second area spawner.</summary>
+        public void ConfigureAsAreaClone(OreSpawner source)
+        {
+            if (source == null) return;
+            wallet = source.wallet;
+            spawnData = source.spawnData;
+            upgradeSystem = source.upgradeSystem;
+            uiData = source.uiData;
+            rewardPopupPrefab = source.rewardPopupPrefab;
+            dayNightSystem = source.dayNightSystem;
+            progressionSystem = source.progressionSystem;
+            spawnedOreParent = transform;
+        }
+
         private void Awake()
         {
             if (progressionSystem == null)

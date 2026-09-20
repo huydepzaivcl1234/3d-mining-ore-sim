@@ -33,6 +33,13 @@ namespace MiningSimulator.Ores
         private float lastExperience;
         private int displayedPercent = -1;
 
+        public void SetOreSpawner(OreSpawner targetSpawner)
+        {
+            if (targetSpawner == null) return;
+            oreSpawner = targetSpawner;
+            Refresh();
+        }
+
         private void Awake()
         {
             if (cardTransform != null) restingScale = cardTransform.localScale;
@@ -131,8 +138,13 @@ namespace MiningSimulator.Ores
             if (powerLabelText != null) powerLabelText.text = MiningLocalization.Text(
                 "MINING POWER", "SỨC ĐÀO");
             if (powerValueText != null) powerValueText.text = power.ToString();
-            if (rewardLabelText != null) rewardLabelText.text = MiningLocalization.Text(
-                "NEXT ORE UNLOCK", "MỞ QUẶNG KẾ TIẾP");
+            MiningWorldAreaController areaController = FindFirstObjectByType<MiningWorldAreaController>(
+                FindObjectsInactive.Include);
+            bool underground = areaController != null &&
+                               areaController.CurrentArea == MiningWorldArea.Underground;
+            if (rewardLabelText != null) rewardLabelText.text = underground
+                ? MiningLocalization.Text("NEXT UNDERGROUND ORE", "QUẶNG LÒNG ĐẤT KẾ TIẾP")
+                : MiningLocalization.Text("NEXT ORE UNLOCK", "MỞ QUẶNG KẾ TIẾP");
             if (xpLabelText != null) xpLabelText.text = MiningLocalization.Text(
                 "WORK XP", "KINH NGHIỆM");
 
@@ -153,7 +165,10 @@ namespace MiningSimulator.Ores
                 if (next == null || ore.MiningPowerRequired < next.MiningPowerRequired) next = ore;
             }
             rewardText.text = next == null
-                ? MiningLocalization.Text("All configured ores unlocked", "Đã mở mọi quặng")
+                ? underground
+                    ? MiningLocalization.Text("All underground ores unlocked",
+                        "Đã mở mọi quặng lòng đất")
+                    : MiningLocalization.Text("All configured ores unlocked", "Đã mở mọi quặng")
                 : string.Format(MiningLocalization.Text("{0} • power {1}/{2}",
                         "{0} • sức đào {1}/{2}"),
                     MiningLocalization.Text(next.DisplayName), power, next.MiningPowerRequired);

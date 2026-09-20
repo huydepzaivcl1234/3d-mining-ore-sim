@@ -122,6 +122,18 @@ namespace MiningSimulator.Ores
         /// <summary>Attachment point used by equipped miner tool cosmetics.</summary>
         public Transform ToolPivot => toolPivot;
 
+        /// <summary>Moves this miner's AI to the ore population owned by the active world area.</summary>
+        public void SetOreSpawner(OreSpawner targetSpawner)
+        {
+            if (oreSpawner == targetSpawner) return;
+            ReleaseTarget();
+            oreSpawner = targetSpawner;
+            ignoredOre = null;
+            ignoredOreUntil = 0f;
+            nextTargetRefreshTime = 0f;
+            ResetProgressTracking();
+        }
+
         /// <summary>
         /// Immediately replaces the current AI-selected target with the requested ore.
         /// Commanded targets are kept until they are depleted, disabled, or replaced by

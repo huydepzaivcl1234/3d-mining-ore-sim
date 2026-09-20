@@ -7,10 +7,8 @@ using UnityEngine.UI;
 namespace MiningSimulator.Ores
 {
     /// <summary>
-    /// "Đang sửa chữa" (under maintenance) notice shown when the player clicks a portal gate
-    /// that has no destination wired up yet. The setup menu authors the UI under the existing
-    /// HUD canvas and deliberately keeps it visible in Edit Mode so designers can edit it.
-    /// Runtime starts hidden and never touches another panel, icon, or HUD element.
+    /// Portal modal. Older scenes already serialize this component as a maintenance panel, so it
+    /// retains that type name while runtime upgrades it into the Underground unlock/travel UI.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class MiningPortalMaintenancePanel : MonoBehaviour
@@ -44,6 +42,10 @@ namespace MiningSimulator.Ores
         [SerializeField] private TMP_Text messageText;
         [SerializeField] private TMP_Text closeButtonText;
 
+        private Button primaryButton;
+        private TMP_Text primaryButtonText;
+        private MiningWorldAreaController areaController;
+
         private CanvasGroup canvasGroup;
         private RectTransform card;
         private Coroutine activeFade;
@@ -67,12 +69,18 @@ namespace MiningSimulator.Ores
         private void OnDisable()
         {
             MiningLocalization.LanguageChanged -= RefreshLocalizedText;
+            if (areaController != null)
+            {
+                areaController.RequirementsChanged -= RefreshLocalizedText;
+                areaController.AreaChanged -= RefreshLocalizedText;
+            }
         }
 
         private void OnDestroy()
         {
             blockerButton?.onClick.RemoveListener(Hide);
             closeButton?.onClick.RemoveListener(Hide);
+            primaryButton?.onClick.RemoveListener(HandlePrimaryAction);
         }
 
         private void Start()
@@ -158,6 +166,21 @@ namespace MiningSimulator.Ores
                 StopCoroutine(activeFade);
             }
             activeFade = StartCoroutine(Fade(0f, 1f, FadeDuration, null));
+        }
+
+        public void Show(MiningWorldAreaController controller)
+        {
+            areaController = controller;
+            EnsurePrimaryButton();
+            if (areaController != null)
+            {
+                areaController.RequirementsChanged -= RefreshLocalizedText;
+                areaController.RequirementsChanged += RefreshLocalizedText;
+                areaController.AreaChanged -= RefreshLocalizedText;
+                areaController.AreaChanged += RefreshLocalizedText;
+            }
+            RefreshLocalizedText();
+            Show();
         }
 
         public void Hide()
@@ -286,6 +309,14 @@ namespace MiningSimulator.Ores
             {
                 closeButtonText = closeButton.transform.Find("Label")?.GetComponent<TMP_Text>();
             }
+
+            if (primaryButton == null && card != null)
+            {
+                primaryButton = card.Find("PrimaryButton")?.GetComponent<Button>();
+                primaryButtonText = primaryButton != null
+                    ? primaryButton.transform.Find("Label")?.GetComponent<TMP_Text>()
+                    : null;
+            }
         }
 
         private void WireButtons()
@@ -295,11 +326,18 @@ namespace MiningSimulator.Ores
             blockerButton?.onClick.AddListener(Hide);
             closeButton?.onClick.RemoveListener(Hide);
             closeButton?.onClick.AddListener(Hide);
+            primaryButton?.onClick.RemoveListener(HandlePrimaryAction);
+            primaryButton?.onClick.AddListener(HandlePrimaryAction);
         }
 
         private void RefreshLocalizedText()
         {
             ResolveReferences();
+            if (areaController != null)
+            {
+                RefreshPortalText();
+                return;
+            }
             if (titleText != null)
             {
                 titleText.text = MiningLocalization.Text(englishTitle, vietnameseTitle);
@@ -315,6 +353,94 @@ namespace MiningSimulator.Ores
                 closeButtonText.text = MiningLocalization.Text(englishCloseButton,
                     vietnameseCloseButton);
             }
+        }
+
+        private void EnsurePrimaryButton()
+        {
+            ResolveReferences();
+            if (card == null) return;
+            if (primaryButton == null)
+            {
+                primaryButton = CreateButton("PrimaryButton", card, "ENTER",
+                    new Vector2(120f, -125f));
+                primaryButtonText = primaryButton.transform.Find("Label")?.GetComponent<TMP_Text>();
+                Image image = primaryButton.GetComponent<Image>();
+                if (image != null) image.color = new Color(0.12f, 0.62f, 0.35f, 1f);
+            }
+            if (closeButton != null)
+            {
+                RectTransform closeRect = closeButton.transform as RectTransform;
+                if (closeRect != null) closeRect.anchoredPosition = new Vector2(-120f, -125f);
+            }
+            WireButtons();
+        }
+
+        private void RefreshPortalText()
+        {
+            EnsurePrimaryButton();
+            if (areaController == null) return;
+
+            bool underground = areaController.CurrentArea == MiningWorldArea.Underground;
+            bool unlocked = areaController.UndergroundUnlocked;
+            if (titleText != null)
+            {
+                titleText.text = MiningLocalization.Text("UNDERGROUND PORTAL", "CỔNG LÒNG ĐẤT");
+            }
+            if (closeButtonText != null)
+            {
+                closeButtonText.text = MiningLocalization.Text("CANCEL", "ĐÓNG");
+            }
+
+            if (underground)
+            {
+                if (messageText != null) messageText.text = MiningLocalization.Text(
+                    "Return to the Ground mining area?",
+                    "Trở về khu khai thác mặt đất?");
+                if (primaryButtonText != null) primaryButtonText.text = MiningLocalization.Text(
+                    "RETURN", "TRỞ VỀ");
+                primaryButton.interactable = true;
+                return;
+            }
+
+            if (unlocked)
+            {
+                if (messageText != null) messageText.text = MiningLocalization.Text(
+                    "The portal is permanently unlocked.\nEnter the Underground mine?",
+                    "Cổng đã được mở khóa vĩnh viễn.\nĐi vào mỏ lòng đất?");
+                if (primaryButtonText != null) primaryButtonText.text = MiningLocalization.Text(
+                    "ENTER", "ĐI VÀO");
+                primaryButton.interactable = true;
+                return;
+            }
+
+            string coinText = areaController.RequiredCoins.ToString("N0");
+            if (messageText != null) messageText.text = string.Format(
+                MiningLocalization.Text(
+                    "Unlock permanently: {0}/{1} Rebirths\n{2}/{3} Coins",
+                    "Mở khóa vĩnh viễn: {0}/{1} Tái sinh\n{2}/{3} Coin"),
+                areaController.CompletedRebirths, areaController.RequiredRebirths,
+                areaController.CurrentCoins.ToString("N0"), coinText);
+            if (primaryButtonText != null) primaryButtonText.text = MiningLocalization.Text(
+                "UNLOCK & ENTER", "MỞ KHÓA & VÀO");
+            primaryButton.interactable = areaController.CanPurchaseUnlock;
+        }
+
+        private void HandlePrimaryAction()
+        {
+            if (areaController == null) return;
+            bool changed;
+            if (areaController.CurrentArea == MiningWorldArea.Underground)
+            {
+                areaController.ReturnToGround();
+                changed = true;
+            }
+            else
+            {
+                changed = areaController.TryUnlockAndEnter();
+            }
+
+            if (changed) Hide();
+            else RefreshLocalizedText();
         }
 
         private IEnumerator Fade(float from, float to, float duration, System.Action completed)

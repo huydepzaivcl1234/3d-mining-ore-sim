@@ -56,6 +56,11 @@ namespace MiningSimulator.Ores
         public event Action<int> NpcCountChanged;
         public event Action<MiningNpc> NpcPurchased;
 
+        public void SetOreSpawner(OreSpawner targetSpawner)
+        {
+            if (targetSpawner != null) oreSpawner = targetSpawner;
+        }
+
         private void Awake()
         {
             FindLuckyBlockSystemIfMissing();

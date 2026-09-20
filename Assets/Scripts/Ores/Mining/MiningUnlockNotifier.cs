@@ -38,6 +38,11 @@ namespace MiningSimulator.Ores
         private Vector2 toastJumpFromPosition;
         private int lastKnownPower = int.MinValue;
 
+        public void SetOreSpawner(OreSpawner targetSpawner)
+        {
+            if (targetSpawner != null) oreSpawner = targetSpawner;
+        }
+
         private void Awake()
         {
             if (progressionSystem == null)

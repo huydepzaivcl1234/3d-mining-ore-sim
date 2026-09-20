@@ -3,9 +3,7 @@ using UnityEngine;
 namespace MiningSimulator.Ores
 {
     /// <summary>
-    /// Marks the Portal as a shared hover/F interaction target. Interacting opens the
-    /// "under maintenance" notice -
-    /// this gate has no destination wired up yet, unlike a finished feature.
+    /// Shared hover/F interaction target for purchasing and travelling to Underground.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class MiningPortalGate : MonoBehaviour, IMiningInteractable
@@ -14,10 +12,24 @@ namespace MiningSimulator.Ores
                  "presses the interaction key, so this object needs no manual wiring.")]
         [SerializeField] private MiningPortalMaintenancePanel maintenancePanel;
 
-        public string InteractionLabel => MiningLocalization.Text("Portal");
+        private MiningWorldAreaController areaController;
+
+        public string InteractionLabel
+        {
+            get
+            {
+                areaController ??= MiningWorldAreaController.EnsureRuntime();
+                if (areaController.CurrentArea == MiningWorldArea.Underground)
+                    return MiningLocalization.Text("Return to Ground", "Về mặt đất");
+                return areaController.UndergroundUnlocked
+                    ? MiningLocalization.Text("Enter Underground", "Vào lòng đất")
+                    : MiningLocalization.Text("Unlock Underground", "Mở khóa lòng đất");
+            }
+        }
         public bool CanInteract => isActiveAndEnabled;
         public void Interact()
         {
+            areaController ??= MiningWorldAreaController.EnsureRuntime();
             if (maintenancePanel == null)
             {
                 maintenancePanel = FindFirstObjectByType<MiningPortalMaintenancePanel>(
@@ -31,7 +43,7 @@ namespace MiningSimulator.Ores
                 return;
             }
 
-            maintenancePanel.Show();
+            maintenancePanel.Show(areaController);
         }
 
         public void SetInteractionFocused(bool focused)

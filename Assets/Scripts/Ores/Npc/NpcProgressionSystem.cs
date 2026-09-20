@@ -63,6 +63,19 @@ namespace MiningSimulator.Ores
         public event Action ProgressionChanged;
         public event Action<int> LevelChanged;
 
+        public void SetOreSpawner(OreSpawner targetSpawner)
+        {
+            if (oreSpawner == targetSpawner || targetSpawner == null) return;
+            if (isActiveAndEnabled && oreSpawner != null)
+                oreSpawner.OreRewardGranted -= HandleOreDepleted;
+            oreSpawner = targetSpawner;
+            if (isActiveAndEnabled)
+            {
+                oreSpawner.OreRewardGranted -= HandleOreDepleted;
+                oreSpawner.OreRewardGranted += HandleOreDepleted;
+            }
+        }
+
         private void Awake()
         {
             if (itemSystem == null)
