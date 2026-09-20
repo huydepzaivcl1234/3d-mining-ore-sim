@@ -130,7 +130,7 @@ namespace MiningSimulator.Ores.Editor
             TextMeshProUGUI count = Text(texts, "Count_Badge", "x1", 10f, Brass,
                 new Vector2(30f, 18f), new Vector2(56f, 14f));
             count.alignment = TextAlignmentOptions.Center;
-            TextMeshProUGUI stats = Text(texts, "SubStats_Text", "⚡ Mining rate: +0 ore/min", 9f,
+            TextMeshProUGUI stats = Text(texts, "SubStats_Text", "MINING RATE: +0 ORE/MIN", 9f,
                 Hex("#C3F8D0"), new Vector2(139f, 28f), new Vector2(0f, -13f));
 
             RectTransform plaque = Child(body, "Price_Plaque", new Vector2(80f, 53f), new Vector2(101f, 0f));

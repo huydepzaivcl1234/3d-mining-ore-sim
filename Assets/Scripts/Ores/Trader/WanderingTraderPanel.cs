@@ -112,11 +112,15 @@ namespace MiningSimulator.Ores
             BindStaticButtons();
             FindRuntimeSources();
             SubscribeSources();
+            MiningLocalization.LanguageChanged -= RefreshLocalizedText;
+            MiningLocalization.LanguageChanged += RefreshLocalizedText;
+            RefreshLocalizedText();
         }
 
         private void OnDisable()
         {
             UnsubscribeSources();
+            MiningLocalization.LanguageChanged -= RefreshLocalizedText;
             panelTransitionRoutine = null;
             pageTransitionRoutine = null;
         }
@@ -343,23 +347,29 @@ namespace MiningSimulator.Ores
         {
             IReadOnlyList<WanderingTraderSystem.TraderOffer> offers =
                 showingSellPage ? sellOffers : buyOffers;
-            string pageTitle = showingSellPage ? "BÁN VẬT PHẨM" : "MUA VẬT PHẨM";
+            if (titleText != null)
+                titleText.text = TraderText("TRADER_TITLE", "WANDERING TRADER");
+            string pageTitle = showingSellPage
+                ? TraderText("TRADER_SELL_ITEMS", "SELL ITEMS")
+                : TraderText("TRADER_BUY_ITEMS", "BUY ITEMS");
             if (subtitleText != null) subtitleText.text = pageTitle;
             if (noteText != null)
             {
                 noteText.text = showingSellPage
-                    ? "BÁN VẬT PHẨM TRONG TÚI ĐỂ NHẬN GEM"
-                    : "ƯU ĐÃI ĐƯỢC LÀM MỚI NGẪU NHIÊN";
+                    ? TraderText("TRADER_SELL_NOTE", "SELL ITEMS FROM YOUR INVENTORY FOR GEMS")
+                    : TraderText("TRADER_BUY_NOTE", "RANDOM OFFERS REFRESH ON TIMER");
             }
-            SetButtonLabel(pageButton, showingSellPage ? "<  TRANG MUA" : "TRANG BÁN  >");
+            SetButtonLabel(pageButton, showingSellPage
+                ? TraderText("TRADER_BUY_PAGE", "<  BUY PAGE")
+                : TraderText("TRADER_SELL_PAGE", "SELL PAGE  >"));
 
             int count = offers != null ? Mathf.Min(VisibleOfferCount, offers.Count) : 0;
             if (emptyPageText != null)
             {
                 emptyPageText.gameObject.SetActive(count == 0);
                 emptyPageText.text = showingSellPage
-                    ? "TÚI ĐỒ CHƯA CÓ VẬT PHẨM ĐỂ BÁN"
-                    : "CHƯA CÓ ƯU ĐÃI";
+                    ? TraderText("TRADER_NO_SELL_ITEMS", "NO ITEMS TO SELL")
+                    : TraderText("TRADER_NO_OFFERS", "NO OFFERS AVAILABLE");
             }
 
             for (int index = 0; index < offerRows.Count; index++)
@@ -385,27 +395,31 @@ namespace MiningSimulator.Ores
             if (isBuy)
             {
                 string currency = offer.Currency == WanderingTraderSystem.TraderCurrency.Gem
-                    ? "GEM"
-                    : "COIN";
+                    ? TraderText("TRADER_GEM", "GEM")
+                    : TraderText("TRADER_COIN", "COIN");
                 Sprite currencyIcon = offer.Currency == WanderingTraderSystem.TraderCurrency.Gem
                     ? gemIcon
                     : coinIcon;
                 SetWell(view.GiveIcon, view.GiveFallback, view.GiveHeading, view.GiveValue,
-                    currencyIcon, currency, "TRẢ", $"{currency} {FormatAmount(offer.Price)}");
+                    currencyIcon, currency, TraderText("TRADER_GIVE", "GIVE"),
+                    $"{currency} {FormatAmount(offer.Price)}");
                 SetWell(view.ReceiveIcon, view.ReceiveFallback, view.ReceiveHeading,
                     view.ReceiveValue, offer.Item.InventoryIcon, offer.Item.IconFallback,
-                    "NHẬN", $"{offer.Item.DisplayName} x{offer.ItemAmount}");
-                SetButtonLabel(view.ActionButton, "MUA");
+                    TraderText("TRADER_RECEIVE", "RECEIVE"),
+                    $"{offer.Item.DisplayName} x{offer.ItemAmount}");
+                SetButtonLabel(view.ActionButton, TraderText("TRADER_BUY", "BUY"));
             }
             else
             {
                 SetWell(view.GiveIcon, view.GiveFallback, view.GiveHeading, view.GiveValue,
                     offer.Item.InventoryIcon, offer.Item.IconFallback,
-                    "BÁN", $"{offer.Item.DisplayName} x{offer.ItemAmount}");
+                    TraderText("TRADER_SELL", "SELL"),
+                    $"{offer.Item.DisplayName} x{offer.ItemAmount}");
                 SetWell(view.ReceiveIcon, view.ReceiveFallback, view.ReceiveHeading,
-                    view.ReceiveValue, gemIcon, "GEM", "NHẬN",
-                    $"GEM {FormatAmount(offer.Price)}");
-                SetButtonLabel(view.ActionButton, "BÁN");
+                    view.ReceiveValue, gemIcon, TraderText("TRADER_GEM", "GEM"),
+                    TraderText("TRADER_RECEIVE", "RECEIVE"),
+                    $"{TraderText("TRADER_GEM", "GEM")} {FormatAmount(offer.Price)}");
+                SetButtonLabel(view.ActionButton, TraderText("TRADER_SELL", "SELL"));
             }
             if (view.Arrow != null) view.Arrow.text = ">";
         }
@@ -439,8 +453,9 @@ namespace MiningSimulator.Ores
             if (feedbackText != null)
             {
                 feedbackText.text = offer.OfferType == WanderingTraderSystem.TraderOfferType.SellItem
-                    ? "KHÔNG ĐỦ VẬT PHẨM"
-                    : "KHÔNG ĐỦ TIỀN HOẶC TÚI ĐỒ ĐÃ ĐẦY";
+                    ? TraderText("TRADER_NOT_ENOUGH_ITEMS", "NOT ENOUGH ITEMS")
+                    : TraderText("TRADER_NOT_ENOUGH_FUNDS",
+                        "NOT ENOUGH FUNDS OR INVENTORY FULL");
             }
             RefreshBalance();
             RefreshOfferButtons();
@@ -450,7 +465,9 @@ namespace MiningSimulator.Ores
         {
             if (feedbackText == null) return;
             int remaining = Mathf.CeilToInt(Mathf.Max(0f, resetAt - Time.unscaledTime));
-            feedbackText.text = $"ĐỔI HÀNG SAU  {remaining / 60:00}:{remaining % 60:00}";
+            feedbackText.text = string.Format(
+                TraderText("TRADER_RESTOCK_IN", "RESTOCK IN {0:00}:{1:00}"),
+                remaining / 60, remaining % 60);
         }
 
         private void RefreshOfferButtons()
@@ -473,7 +490,29 @@ namespace MiningSimulator.Ores
             if (balanceText == null) return;
             float money = wallet != null ? wallet.CurrentMoney : 0f;
             float gems = wallet != null ? wallet.CurrentGems : 0f;
-            balanceText.text = $"COIN {MiningMoneyFormatter.Format(money)}   |   GEM {MiningMoneyFormatter.Format(gems)}";
+            balanceText.text = string.Format(
+                TraderText("TRADER_BALANCE", "COIN {0}   |   GEM {1}"),
+                MiningMoneyFormatter.Format(money), MiningMoneyFormatter.Format(gems));
+        }
+
+        private void RefreshLocalizedText()
+        {
+            if (!isActiveAndEnabled)
+            {
+                return;
+            }
+
+            if (titleText != null)
+                titleText.text = TraderText("TRADER_TITLE", "WANDERING TRADER");
+            SetButtonLabel(closeButton, TraderText("TRADER_CLOSE", "CLOSE"));
+            RenderCurrentPage();
+            RefreshBalance();
+            UpdateCountdown();
+        }
+
+        private static string TraderText(string key, string englishFallback)
+        {
+            return MiningLocalization.TextKey(key, englishFallback);
         }
 
         private static string FormatAmount(float value) => MiningMoneyFormatter.Format(value);
@@ -619,10 +658,10 @@ namespace MiningSimulator.Ores
                 new Vector2(0f, 237f), new Vector2(598f, 66f));
             AddOutline(headerBand.gameObject, new Color(0.55f, 0.29f, 0.08f),
                 new Vector2(2f, -2f));
-            titleText = EnsureLabel("Title", cardRect, "THƯƠNG NHÂN LANG THANG", 20f,
+            titleText = EnsureLabel("Title", cardRect, "WANDERING TRADER", 20f,
                 new Vector2(0f, 239f), new Vector2(440f, 28f),
                 new Color(1f, 0.95f, 0.8f));
-            subtitleText = EnsureLabel("Subtitle", cardRect, "MUA VẬT PHẨM", 10f,
+            subtitleText = EnsureLabel("Subtitle", cardRect, "BUY ITEMS", 10f,
                 new Vector2(0f, 218f), new Vector2(400f, 20f),
                 new Color(0.86f, 0.64f, 0.39f));
 
@@ -637,7 +676,7 @@ namespace MiningSimulator.Ores
                 new Vector2(276f, 237f), new Vector2(34f, 34f),
                 new Color(0.16f, 0.035f, 0.008f), 15f);
             AddOutline(headerCloseButton.gameObject, Gold, new Vector2(1.5f, -1.5f));
-            feedbackText = EnsureLabel("Countdown", cardRect, "ĐỔI HÀNG SAU  00:00", 12f,
+            feedbackText = EnsureLabel("Countdown", cardRect, "RESTOCK IN 00:00", 12f,
                 new Vector2(-168f, 164f), new Vector2(220f, 28f),
                 new Color(1f, 0.65f, 0.28f));
             RectTransform timerPill = EnsureImage("Timer Pill", cardRect,
@@ -663,14 +702,14 @@ namespace MiningSimulator.Ores
                 new Vector2(0f, 4f), new Vector2(500f, 80f), PaleGold);
             emptyPageText.gameObject.SetActive(false);
             noteText = EnsureLabel("Page Note", cardRect,
-                "ƯU ĐÃI ĐƯỢC LÀM MỚI NGẪU NHIÊN", 10f,
+                "RANDOM OFFERS REFRESH ON TIMER", 10f,
                 new Vector2(0f, -139f), new Vector2(520f, 24f),
                 new Color(0.78f, 0.55f, 0.32f));
-            pageButton = EnsureButton("Page Button", cardRect, "TRANG BÁN  >",
+            pageButton = EnsureButton("Page Button", cardRect, "SELL PAGE  >",
                 new Vector2(174f, -176f), new Vector2(210f, 36f),
                 new Color(0.31f, 0.14f, 0.04f), 13f);
             AddOutline(pageButton.gameObject, Gold, new Vector2(1.5f, -1.5f));
-            closeButton = EnsureButton("Close Button", cardRect, "ĐÓNG",
+            closeButton = EnsureButton("Close Button", cardRect, "CLOSE",
                 new Vector2(-112f, -220f), new Vector2(300f, 46f),
                 new Color(0.49f, 0.09f, 0.025f), 17f);
             AddOutline(closeButton.gameObject, new Color(0.9f, 0.3f, 0.12f),

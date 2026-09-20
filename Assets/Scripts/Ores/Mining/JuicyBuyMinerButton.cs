@@ -177,8 +177,8 @@ namespace MiningSimulator.Ores
             int oresPerMinute = data != null
                 ? Mathf.RoundToInt(data.MiningPower * 60f / Mathf.Max(0.01f, data.SecondsPerHit)) : 0;
             if (subStatsText != null)
-                subStatsText.text = string.Format(MiningLocalization.Text(
-                    "⚡ Mining rate: +{0} ore/min", "⚡ Tốc độ: +{0} quặng/phút"), oresPerMinute);
+                subStatsText.text = string.Format(MiningLocalization.TextKey(
+                    "MINING_RATE_FORMAT", "MINING RATE: +{0} ORE/MIN"), oresPerMinute);
             if (costText != null)
                 costText.text = npcShop != null ? MiningMoneyFormatter.Format(npcShop.NpcCost) : "—";
         }
