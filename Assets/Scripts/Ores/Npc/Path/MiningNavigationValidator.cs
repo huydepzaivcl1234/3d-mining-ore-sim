@@ -33,39 +33,23 @@ namespace MiningSimulator.Ores
 
             if (navMeshReady)
             {
-                int obstacleCount = FindObjectsByType<NavMeshObstacle>(FindObjectsSortMode.None).Length;
-                int carvingCount = 0;
+                int circularObstacleCount = 0;
                 foreach (NavMeshObstacle obstacle in
                          FindObjectsByType<NavMeshObstacle>(FindObjectsSortMode.None))
                 {
-                    if (obstacle != null && obstacle.carving)
+                    if (obstacle != null && obstacle.enabled && obstacle.carving &&
+                        obstacle.shape == NavMeshObstacleShape.Capsule)
                     {
-                        carvingCount++;
+                        circularObstacleCount++;
                     }
-                }
-
-                if (obstacleCount == 0)
-                {
-                    Debug.LogWarning(
-                        "[MiningNavigation] NavMesh is built, but no NavMeshObstacle exists in the " +
-                        "scene. Miners will path over ores as if they weren't there. Add " +
-                        nameof(MiningNavMeshObstacle) + " to the ore prefab.", this);
-                    return;
-                }
-
-                if (carvingCount == 0)
-                {
-                    Debug.LogWarning(
-                        "[MiningNavigation] NavMeshObstacles exist but none have Carve enabled, so " +
-                        "they only nudge agents locally instead of blocking paths. Enable carving.",
-                        this);
-                    return;
                 }
 
                 if (logOnSuccess)
                 {
                     Debug.Log(
-                        $"[MiningNavigation] Using Unity NavMesh. {carvingCount} carving obstacle(s) active.",
+                        $"[MiningNavigation] Using Unity NavMesh with {circularObstacleCount} " +
+                        "compact circular mineable obstacle(s). Ore geometry is excluded from " +
+                        "the bake, so paths stay on the ground and route around rocks.",
                         this);
                 }
 

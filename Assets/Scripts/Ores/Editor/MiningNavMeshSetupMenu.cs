@@ -17,9 +17,8 @@ namespace MiningSimulator.Editor
     ///    components on the "Navmeshsuface" GameObject in the active scene.
     /// 2. Fixes the surface's layer mask to include both Default (0) and Ground (3) so the
     ///    floor Plane is picked up by the bake regardless of which layer it lives on.
-    /// 3. Adds <see cref="MiningNavMeshObstacle"/> (+ the required <see cref="NavMeshObstacle"/>)
-    ///    to every ore and lucky-block prefab in Assets/Prefabs/Ores so they carve holes in the
-    ///    NavMesh at runtime.
+    /// 3. Marks ore/lucky-block hierarchies Ignore From Build and configures compact circular
+    ///    carving obstacles, so paths stay on the ground and route tightly around mineables.
     /// </summary>
     public static class MiningNavMeshSetupMenu
     {
@@ -116,7 +115,8 @@ namespace MiningSimulator.Editor
         }
 
         /// <summary>
-        /// Scans all prefabs in the ore folder and adds MiningNavMeshObstacle where missing.
+        /// Scans all prefabs in the ore folder, excludes each mineable hierarchy from source
+        /// collection, and configures one compact circular carving obstacle.
         /// </summary>
         private static int SetupOrePrefabs()
         {
@@ -140,41 +140,55 @@ namespace MiningSimulator.Editor
                     continue;
                 }
 
-                // Skip if already set up.
-                if (prefab.GetComponentInChildren<MiningNavMeshObstacle>(true) != null)
+                GameObject target = isOre
+                    ? prefab.GetComponentInChildren<Ore>(true).gameObject
+                    : prefab.GetComponentInChildren<LuckyBlock>(true).gameObject;
+                bool changed = false;
+
+                NavMeshModifier modifier = target.GetComponent<NavMeshModifier>();
+                if (modifier == null)
+                {
+                    modifier = target.AddComponent<NavMeshModifier>();
+                    changed = true;
+                }
+
+                if (!modifier.enabled || !modifier.ignoreFromBuild || modifier.overrideArea)
+                {
+                    modifier.enabled = true;
+                    modifier.overrideArea = false;
+                    modifier.ignoreFromBuild = true;
+                    EditorUtility.SetDirty(modifier);
+                    changed = true;
+                }
+
+                MiningNavMeshObstacle circularObstacle =
+                    target.GetComponent<MiningNavMeshObstacle>();
+                if (circularObstacle == null)
+                {
+                    circularObstacle = target.AddComponent<MiningNavMeshObstacle>();
+                    changed = true;
+                }
+
+                foreach (NavMeshObstacle obstacle in
+                         prefab.GetComponentsInChildren<NavMeshObstacle>(true))
+                {
+                    obstacle.carving = false;
+                    obstacle.enabled = false;
+                    EditorUtility.SetDirty(obstacle);
+                }
+
+                circularObstacle.EnableCircularCarving();
+                EditorUtility.SetDirty(circularObstacle);
+                changed = true;
+
+                if (!changed)
                 {
                     continue;
                 }
 
-                // Find the root GameObject that has the Ore or LuckyBlock component - that's
-                // where the colliders live and where the obstacle should sit.
-                GameObject target = prefab;
-                Ore oreComponent = prefab.GetComponentInChildren<Ore>(true);
-                LuckyBlock luckyComponent = prefab.GetComponentInChildren<LuckyBlock>(true);
-                if (oreComponent != null)
-                {
-                    target = oreComponent.gameObject;
-                }
-                else if (luckyComponent != null)
-                {
-                    target = luckyComponent.gameObject;
-                }
-
-                // Add components. NavMeshObstacle is added automatically via [RequireComponent]
-                // on MiningNavMeshObstacle, but we add it explicitly for clarity.
-                if (target.GetComponent<NavMeshObstacle>() == null)
-                {
-                    target.AddComponent<NavMeshObstacle>();
-                }
-
-                target.AddComponent<MiningNavMeshObstacle>();
-
-                // OnValidate in MiningNavMeshObstacle will set carving=true, shape=Box,
-                // carveOnlyStationary=true automatically.
-
                 PrefabUtility.SavePrefabAsset(prefab);
                 updated++;
-                Debug.Log($"[NavMesh Setup] Added MiningNavMeshObstacle to: {path}");
+                Debug.Log($"[NavMesh Setup] Configured circular mineable obstacle: {path}");
             }
 
             return updated;

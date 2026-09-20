@@ -9,15 +9,14 @@ namespace MiningSimulator.Ores
     /// Owns the runtime NavMesh for the mining level.
     ///
     /// Design note - why this almost never rebuilds:
-    /// Ores are NOT baked into the NavMesh. They carve it at runtime through
-    /// <see cref="MiningNavMeshObstacle"/> (NavMeshObstacle with Carve enabled). Carving is
-    /// applied by Unity every frame on a background job and is far cheaper than a surface
-    /// rebuild, so ores can spawn, deplete, and return to the pool freely without ever
-    /// triggering a bake. This surface therefore only needs to cover the *static* geometry -
-    /// the floor/terrain the miners walk on.
+    /// Ores are NOT baked into or carved out of the NavMesh. Before every build they receive a
+    /// <see cref="NavMeshModifier"/> with Ignore From Build enabled. The ground underneath remains
+    /// the only baked surface, while a compact circular <see cref="MiningNavMeshObstacle"/> gives
+    /// shortest-path queries a clean footprint to route around. This avoids rectangular holes and
+    /// prevents the top of a rock from becoming walkable.
     ///
-    /// The explicit rebuild path below exists for the cases carving can't cover: the walkable
-    /// floor itself changing (a new area unlocked, a rebirth layout swap, a portal room opening).
+    /// The explicit rebuild path below is for the walkable floor itself changing (a new area
+    /// unlocked, a rebirth layout swap, or a portal room opening).
     /// Call <see cref="RequestRebuild"/> for those; it coalesces bursts of requests into one bake.
     /// </summary>
     [DefaultExecutionOrder(-200)]
@@ -142,10 +141,62 @@ namespace MiningSimulator.Ores
                 return;
             }
 
+            ExcludeMineablesFromBuild();
+
             // Player builds cannot read every imported render mesh. The playable ground
             // already has colliders, so baking from them prevents unreadable ore meshes
             // from breaking the runtime NavMesh update.
             surface.useGeometry = NavMeshCollectGeometry.PhysicsColliders;
+        }
+
+        /// <summary>
+        /// Keeps dynamic rocks out of source collection. Marking them Not Walkable would still
+        /// create a hole; ignoring their hierarchy lets the floor collider underneath be baked.
+        /// This runs again before every rebuild so newly spawned mineables are covered too.
+        /// </summary>
+        private static void ExcludeMineablesFromBuild()
+        {
+            foreach (Ore ore in Object.FindObjectsByType<Ore>(
+                         FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                EnsureIgnoredByNavMeshBuild(ore.gameObject);
+            }
+
+            foreach (LuckyBlock luckyBlock in Object.FindObjectsByType<LuckyBlock>(
+                         FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                EnsureIgnoredByNavMeshBuild(luckyBlock.gameObject);
+            }
+        }
+
+        private static void EnsureIgnoredByNavMeshBuild(GameObject target)
+        {
+            NavMeshModifier modifier = target.GetComponent<NavMeshModifier>();
+            if (modifier == null)
+            {
+                modifier = target.AddComponent<NavMeshModifier>();
+            }
+
+            modifier.enabled = true;
+            modifier.overrideArea = false;
+            modifier.ignoreFromBuild = true;
+
+            MiningNavMeshObstacle obstacle = target.GetComponent<MiningNavMeshObstacle>();
+            if (obstacle == null)
+            {
+                obstacle = target.AddComponent<MiningNavMeshObstacle>();
+            }
+
+            // A few old prefab variants may still contain an additional box obstacle. Disable
+            // every legacy obstacle first, then let the single owner below re-enable its capsule.
+            foreach (NavMeshObstacle legacyObstacle in
+                     target.GetComponentsInChildren<NavMeshObstacle>(true))
+            {
+                legacyObstacle.carving = false;
+                legacyObstacle.enabled = false;
+            }
+
+            obstacle.EnableCircularCarving();
         }
 
         private static bool HasNavMeshData()

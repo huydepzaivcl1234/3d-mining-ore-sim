@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
 namespace MiningSimulator.Ores
 {
@@ -68,8 +69,10 @@ namespace MiningSimulator.Ores
                 return false;
             }
 
-            Ore closest = null;
-            float closestSqrDistance = float.PositiveInfinity;
+            Ore bestOre = null;
+            float bestPathDistance = float.PositiveInfinity;
+            float bestDirectSqrDistance = float.PositiveInfinity;
+            bool canComparePaths = MiningNavigation.PathfindingAvailable;
 
             foreach (Ore ore in activeOres)
             {
@@ -79,19 +82,44 @@ namespace MiningSimulator.Ores
                     continue;
                 }
 
-                float sqrDistance = ore.SqrDistanceToSurface(origin);
-                if (sqrDistance >= closestSqrDistance)
+                float directSqrDistance = ore.SqrDistanceToSurface(origin);
+                if (!canComparePaths)
+                {
+                    if (directSqrDistance < bestDirectSqrDistance)
+                    {
+                        bestOre = ore;
+                        bestDirectSqrDistance = directSqrDistance;
+                    }
+
+                    continue;
+                }
+
+                Vector3 destination = ore.GetClosestSurfacePoint(origin);
+                if (!MiningNavigation.TryGetPathDistance(origin, destination,
+                        out float pathDistance))
+                {
+                    // A backend exists, so failure means the ore is currently unreachable.
+                    continue;
+                }
+
+                const float tieTolerance = 0.01f;
+                bool shorterPath = pathDistance < bestPathDistance - tieTolerance;
+                bool equalPathButCloser = Mathf.Abs(pathDistance - bestPathDistance) <=
+                                          tieTolerance &&
+                                          directSqrDistance < bestDirectSqrDistance;
+                if (!shorterPath && !equalPathButCloser)
                 {
                     continue;
                 }
 
-                closest = ore;
-                closestSqrDistance = sqrDistance;
+                bestOre = ore;
+                bestPathDistance = pathDistance;
+                bestDirectSqrDistance = directSqrDistance;
             }
 
-            if (closest != null && closest.TryReserveMiner(miner, miningPower, out slotIndex))
+            if (bestOre != null && bestOre.TryReserveMiner(miner, miningPower, out slotIndex))
             {
-                reservedOre = closest;
+                reservedOre = bestOre;
                 return true;
             }
 
@@ -263,10 +291,13 @@ namespace MiningSimulator.Ores
                 Mathf.Max(0.01f, Mathf.Max(spawnData.UniformScaleRange.x, spawnData.UniformScaleRange.y)));
             instance.transform.localScale = data.Prefab.transform.localScale * scale;
             ore.Initialize(data, wallet, upgradeSystem, false);
-            EnsureNavigationObstacle(ore);
+            EnsureCircularNavigationObstacle(ore);
             instance.SetActive(true);
             KeepAboveSurface(instance, position.y);
             instance.transform.position += Vector3.up * data.SpawnHeightOffset;
+            // Initialize configures hit feedback before final surface placement. Capture the
+            // completed position so a hit cannot restore the ore to that earlier Y value.
+            ore.FinalizeSpawnPlacement();
             ore.Depleted += HandleOreDepleted;
             ore.RewardGranted += HandleRewardGranted;
             activeOres.Add(ore);
@@ -612,7 +643,7 @@ namespace MiningSimulator.Ores
                 }
 
                 ore.ConfigureRuntime(wallet, upgradeSystem);
-                EnsureNavigationObstacle(ore);
+                EnsureCircularNavigationObstacle(ore);
                 ore.Depleted -= HandleOreDepleted;
                 ore.Depleted += HandleOreDepleted;
                 ore.RewardGranted -= HandleRewardGranted;
@@ -621,12 +652,29 @@ namespace MiningSimulator.Ores
             }
         }
 
-        private static void EnsureNavigationObstacle(Ore ore)
+        private static void EnsureCircularNavigationObstacle(Ore ore)
         {
-            if (ore != null && ore.GetComponent<MiningNavMeshObstacle>() == null)
+            if (ore == null)
             {
-                ore.gameObject.AddComponent<MiningNavMeshObstacle>();
+                return;
             }
+
+            MiningNavMeshObstacle circularObstacle =
+                ore.GetComponentInChildren<MiningNavMeshObstacle>(true);
+            if (circularObstacle == null)
+            {
+                circularObstacle = ore.gameObject.AddComponent<MiningNavMeshObstacle>();
+            }
+
+            // Remove any extra legacy box obstacles before enabling the one circular owner.
+            foreach (NavMeshObstacle obstacle in
+                     ore.GetComponentsInChildren<NavMeshObstacle>(true))
+            {
+                obstacle.carving = false;
+                obstacle.enabled = false;
+            }
+
+            circularObstacle.EnableCircularCarving();
         }
 
         private void OnDrawGizmosSelected()

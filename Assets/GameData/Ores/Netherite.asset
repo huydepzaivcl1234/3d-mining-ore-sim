@@ -17,9 +17,9 @@ MonoBehaviour:
   description: legend ore that need strongest
   tier: 10
   miningPowerRequired: 35
-  durability: 2000
+  durability: 5000
   clickDamage: 1
-  baseSellValue: 750
+  baseSellValue: 1000
   gemReward: 1
   experienceReward: 450
   destroyDelay: 0

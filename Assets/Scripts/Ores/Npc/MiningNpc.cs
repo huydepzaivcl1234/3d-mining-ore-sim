@@ -50,13 +50,13 @@ namespace MiningSimulator.Ores
         [Header("Global Pathfinding")]
         [Tooltip("Routes through MiningNavigation for the actual shortest route to the target instead of only reacting to whatever is directly ahead. Uses Unity NavMesh when a MiningNavMeshBuilder exists, otherwise the MiningNavGrid A* fallback, otherwise the old direct-line reactive steering.")]
         [SerializeField] private bool useGlobalPathfinding = true;
-        [Tooltip("How far from the miner / its stand position the NavMesh query may search for a valid point on the mesh. Miners stand right beside carved-out ores, so a little slack here avoids failed queries.")]
+        [Tooltip("How far from the miner / its stand position the NavMesh query may search for a valid point on the mesh. A little slack avoids failed queries near a NavMesh edge.")]
         [Min(0.1f)][SerializeField] private float navMeshSampleRadius = 2f;
         [Tooltip("Minimum time between path requests to MiningNavGrid for the same target.")]
         [Min(0.05f)][SerializeField] private float repathInterval = 0.4f;
         [Tooltip("How far the stand position has to move before a fresh path is requested early (instead of waiting for Repath Interval).")]
         [Min(0f)][SerializeField] private float repathTargetMoveThreshold = 0.5f;
-        [Tooltip("Within this distance of the mining stand position, the miner may walk straight in only when no other ore blocks that final segment. The target ore carves itself out of the NavMesh, so direct steering owns the last leg; a neighbouring ore still keeps the global route active so the miner does not bounce left and right around a cluster.")]
+        [Tooltip("Within this distance of the mining stand position, the miner may walk straight in only when no other ore blocks that final segment. A neighbouring ore keeps the global route active so the miner does not bounce left and right around a cluster.")]
         [Min(0.1f)][SerializeField] private float finalApproachDistance = 2.5f;
         [Tooltip("How far ahead along the route to aim while path-following. Steering exactly at the next corner makes the miner hug it and then snap to the next heading - that is the visible zig-zag. Aiming at a point further along the polyline cuts corners smoothly. Keep it under the typical corner spacing.")]
         [Min(0.1f)][SerializeField] private float pathLookAheadDistance = 1.75f;

@@ -17,8 +17,8 @@ namespace MiningSimulator.Ores
     /// Single entry point every miner uses to ask for a route. It tries, in order:
     ///
     /// 1. Unity NavMesh (<see cref="NavMesh.CalculatePath"/>) - the preferred path. Gives a true
-    ///    global shortest route over the real walkable surface, respects ore carving from
-    ///    <see cref="MiningNavMeshObstacle"/>, and costs no per-agent bookkeeping.
+    ///    global shortest route over the real walkable surface and routes around the compact
+    ///    circular carve owned by each mineable. Ore geometry itself is excluded from the bake.
     /// 2. <see cref="MiningNavGrid"/> A* - used when no NavMesh exists in the scene, or when the
     ///    NavMesh query fails (agent off-mesh, target in a disconnected region).
     /// 3. Nothing - the caller falls back to its own direct-line reactive steering.
@@ -34,6 +34,7 @@ namespace MiningSimulator.Ores
         // immediately before the next query can overwrite them.
         private static NavMeshPath sharedPath;
         private static Vector3[] cornerBuffer = new Vector3[64];
+        private static readonly List<Vector3> DistancePathBuffer = new(16);
         private static float nextNavigationRecoveryAttempt;
         private static bool navigationRecoveryLogged;
 
@@ -41,14 +42,44 @@ namespace MiningSimulator.Ores
         public static bool NavMeshAvailable =>
             MiningNavMeshBuilder.Instance != null && MiningNavMeshBuilder.Instance.HasNavMesh;
 
+        /// <summary>True when ore selection can compare complete routed path costs.</summary>
+        public static bool PathfindingAvailable => NavMeshAvailable ||
+            (MiningNavGrid.Instance != null && MiningNavGrid.Instance.HasBaked);
+
+        /// <summary>
+        /// Returns the length of a complete global route without allocating a waypoint list.
+        /// Ore selection uses this cost so "closest" means shortest reachable path rather than
+        /// shortest straight line through intervening rocks.
+        /// </summary>
+        public static bool TryGetPathDistance(Vector3 start, Vector3 end, out float distance,
+            int areaMask = NavMesh.AllAreas, float sampleRadius = 2f)
+        {
+            distance = float.PositiveInfinity;
+            if (!TryFindPath(start, end, DistancePathBuffer, areaMask, sampleRadius))
+            {
+                return false;
+            }
+
+            distance = 0f;
+            Vector3 previous = start;
+            for (int index = 0; index < DistancePathBuffer.Count; index++)
+            {
+                Vector3 waypoint = DistancePathBuffer[index];
+                distance += Vector3.Distance(previous, waypoint);
+                previous = waypoint;
+            }
+
+            return true;
+        }
+
         /// <summary>
         /// Fills resultWaypoints with a route from start to end and reports which backend produced
         /// it. Returns false (and clears the list) when no route exists at all.
         /// </summary>
         /// <param name="sampleRadius">
         /// How far from start/end to search for a point actually on the NavMesh. Miners stand
-        /// beside ores, so their stand position can sit slightly inside a carved hole - this lets
-        /// the query snap to the nearest legal point instead of failing outright.
+        /// beside ores, so their stand position can sit close to a NavMesh edge - this lets the
+        /// query snap to the nearest legal point instead of failing outright.
         /// </param>
         public static bool TryFindPath(Vector3 start, Vector3 end, List<Vector3> resultWaypoints,
             int areaMask = NavMesh.AllAreas, float sampleRadius = 2f)

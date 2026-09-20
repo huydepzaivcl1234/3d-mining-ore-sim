@@ -285,6 +285,16 @@ namespace MiningSimulator.Ores
             upgradeSystem = targetUpgradeSystem;
         }
 
+        /// <summary>
+        /// Captures the fully placed spawn transform as the resting pose for hit feedback.
+        /// The spawner calls this after ground correction and the authored height offset,
+        /// preventing the first hit from restoring an earlier vertical position.
+        /// </summary>
+        public void FinalizeSpawnPlacement()
+        {
+            ConfigureHitPunch();
+        }
+
         public bool MineOnce()
         {
             return data != null && ApplyDamage(data.ClickDamage);
