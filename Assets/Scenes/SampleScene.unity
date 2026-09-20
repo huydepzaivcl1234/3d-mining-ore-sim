@@ -100758,6 +100758,7 @@ GameObject:
   - component: {fileID: 5319940143687006135}
   - component: {fileID: 5319940143687006137}
   - component: {fileID: 5319940143687006136}
+  - component: {fileID: 7841127736282904131}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -103805,6 +103806,29 @@ MonoBehaviour:
   defaultLanguage: English
   saveLoad: 0
   prefabs: []
+--- !u!114 &7841127736282904131
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2565732121670608888}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a928795a35d4e65a51ac52a1bc2d7d3, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningWorldAreaController
+  requiredRebirths: 3
+  requiredCoins: 1000000
+  undergroundSpawnData: {fileID: 11400000, guid: acc197e110f3c3079f40fc71384d1dd7, type: 2}
+  undergroundAreaCenter: {x: 0, y: 0, z: 0}
+  undergroundAreaSize: {x: 20, y: 0, z: 20}
+  wallet: {fileID: 5319940143687006134}
+  rebirthSystem: {fileID: 1044407942}
+  groundSpawner: {fileID: 1828941534}
+  undergroundSpawner: {fileID: 0}
+  groundEnvironment: {fileID: 0}
+  undergroundEnvironment: {fileID: 0}
 --- !u!114 &5345239619755833584
 MonoBehaviour:
   m_ObjectHideFlags: 0

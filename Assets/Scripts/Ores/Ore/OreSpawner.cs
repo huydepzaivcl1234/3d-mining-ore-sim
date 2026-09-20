@@ -29,11 +29,20 @@ namespace MiningSimulator.Ores
         private readonly RaycastHit[] groundHitBuffer = new RaycastHit[32];
         private Coroutine spawnRoutine;
         private bool initialSpawnCompleted;
+        private bool hasAreaOverride;
+        private Vector3 areaCenterOverride;
+        private Vector3 areaSizeOverride;
 
         public int ActiveCount => activeOres.Count;
         public int PooledCount => inactivePooledOres.Count;
         public OreSpawnData SpawnData => spawnData;
         public MiningUpgradeSystem UpgradeSystem => upgradeSystem;
+        public Vector3 SpawnAreaCenter => hasAreaOverride && spawnData != null
+            ? areaCenterOverride
+            : spawnData != null ? spawnData.AreaCenter : Vector3.zero;
+        public Vector3 SpawnAreaSize => hasAreaOverride && spawnData != null
+            ? areaSizeOverride
+            : spawnData != null ? spawnData.AreaSize : Vector3.zero;
         public event System.Action<Ore, float> OreRewardGranted;
 
         /// <summary>Copies immutable gameplay references for a second area spawner.</summary>
@@ -48,6 +57,34 @@ namespace MiningSimulator.Ores
             dayNightSystem = source.dayNightSystem;
             progressionSystem = source.progressionSystem;
             spawnedOreParent = transform;
+            hasAreaOverride = false;
+        }
+
+        /// <summary>
+        /// Copies the shared runtime references while allowing an area to use its own ore table
+        /// and footprint. The underground clone intentionally has no day/night special roll, so
+        /// its table remains the only source of ore types for that area.
+        /// </summary>
+        public void ConfigureAsAreaClone(OreSpawner source, OreSpawnData areaSpawnData,
+            Vector3 areaCenter, Vector3 areaSize)
+        {
+            ConfigureAsAreaClone(source);
+            if (areaSpawnData == null)
+            {
+                spawnData = null;
+                Debug.LogError("Underground OreSpawner requires a dedicated UndergroundOreSpawnData asset. " +
+                    "It will stay empty instead of spawning ground ores.", this);
+            }
+            else
+            {
+                spawnData = areaSpawnData;
+            }
+
+            areaCenterOverride = areaCenter;
+            areaSizeOverride = new Vector3(Mathf.Abs(areaSize.x), Mathf.Abs(areaSize.y),
+                Mathf.Abs(areaSize.z));
+            hasAreaOverride = true;
+            dayNightSystem = null;
         }
 
         private void Awake()
@@ -560,8 +597,8 @@ namespace MiningSimulator.Ores
 
         private Vector3 ChoosePosition()
         {
-            Vector3 areaSize = spawnData.AreaSize;
-            Vector3 local = spawnData.AreaCenter + new Vector3(
+            Vector3 areaSize = SpawnAreaSize;
+            Vector3 local = SpawnAreaCenter + new Vector3(
                 UnityEngine.Random.Range(-areaSize.x * 0.5f, areaSize.x * 0.5f),
                 UnityEngine.Random.Range(-areaSize.y * 0.5f, areaSize.y * 0.5f),
                 UnityEngine.Random.Range(-areaSize.z * 0.5f, areaSize.z * 0.5f));
@@ -701,7 +738,7 @@ namespace MiningSimulator.Ores
             Gizmos.color = spawnData.SpawnAreaGizmoColor;
             Matrix4x4 previous = Gizmos.matrix;
             Gizmos.matrix = transform.localToWorldMatrix;
-            Gizmos.DrawWireCube(spawnData.AreaCenter, spawnData.AreaSize);
+            Gizmos.DrawWireCube(SpawnAreaCenter, SpawnAreaSize);
             Gizmos.matrix = previous;
         }
     }

@@ -28,6 +28,8 @@ MonoBehaviour:
   nightAmbiencePauseRange: {x: 2, y: 5}
   sunriseRoosterSfx: {fileID: 8300000, guid: 4caad48eb5424c0f9bb4cc6172f006fd, type: 3}
   coinRainAmbience: {fileID: 8300000, guid: 256f376d46cc5504985640d35469ad3a, type: 3}
+  undergroundAmbience: {fileID: 8300000, guid: c4d34d8d0d95414e8b5e6a853d0dca6d, type: 3}
+  undergroundAmbienceVolume: 0.55
   stalkedCatchSfx: {fileID: 8300000, guid: a7fcd3cb2495843408b8bf42b797a897, type: 3}
   stalkedJumpscareSfx: {fileID: 8300000, guid: f3c811ecf0fea6a4a8f2585e63c37933, type: 3}
   ambienceVolume: 0.45

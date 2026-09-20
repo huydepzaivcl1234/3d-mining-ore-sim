@@ -54,7 +54,7 @@ VALIDATION NOTE
   and the new path-distance API has no stale call sites.
 - Unity Editor/Play Mode is not available in the packaging environment, so perform the
   Play Mode checklist above after importing.
-V10 UNDERGROUND AREA
+V11 UNDERGROUND AREA
 ====================
-This package now also includes the complete Underground portal update. Read
-README_UNDERGROUND_V10.txt for unlock requirements, behavior and the test checklist.
+This package now also includes the separate Underground ore table, configurable area size,
+entry requirements and Underground ambience. Read README_UNDERGROUND_V11.txt for details.

@@ -24,6 +24,12 @@ namespace MiningSimulator.Ores
         [Min(0), SerializeField] private int requiredRebirths = 3;
         [Min(0f), SerializeField] private float requiredCoins = 1000000f;
 
+        [Header("Underground Ore Area")]
+        [Tooltip("Independent spawn table. Only entries in this asset can spawn Underground.")]
+        [SerializeField] private OreSpawnData undergroundSpawnData;
+        [SerializeField] private Vector3 undergroundAreaCenter;
+        [Min(1f), SerializeField] private Vector3 undergroundAreaSize = new(20f, 0f, 20f);
+
         [Header("Runtime References")]
         [SerializeField] private PlayerWallet wallet;
         [SerializeField] private MiningRebirthSystem rebirthSystem;
@@ -43,6 +49,9 @@ namespace MiningSimulator.Ores
         public bool UndergroundUnlocked => undergroundUnlocked;
         public int RequiredRebirths => requiredRebirths;
         public float RequiredCoins => requiredCoins;
+        public OreSpawnData UndergroundSpawnData => undergroundSpawnData;
+        public Vector3 UndergroundAreaCenter => undergroundAreaCenter;
+        public Vector3 UndergroundAreaSize => undergroundAreaSize;
         public int CompletedRebirths => rebirthSystem != null ? rebirthSystem.CompletedRebirths : 0;
         public float CurrentCoins => wallet != null ? wallet.CurrentMoney : 0f;
         public OreSpawner ActiveSpawner => CurrentArea == MiningWorldArea.Underground
@@ -197,13 +206,18 @@ namespace MiningSimulator.Ores
                 BuildCave(undergroundEnvironment.transform);
             }
 
-            if (undergroundSpawner == null && groundSpawner != null)
+            if (groundSpawner != null)
             {
-                GameObject spawnerObject = new("Underground Ore System");
-                spawnerObject.SetActive(false);
-                spawnerObject.transform.SetParent(transform, false);
-                undergroundSpawner = spawnerObject.AddComponent<OreSpawner>();
-                undergroundSpawner.ConfigureAsAreaClone(groundSpawner);
+                if (undergroundSpawner == null)
+                {
+                    GameObject spawnerObject = new("Underground Ore System");
+                    spawnerObject.SetActive(false);
+                    spawnerObject.transform.SetParent(transform, false);
+                    undergroundSpawner = spawnerObject.AddComponent<OreSpawner>();
+                }
+
+                undergroundSpawner.ConfigureAsAreaClone(groundSpawner, undergroundSpawnData,
+                    undergroundAreaCenter, undergroundAreaSize);
             }
 
             undergroundEnvironment.SetActive(false);
@@ -212,9 +226,8 @@ namespace MiningSimulator.Ores
 
         private void BuildCave(Transform root)
         {
-            OreSpawnData data = groundSpawner != null ? groundSpawner.SpawnData : null;
-            Vector3 center = data != null ? data.AreaCenter : Vector3.zero;
-            Vector3 size = data != null ? data.AreaSize : new Vector3(32f, 0f, 32f);
+            Vector3 center = undergroundAreaCenter;
+            Vector3 size = undergroundAreaSize;
             float width = Mathf.Max(28f, size.x + 12f);
             float depth = Mathf.Max(28f, size.z + 12f);
             float wallHeight = 14f;
@@ -346,5 +359,15 @@ namespace MiningSimulator.Ores
 
         private void HandleMoneyChanged(float _) => RequirementsChanged?.Invoke();
         private void HandleRebirthChanged() => RequirementsChanged?.Invoke();
+
+        private void OnValidate()
+        {
+            requiredRebirths = Mathf.Max(0, requiredRebirths);
+            requiredCoins = Mathf.Max(0f, requiredCoins);
+            undergroundAreaSize = new Vector3(
+                Mathf.Max(1f, Mathf.Abs(undergroundAreaSize.x)),
+                Mathf.Max(0f, Mathf.Abs(undergroundAreaSize.y)),
+                Mathf.Max(1f, Mathf.Abs(undergroundAreaSize.z)));
+        }
     }
 }

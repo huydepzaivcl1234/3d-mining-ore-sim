@@ -26,6 +26,7 @@ namespace MiningSimulator.Ores
         // Runtime lookup avoids storing a scene object reference in audio data.
         // This keeps the audio feature independent of authored UI and scene layout.
         private DayNightSystem dayNightSystem;
+        private MiningWorldAreaController areaController;
         [SerializeField] private AudioSource musicSource;
         [SerializeField] private AudioSource sfxSource;
         [SerializeField] private AudioSource ambienceSource;
@@ -110,6 +111,11 @@ namespace MiningSimulator.Ores
             {
                 mainMenu = FindFirstObjectByType<MiningMainMenu>(FindObjectsInactive.Include);
             }
+            if (areaController == null)
+            {
+                areaController = FindFirstObjectByType<MiningWorldAreaController>(
+                    FindObjectsInactive.Include);
+            }
         }
 
         private void OnEnable()
@@ -184,6 +190,7 @@ namespace MiningSimulator.Ores
 
             ResolveSources();
             ConfigureSources();
+            BindWorldAreaController();
         }
 
         private void Start()
@@ -207,6 +214,7 @@ namespace MiningSimulator.Ores
 
             if (audioData == null || dayNightSystem == null || ambienceSource == null ||
                 mainMenuMusicActive || shopThemeActive || coinRainAmbienceActive ||
+                IsUndergroundAreaActive() ||
                 ambienceFadedForPeriodChange ||
                 !ambienceSource.isPlaying || audioData.AmbienceFadeDuration <= 0f)
             {
@@ -223,6 +231,10 @@ namespace MiningSimulator.Ores
         private void OnDisable()
         {
             StopAmbiencePlaylist();
+            if (areaController != null)
+            {
+                areaController.AreaChanged -= HandleAreaChanged;
+            }
             if (oreSpawner != null)
             {
                 oreSpawner.OreRewardGranted -= HandleOreRewardGranted;
@@ -636,6 +648,7 @@ namespace MiningSimulator.Ores
             EnsureClipLoaded(audioData.BackgroundMusic);
             EnsureClipLoaded(audioData.ShopMusic);
             EnsureClipLoaded(audioData.MorningAmbience);
+            EnsureClipLoaded(audioData.UndergroundAmbience);
             for (int index = 0; index < audioData.MorningAmbienceCount; index++)
             {
                 EnsureClipLoaded(audioData.GetMorningAmbienceAt(index));
@@ -740,7 +753,7 @@ namespace MiningSimulator.Ores
         private void HandlePeriodChanged(MiningTimePeriod period)
         {
             ambienceFadedForPeriodChange = false;
-            if (coinRainAmbienceActive)
+            if (coinRainAmbienceActive || IsUndergroundAreaActive())
             {
                 return;
             }
@@ -774,6 +787,12 @@ namespace MiningSimulator.Ores
             if (coinRainAmbienceActive)
             {
                 PlayCoinRainAmbience();
+                return;
+            }
+
+            if (IsUndergroundAreaActive())
+            {
+                PlayUndergroundAmbience(fadeIn);
                 return;
             }
 
@@ -834,7 +853,35 @@ namespace MiningSimulator.Ores
             }
         }
 
+        private void PlayUndergroundAmbience(bool fadeIn)
+        {
+            StopAmbiencePlaylist();
+            if (audioData == null || ambienceSource == null || musicMuted)
+            {
+                return;
+            }
+
+            AudioClip ambience = audioData.UndergroundAmbience != null
+                ? audioData.UndergroundAmbience
+                : audioData.NightAmbience != null
+                    ? audioData.NightAmbience
+                    : audioData.BackgroundMusic;
+            if (!EnsureClipLoaded(ambience))
+            {
+                return;
+            }
+
+            PlayAmbienceClip(ambience, fadeIn, GetUndergroundAmbienceVolume());
+            ambienceSource.loop = true;
+            currentPlaylistAmbience = ambience;
+        }
+
         private void PlayAmbienceClip(AudioClip clip, bool fadeIn)
+        {
+            PlayAmbienceClip(clip, fadeIn, GetAmbienceVolume());
+        }
+
+        private void PlayAmbienceClip(AudioClip clip, bool fadeIn, float targetVolume)
         {
             ConfigureSources();
             StopAmbienceFade();
@@ -848,8 +895,39 @@ namespace MiningSimulator.Ores
             ambienceSource.Play();
             if (fadeIn)
             {
-                FadeAmbienceTo(GetAmbienceVolume(), false);
+                FadeAmbienceTo(targetVolume, false);
             }
+            else
+            {
+                ambienceSource.volume = targetVolume;
+            }
+        }
+
+        private void HandleAreaChanged()
+        {
+            ambienceFadedForPeriodChange = false;
+            if (!shopThemeActive && !mainMenuMusicActive && !coinRainAmbienceActive)
+            {
+                PlayWorldAmbience(true);
+            }
+        }
+
+        private void BindWorldAreaController()
+        {
+            areaController ??= MiningWorldAreaController.EnsureRuntime();
+            if (areaController == null)
+            {
+                return;
+            }
+
+            areaController.AreaChanged -= HandleAreaChanged;
+            areaController.AreaChanged += HandleAreaChanged;
+        }
+
+        private bool IsUndergroundAreaActive()
+        {
+            return areaController != null &&
+                   areaController.CurrentArea == MiningWorldArea.Underground;
         }
 
         private IEnumerator PlayAmbiencePlaylist(bool isNight)
@@ -981,6 +1059,9 @@ namespace MiningSimulator.Ores
         private float GetMusicVolume() => audioData.MusicVolume * masterVolume * musicVolume;
 
         private float GetAmbienceVolume() => audioData.AmbienceVolume * masterVolume * musicVolume;
+
+        private float GetUndergroundAmbienceVolume() =>
+            audioData.UndergroundAmbienceVolume * masterVolume * musicVolume;
 
         private void StopAudioFades()
         {
