@@ -12,6 +12,7 @@ namespace MiningSimulator.Ores
         private float nextDestinationTime;
         private bool hasDestination;
         private bool isTrading;
+        private Animator animator;
 
         public string InteractionLabel => MiningLocalization.Text("WANDERING TRADER", "THƯƠNG NHÂN LANG THANG");
         public bool CanInteract => owner != null && !isTrading;
@@ -19,6 +20,7 @@ namespace MiningSimulator.Ores
         public void Initialize(WanderingTraderSystem traderSystem)
         {
             owner = traderSystem;
+            animator = GetComponentInChildren<Animator>(true);
             ChooseDestination();
         }
 
@@ -26,7 +28,15 @@ namespace MiningSimulator.Ores
         {
             if (owner == null || isTrading)
             {
+                owner?.ApplyMovementAnimation(animator, false);
                 return;
+            }
+
+            if (!owner.IsOutsideMiningArea(transform.position))
+            {
+                transform.position = owner.MoveOutsideMiningArea(transform.position);
+                hasDestination = false;
+                ChooseDestination();
             }
 
             if (!hasDestination || Time.time >= nextDestinationTime)
@@ -35,6 +45,7 @@ namespace MiningSimulator.Ores
             }
             if (!hasDestination)
             {
+                owner.ApplyMovementAnimation(animator, false);
                 return;
             }
 
@@ -45,13 +56,24 @@ namespace MiningSimulator.Ores
                 hasDestination = false;
                 nextDestinationTime = Time.time + UnityEngine.Random.Range(owner.WaitSeconds.x,
                     owner.WaitSeconds.y);
+                owner.ApplyMovementAnimation(animator, false);
                 return;
             }
 
             Vector3 direction = offset.normalized;
-            transform.position += direction * owner.WanderSpeed * Time.deltaTime;
+            Vector3 nextPosition = transform.position + direction * owner.WanderSpeed * Time.deltaTime;
+            if (!owner.IsOutsideMiningArea(nextPosition))
+            {
+                hasDestination = false;
+                nextDestinationTime = Time.time;
+                owner.ApplyMovementAnimation(animator, false);
+                return;
+            }
+
+            transform.position = nextPosition;
             transform.rotation = Quaternion.RotateTowards(transform.rotation,
                 Quaternion.LookRotation(direction, Vector3.up), 360f * Time.deltaTime);
+            owner.ApplyMovementAnimation(animator, true);
         }
 
         private void OnMouseDown()
@@ -83,6 +105,7 @@ namespace MiningSimulator.Ores
         public void SetTrading(bool trading)
         {
             isTrading = trading;
+            owner?.ApplyMovementAnimation(animator, false);
             if (!trading)
             {
                 nextDestinationTime = Time.time + 0.5f;

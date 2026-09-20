@@ -18,6 +18,12 @@ namespace MiningSimulator.Ores
         [SerializeField] private MiningUpgradeSystem upgradeSystem;
         [SerializeField] private LuckyBlockDropSystem luckyBlockSystem;
 
+        [Header("Wandering Trader")]
+        [Tooltip("Optional civilian prefab used by the wandering trader. Leave empty to reuse the miner humanoid.")]
+        [SerializeField] private GameObject wanderingTraderModelPrefab;
+        [Tooltip("Optional controller used for the trader's idle and walk animation.")]
+        [SerializeField] private RuntimeAnimatorController wanderingTraderAnimatorController;
+
         private int purchasedCount;
 
         public int NpcCost => npcData != null ? npcData.PurchaseCost : 0;
@@ -25,6 +31,9 @@ namespace MiningSimulator.Ores
         public NpcData NpcData => npcData;
         /// <summary>Humanoid source reused by the runtime-only wandering trader.</summary>
         public MiningNpc NpcPrefab => npcPrefab;
+        public GameObject WanderingTraderModelPrefab => wanderingTraderModelPrefab;
+        public RuntimeAnimatorController WanderingTraderAnimatorController =>
+            wanderingTraderAnimatorController;
         public int MaximumMiners
         {
             get

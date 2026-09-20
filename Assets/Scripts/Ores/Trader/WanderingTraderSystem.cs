@@ -15,6 +15,12 @@ namespace MiningSimulator.Ores
     {
         [Header("Humanoid Source")]
         [SerializeField] private MiningNpc humanoidPrefab;
+        [Tooltip("Optional trader prefab. It can be any humanoid model; a collider is added automatically if needed.")]
+        [SerializeField] private GameObject traderModelPrefab;
+        [Tooltip("Optional Animator Controller for the trader model.")]
+        [SerializeField] private RuntimeAnimatorController animatorController;
+        [SerializeField] private string walkingBoolParameter = "IsWalking";
+        [SerializeField] private string speedFloatParameter = "Speed";
 
         [Header("Wander Area")]
         [Tooltip("Horizontal area where the trader can walk. The mining area is excluded.")]
@@ -48,6 +54,8 @@ namespace MiningSimulator.Ores
             WanderingTraderSystem system = shop.gameObject.AddComponent<WanderingTraderSystem>();
             system.npcShop = shop;
             system.humanoidPrefab = shop.NpcPrefab;
+            system.traderModelPrefab = shop.WanderingTraderModelPrefab;
+            system.animatorController = shop.WanderingTraderAnimatorController;
         }
 
         private void Awake()
@@ -106,7 +114,7 @@ namespace MiningSimulator.Ores
                     UnityEngine.Random.Range(-wanderAreaSize.x * 0.5f, wanderAreaSize.x * 0.5f),
                     0f,
                     UnityEngine.Random.Range(-wanderAreaSize.y * 0.5f, wanderAreaSize.y * 0.5f));
-                if (miningBounds.Contains(candidate))
+                if (!IsPathOutsideMiningArea(currentPosition, candidate, miningBounds))
                 {
                     continue;
                 }
@@ -122,25 +130,91 @@ namespace MiningSimulator.Ores
         public float WanderSpeed => wanderSpeed;
         public Vector2 WaitSeconds => waitSeconds;
 
+        public bool IsOutsideMiningArea(Vector3 position)
+        {
+            return !GetMiningBounds().Contains(position);
+        }
+
+        public Vector3 MoveOutsideMiningArea(Vector3 position)
+        {
+            Bounds miningBounds = GetMiningBounds();
+            if (!miningBounds.Contains(position))
+            {
+                return position;
+            }
+
+            float left = Mathf.Abs(position.x - miningBounds.min.x);
+            float right = Mathf.Abs(miningBounds.max.x - position.x);
+            float bottom = Mathf.Abs(position.z - miningBounds.min.z);
+            float top = Mathf.Abs(miningBounds.max.z - position.z);
+            float nearest = Mathf.Min(left, right, bottom, top);
+            const float safetyGap = 0.5f;
+
+            if (nearest == left)
+            {
+                position.x = miningBounds.min.x - safetyGap;
+            }
+            else if (nearest == right)
+            {
+                position.x = miningBounds.max.x + safetyGap;
+            }
+            else if (nearest == bottom)
+            {
+                position.z = miningBounds.min.z - safetyGap;
+            }
+            else
+            {
+                position.z = miningBounds.max.z + safetyGap;
+            }
+
+            return SnapToGround(position, position.y);
+        }
+
+        public void ApplyMovementAnimation(Animator animator, bool moving)
+        {
+            if (animator == null)
+            {
+                return;
+            }
+
+            if (animatorController != null && animator.runtimeAnimatorController != animatorController)
+            {
+                animator.runtimeAnimatorController = animatorController;
+            }
+
+            SetAnimatorBoolIfPresent(animator, walkingBoolParameter, moving);
+            SetAnimatorFloatIfPresent(animator, speedFloatParameter, moving ? wanderSpeed : 0f);
+        }
+
         private void SpawnTrader()
         {
-            if (trader != null || humanoidPrefab == null)
+            if (trader != null || (traderModelPrefab == null && humanoidPrefab == null))
             {
                 return;
             }
 
             Vector3 start = wanderAreaCenter;
-            TryGetDestination(start, out start);
-            MiningNpc copiedMiner = Instantiate(humanoidPrefab, start, Quaternion.identity);
-            copiedMiner.name = "Wandering Trader";
-            copiedMiner.enabled = false;
-            MiningNpcHeadlamp headlamp = copiedMiner.GetComponent<MiningNpcHeadlamp>();
+            if (!TryGetSpawnPosition(out start))
+            {
+                start = MoveOutsideMiningArea(start);
+            }
+            GameObject traderObject = traderModelPrefab != null
+                ? Instantiate(traderModelPrefab, start, Quaternion.identity)
+                : Instantiate(humanoidPrefab.gameObject, start, Quaternion.identity);
+            traderObject.name = "Wandering Trader";
+
+            MiningNpc copiedMiner = traderObject.GetComponent<MiningNpc>();
+            if (copiedMiner != null)
+            {
+                copiedMiner.enabled = false;
+            }
+            MiningNpcHeadlamp headlamp = traderObject.GetComponent<MiningNpcHeadlamp>();
             if (headlamp != null)
             {
                 headlamp.enabled = false;
             }
 
-            Rigidbody body = copiedMiner.GetComponent<Rigidbody>();
+            Rigidbody body = traderObject.GetComponent<Rigidbody>();
             if (body != null)
             {
                 body.isKinematic = true;
@@ -148,7 +222,15 @@ namespace MiningSimulator.Ores
                 body.angularVelocity = Vector3.zero;
             }
 
-            trader = copiedMiner.gameObject.AddComponent<WanderingTraderAgent>();
+            if (traderObject.GetComponent<Collider>() == null)
+            {
+                CapsuleCollider collider = traderObject.AddComponent<CapsuleCollider>();
+                collider.center = new Vector3(0f, 0.9f, 0f);
+                collider.height = 1.8f;
+                collider.radius = 0.35f;
+            }
+
+            trader = traderObject.AddComponent<WanderingTraderAgent>();
             trader.Initialize(this);
         }
 
@@ -231,6 +313,77 @@ namespace MiningSimulator.Ores
             size.z += miningAreaPadding * 2f;
             size.y = 1000f;
             return new Bounds(center, size);
+        }
+
+        private bool TryGetSpawnPosition(out Vector3 destination)
+        {
+            Bounds miningBounds = GetMiningBounds();
+            for (int attempt = 0; attempt < destinationAttempts; attempt++)
+            {
+                Vector3 candidate = wanderAreaCenter + new Vector3(
+                    UnityEngine.Random.Range(-wanderAreaSize.x * 0.5f, wanderAreaSize.x * 0.5f),
+                    0f,
+                    UnityEngine.Random.Range(-wanderAreaSize.y * 0.5f, wanderAreaSize.y * 0.5f));
+                if (!miningBounds.Contains(candidate))
+                {
+                    destination = SnapToGround(candidate, wanderAreaCenter.y);
+                    return true;
+                }
+            }
+
+            destination = MoveOutsideMiningArea(wanderAreaCenter);
+            return false;
+        }
+
+        private static bool IsPathOutsideMiningArea(Vector3 from, Vector3 to, Bounds miningBounds)
+        {
+            if (miningBounds.Contains(from) || miningBounds.Contains(to))
+            {
+                return false;
+            }
+
+            Vector3 direction = to - from;
+            direction.y = 0f;
+            float distance = direction.magnitude;
+            if (distance <= 0.001f)
+            {
+                return true;
+            }
+
+            return !miningBounds.IntersectRay(new Ray(from, direction / distance), out float hitDistance) ||
+                   hitDistance > distance;
+        }
+
+        private static void SetAnimatorBoolIfPresent(Animator animator, string parameterName, bool value)
+        {
+            if (string.IsNullOrWhiteSpace(parameterName))
+            {
+                return;
+            }
+            foreach (AnimatorControllerParameter parameter in animator.parameters)
+            {
+                if (parameter.type == AnimatorControllerParameterType.Bool && parameter.name == parameterName)
+                {
+                    animator.SetBool(parameterName, value);
+                    return;
+                }
+            }
+        }
+
+        private static void SetAnimatorFloatIfPresent(Animator animator, string parameterName, float value)
+        {
+            if (string.IsNullOrWhiteSpace(parameterName))
+            {
+                return;
+            }
+            foreach (AnimatorControllerParameter parameter in animator.parameters)
+            {
+                if (parameter.type == AnimatorControllerParameterType.Float && parameter.name == parameterName)
+                {
+                    animator.SetFloat(parameterName, value);
+                    return;
+                }
+            }
         }
 
         private static Vector3 SnapToGround(Vector3 position, float fallbackY)
