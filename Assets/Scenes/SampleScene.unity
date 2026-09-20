@@ -28318,6 +28318,8 @@ MonoBehaviour:
   progressionSystem: {fileID: 655586588}
   upgradeSystem: {fileID: 1144114548}
   luckyBlockSystem: {fileID: 725887964}
+  wanderingTraderModelPrefab: {fileID: 2496966258743808721, guid: 9044a6a3adaeb794f8f305d8bb876487, type: 3}
+  wanderingTraderAnimatorController: {fileID: 9100000, guid: 8291c44a8f929d744a03cbe8628030c2, type: 2}
 --- !u!4 &655586587
 Transform:
   m_ObjectHideFlags: 0
@@ -42115,6 +42117,65 @@ Transform:
   - {fileID: 568057024}
   - {fileID: 1369443380}
   - {fileID: 1961927742}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &939271479
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 939271481}
+  - component: {fileID: 939271480}
+  m_Layer: 0
+  m_Name: Wandering Trader System
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &939271480
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 939271479}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5bec049ef414c6247a7a645ea88585d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.WanderingTraderSystem
+  npcShop: {fileID: 655586586}
+  humanoidPrefab: {fileID: 6240163918479986620, guid: 3b9fc0d6232590649bdd95a4ecb5a7cc, type: 3}
+  traderModelPrefab: {fileID: 2496966258743808721, guid: 9044a6a3adaeb794f8f305d8bb876487, type: 3}
+  animatorController: {fileID: 9100000, guid: 8291c44a8f929d744a03cbe8628030c2, type: 2}
+  walkingBoolParameter: IsMoving
+  speedFloatParameter: Speed
+  wanderAreaCenter: {x: 0, y: 0, z: 0}
+  wanderAreaSize: {x: 64, y: 64}
+  miningAreaPadding: 4
+  wanderSpeed: 2
+  waitSeconds: {x: 1.5, y: 4}
+  destinationAttempts: 24
+  maximumItemsRequested: 3
+  moneyPerRarityStep: 30
+  gemsPerRarityStep: 1
+--- !u!4 &939271481
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 939271479}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 35.9}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &940184169
@@ -109238,3 +109299,4 @@ SceneRoots:
   - {fileID: 1546368046}
   - {fileID: 566203702}
   - {fileID: 1293138317}
+  - {fileID: 939271481}

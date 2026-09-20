@@ -13,6 +13,9 @@ namespace MiningSimulator.Ores
     [DisallowMultipleComponent]
     public sealed class WanderingTraderSystem : MonoBehaviour
     {
+        [Header("Scene References")]
+        [SerializeField] private NpcShop npcShop;
+
         [Header("Humanoid Source")]
         [SerializeField] private MiningNpc humanoidPrefab;
         [Tooltip("Optional trader prefab. It can be any humanoid model; a collider is added automatically if needed.")]
@@ -37,7 +40,6 @@ namespace MiningSimulator.Ores
         [Min(1f), SerializeField] private float gemsPerRarityStep = 1f;
 
         private readonly List<MiningItemData> eligibleItems = new();
-        private NpcShop npcShop;
         private OreSpawner oreSpawner;
         private MiningItemSystem itemSystem;
         private PlayerWallet wallet;
@@ -46,22 +48,32 @@ namespace MiningSimulator.Ores
 
         public static void EnsureRuntime(NpcShop shop)
         {
-            if (shop == null || shop.GetComponent<WanderingTraderSystem>() != null)
+            if (shop == null || FindFirstObjectByType<WanderingTraderSystem>(
+                    FindObjectsInactive.Include) != null)
             {
                 return;
             }
 
             WanderingTraderSystem system = shop.gameObject.AddComponent<WanderingTraderSystem>();
-            system.npcShop = shop;
-            system.humanoidPrefab = shop.NpcPrefab;
-            system.traderModelPrefab = shop.WanderingTraderModelPrefab;
-            system.animatorController = shop.WanderingTraderAnimatorController;
+            system.Configure(shop);
+        }
+
+        /// <summary>Called by the scene setup tool so the authored system exposes all settings.</summary>
+        public void Configure(NpcShop shop)
+        {
+            npcShop = shop;
+            humanoidPrefab ??= shop != null ? shop.NpcPrefab : null;
+            traderModelPrefab ??= shop != null ? shop.WanderingTraderModelPrefab : null;
+            animatorController ??= shop != null ? shop.WanderingTraderAnimatorController : null;
         }
 
         private void Awake()
         {
             npcShop ??= GetComponent<NpcShop>();
+            npcShop ??= FindFirstObjectByType<NpcShop>(FindObjectsInactive.Include);
             humanoidPrefab ??= npcShop != null ? npcShop.NpcPrefab : null;
+            traderModelPrefab ??= npcShop != null ? npcShop.WanderingTraderModelPrefab : null;
+            animatorController ??= npcShop != null ? npcShop.WanderingTraderAnimatorController : null;
             oreSpawner = FindFirstObjectByType<OreSpawner>(FindObjectsInactive.Include);
             itemSystem = FindFirstObjectByType<MiningItemSystem>(FindObjectsInactive.Include);
             wallet = FindFirstObjectByType<PlayerWallet>(FindObjectsInactive.Include);
@@ -230,7 +242,11 @@ namespace MiningSimulator.Ores
                 collider.radius = 0.35f;
             }
 
-            trader = traderObject.AddComponent<WanderingTraderAgent>();
+            trader = traderObject.GetComponent<WanderingTraderAgent>();
+            if (trader == null)
+            {
+                trader = traderObject.AddComponent<WanderingTraderAgent>();
+            }
             trader.Initialize(this);
         }
 
