@@ -26,6 +26,20 @@ MonoBehaviour:
   modelLocalEulerAngles: {x: 0, y: 0, z: 0}
   selectionChancePercent: 33.34
   maximumStack: 64
+  traderCanBuy: 1
+  traderCanSell: 1
+  traderMinimumOfferAmount: 1
+  traderMaximumOfferAmount: 5
+  traderBuyValue: 3000
+  traderCoinBuyMaximum: 20000
+  traderGemBuyValue: 4
+  traderGemBuyMaximum: 5
+  traderSellValue: 3
+  traderGemSellMaximum: 4
+  useType: 0
   effectType: 0
   effectPercent: 25
   effectDurationSeconds: 180
+  giftRewards: []
+  giftSpinDurationSeconds: 3.5
+  giftSpinRotations: 6
