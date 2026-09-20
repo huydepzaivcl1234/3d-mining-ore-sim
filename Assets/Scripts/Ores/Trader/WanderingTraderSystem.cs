@@ -230,6 +230,7 @@ namespace MiningSimulator.Ores
             if (body != null)
             {
                 body.isKinematic = true;
+                body.interpolation = RigidbodyInterpolation.Interpolate;
                 body.linearVelocity = Vector3.zero;
                 body.angularVelocity = Vector3.zero;
             }
@@ -259,10 +260,12 @@ namespace MiningSimulator.Ores
                 return false;
             }
 
+            // An offer must still be visible when the player owns none of its item yet.
+            // Otherwise clicking the trader looks like a failed interaction and it never pauses.
             eligibleItems.Clear();
             foreach (MiningItemData item in database.Items)
             {
-                if (item != null && itemSystem.GetItemCount(item) > 0)
+                if (item != null)
                 {
                     eligibleItems.Add(item);
                 }
@@ -274,8 +277,7 @@ namespace MiningSimulator.Ores
 
             MiningItemData requestedItem = eligibleItems[UnityEngine.Random.Range(0,
                 eligibleItems.Count)];
-            int amount = UnityEngine.Random.Range(1, Mathf.Min(maximumItemsRequested,
-                itemSystem.GetItemCount(requestedItem)) + 1);
+            int amount = UnityEngine.Random.Range(1, maximumItemsRequested + 1);
             bool paysGems = UnityEngine.Random.value < 0.5f;
             int rarityStep = (int)requestedItem.Rarity + 1;
             float reward = paysGems

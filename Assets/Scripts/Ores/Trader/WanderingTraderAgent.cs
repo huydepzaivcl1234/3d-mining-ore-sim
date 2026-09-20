@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 
 namespace MiningSimulator.Ores
 {
@@ -13,6 +14,7 @@ namespace MiningSimulator.Ores
         private bool hasDestination;
         private bool isTrading;
         private Animator animator;
+        private Rigidbody body;
 
         public string InteractionLabel => MiningLocalization.Text("WANDERING TRADER", "THƯƠNG NHÂN LANG THANG");
         public bool CanInteract => owner != null && !isTrading;
@@ -21,11 +23,14 @@ namespace MiningSimulator.Ores
         {
             owner = traderSystem;
             animator = GetComponentInChildren<Animator>(true);
+            body = GetComponent<Rigidbody>();
             ChooseDestination();
         }
 
         private void Update()
         {
+            HandlePointerInteraction();
+
             if (owner == null || isTrading)
             {
                 owner?.ApplyMovementAnimation(animator, false);
@@ -61,7 +66,28 @@ namespace MiningSimulator.Ores
             }
 
             Vector3 direction = offset.normalized;
-            Vector3 nextPosition = transform.position + direction * owner.WanderSpeed * Time.deltaTime;
+            transform.rotation = Quaternion.RotateTowards(transform.rotation,
+                Quaternion.LookRotation(direction, Vector3.up), 360f * Time.deltaTime);
+            owner.ApplyMovementAnimation(animator, true);
+        }
+
+        private void FixedUpdate()
+        {
+            if (owner == null || isTrading || !hasDestination)
+            {
+                return;
+            }
+
+            Vector3 currentPosition = body != null ? body.position : transform.position;
+            Vector3 offset = destination - currentPosition;
+            offset.y = 0f;
+            if (offset.sqrMagnitude <= 0.04f)
+            {
+                return;
+            }
+
+            Vector3 nextPosition = currentPosition + offset.normalized * owner.WanderSpeed *
+                Time.fixedDeltaTime;
             if (!owner.IsOutsideMiningArea(nextPosition))
             {
                 hasDestination = false;
@@ -70,15 +96,34 @@ namespace MiningSimulator.Ores
                 return;
             }
 
-            transform.position = nextPosition;
-            transform.rotation = Quaternion.RotateTowards(transform.rotation,
-                Quaternion.LookRotation(direction, Vector3.up), 360f * Time.deltaTime);
-            owner.ApplyMovementAnimation(animator, true);
+            if (body != null && body.isKinematic)
+            {
+                body.MovePosition(nextPosition);
+            }
+            else
+            {
+                transform.position = nextPosition;
+            }
         }
 
         private void OnMouseDown()
         {
             if (EventSystem.current == null || !EventSystem.current.IsPointerOverGameObject())
+            {
+                Interact();
+            }
+        }
+
+        private void HandlePointerInteraction()
+        {
+            if (!CanInteract || IsPointerOverUi())
+            {
+                return;
+            }
+
+            bool clicked = Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame;
+            bool pressedF = Keyboard.current != null && Keyboard.current.fKey.wasPressedThisFrame;
+            if ((clicked || pressedF) && IsPointerOverThisTrader())
             {
                 Interact();
             }
@@ -117,6 +162,30 @@ namespace MiningSimulator.Ores
             hasDestination = owner != null && owner.TryGetDestination(transform.position,
                 out destination);
             nextDestinationTime = Time.time + 0.25f;
+        }
+
+        private bool IsPointerOverThisTrader()
+        {
+            Camera camera = Camera.main;
+            Pointer pointer = Pointer.current;
+            if (camera == null || pointer == null)
+            {
+                return false;
+            }
+
+            Ray ray = camera.ScreenPointToRay(pointer.position.ReadValue());
+            if (!Physics.Raycast(ray, out RaycastHit hit, 500f, ~0,
+                    QueryTriggerInteraction.Ignore))
+            {
+                return false;
+            }
+
+            return hit.collider.GetComponentInParent<WanderingTraderAgent>() == this;
+        }
+
+        private static bool IsPointerOverUi()
+        {
+            return EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
         }
     }
 }
