@@ -42,7 +42,7 @@ MonoBehaviour:
     costIncreasePerPurchase: 10
   npcMoveSpeed:
     displayName: "T\u0103ng t\u1ED1c \u0111\u1ED9 di chuy\u1EC3n NPC"
-    percentPerStack: 5
+    percentPerStack: 1
     maximumStacks: 100
     startingCost: 10
     costGrowthMultiplier: 1.2
@@ -77,7 +77,7 @@ MonoBehaviour:
     costIncreasePerPurchase: 10
   itemDropChance:
     displayName: "T\u0103ng t\u1EC9 l\u1EC7 r\u01A1i v\u1EADt ph\u1EA9m"
-    percentPerStack: 1
+    percentPerStack: 0.1
     maximumStacks: 100
     startingCost: 50
     costGrowthMultiplier: 1.2

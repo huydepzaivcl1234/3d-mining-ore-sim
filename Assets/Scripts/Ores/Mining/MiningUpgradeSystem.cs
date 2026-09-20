@@ -34,7 +34,6 @@ namespace MiningSimulator.Ores
         public float PermanentMoneyMultiplier => permanentMoneyMultiplier * achievementMoneyMultiplier;
         public float PermanentExperienceMultiplier =>
             permanentExperienceMultiplier * achievementExperienceMultiplier;
-        /// <summary>Permanent Rebirth multiplier for all ore damage, including NPC mining.</summary>
         public float PermanentMiningStrengthMultiplier => permanentMiningStrengthMultiplier;
         public float AchievementMoneyMultiplier => achievementMoneyMultiplier;
         public float AchievementExperienceMultiplier => achievementExperienceMultiplier;
@@ -196,17 +195,10 @@ namespace MiningSimulator.Ores
             permanentExperienceMultiplier = Mathf.Max(1f, multiplier);
         }
 
-        /// <summary>Applies the permanent mining-strength bonus earned from Rebirth.</summary>
+        /// <summary>Permanent, Rebirth-granted multiplier applied to every NPC mining hit.</summary>
         public void SetPermanentMiningStrengthMultiplier(float multiplier)
         {
-            float safeMultiplier = Mathf.Max(1f, multiplier);
-            if (Mathf.Approximately(permanentMiningStrengthMultiplier, safeMultiplier))
-            {
-                return;
-            }
-
-            permanentMiningStrengthMultiplier = safeMultiplier;
-            UpgradesChanged?.Invoke();
+            permanentMiningStrengthMultiplier = Mathf.Max(1f, multiplier);
         }
 
         /// <summary>Applies the cumulative permanent rewards earned from achievements.</summary>

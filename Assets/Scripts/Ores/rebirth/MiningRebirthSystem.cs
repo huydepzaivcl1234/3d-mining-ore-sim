@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace MiningSimulator.Ores
 {
-    /// <summary>Owns saved rebirth progression and applies its permanent bonuses.</summary>
+    /// <summary>Owns saved rebirth progression and applies its permanent money multiplier.</summary>
     [DisallowMultipleComponent]
     public sealed class MiningRebirthSystem : MonoBehaviour
     {
@@ -28,16 +28,16 @@ namespace MiningSimulator.Ores
         public float NextMoneyMultiplier => rebirthData != null
             ? rebirthData.GetMoneyMultiplier(completedRebirths + 1)
             : 1f;
-        // Rebirth's permanent boost now applies to both money and NPC experience, at the
-        // same multiplier value.
-        public float PermanentExperienceMultiplier => PermanentMoneyMultiplier;
-        public float NextExperienceMultiplier => NextMoneyMultiplier;
         public float PermanentMiningStrengthMultiplier => rebirthData != null
             ? rebirthData.GetMiningStrengthMultiplier(completedRebirths)
             : 1f;
         public float NextMiningStrengthMultiplier => rebirthData != null
             ? rebirthData.GetMiningStrengthMultiplier(completedRebirths + 1)
             : 1f;
+        // Rebirth's permanent boost now applies to both money and NPC experience, at the
+        // same multiplier value.
+        public float PermanentExperienceMultiplier => PermanentMoneyMultiplier;
+        public float NextExperienceMultiplier => NextMoneyMultiplier;
         public bool CanRebirth => wallet != null && rebirthData != null &&
                                   wallet.CurrentMoney >= CurrentRequirement;
         public float Progress01 => wallet == null || rebirthData == null

@@ -208,6 +208,12 @@ namespace MiningSimulator.Ores
             float nextMultiplier = rebirthSystem != null
                 ? rebirthSystem.NextMoneyMultiplier
                 : currentMultiplier;
+            float currentStrengthMultiplier = rebirthSystem != null
+                ? rebirthSystem.PermanentMiningStrengthMultiplier
+                : 1f;
+            float nextStrengthMultiplier = rebirthSystem != null
+                ? rebirthSystem.NextMiningStrengthMultiplier
+                : currentStrengthMultiplier;
             string currentMoney = MiningMoneyFormatter.Format(wallet != null
                 ? wallet.CurrentMoney
                 : 0f);
@@ -220,8 +226,8 @@ namespace MiningSimulator.Ores
                 $"Tiền: {currentMoney}\nMọi nâng cấp\nCấp thợ mỏ và NPC trên sân"));
             Set(gainTitleLabel, MiningLocalization.Text("PERMANENT REWARD", "NHẬN VĨNH VIỄN"));
             Set(gainDetailsLabel, MiningLocalization.Text(
-                $"Money and XP boost\nx{currentMultiplier:0.00}  >  x{nextMultiplier:0.00}\nRebirth {completed}  >  {completed + 1}",
-                $"Tăng tiền và XP\nx{currentMultiplier:0.00}  >  x{nextMultiplier:0.00}\nTái sinh {completed}  >  {completed + 1}"));
+                $"Money & XP: x{currentMultiplier:0.00}  >  x{nextMultiplier:0.00}\nStrength: x{currentStrengthMultiplier:0.00}  >  x{nextStrengthMultiplier:0.00}\nRebirth {completed}  >  {completed + 1}",
+                $"Tiền & XP: x{currentMultiplier:0.00}  >  x{nextMultiplier:0.00}\nSức đào: x{currentStrengthMultiplier:0.00}  >  x{nextStrengthMultiplier:0.00}\nTái sinh {completed}  >  {completed + 1}"));
             Set(rewardTitleLabel, MiningLocalization.Text("NEXT PERMANENT MULTIPLIER",
                 "HỆ SỐ VĨNH VIỄN TIẾP THEO"));
         }

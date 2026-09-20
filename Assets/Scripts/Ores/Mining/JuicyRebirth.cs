@@ -156,7 +156,13 @@ namespace MiningSimulator.Ores
             float currentMultiplier = rebirthSystem != null
                 ? rebirthSystem.PermanentMoneyMultiplier
                 : 1f;
+            float currentStrengthMultiplier = rebirthSystem != null
+                ? rebirthSystem.PermanentMiningStrengthMultiplier
+                : 1f;
             float nextMultiplier = rebirthSystem != null ? rebirthSystem.NextMoneyMultiplier : 1f;
+            float nextStrengthMultiplier = rebirthSystem != null
+                ? rebirthSystem.NextMiningStrengthMultiplier
+                : 1f;
             bool ready = rebirthSystem != null && rebirthSystem.CanRebirth;
             targetFill = requirement > 0 ? Mathf.Clamp01(money / requirement) : 0f;
 
@@ -176,8 +182,9 @@ namespace MiningSimulator.Ores
             if (currentRewardText != null)
             {
                 currentRewardText.text = string.Format(MiningLocalization.Text(
-                    "Permanent reward: x{0:0.00} money & XP",
-                    "Thưởng vĩnh viễn: x{0:0.00} tiền & XP"), currentMultiplier);
+                    "Permanent reward: x{0:0.00} money & XP • x{1:0.00} strength",
+                    "Thưởng vĩnh viễn: x{0:0.00} tiền & XP • x{1:0.00} sức đào"),
+                    currentMultiplier, currentStrengthMultiplier);
             }
             if (requirementText != null)
             {
@@ -200,8 +207,9 @@ namespace MiningSimulator.Ores
             {
                 buttonSubText.text = ready
                     ? string.Format(MiningLocalization.Text(
-                        "Next permanent reward: x{0:0.00} money & XP",
-                        "Thưởng vĩnh viễn kế tiếp: x{0:0.00} tiền & XP"), nextMultiplier)
+                        "Next permanent reward: x{0:0.00} money & XP • x{1:0.00} strength",
+                        "Thưởng vĩnh viễn kế tiếp: x{0:0.00} tiền & XP • x{1:0.00} sức đào"),
+                        nextMultiplier, nextStrengthMultiplier)
                     : string.Format(MiningLocalization.Text(
                             "Need {0:N0} more money to unlock",
                             "Cần thêm {0:N0} tiền để mở khóa"),

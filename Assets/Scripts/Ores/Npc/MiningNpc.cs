@@ -344,8 +344,6 @@ namespace MiningSimulator.Ores
                 return;
             }
 
-            // Do not keep an old route alive once this miner is already close enough to mine.
-            // A stale final waypoint can otherwise pull it away from its assigned ore slot.
             ResetGlobalPath();
             ResetProgressTracking();
             SetMiningAnimationState(true);

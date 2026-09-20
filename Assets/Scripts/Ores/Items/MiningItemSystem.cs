@@ -205,6 +205,61 @@ namespace MiningSimulator.Ores
             return item != null && amount > 0 && GetAvailableSpace(item) >= amount;
         }
 
+        /// <summary>Returns the total amount of one item currently held by the player.</summary>
+        public int GetItemCount(MiningItemData item)
+        {
+            EnsureRuntimeSlots();
+            if (item == null)
+            {
+                return 0;
+            }
+
+            int count = 0;
+            foreach (RuntimeSlot slot in slots)
+            {
+                if (slot.item == item && slot.count > 0)
+                {
+                    count += slot.count;
+                }
+            }
+            return count;
+        }
+
+        /// <summary>Removes items for a trade without activating their effects.</summary>
+        public bool TryRemoveItem(MiningItemData item, int amount = 1)
+        {
+            EnsureRuntimeSlots();
+            if (item == null || amount <= 0 || GetItemCount(item) < amount)
+            {
+                return false;
+            }
+
+            int remaining = amount;
+            foreach (RuntimeSlot slot in slots)
+            {
+                if (slot.item != item || slot.count <= 0)
+                {
+                    continue;
+                }
+
+                int removed = Mathf.Min(slot.count, remaining);
+                slot.count -= removed;
+                remaining -= removed;
+                if (slot.count == 0)
+                {
+                    slot.item = null;
+                }
+                if (remaining == 0)
+                {
+                    break;
+                }
+            }
+
+            SaveInventory();
+            InventoryChanged?.Invoke();
+            return true;
+        }
+
         public bool TryUseSlot(int index)
         {
             EnsureRuntimeSlots();

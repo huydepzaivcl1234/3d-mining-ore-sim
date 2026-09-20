@@ -23,6 +23,8 @@ namespace MiningSimulator.Ores
         public int NpcCost => npcData != null ? npcData.PurchaseCost : 0;
         public int PurchasedCount => purchasedCount;
         public NpcData NpcData => npcData;
+        /// <summary>Humanoid source reused by the runtime-only wandering trader.</summary>
+        public MiningNpc NpcPrefab => npcPrefab;
         public int MaximumMiners
         {
             get
@@ -49,6 +51,7 @@ namespace MiningSimulator.Ores
         {
             FindLuckyBlockSystemIfMissing();
             FindProgressionSystemIfMissing();
+            WanderingTraderSystem.EnsureRuntime(this);
         }
 
         private void Start()
