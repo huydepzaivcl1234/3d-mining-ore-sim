@@ -20,6 +20,12 @@ namespace MiningSimulator.Ores
         private float resetAt;
         private bool isOpen;
 
+        private void Awake()
+        {
+            BindButtons();
+            ApplyShopStyle();
+        }
+
         public static WanderingTraderPanel EnsureRuntime()
         {
             WanderingTraderPanel existing = FindFirstObjectByType<WanderingTraderPanel>(FindObjectsInactive.Include);
@@ -55,6 +61,7 @@ namespace MiningSimulator.Ores
             for (int i = 0; i < offers.Count; i++) CreateOfferRow(parent, offers[i], i);
             gameObject.SetActive(true);
             transform.SetAsLastSibling();
+            ApplyShopStyle();
             UpdateCountdown();
         }
 
@@ -154,6 +161,19 @@ namespace MiningSimulator.Ores
             if (closeButton == null) return;
             closeButton.onClick.RemoveListener(Hide);
             closeButton.onClick.AddListener(Hide);
+        }
+
+        private void ApplyShopStyle()
+        {
+            Image background = GetComponent<Image>();
+            if (background != null)
+                background.color = new Color(0.02f, 0.015f, 0.01f, 0.78f);
+
+            Transform card = transform.Find("Offer Card");
+            if (card == null) card = transform.Find("Trade Card");
+            Image cardImage = card != null ? card.GetComponent<Image>() : null;
+            if (cardImage != null)
+                cardImage.color = new Color(0.18f, 0.08f, 0.03f, 0.98f);
         }
 
         private static Canvas FindHudCanvas()
