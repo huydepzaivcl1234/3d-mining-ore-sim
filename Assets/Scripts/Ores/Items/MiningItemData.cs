@@ -89,11 +89,33 @@ namespace MiningSimulator.Ores
         [Range(0f, 100f), SerializeField] private float selectionChancePercent = 33.33f;
         [Range(1, 64), SerializeField] private int maximumStack = 64;
 
-        [Header("Wandering Trader Values")]
-        [Tooltip("Money the player pays the wandering trader to receive one of this item.")]
-        [Min(0f), SerializeField] private float traderBuyValue = 25f;
-        [Tooltip("Money the player receives from the wandering trader for one of this item.")]
-        [Min(0f), SerializeField] private float traderSellValue = 15f;
+        [Header("Wandering Trader Shop")]
+        [Tooltip("Allow this item to appear in random Buy offers.")]
+        [SerializeField] private bool traderCanBuy = true;
+        [Tooltip("Allow this item to appear on the Sell page when the player owns it.")]
+        [SerializeField] private bool traderCanSell = true;
+        [Tooltip("Smallest item quantity that can appear in one offer.")]
+        [Range(1, 64), SerializeField] private int traderMinimumOfferAmount = 1;
+        [Tooltip("Largest item quantity that can appear in one offer.")]
+        [Range(1, 64), SerializeField] private int traderMaximumOfferAmount = 3;
+
+        [Header("Trader Buy Price - Coin Bundle Total")]
+        [Tooltip("Minimum Coin price for the complete bundle. Quantity does not multiply this value.")]
+        [Min(0f), SerializeField] private float traderBuyValue = 4000f;
+        [Tooltip("Maximum Coin price for the complete bundle. Quantity does not multiply this value.")]
+        [Min(0f), SerializeField] private float traderCoinBuyMaximum = 5000f;
+
+        [Header("Trader Buy Price - Gems Per Item")]
+        [Tooltip("Minimum Gem price per item. The rolled value is multiplied by the offer quantity.")]
+        [Min(0f), SerializeField] private float traderGemBuyValue = 4f;
+        [Tooltip("Maximum Gem price per item. The rolled value is multiplied by the offer quantity.")]
+        [Min(0f), SerializeField] private float traderGemBuyMaximum = 5f;
+
+        [Header("Trader Sell Reward - Gems Per Item")]
+        [Tooltip("Minimum Gems received per item sold.")]
+        [Min(0f), SerializeField] private float traderSellValue = 2f;
+        [Tooltip("Maximum Gems received per item sold.")]
+        [Min(0f), SerializeField] private float traderGemSellMaximum = 3f;
 
         [Header("Use")]
         [SerializeField] private MiningItemUseType useType = MiningItemUseType.TimedEffect;
@@ -122,8 +144,16 @@ namespace MiningSimulator.Ores
         public Vector3 ModelLocalEulerAngles => modelLocalEulerAngles;
         public float SelectionChancePercent => selectionChancePercent;
         public int MaximumStack => maximumStack;
+        public bool TraderCanBuy => traderCanBuy;
+        public bool TraderCanSell => traderCanSell;
+        public int TraderMinimumOfferAmount => traderMinimumOfferAmount;
+        public int TraderMaximumOfferAmount => traderMaximumOfferAmount;
         public float TraderBuyValue => traderBuyValue;
+        public float TraderCoinBuyMaximum => traderCoinBuyMaximum;
+        public float TraderGemBuyValue => traderGemBuyValue;
+        public float TraderGemBuyMaximum => traderGemBuyMaximum;
         public float TraderSellValue => traderSellValue;
+        public float TraderGemSellMaximum => traderGemSellMaximum;
         public MiningItemUseType UseType => useType;
         public MiningItemEffectType EffectType => effectType;
         public float EffectPercent => effectPercent;
@@ -212,8 +242,15 @@ namespace MiningSimulator.Ores
                 displayName = name;
             }
             maximumStack = Mathf.Clamp(maximumStack, 1, 64);
+            traderMinimumOfferAmount = Mathf.Clamp(traderMinimumOfferAmount, 1, 64);
+            traderMaximumOfferAmount = Mathf.Clamp(
+                traderMaximumOfferAmount, traderMinimumOfferAmount, 64);
             traderBuyValue = Mathf.Max(0f, traderBuyValue);
+            traderCoinBuyMaximum = Mathf.Max(traderBuyValue, traderCoinBuyMaximum);
+            traderGemBuyValue = Mathf.Max(0f, traderGemBuyValue);
+            traderGemBuyMaximum = Mathf.Max(traderGemBuyValue, traderGemBuyMaximum);
             traderSellValue = Mathf.Max(0f, traderSellValue);
+            traderGemSellMaximum = Mathf.Max(traderSellValue, traderGemSellMaximum);
             selectionChancePercent = Mathf.Clamp(selectionChancePercent, 0f, 100f);
             effectPercent = Mathf.Max(0f, effectPercent);
             effectDurationSeconds = Mathf.Max(0.1f, effectDurationSeconds);

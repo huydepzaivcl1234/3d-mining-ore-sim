@@ -5,8 +5,8 @@ using UnityEngine;
 namespace MiningSimulator.Ores
 {
     /// <summary>
-    /// Creates one stationary civilian trader from the existing humanoid miner prefab. The trader
-    /// stays outside the ore spawn area and owns one item-for-currency offer at a time.
+    /// Creates one stationary civilian trader with rotating buy offers and an inventory-driven
+    /// sell-for-Gem page. The trader stays outside the ore spawn area.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class WanderingTraderSystem : MonoBehaviour
@@ -38,12 +38,13 @@ namespace MiningSimulator.Ores
 
         [Header("Offers")]
         [Range(1, 8), SerializeField] private int maximumItemsRequested = 3;
-        [Range(1, 8), SerializeField] private int offerCount = 3;
+        [Range(1, 3), SerializeField] private int offerCount = 3;
         [Min(1f), SerializeField] private float offerRefreshSeconds = 60f;
         [Min(1f), SerializeField] private float baseMoneyValue = 30f;
         [Min(1f), SerializeField] private float baseGemValue = 1f;
 
         private readonly List<MiningItemData> eligibleItems = new();
+        private readonly List<MiningItemData> sellCandidates = new();
         private OreSpawner oreSpawner;
         private MiningItemSystem itemSystem;
         private PlayerWallet wallet;
@@ -51,9 +52,11 @@ namespace MiningSimulator.Ores
         [SerializeField] private WanderingTraderAgent sceneTrader;
         private WanderingTraderPanel panel;
         private readonly List<TraderOffer> currentOffers = new();
+        private readonly List<TraderOffer> currentSellOffers = new();
         private float nextOfferRefreshTime;
         private bool hasCurrentOffer;
         public IReadOnlyList<TraderOffer> CurrentOffers => currentOffers;
+        public IReadOnlyList<TraderOffer> CurrentSellOffers => currentSellOffers;
         public float OfferSecondsRemaining => Mathf.Max(0f, nextOfferRefreshTime - Time.time);
 
         public static void EnsureRuntime(NpcShop shop)
@@ -117,7 +120,7 @@ namespace MiningSimulator.Ores
                 RefreshOffer();
                 if (panel != null && panel.IsOpen)
                 {
-                    panel.Show(currentOffers, OfferSecondsRemaining, CanAcceptOffer,
+                    panel.Show(currentOffers, currentSellOffers, OfferSecondsRemaining, CanAcceptOffer,
                         TryAcceptOffer, () => HandleTradeClosed(trader));
                 }
             }
@@ -142,7 +145,9 @@ namespace MiningSimulator.Ores
                 return false;
             }
 
-            panel.Show(currentOffers, OfferSecondsRemaining, CanAcceptOffer,
+            // The sell page always reflects the inventory at the moment the player opens it.
+            RefreshSellOffers();
+            panel.Show(currentOffers, currentSellOffers, OfferSecondsRemaining, CanAcceptOffer,
                 TryAcceptOffer, () => HandleTradeClosed(trader));
             trader.SetTrading(true);
             return true;
@@ -294,45 +299,55 @@ namespace MiningSimulator.Ores
             return MoveOutsideMiningArea(position);
         }
 
-        private bool TryCreateOffer(out TraderOffer offer)
+        private bool TryCreateBuyOffer(MiningItemData item, out TraderOffer offer)
         {
             offer = default;
-            MiningItemDatabase database = itemSystem != null ? itemSystem.Database : null;
-            if (database == null)
+            if (item == null || !item.TraderCanBuy)
             {
                 return false;
             }
 
-            // An offer must still be visible when the player owns none of its item yet.
-            // Otherwise clicking the trader looks like a failed interaction and it never pauses.
-            eligibleItems.Clear();
-            foreach (MiningItemData item in database.Items)
+            int amount = RollOfferAmount(item);
+            TraderCurrency currency = UnityEngine.Random.value < 0.5f
+                ? TraderCurrency.Coin
+                : TraderCurrency.Gem;
+            int rarityStep = (int)item.Rarity + 1;
+            float price;
+            if (currency == TraderCurrency.Coin)
             {
-                if (item != null)
-                {
-                    eligibleItems.Add(item);
-                }
+                float fallback = rarityStep * baseMoneyValue;
+                price = RollPrice(item.TraderBuyValue, item.TraderCoinBuyMaximum, fallback);
             }
-            if (eligibleItems.Count == 0)
+            else
             {
-                return false;
+                float fallback = rarityStep * baseGemValue;
+                float perItem = RollPrice(item.TraderGemBuyValue,
+                    item.TraderGemBuyMaximum, fallback);
+                price = perItem * amount;
             }
-
-            MiningItemData requestedItem = eligibleItems[UnityEngine.Random.Range(0,
-                eligibleItems.Count)];
-            int amount = UnityEngine.Random.Range(1, maximumItemsRequested + 1);
-            bool traderSellsItem = UnityEngine.Random.value < 0.5f;
-            bool paysGems = false;
-            int rarityStep = (int)requestedItem.Rarity + 1;
-            float configuredValue = traderSellsItem
-                ? requestedItem.TraderBuyValue
-                : requestedItem.TraderSellValue;
-            float fallbackValue = traderSellsItem
-                ? rarityStep * baseMoneyValue
-                : rarityStep * baseMoneyValue;
-            float reward = Mathf.Max(1f, Mathf.Round((configuredValue > 0f ? configuredValue : fallbackValue) * amount));
-            offer = new TraderOffer(requestedItem, amount, reward, paysGems, traderSellsItem);
+            price = Mathf.Max(1f, Mathf.Round(price));
+            offer = new TraderOffer(item, amount, price, currency, TraderOfferType.BuyItem);
             return true;
+        }
+
+        private int RollOfferAmount(MiningItemData item, int owned = int.MaxValue)
+        {
+            int maximum = Mathf.Min(maximumItemsRequested,
+                item.TraderMaximumOfferAmount, owned);
+            int minimum = Mathf.Min(item.TraderMinimumOfferAmount, maximum);
+            return UnityEngine.Random.Range(Mathf.Max(1, minimum), Mathf.Max(1, maximum) + 1);
+        }
+
+        private static float RollPrice(float minimum, float maximum, float fallback)
+        {
+            if (minimum <= 0f && maximum <= 0f)
+            {
+                return fallback;
+            }
+
+            minimum = Mathf.Max(0f, minimum);
+            maximum = Mathf.Max(minimum, maximum);
+            return UnityEngine.Random.Range(minimum, maximum);
         }
 
         private bool CanAcceptOffer(TraderOffer offer)
@@ -342,9 +357,12 @@ namespace MiningSimulator.Ores
                 return false;
             }
 
-            if (offer.TraderSellsItem)
+            if (offer.OfferType == TraderOfferType.BuyItem)
             {
-                return wallet.CurrentMoney >= offer.RewardAmount &&
+                bool hasCurrency = offer.Currency == TraderCurrency.Gem
+                    ? wallet.CurrentGems >= offer.Price
+                    : wallet.CurrentMoney >= offer.Price;
+                return hasCurrency &&
                        itemSystem.CanAddItem(offer.Item, offer.ItemAmount);
             }
 
@@ -358,15 +376,19 @@ namespace MiningSimulator.Ores
                 return false;
             }
 
-            if (offer.TraderSellsItem)
+            if (offer.OfferType == TraderOfferType.BuyItem)
             {
-                if (!wallet.TrySpend(offer.RewardAmount))
+                bool spent = offer.Currency == TraderCurrency.Gem
+                    ? wallet.TrySpendGems(offer.Price)
+                    : wallet.TrySpend(offer.Price);
+                if (!spent)
                 {
                     return false;
                 }
                 if (!itemSystem.TryAddItem(offer.Item, offer.ItemAmount))
                 {
-                    wallet.AddMoney(offer.RewardAmount);
+                    if (offer.Currency == TraderCurrency.Gem) wallet.AddGems(offer.Price);
+                    else wallet.AddMoney(offer.Price);
                     return false;
                 }
             }
@@ -374,8 +396,7 @@ namespace MiningSimulator.Ores
             {
                 if (!itemSystem.TryRemoveItem(offer.Item, offer.ItemAmount))
                     return false;
-                if (offer.PaysGems) wallet.AddGems(offer.RewardAmount);
-                else wallet.AddMoney(offer.RewardAmount);
+                wallet.AddGems(offer.Price);
             }
             RefreshOffer();
             return true;
@@ -384,19 +405,77 @@ namespace MiningSimulator.Ores
         private void RefreshOffer()
         {
             currentOffers.Clear();
-            for (int index = 0; index < Mathf.Max(1, offerCount); index++)
+            currentSellOffers.Clear();
+            MiningItemDatabase database = itemSystem != null ? itemSystem.Database : null;
+            if (database == null)
             {
-                if (TryCreateOffer(out TraderOffer offer))
+                hasCurrentOffer = false;
+                nextOfferRefreshTime = Time.time + Mathf.Max(1f, offerRefreshSeconds);
+                return;
+            }
+
+            eligibleItems.Clear();
+            foreach (MiningItemData item in database.Items)
+            {
+                if (item == null || !item.TraderCanBuy) continue;
+                eligibleItems.Add(item);
+            }
+            Shuffle(eligibleItems);
+
+            int visibleBuyCount = Mathf.Min(Mathf.Clamp(offerCount, 1, 3), eligibleItems.Count);
+            for (int index = 0; index < visibleBuyCount; index++)
+            {
+                if (TryCreateBuyOffer(eligibleItems[index], out TraderOffer offer))
                     currentOffers.Add(offer);
             }
-            hasCurrentOffer = currentOffers.Count > 0;
+
+            RefreshSellOffers();
+            hasCurrentOffer = currentOffers.Count > 0 || currentSellOffers.Count > 0;
             nextOfferRefreshTime = Time.time + Mathf.Max(1f, offerRefreshSeconds);
+        }
+
+        private void RefreshSellOffers()
+        {
+            currentSellOffers.Clear();
+            MiningItemDatabase database = itemSystem != null ? itemSystem.Database : null;
+            if (database == null) return;
+            sellCandidates.Clear();
+            foreach (MiningItemData item in database.Items)
+            {
+                if (item != null && item.TraderCanSell && itemSystem.GetItemCount(item) > 0)
+                    sellCandidates.Add(item);
+            }
+            Shuffle(sellCandidates);
+            int visibleSellCount = Mathf.Min(Mathf.Clamp(offerCount, 1, 3), sellCandidates.Count);
+            for (int index = 0; index < visibleSellCount; index++)
+            {
+                MiningItemData item = sellCandidates[index];
+                int owned = itemSystem.GetItemCount(item);
+                int amount = RollOfferAmount(item, owned);
+                int rarityStep = (int)item.Rarity + 1;
+                float value = RollPrice(item.TraderSellValue,
+                    item.TraderGemSellMaximum, rarityStep * baseGemValue);
+                float gems = Mathf.Max(1f, Mathf.Round(value * amount));
+                currentSellOffers.Add(new TraderOffer(item, amount, gems,
+                    TraderCurrency.Gem, TraderOfferType.SellItem));
+            }
+        }
+
+        private static void Shuffle(List<MiningItemData> items)
+        {
+            for (int index = items.Count - 1; index > 0; index--)
+            {
+                int other = UnityEngine.Random.Range(0, index + 1);
+                MiningItemData temporary = items[index];
+                items[index] = items[other];
+                items[other] = temporary;
+            }
         }
 
         private void OnValidate()
         {
             maximumItemsRequested = Mathf.Max(1, maximumItemsRequested);
-            offerCount = Mathf.Max(1, offerCount);
+            offerCount = Mathf.Clamp(offerCount, 1, 3);
             offerRefreshSeconds = Mathf.Max(1f, offerRefreshSeconds);
             baseMoneyValue = Mathf.Max(1f, baseMoneyValue);
             baseGemValue = Mathf.Max(1f, baseGemValue);
@@ -515,23 +594,35 @@ namespace MiningSimulator.Ores
             return position;
         }
 
+        public enum TraderCurrency
+        {
+            Coin = 0,
+            Gem = 1
+        }
+
+        public enum TraderOfferType
+        {
+            BuyItem = 0,
+            SellItem = 1
+        }
+
         public readonly struct TraderOffer
         {
-            public TraderOffer(MiningItemData item, int itemAmount, float rewardAmount,
-                bool paysGems, bool traderSellsItem = false)
+            public TraderOffer(MiningItemData item, int itemAmount, float price,
+                TraderCurrency currency, TraderOfferType offerType)
             {
                 Item = item;
                 ItemAmount = itemAmount;
-                RewardAmount = rewardAmount;
-                PaysGems = paysGems;
-                TraderSellsItem = traderSellsItem;
+                Price = price;
+                Currency = currency;
+                OfferType = offerType;
             }
 
             public MiningItemData Item { get; }
             public int ItemAmount { get; }
-            public float RewardAmount { get; }
-            public bool PaysGems { get; }
-            public bool TraderSellsItem { get; }
+            public float Price { get; }
+            public TraderCurrency Currency { get; }
+            public TraderOfferType OfferType { get; }
         }
     }
 }

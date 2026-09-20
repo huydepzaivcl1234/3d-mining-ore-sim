@@ -15,9 +15,17 @@ namespace MiningSimulator.Ores
         private void Awake()
         {
             button = GetComponent<Button>();
+            ResolveAudioManager();
         }
 
         private void OnEnable()
+        {
+            ResolveAudioManager();
+            RefreshBinding();
+        }
+
+        /// <summary>Restores the listener after a runtime-authored Button replaces its callbacks.</summary>
+        public void RefreshBinding()
         {
             button ??= GetComponent<Button>();
             button.onClick.RemoveListener(Play);
@@ -32,6 +40,18 @@ namespace MiningSimulator.Ores
         private void Play()
         {
             audioManager?.PlayButtonSfx();
+        }
+
+        /// <summary>Allows runtime-authored buttons to use the shared SFX source immediately.</summary>
+        public void Configure(MiningAudioManager manager)
+        {
+            audioManager = manager;
+            if (isActiveAndEnabled) RefreshBinding();
+        }
+
+        private void ResolveAudioManager()
+        {
+            audioManager ??= FindFirstObjectByType<MiningAudioManager>(FindObjectsInactive.Include);
         }
     }
 }
