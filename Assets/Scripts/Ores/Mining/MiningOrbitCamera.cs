@@ -21,18 +21,12 @@ namespace MiningSimulator.Ores
         [Min(0f), SerializeField] private float collisionPadding = 0.08f;
         [Tooltip("Height of the horizontal probe that prevents keyboard movement through walls.")]
         [Min(0f), SerializeField] private float focusCollisionHeight = 1f;
-<<<<<<< HEAD
         [Tooltip("How quickly the camera rolls back to its authored distance after a wall clears.")]
         [Min(0f), SerializeField] private float collisionRecoverySpeed = 18f;
 
         private const int CollisionHitCapacity = 32;
         private readonly RaycastHit[] collisionHits = new RaycastHit[CollisionHitCapacity];
         private readonly Collider[] overlapHits = new Collider[CollisionHitCapacity];
-=======
-
-        private const int CollisionHitCapacity = 32;
-        private readonly RaycastHit[] collisionHits = new RaycastHit[CollisionHitCapacity];
->>>>>>> 87d0df32b (Update camera)
         private Vector3 focusPoint;
         private float distance;
         private float yaw;
@@ -272,7 +266,6 @@ namespace MiningSimulator.Ores
             Vector3 castOrigin = focusPoint + Vector3.up * (collisionRadius + collisionPadding);
             Vector3 offset = desiredPosition - castOrigin;
             float castDistance = offset.magnitude;
-<<<<<<< HEAD
             if (castDistance <= Mathf.Epsilon)
             {
                 return ResolveEyeOverlap(desiredPosition);
@@ -393,15 +386,6 @@ namespace MiningSimulator.Ores
             collisionEye.radius = collisionRadius;
             collisionEye.isTrigger = true;
             collisionEye.enabled = false;
-=======
-            if (!TryGetClosestObstruction(castOrigin, offset, castDistance, out RaycastHit hit))
-            {
-                return desiredPosition;
-            }
-
-            float safeDistance = Mathf.Max(0f, hit.distance - collisionPadding);
-            return castOrigin + offset.normalized * safeDistance;
->>>>>>> 87d0df32b (Update camera)
         }
 
         private void MoveFocusPoint(Vector3 movement)
@@ -505,14 +489,12 @@ namespace MiningSimulator.Ores
             collisionRadius = Mathf.Max(0.01f, collisionRadius);
             collisionPadding = Mathf.Max(0f, collisionPadding);
             focusCollisionHeight = Mathf.Max(collisionRadius, focusCollisionHeight);
-<<<<<<< HEAD
             collisionRecoverySpeed = Mathf.Max(0f, collisionRecoverySpeed);
             if (collisionEye != null)
             {
                 collisionEye.radius = collisionRadius;
             }
-=======
->>>>>>> 87d0df32b (Update camera)
         }
     }
 }
+

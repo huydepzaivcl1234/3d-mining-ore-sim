@@ -458,3 +458,4 @@ namespace MiningSimulator.Ores
         }
     }
 }
+
