@@ -246,8 +246,20 @@ namespace MiningSimulator.Ores
             if (undergroundEnvironment != null) undergroundEnvironment.SetActive(underground);
 
             ApplyLighting(underground);
-            RebindAreaSystems(ActiveSpawner);
-            MiningNavMeshBuilder.Instance?.RequestRebuild();
+            RebindSharedAreaSystems(ActiveSpawner);
+
+            MiningNavMeshBuilder navMeshBuilder = MiningNavMeshBuilder.Instance;
+            if (navMeshBuilder != null)
+            {
+                if (underground)
+                {
+                    navMeshBuilder.RequestRebuildForRoot(undergroundEnvironment);
+                }
+                else
+                {
+                    navMeshBuilder.RequestRebuild();
+                }
+            }
             AreaChanged?.Invoke();
         }
 
@@ -283,6 +295,7 @@ namespace MiningSimulator.Ores
             }
 
             undergroundEnvironment ??= FindSceneObjectByName(
+                "UnderGround", "Underground",
                 "Underground Environment", "Under Ground Environment",
                 "Underground Platform", "Under Ground Platform",
                 "Underground World", "Under Ground World");
@@ -387,14 +400,13 @@ namespace MiningSimulator.Ores
             return true;
         }
 
-        private void RebindAreaSystems(OreSpawner spawner)
+        private void RebindSharedAreaSystems(OreSpawner spawner)
         {
             if (spawner == null) return;
-            foreach (MiningNpc npc in FindObjectsByType<MiningNpc>(FindObjectsInactive.Include,
-                         FindObjectsSortMode.None))
-            {
-                npc?.SetOreSpawner(spawner);
-            }
+
+            // Miners are scene-authored per area. Never move, duplicate, or overwrite their
+            // OreSpawner assignment here; the user can duplicate a miner under UnderGround and
+            // assign the existing underground spawner in the Inspector.
             FindFirstObjectByType<NpcShop>(FindObjectsInactive.Include)?.SetOreSpawner(spawner);
             FindFirstObjectByType<NpcProgressionSystem>(FindObjectsInactive.Include)?.SetOreSpawner(spawner);
             FindFirstObjectByType<MiningUnlockNotifier>(FindObjectsInactive.Include)?.SetOreSpawner(spawner);

@@ -106,12 +106,110 @@ namespace MiningSimulator.Editor
                           "(added Default + Ground layers).");
             }
 
+            changes += SetupUndergroundSurface(builder);
+
             if (changes > 0)
             {
                 EditorSceneManager.MarkSceneDirty(builder.gameObject.scene);
             }
 
             return changes;
+        }
+
+        /// <summary>
+        /// Adds navigation only to the user's existing UnderGround root. It never creates or
+        /// duplicates the platform, ore spawner, NPC, or wandering trader.
+        /// </summary>
+        private static int SetupUndergroundSurface(MiningNavMeshBuilder builder)
+        {
+            GameObject undergroundRoot = FindUnderGroundRoot();
+            if (undergroundRoot == null)
+            {
+                Debug.LogWarning("[NavMesh Setup] No scene root named 'UnderGround' was found. " +
+                                 "Your existing underground objects were not changed.");
+                return 0;
+            }
+
+            int changes = 0;
+            NavMeshSurface undergroundSurface =
+                undergroundRoot.GetComponent<NavMeshSurface>();
+            if (undergroundSurface == null)
+            {
+                undergroundSurface = Undo.AddComponent<NavMeshSurface>(undergroundRoot);
+                changes++;
+            }
+
+            Undo.RecordObject(undergroundSurface, "Configure Underground NavMeshSurface");
+            if (!undergroundSurface.enabled)
+            {
+                undergroundSurface.enabled = true;
+                changes++;
+            }
+            if (undergroundSurface.collectObjects != CollectObjects.Children)
+            {
+                undergroundSurface.collectObjects = CollectObjects.Children;
+                changes++;
+            }
+            if (undergroundSurface.useGeometry != NavMeshCollectGeometry.PhysicsColliders)
+            {
+                undergroundSurface.useGeometry = NavMeshCollectGeometry.PhysicsColliders;
+                changes++;
+            }
+            if (undergroundSurface.layerMask.value != ~0)
+            {
+                undergroundSurface.layerMask = ~0;
+                changes++;
+            }
+            EditorUtility.SetDirty(undergroundSurface);
+
+            var builderSerialized = new SerializedObject(builder);
+            SerializedProperty undergroundSurfaceProperty =
+                builderSerialized.FindProperty("undergroundSurface");
+            if (undergroundSurfaceProperty != null &&
+                undergroundSurfaceProperty.objectReferenceValue != undergroundSurface)
+            {
+                undergroundSurfaceProperty.objectReferenceValue = undergroundSurface;
+                builderSerialized.ApplyModifiedProperties();
+                EditorUtility.SetDirty(builder);
+                changes++;
+            }
+
+            // Bake once now so duplicated underground miners can move immediately in Play Mode.
+            // Temporarily revealing an inactive root is not recorded and its authored state is
+            // restored before this setup method returns.
+            bool wasActive = undergroundRoot.activeSelf;
+            if (!wasActive) undergroundRoot.SetActive(true);
+            undergroundSurface.BuildNavMesh();
+            if (!wasActive) undergroundRoot.SetActive(false);
+
+            EditorSceneManager.MarkSceneDirty(undergroundRoot.scene);
+            Debug.Log("[NavMesh Setup] Underground NavMeshSurface configured on existing root: " +
+                      undergroundRoot.name, undergroundRoot);
+            return changes;
+        }
+
+        private static GameObject FindUnderGroundRoot()
+        {
+            foreach (Transform candidate in Object.FindObjectsByType<Transform>(
+                         FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (candidate == null || candidate.parent != null ||
+                    !candidate.gameObject.scene.IsValid())
+                {
+                    continue;
+                }
+
+                string compact = candidate.name.Replace(" ", string.Empty)
+                    .Replace("_", string.Empty)
+                    .Replace("-", string.Empty);
+                if (string.Equals(compact, "underground",
+                        System.StringComparison.OrdinalIgnoreCase))
+                {
+                    return candidate.gameObject;
+                }
+            }
+
+            return null;
         }
 
         /// <summary>

@@ -28,6 +28,9 @@ namespace MiningSimulator.Ores
         [Header("Surface")]
         [Tooltip("The surface describing the walkable floor. Leave empty to use the NavMeshSurface on this GameObject.")]
         [SerializeField] private NavMeshSurface surface;
+        [Tooltip("Optional scene-authored surface on the UnderGround root. It is resolved or " +
+                 "added to that existing root at runtime when the portal first opens.")]
+        [SerializeField] private NavMeshSurface undergroundSurface;
         [Tooltip("Bakes the surface once on Start. Turn this off if you bake the surface in the editor and your floor never changes at runtime - the baked data is then used as-is.")]
         [SerializeField] private bool buildOnStart = true;
 
@@ -39,6 +42,7 @@ namespace MiningSimulator.Ores
 
         private float lastBuildTime = float.NegativeInfinity;
         private Coroutine pendingRebuild;
+        private NavMeshSurface pendingSurface;
 
         /// <summary>True once a NavMesh exists and can answer path queries.</summary>
         public bool HasNavMesh { get; private set; }
@@ -57,7 +61,11 @@ namespace MiningSimulator.Ores
                 surface = GetComponent<NavMeshSurface>();
             }
 
-            ConfigureRuntimeBuildGeometry();
+            ConfigureRuntimeBuildGeometry(surface);
+            if (undergroundSurface != null)
+            {
+                ConfigureUndergroundSurface(undergroundSurface);
+            }
         }
 
         private void OnDestroy()
@@ -85,12 +93,47 @@ namespace MiningSimulator.Ores
         /// <summary>Queues a rebuild, merging any requests that arrive in the same short window.</summary>
         public void RequestRebuild()
         {
-            if (pendingRebuild != null || !isActiveAndEnabled)
+            QueueRebuild(surface);
+        }
+
+        /// <summary>
+        /// Builds navigation on an existing designer-authored area root. No platform, spawner,
+        /// miner, or hierarchy object is created; only a missing NavMeshSurface component may be
+        /// added to the supplied root.
+        /// </summary>
+        public void RequestRebuildForRoot(GameObject areaRoot)
+        {
+            if (areaRoot == null)
+            {
+                Debug.LogWarning("Cannot build Underground NavMesh without an authored area root.",
+                    this);
+                return;
+            }
+
+            undergroundSurface = areaRoot.GetComponent<NavMeshSurface>() ??
+                                 areaRoot.GetComponentInChildren<NavMeshSurface>(true);
+            if (undergroundSurface == null)
+            {
+                undergroundSurface = areaRoot.AddComponent<NavMeshSurface>();
+            }
+
+            ConfigureUndergroundSurface(undergroundSurface);
+            QueueRebuild(undergroundSurface);
+        }
+
+        private void QueueRebuild(NavMeshSurface targetSurface)
+        {
+            if (targetSurface == null || !isActiveAndEnabled)
             {
                 return;
             }
 
-            pendingRebuild = StartCoroutine(RebuildAfterDelay());
+            // The newest area request wins while a short coalescing delay is active.
+            pendingSurface = targetSurface;
+            if (pendingRebuild == null)
+            {
+                pendingRebuild = StartCoroutine(RebuildAfterDelay());
+            }
         }
 
         private IEnumerator RebuildAfterDelay()
@@ -103,40 +146,61 @@ namespace MiningSimulator.Ores
                 yield return new WaitForSeconds(earliestBuild - Time.time);
             }
 
+            NavMeshSurface targetSurface = pendingSurface != null ? pendingSurface : surface;
+            pendingSurface = null;
             pendingRebuild = null;
-            Build();
+            Build(targetSurface);
         }
 
         /// <summary>Bakes the surface immediately. Prefer <see cref="RequestRebuild"/> in gameplay code.</summary>
         public void Build()
         {
-            if (surface == null)
+            Build(surface);
+        }
+
+        private void Build(NavMeshSurface targetSurface)
+        {
+            if (targetSurface == null)
             {
                 Debug.LogWarning($"{nameof(MiningNavMeshBuilder)} has no NavMeshSurface assigned.", this);
                 return;
             }
 
-            ConfigureRuntimeBuildGeometry();
+            ConfigureRuntimeBuildGeometry(targetSurface);
             lastBuildTime = Time.time;
 
             // UpdateNavMesh reuses the existing NavMeshData instance, so agents and in-flight
             // path queries keep working across the swap. BuildNavMesh would allocate fresh data
             // and momentarily invalidate them.
-            if (surface.navMeshData != null)
+            if (targetSurface.navMeshData != null)
             {
-                surface.UpdateNavMesh(surface.navMeshData);
+                targetSurface.UpdateNavMesh(targetSurface.navMeshData);
             }
             else
             {
-                surface.BuildNavMesh();
+                targetSurface.BuildNavMesh();
             }
 
             HasNavMesh = HasNavMeshData();
         }
 
-        private void ConfigureRuntimeBuildGeometry()
+        private static void ConfigureUndergroundSurface(NavMeshSurface targetSurface)
         {
-            if (surface == null)
+            if (targetSurface == null)
+            {
+                return;
+            }
+
+            // The user's UnderGround root owns the platform. Children collection prevents the
+            // underground bake from pulling Ground or other unrelated scene geometry into it.
+            targetSurface.collectObjects = CollectObjects.Children;
+            targetSurface.layerMask = ~0;
+            ConfigureRuntimeBuildGeometry(targetSurface);
+        }
+
+        private static void ConfigureRuntimeBuildGeometry(NavMeshSurface targetSurface)
+        {
+            if (targetSurface == null)
             {
                 return;
             }
@@ -146,7 +210,7 @@ namespace MiningSimulator.Ores
             // Player builds cannot read every imported render mesh. The playable ground
             // already has colliders, so baking from them prevents unreadable ore meshes
             // from breaking the runtime NavMesh update.
-            surface.useGeometry = NavMeshCollectGeometry.PhysicsColliders;
+            targetSurface.useGeometry = NavMeshCollectGeometry.PhysicsColliders;
         }
 
         /// <summary>
