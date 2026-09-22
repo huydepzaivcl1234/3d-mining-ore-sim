@@ -78,7 +78,6 @@ namespace MiningSimulator.Ores
         private int stuckRepathAttempts;
 
         private readonly RaycastHit[] obstacleHits = new RaycastHit[32];
-        private readonly Collider[] separationHits = new Collider[24];
         private Ore targetOre;
         private LuckyBlock targetLuckyBlock;
         private Ore ignoredOre;
@@ -97,7 +96,6 @@ namespace MiningSimulator.Ores
         private Vector3 desiredMoveTarget;
         private Vector3 desiredFacingDirection;
         private Vector3 lastProgressPosition;
-        private Vector3 smoothedSeparation;
         private Vector3 detourDirection;
         private Vector3 detourWaypoint;
         private Vector3 detourExitWaypoint;
@@ -286,7 +284,6 @@ namespace MiningSimulator.Ores
             ReleaseTarget();
             hasMoveTarget = false;
             desiredFacingDirection = Vector3.zero;
-            smoothedSeparation = Vector3.zero;
             detourDirection = Vector3.zero;
             detourDirectionUntil = 0f;
             ResetGlobalPath();
@@ -411,8 +408,6 @@ namespace MiningSimulator.Ores
                 npcData.StoppingDistance * npcData.StoppingDistance)
             {
                 SetMovingAnimationState(false);
-                smoothedSeparation = Vector3.MoveTowards(smoothedSeparation, Vector3.zero,
-                    npcData.NpcSeparationResponsiveness * Time.fixedDeltaTime);
                 ApplyHorizontalVelocity(Vector3.zero, movementAcceleration, brakingAcceleration);
                 RotateTowards(desiredFacingDirection);
                 return;
@@ -455,12 +450,6 @@ namespace MiningSimulator.Ores
                     ClearDetour();
                 }
             }
-
-            Vector3 separation = CalculateNpcSeparation(currentPosition);
-            smoothedSeparation = Vector3.MoveTowards(smoothedSeparation, separation,
-                npcData.NpcSeparationResponsiveness * Time.fixedDeltaTime);
-            movementDirection = (movementDirection +
-                smoothedSeparation * npcData.NpcSeparationStrength).normalized;
 
             float maximumSpeed = npcData.MoveSpeed * speedMultiplier;
             float brakingDistance = Mathf.Max(0f,
@@ -1555,44 +1544,6 @@ namespace MiningSimulator.Ores
             hasDetourExitWaypoint = false;
         }
 
-        private Vector3 CalculateNpcSeparation(Vector3 currentPosition)
-        {
-            int overlapCount = Physics.OverlapSphereNonAlloc(currentPosition,
-                npcData.NpcSeparationRadius, separationHits, npcData.CollisionLayers,
-                QueryTriggerInteraction.Ignore);
-            Vector3 separation = Vector3.zero;
-            for (int index = 0; index < overlapCount; index++)
-            {
-                Collider overlap = separationHits[index];
-                MiningNpc otherNpc = overlap != null ? overlap.GetComponentInParent<MiningNpc>() : null;
-                if (otherNpc == null || otherNpc == this)
-                {
-                    continue;
-                }
-
-                Vector3 away = currentPosition - otherNpc.transform.position;
-                away.y = 0f;
-                float distance = away.magnitude;
-                if (distance <= Mathf.Epsilon)
-                {
-                    int separationOrder = transform.GetSiblingIndex()
-                        .CompareTo(otherNpc.transform.GetSiblingIndex());
-                    if (separationOrder == 0)
-                    {
-                        separationOrder = string.CompareOrdinal(name, otherNpc.name);
-                    }
-
-                    away = separationOrder <= 0 ? Vector3.right : Vector3.left;
-                    distance = npcData.ColliderRadius;
-                }
-
-                float weight = 1f - Mathf.Clamp01(distance / npcData.NpcSeparationRadius);
-                separation += away.normalized * weight;
-            }
-
-            return Vector3.ClampMagnitude(separation, 1f);
-        }
-
         private void ApplyHorizontalVelocity(Vector3 desiredHorizontalVelocity, float acceleration,
             float brakingAcceleration)
         {
@@ -1671,8 +1622,10 @@ namespace MiningSimulator.Ores
             {
                 body.mass = npcData.Mass;
                 body.interpolation = RigidbodyInterpolation.Interpolate;
+                body.useGravity = true;
                 body.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
-                body.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+                body.constraints = RigidbodyConstraints.FreezeRotationX |
+                                   RigidbodyConstraints.FreezeRotationZ;
             }
         }
 
@@ -1715,7 +1668,9 @@ namespace MiningSimulator.Ores
                     continue;
                 }
 
-                if (capsule != null && npcData != null && npcData.IgnoreNpcPhysicalCollisions)
+                // Miners may overlap and pass through each other. Keep the capsule active so it
+                // can still stand on the floor and respect non-miner world collision.
+                if (capsule != null)
                 {
                     other.capsule ??= other.GetComponent<CapsuleCollider>();
                     if (other.capsule != null)
