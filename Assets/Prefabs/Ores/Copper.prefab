@@ -215,6 +215,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 48b2a71b7c1f3b24fb80755320d2e09d, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2227390612948982677}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 48b2a71b7c1f3b24fb80755320d2e09d, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5386385992690853292}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 48b2a71b7c1f3b24fb80755320d2e09d, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -8003552594036609319}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 48b2a71b7c1f3b24fb80755320d2e09d, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -4152827101658105913}
   m_SourcePrefab: {fileID: 100100000, guid: 48b2a71b7c1f3b24fb80755320d2e09d, type: 3}
 --- !u!1 &8129024029718066874 stripped
 GameObject:
@@ -259,6 +268,57 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 4243653871660681278, guid: 48b2a71b7c1f3b24fb80755320d2e09d, type: 3}
+--- !u!114 &5386385992690853292
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8129024029718066874}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e3fdca004f2d45fe8abbed571a8abd5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.AI.Navigation::Unity.AI.Navigation.NavMeshModifier
+  m_SerializedVersion: 0
+  m_OverrideArea: 0
+  m_Area: 0
+  m_OverrideGenerateLinks: 0
+  m_GenerateLinks: 0
+  m_IgnoreFromBuild: 1
+  m_ApplyToChildren: 1
+  m_AffectedAgents: ffffffff
+--- !u!208 &-8003552594036609319
+NavMeshObstacle:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8129024029718066874}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Shape: 0
+  m_Extents: {x: 0.2, y: 0.25, z: 0.2}
+  m_MoveThreshold: 0.5
+  m_Carve: 1
+  m_CarveOnlyStationary: 1
+  m_Center: {x: 0, y: 0, z: 0}
+  m_TimeToStationary: 0.1
+--- !u!114 &-4152827101658105913
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8129024029718066874}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82acf501f5c525d4f94271bcf5c18c29, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningNavMeshObstacle
+  radiusPadding: 0.04
+  minimumRadius: 0.2
+  minimumHeight: 0.5
 --- !u!4 &8906933576197860352 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 48b2a71b7c1f3b24fb80755320d2e09d, type: 3}

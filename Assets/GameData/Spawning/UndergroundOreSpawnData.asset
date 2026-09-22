@@ -13,22 +13,8 @@ MonoBehaviour:
   m_Name: UndergroundOreSpawnData
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.OreSpawnData
   oreSpawnTable:
-  - ore: {fileID: 11400000, guid: 3982179b3238eaf4ebcf9c0a2f198d7e, type: 2}
+  - ore: {fileID: 11400000, guid: 50edc2e3977cafd418b1df34e679efd6, type: 2}
     spawnChancePercent: 35
-  - ore: {fileID: 11400000, guid: 3122b10f68c76d440b1523756c7ee4c4, type: 2}
-    spawnChancePercent: 25
-  - ore: {fileID: 11400000, guid: 74e09bd17e9dfd9c7fa895c0dcaad7da, type: 2}
-    spawnChancePercent: 18
-  - ore: {fileID: 11400000, guid: bda08fd18d8aa0ee377cd8a982164c74, type: 2}
-    spawnChancePercent: 10
-  - ore: {fileID: 11400000, guid: 6ce1f29ef4520f9de60df99934688572, type: 2}
-    spawnChancePercent: 7
-  - ore: {fileID: 11400000, guid: 60b3200fc7d6b3149bc117a7a0eda15b, type: 2}
-    spawnChancePercent: 3
-  - ore: {fileID: 11400000, guid: 00d2f60055fd85843869890c15e2ff21, type: 2}
-    spawnChancePercent: 1.5
-  - ore: {fileID: 11400000, guid: 0e756525455d7e943aa9ce16f9f91b41, type: 2}
-    spawnChancePercent: 0.5
   rarityRules:
   - rarity: 0
     baseChanceMultiplier: 1
