@@ -21,14 +21,22 @@ namespace MiningSimulator.Ores
         [Min(0f), SerializeField] private float collisionPadding = 0.08f;
         [Tooltip("Height of the horizontal probe that prevents keyboard movement through walls.")]
         [Min(0f), SerializeField] private float focusCollisionHeight = 1f;
+        [Tooltip("How quickly the camera rolls back to its authored distance after a wall clears.")]
+        [Min(0f), SerializeField] private float collisionRecoverySpeed = 18f;
 
         private const int CollisionHitCapacity = 32;
         private readonly RaycastHit[] collisionHits = new RaycastHit[CollisionHitCapacity];
+        private readonly Collider[] overlapHits = new Collider[CollisionHitCapacity];
         private Vector3 focusPoint;
         private float distance;
         private float yaw;
         private float pitch;
         private bool inputLocked;
+        private bool cinematicOverride;
+        private float resolvedBoomDistance = -1f;
+        private Vector3 resolvedCameraPosition;
+        private bool hasResolvedCameraPosition;
+        private SphereCollider collisionEye;
         private Tween shakeTween;
         private float shakeEnvelope;
         private float shakeStrength;
@@ -38,6 +46,7 @@ namespace MiningSimulator.Ores
         private void Awake()
         {
             controlledCamera ??= Camera.main;
+            EnsureCollisionEye();
             if (gameData != null)
             {
                 focusPoint = gameData.CameraFocusPoint;
@@ -49,7 +58,7 @@ namespace MiningSimulator.Ores
 
         private void Update()
         {
-            if (gameData == null || inputLocked)
+            if (gameData == null || inputLocked || cinematicOverride)
             {
                 return;
             }
@@ -72,7 +81,7 @@ namespace MiningSimulator.Ores
                 controlledCamera = Camera.main;
             }
 
-            if (controlledCamera == null || gameData == null)
+            if (controlledCamera == null || gameData == null || cinematicOverride)
             {
                 return;
             }
@@ -122,6 +131,64 @@ namespace MiningSimulator.Ores
                 shakeTween.Stop();
             }
             shakeEnvelope = 0f;
+            cinematicOverride = false;
+            hasResolvedCameraPosition = false;
+            resolvedBoomDistance = -1f;
+        }
+
+        private void OnDestroy()
+        {
+            if (collisionEye != null)
+            {
+                Destroy(collisionEye.gameObject);
+                collisionEye = null;
+            }
+        }
+
+        public Camera ControlledCamera => controlledCamera;
+        public Vector3 FocusPoint => focusPoint;
+        public Vector3 DefaultFocusPoint => gameData != null
+            ? gameData.CameraFocusPoint
+            : Vector3.zero;
+        public bool CinematicOverrideActive => cinematicOverride;
+
+        public void BeginCinematicOverride()
+        {
+            cinematicOverride = true;
+            hasResolvedCameraPosition = false;
+            resolvedBoomDistance = -1f;
+        }
+
+        public void SetCinematicPose(Vector3 position, Quaternion rotation, float fieldOfView)
+        {
+            if (!cinematicOverride)
+            {
+                return;
+            }
+
+            controlledCamera ??= Camera.main;
+            if (controlledCamera == null)
+            {
+                return;
+            }
+
+            controlledCamera.transform.SetPositionAndRotation(position, rotation);
+            controlledCamera.fieldOfView = fieldOfView;
+        }
+
+        public void GetGameplayPose(Vector3 targetFocus, out Vector3 position,
+            out Quaternion rotation)
+        {
+            rotation = Quaternion.Euler(pitch, yaw, 0f);
+            position = targetFocus - rotation * Vector3.forward * distance;
+        }
+
+        public void EndCinematicOverride(Vector3 targetFocus)
+        {
+            focusPoint = targetFocus;
+            cinematicOverride = false;
+            hasResolvedCameraPosition = false;
+            resolvedBoomDistance = -1f;
         }
 
         private static float SampleShake(float time, float seed)
@@ -199,13 +266,126 @@ namespace MiningSimulator.Ores
             Vector3 castOrigin = focusPoint + Vector3.up * (collisionRadius + collisionPadding);
             Vector3 offset = desiredPosition - castOrigin;
             float castDistance = offset.magnitude;
-            if (!TryGetClosestObstruction(castOrigin, offset, castDistance, out RaycastHit hit))
+            if (castDistance <= Mathf.Epsilon)
             {
-                return desiredPosition;
+                return ResolveEyeOverlap(desiredPosition);
             }
 
-            float safeDistance = Mathf.Max(0f, hit.distance - collisionPadding);
-            return castOrigin + offset.normalized * safeDistance;
+            float availableDistance = castDistance;
+            if (TryGetClosestObstruction(castOrigin, offset, castDistance, out RaycastHit hit))
+            {
+                availableDistance = Mathf.Max(0f, hit.distance - collisionPadding);
+            }
+
+            if (resolvedBoomDistance < 0f || availableDistance < resolvedBoomDistance)
+            {
+                resolvedBoomDistance = availableDistance;
+            }
+            else
+            {
+                resolvedBoomDistance = Mathf.MoveTowards(resolvedBoomDistance,
+                    availableDistance, collisionRecoverySpeed * Time.unscaledDeltaTime);
+            }
+
+            Vector3 boomTarget = castOrigin + offset.normalized *
+                                 Mathf.Min(resolvedBoomDistance, availableDistance);
+            Vector3 rolledPosition = ResolveEyeMovement(boomTarget);
+            resolvedCameraPosition = ResolveEyeOverlap(rolledPosition);
+            hasResolvedCameraPosition = true;
+            return resolvedCameraPosition;
+        }
+
+        private Vector3 ResolveEyeMovement(Vector3 targetPosition)
+        {
+            if (!hasResolvedCameraPosition)
+            {
+                return targetPosition;
+            }
+
+            Vector3 movement = targetPosition - resolvedCameraPosition;
+            float movementDistance = movement.magnitude;
+            if (movementDistance <= Mathf.Epsilon ||
+                !TryGetClosestObstruction(resolvedCameraPosition, movement, movementDistance,
+                    out RaycastHit hit))
+            {
+                return targetPosition;
+            }
+
+            Vector3 direction = movement / movementDistance;
+            float forwardDistance = Mathf.Max(0f, hit.distance - collisionPadding);
+            Vector3 position = resolvedCameraPosition + direction * forwardDistance;
+            Vector3 remaining = targetPosition - position;
+            Vector3 slide = Vector3.ProjectOnPlane(remaining, hit.normal);
+            float slideDistance = slide.magnitude;
+            if (slideDistance <= Mathf.Epsilon)
+            {
+                return position;
+            }
+
+            Vector3 slideDirection = slide / slideDistance;
+            if (TryGetClosestObstruction(position, slideDirection, slideDistance,
+                    out RaycastHit slideHit))
+            {
+                slideDistance = Mathf.Max(0f, slideHit.distance - collisionPadding);
+            }
+
+            return position + slideDirection * slideDistance;
+        }
+
+        private Vector3 ResolveEyeOverlap(Vector3 position)
+        {
+            EnsureCollisionEye();
+            if (collisionEye == null || collisionLayers.value == 0)
+            {
+                return position;
+            }
+
+            // Resolve a few contacts so the virtual eye can escape wall corners instead of
+            // remaining wedged when a fast orbit begins with the camera already intersecting.
+            for (int pass = 0; pass < 3; pass++)
+            {
+                int count = Physics.OverlapSphereNonAlloc(position, collisionRadius,
+                    overlapHits, collisionLayers, QueryTriggerInteraction.Ignore);
+                bool moved = false;
+                for (int index = 0; index < count; index++)
+                {
+                    Collider candidate = overlapHits[index];
+                    if (!IsCameraObstruction(candidate) ||
+                        !Physics.ComputePenetration(collisionEye, position,
+                            Quaternion.identity, candidate, candidate.transform.position,
+                            candidate.transform.rotation, out Vector3 direction,
+                            out float penetration))
+                    {
+                        continue;
+                    }
+
+                    position += direction * (penetration + collisionPadding);
+                    moved = true;
+                }
+
+                if (!moved)
+                {
+                    break;
+                }
+            }
+
+            return position;
+        }
+
+        private void EnsureCollisionEye()
+        {
+            if (collisionEye != null)
+            {
+                collisionEye.radius = collisionRadius;
+                return;
+            }
+
+            GameObject eyeObject = new("Camera Collision Eye");
+            eyeObject.hideFlags = HideFlags.HideAndDontSave;
+            collisionEye = eyeObject.AddComponent<SphereCollider>();
+            collisionEye.radius = collisionRadius;
+            collisionEye.isTrigger = true;
+            collisionEye.enabled = false;
         }
 
         private void MoveFocusPoint(Vector3 movement)
@@ -309,6 +489,11 @@ namespace MiningSimulator.Ores
             collisionRadius = Mathf.Max(0.01f, collisionRadius);
             collisionPadding = Mathf.Max(0f, collisionPadding);
             focusCollisionHeight = Mathf.Max(collisionRadius, focusCollisionHeight);
+            collisionRecoverySpeed = Mathf.Max(0f, collisionRecoverySpeed);
+            if (collisionEye != null)
+            {
+                collisionEye.radius = collisionRadius;
+            }
         }
     }
 }

@@ -46,6 +46,7 @@ namespace MiningSimulator.Ores
         private float groundFogDensity;
         private AmbientMode groundAmbientMode;
         private Color groundAmbientLight;
+        private MiningPortalSlideTransition slideTransition;
 
         public MiningWorldArea CurrentArea { get; private set; } = MiningWorldArea.Ground;
         public bool UndergroundUnlocked => undergroundUnlocked;
@@ -59,6 +60,7 @@ namespace MiningSimulator.Ores
         public OreSpawner ActiveSpawner => CurrentArea == MiningWorldArea.Underground
             ? undergroundSpawner
             : groundSpawner;
+        public bool IsTransitioning => slideTransition != null && slideTransition.IsPlaying;
         public event Action AreaChanged;
         public event Action RequirementsChanged;
 
@@ -103,6 +105,7 @@ namespace MiningSimulator.Ores
             CaptureGroundLighting();
             EnsureUndergroundWorld();
             SwitchTo(MiningWorldArea.Ground, true);
+            slideTransition = MiningPortalSlideTransition.EnsureRuntime(this);
         }
 
         private void OnEnable()
@@ -133,8 +136,7 @@ namespace MiningSimulator.Ores
         {
             if (undergroundUnlocked)
             {
-                SwitchTo(MiningWorldArea.Underground);
-                return true;
+                return RequestAreaChange(MiningWorldArea.Underground);
             }
 
             if (!CanPurchaseUnlock || wallet == null || !wallet.TrySpend(requiredCoins))
@@ -147,13 +149,12 @@ namespace MiningSimulator.Ores
             PlayerPrefs.SetInt(UndergroundUnlockSaveKey, 1);
             PlayerPrefs.Save();
             RequirementsChanged?.Invoke();
-            SwitchTo(MiningWorldArea.Underground);
-            return true;
+            return RequestAreaChange(MiningWorldArea.Underground);
         }
 
         public void ReturnToGround()
         {
-            SwitchTo(MiningWorldArea.Ground);
+            RequestAreaChange(MiningWorldArea.Ground);
         }
 
         public void ToggleArea()
@@ -164,8 +165,43 @@ namespace MiningSimulator.Ores
             }
             else if (undergroundUnlocked)
             {
-                SwitchTo(MiningWorldArea.Underground);
+                RequestAreaChange(MiningWorldArea.Underground);
             }
+        }
+
+        public Vector3 GetCameraFocus(MiningWorldArea area, Vector3 groundFallback)
+        {
+            return area == MiningWorldArea.Underground
+                ? undergroundAreaCenter
+                : groundFallback;
+        }
+
+        private bool RequestAreaChange(MiningWorldArea area)
+        {
+            if (CurrentArea == area || IsTransitioning ||
+                (area == MiningWorldArea.Underground && !undergroundUnlocked))
+            {
+                return false;
+            }
+
+            slideTransition ??= MiningPortalSlideTransition.EnsureRuntime(this);
+            MiningPortalGate portal = FindFirstObjectByType<MiningPortalGate>(
+                FindObjectsInactive.Include);
+            if (slideTransition != null &&
+                slideTransition.TryPlay(area, portal != null ? portal.transform : null))
+            {
+                return true;
+            }
+
+            // A missing camera should never make travel unusable. The world swap still works;
+            // only the presentation is skipped.
+            SwitchTo(area);
+            return CurrentArea == area;
+        }
+
+        internal void CompleteAnimatedSwitch(MiningWorldArea area)
+        {
+            SwitchTo(area);
         }
 
         private void SwitchTo(MiningWorldArea area, bool force = false)
@@ -331,7 +367,7 @@ namespace MiningSimulator.Ores
             CreateBlock("West Wall", root, center + new Vector3(-width * 0.5f, wallHeight * 0.5f, 0f),
                 new Vector3(1.5f, wallHeight, depth), wallMaterial, true);
             CreateBlock("Cave Ceiling", root, center + Vector3.up * wallHeight,
-                new Vector3(width, 1.5f, depth), wallMaterial, false);
+                new Vector3(width, 1.5f, depth), wallMaterial, true);
 
             System.Random random = new(73021);
             for (int index = 0; index < 36; index++)
