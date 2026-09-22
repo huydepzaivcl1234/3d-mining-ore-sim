@@ -112,3 +112,6 @@ InitTestScene*.unity*
 
 # Auto-generated cache in Assets folder
 /[Aa]ssets/[Ss]ceneDependencyCache*
+# Local Unity cache backup folders (never commit generated Library copies)
+/[Ll]ibrary_backup*/
+/[Ll]ibrary-[Bb]ackup*/
