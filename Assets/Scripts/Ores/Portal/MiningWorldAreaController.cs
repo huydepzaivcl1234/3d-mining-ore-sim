@@ -39,6 +39,9 @@ namespace MiningSimulator.Ores
         [SerializeField] private OreSpawner undergroundSpawner;
         [SerializeField] private GameObject groundEnvironment;
         [SerializeField] private GameObject undergroundEnvironment;
+        [Tooltip("Optional scene-authored camera destination. When empty, the Underground Ore " +
+                 "System or Underground Platform position is used automatically.")]
+        [SerializeField] private Transform undergroundCameraFocus;
 
         private bool undergroundUnlocked;
         private bool groundFog;
@@ -171,9 +174,28 @@ namespace MiningSimulator.Ores
 
         public Vector3 GetCameraFocus(MiningWorldArea area, Vector3 groundFallback)
         {
-            return area == MiningWorldArea.Underground
-                ? undergroundAreaCenter
-                : groundFallback;
+            if (area != MiningWorldArea.Underground)
+            {
+                return groundFallback;
+            }
+
+            if (undergroundCameraFocus != null)
+            {
+                return undergroundCameraFocus.position;
+            }
+
+            if (undergroundSpawner != null)
+            {
+                return undergroundSpawner.transform.position;
+            }
+
+            if (undergroundEnvironment != null &&
+                TryGetRendererBoundsCenter(undergroundEnvironment, out Vector3 platformCenter))
+            {
+                return platformCenter;
+            }
+
+            return undergroundAreaCenter;
         }
 
         private bool RequestAreaChange(MiningWorldArea area)
@@ -233,90 +255,65 @@ namespace MiningSimulator.Ores
         {
             wallet ??= FindFirstObjectByType<PlayerWallet>(FindObjectsInactive.Include);
             rebirthSystem ??= FindFirstObjectByType<MiningRebirthSystem>(FindObjectsInactive.Include);
-            if (groundSpawner == null)
-            {
-                foreach (OreSpawner candidate in FindObjectsByType<OreSpawner>(
-                             FindObjectsInactive.Include, FindObjectsSortMode.None))
-                {
-                    if (candidate == null || candidate == undergroundSpawner ||
-                        candidate.gameObject.name == "Underground Ore System")
-                    {
-                        continue;
-                    }
 
+            foreach (OreSpawner candidate in FindObjectsByType<OreSpawner>(
+                         FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (candidate == null)
+                {
+                    continue;
+                }
+
+                if (undergroundSpawner == null && IsUndergroundName(candidate.gameObject.name))
+                {
+                    undergroundSpawner = candidate;
+                    continue;
+                }
+
+                if (groundSpawner == null && candidate != undergroundSpawner &&
+                    !IsUndergroundName(candidate.gameObject.name))
+                {
                     groundSpawner = candidate;
-                    break;
                 }
             }
+
             if (groundEnvironment == null)
             {
                 groundEnvironment = GameObject.Find("Ground");
+            }
+
+            undergroundEnvironment ??= FindSceneObjectByName(
+                "Underground Environment", "Under Ground Environment",
+                "Underground Platform", "Under Ground Platform",
+                "Underground World", "Under Ground World");
+
+            if (undergroundCameraFocus == null)
+            {
+                GameObject focus = FindSceneObjectByName(
+                    "Underground Camera Focus", "Under Ground Camera Focus",
+                    "Underground Focus", "Under Ground Focus");
+                undergroundCameraFocus = focus != null ? focus.transform : null;
             }
         }
 
         private void EnsureUndergroundWorld()
         {
-            EnsureUndergroundHierarchy();
-
-            // The editor setup creates the named environment root so designers can see and
-            // select the Underground hierarchy. Its generated cave children are still created
-            // lazily in Play Mode to avoid serializing runtime-created materials into a scene.
-            if (undergroundEnvironment != null && undergroundEnvironment.transform.childCount == 0)
-            {
-                BuildCave(undergroundEnvironment.transform);
-            }
-
-            if (groundSpawner != null)
-            {
-                undergroundSpawner.ConfigureAsAreaClone(groundSpawner, undergroundSpawnData,
-                    undergroundAreaCenter, undergroundAreaSize);
-            }
-
-            undergroundEnvironment.SetActive(false);
+            // Underground content is authored in the scene. Never create geometry, clone a
+            // spawner, reparent objects, or overwrite the designer's platform configuration.
+            if (undergroundEnvironment != null) undergroundEnvironment.SetActive(false);
             if (undergroundSpawner != null) undergroundSpawner.gameObject.SetActive(false);
-        }
-
-        private void EnsureUndergroundHierarchy()
-        {
-            if (undergroundEnvironment == null)
+            if (Application.isPlaying && undergroundSpawner == null)
             {
-                Transform existingEnvironment = transform.Find("Underground Environment");
-                undergroundEnvironment = existingEnvironment != null
-                    ? existingEnvironment.gameObject
-                    : new GameObject("Underground Environment");
-            }
-            if (undergroundEnvironment.transform.parent != transform)
-            {
-                undergroundEnvironment.transform.SetParent(transform, false);
-            }
-
-            if (undergroundSpawner == null)
-            {
-                Transform existingSpawner = transform.Find("Underground Ore System");
-                if (existingSpawner != null)
-                {
-                    undergroundSpawner = existingSpawner.GetComponent<OreSpawner>();
-                }
-
-                if (undergroundSpawner == null && groundSpawner != null)
-                {
-                    GameObject spawnerObject = new("Underground Ore System");
-                    spawnerObject.SetActive(false);
-                    spawnerObject.transform.SetParent(transform, false);
-                    undergroundSpawner = spawnerObject.AddComponent<OreSpawner>();
-                }
-
-                if (undergroundSpawner != null)
-                {
-                    undergroundSpawner.gameObject.SetActive(false);
-                }
+                Debug.LogWarning("No scene-authored Underground Ore System was found. " +
+                                 "Assign it on MiningWorldAreaController or name the object " +
+                                 "'Under Ground Ore System'. Nothing will be generated.", this);
             }
         }
 
 #if UNITY_EDITOR
         /// <summary>
-        /// Called by the editor setup menu for a designer-authored gameplay scene. It creates only
-        /// the named hierarchy and serialized references; the cave geometry remains runtime-built.
+        /// Called by the editor setup menu. It only resolves designer-authored scene objects and
+        /// never creates, reparents, resizes, or configures Underground content.
         /// </summary>
         public void PrepareEditorHierarchy()
         {
@@ -327,103 +324,67 @@ namespace MiningSimulator.Ores
 
             undergroundSpawnData ??= Resources.Load<OreSpawnData>(UndergroundSpawnDataResourcePath);
             ResolveReferences();
-            EnsureUndergroundHierarchy();
-            undergroundEnvironment.SetActive(false);
-            if (undergroundSpawner != null)
-            {
-                undergroundSpawner.ConfigureAsAreaClone(groundSpawner, undergroundSpawnData,
-                    undergroundAreaCenter, undergroundAreaSize);
-                undergroundSpawner.gameObject.SetActive(false);
-            }
         }
 #endif
 
-        private void BuildCave(Transform root)
+        private static bool IsUndergroundName(string objectName)
         {
-            Vector3 center = undergroundAreaCenter;
-            Vector3 size = undergroundAreaSize;
-            float width = Mathf.Max(28f, size.x + 12f);
-            float depth = Mathf.Max(28f, size.z + 12f);
-            float wallHeight = 14f;
-
-            Material floorMaterial = CreateMaterial("Underground Basalt", new Color(0.10f, 0.105f, 0.12f));
-            Material wallMaterial = CreateMaterial("Underground Rock", new Color(0.075f, 0.065f, 0.08f));
-            Material[] rockMaterials =
+            if (string.IsNullOrWhiteSpace(objectName))
             {
-                CreateMaterial("Slate Rock", new Color(0.16f, 0.17f, 0.20f)),
-                CreateMaterial("Iron Rock", new Color(0.23f, 0.16f, 0.13f)),
-                CreateMaterial("Moss Rock", new Color(0.12f, 0.20f, 0.16f)),
-                CreateMaterial("Crystal Rock", new Color(0.20f, 0.12f, 0.28f))
-            };
-
-            CreateBlock("Cave Floor", root, center + Vector3.down * 0.5f,
-                new Vector3(width, 1f, depth), floorMaterial, true);
-            CreateBlock("North Wall", root, center + new Vector3(0f, wallHeight * 0.5f, depth * 0.5f),
-                new Vector3(width, wallHeight, 1.5f), wallMaterial, true);
-            CreateBlock("South Wall", root, center + new Vector3(0f, wallHeight * 0.5f, -depth * 0.5f),
-                new Vector3(width, wallHeight, 1.5f), wallMaterial, true);
-            CreateBlock("East Wall", root, center + new Vector3(width * 0.5f, wallHeight * 0.5f, 0f),
-                new Vector3(1.5f, wallHeight, depth), wallMaterial, true);
-            CreateBlock("West Wall", root, center + new Vector3(-width * 0.5f, wallHeight * 0.5f, 0f),
-                new Vector3(1.5f, wallHeight, depth), wallMaterial, true);
-            CreateBlock("Cave Ceiling", root, center + Vector3.up * wallHeight,
-                new Vector3(width, 1.5f, depth), wallMaterial, true);
-
-            System.Random random = new(73021);
-            for (int index = 0; index < 36; index++)
-            {
-                float angle = index / 36f * Mathf.PI * 2f;
-                float edgeX = Mathf.Cos(angle) * (width * 0.43f);
-                float edgeZ = Mathf.Sin(angle) * (depth * 0.43f);
-                GameObject rock = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                rock.name = $"Decorative Rock Variant {index + 1:00}";
-                rock.transform.SetParent(root, false);
-                rock.transform.position = center + new Vector3(edgeX, 0.35f, edgeZ);
-                rock.transform.rotation = Quaternion.Euler(0f, (float)random.NextDouble() * 360f,
-                    (float)random.NextDouble() * 18f - 9f);
-                float scale = 0.7f + (float)random.NextDouble() * 1.5f;
-                rock.transform.localScale = new Vector3(scale * 1.35f, scale * 0.75f, scale);
-                Renderer renderer = rock.GetComponent<Renderer>();
-                renderer.sharedMaterial = rockMaterials[index % rockMaterials.Length];
-                Collider collider = rock.GetComponent<Collider>();
-                if (collider != null) collider.enabled = false;
+                return false;
             }
 
-            for (int index = 0; index < 8; index++)
+            string compact = objectName.Replace(" ", string.Empty)
+                .Replace("_", string.Empty)
+                .Replace("-", string.Empty);
+            return compact.IndexOf("underground", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        private static GameObject FindSceneObjectByName(params string[] acceptedNames)
+        {
+            foreach (Transform candidate in FindObjectsByType<Transform>(
+                         FindObjectsInactive.Include, FindObjectsSortMode.None))
             {
-                GameObject lightObject = new($"Cave Crystal Light {index + 1:00}");
-                lightObject.transform.SetParent(root, false);
-                float angle = index / 8f * Mathf.PI * 2f;
-                lightObject.transform.position = center + new Vector3(
-                    Mathf.Cos(angle) * width * 0.34f, 3f, Mathf.Sin(angle) * depth * 0.34f);
-                Light light = lightObject.AddComponent<Light>();
-                light.type = LightType.Point;
-                light.range = 11f;
-                light.intensity = 2.2f;
-                light.color = index % 2 == 0
-                    ? new Color(0.30f, 0.65f, 1f)
-                    : new Color(0.72f, 0.30f, 1f);
+                if (candidate == null || !candidate.gameObject.scene.IsValid())
+                {
+                    continue;
+                }
+
+                foreach (string acceptedName in acceptedNames)
+                {
+                    if (string.Equals(candidate.name, acceptedName,
+                            StringComparison.OrdinalIgnoreCase))
+                    {
+                        return candidate.gameObject;
+                    }
+                }
             }
+
+            return null;
         }
 
-        private static void CreateBlock(string name, Transform parent, Vector3 position,
-            Vector3 scale, Material material, bool walkableOrBlocking)
+        private static bool TryGetRendererBoundsCenter(GameObject root, out Vector3 center)
         {
-            GameObject block = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            block.name = name;
-            block.transform.SetParent(parent, false);
-            block.transform.position = position;
-            block.transform.localScale = scale;
-            block.GetComponent<Renderer>().sharedMaterial = material;
-            Collider collider = block.GetComponent<Collider>();
-            if (collider != null) collider.enabled = walkableOrBlocking;
-        }
+            center = root != null ? root.transform.position : Vector3.zero;
+            if (root == null)
+            {
+                return false;
+            }
 
-        private static Material CreateMaterial(string name, Color color)
-        {
-            Shader shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
-            Material material = new(shader) { name = name, color = color };
-            return material;
+            Renderer[] renderers = root.GetComponentsInChildren<Renderer>(true);
+            if (renderers.Length == 0)
+            {
+                return false;
+            }
+
+            Bounds bounds = renderers[0].bounds;
+            for (int index = 1; index < renderers.Length; index++)
+            {
+                bounds.Encapsulate(renderers[index].bounds);
+            }
+
+            center = bounds.center;
+            return true;
         }
 
         private void RebindAreaSystems(OreSpawner spawner)
