@@ -15677,20 +15677,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c9cd843c843df5e4eb4a4e602b0b3302, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CaveIdleGame.CameraWallClip
-  probeRadius: 0.5
-  obstacleLayers:
-    m_Bits: 9
-  pushStrength: 10
-  autoNearClip: 1
-  minNearClip: 0.05
-  normalNearClip: 0.3
-  orbitTarget: {fileID: 0}
-  desiredDistance: 10
-  minDistance: 1.5
-  recoverySpeed: 5
-  _cam: {fileID: 0}
-  _currentDistance: 0
-  _velocity: {x: 0, y: 0, z: 0}
 --- !u!1 &330788427
 GameObject:
   m_ObjectHideFlags: 0
@@ -59161,6 +59147,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningOrbitCamera
   controlledCamera: {fileID: 0}
   gameData: {fileID: 11400000, guid: fa0fc8680dcb4e63a9939950274281de, type: 2}
+  collisionLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  collisionRadius: 0.35
+  collisionPadding: 0.08
+  focusCollisionHeight: 1
 --- !u!1 &1183823968
 GameObject:
   m_ObjectHideFlags: 0
