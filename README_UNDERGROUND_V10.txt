@@ -20,12 +20,12 @@ WHAT THIS UPDATE ADDS
 HOW TO USE
 ----------
 1. Extract this ZIP into the Unity project root and overwrite when asked.
-2. Open Assets/Scenes/SampleScene.unity.
+2. Open your normal gameplay scene.
 3. Let Unity finish compiling.
 4. Enter Play Mode and hover/click the existing portal with the normal interaction key.
 
 No manual scene setup is required. The Underground world is built once at runtime by the
-portal's MiningWorldAreaController. The current ore table is reused automatically.
+portal's MiningWorldAreaController. The separate Underground ore table is loaded automatically.
 
 BALANCE SETTINGS
 ----------------
@@ -35,8 +35,8 @@ Assets/Scripts/Ores/Portal/MiningWorldAreaController.cs
   requiredRebirths = 3
   requiredCoins    = 1,000,000
 
-To tune these in the Inspector, add MiningWorldAreaController to a scene object before Play
-Mode. The portal will reuse that authored instance instead of creating one at runtime.
+To tune these in the Inspector, add MiningWorldAreaController to any gameplay scene object
+before Play Mode. The portal will reuse that authored instance instead of creating one at runtime.
 
 TEST CHECKLIST
 --------------

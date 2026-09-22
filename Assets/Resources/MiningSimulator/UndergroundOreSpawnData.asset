@@ -56,7 +56,7 @@ MonoBehaviour:
   maximumPooledOres: 12
   secondsPerSpawn: 2
   areaCenter: {x: 0, y: 0, z: 0}
-  areaSize: {x: 200, y: 0, z: 200}
+  areaSize: {x: 20, y: 0, z: 20}
   heightOffset: 0
   randomYRotation: 1
   randomYRotationRange: {x: 0, y: 360}

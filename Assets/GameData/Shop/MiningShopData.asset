@@ -32,7 +32,7 @@ MonoBehaviour:
   - item: {fileID: 0}
     cosmetic: {fileID: 11400000, guid: e9b8d4e4d44a4c268fa0c4f30ef73ee2, type: 2}
     itemAmount: 1
-    gemCost: 0
+    gemCost: 75
   productSchemaVersion: 1
   rareGiftBox: {fileID: 11400000, guid: f18a9bc3efc342d4b64dde59a7745142, type: 2}
   rareGiftBoxGemCost: 20

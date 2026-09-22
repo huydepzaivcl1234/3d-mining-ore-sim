@@ -6,18 +6,23 @@ WHAT THIS UPDATE ADDS
 - A separate Underground OreSpawner with its own OreSpawnData asset.
 - Ground and Underground no longer share the same ore roll table.
 - The Underground table is editable at:
-  Assets/GameData/Spawning/UndergroundOreSpawnData.asset
+  Assets/Resources/MiningSimulator/UndergroundOreSpawnData.asset
 - The default Underground table uses Stone, Coal, Iron, Gold, Diamond, Light Stone,
   Dark Stone and Netherite. Copper and Gem are intentionally not in the default table.
 - Underground spawning does not use the ground Day/Night special-ore roll.
-- Underground area center and size are editable on GameManager >
-  MiningWorldAreaController.
+- Underground area center, size and unlock conditions are editable on any gameplay
+  GameObject with MiningWorldAreaController.
+- To create the visible hierarchy in your own gameplay scene, run:
+  Mining Simulator > Setup > Create Underground World In Open Scene
+- If the only available scene is SampleScene, run:
+  Mining Simulator > Setup > Create Gameplay Scene Copy With Underground
+  and save the new scene under Assets/Scenes/MiningGameplay.unity.
 - The cave floor, cave walls, decorative rocks and spawn bounds use that same configured size.
 - Underground ambience is played as a looping crossfade while Underground is active.
 
 INSPECTOR SETTINGS
 ------------------
-On GameManager > MiningWorldAreaController:
+On any gameplay GameObject with MiningWorldAreaController:
 
   Required Rebirths       3
   Required Coins          1,000,000
@@ -25,7 +30,7 @@ On GameManager > MiningWorldAreaController:
   Underground Area Center (0, 0, 0)
   Underground Area Size   (20, 0, 20)
 
-On GameManager > MiningAudioManager > MiningAudioData:
+On Assets/GameData/Audio/MiningAudioData.asset:
 
   Underground Ambience        NightForest by default
   Underground Ambience Volume 0.55 by default
@@ -41,8 +46,9 @@ INSTALL
 4. Reopen Unity and wait for compilation/import to finish.
 5. Enter Play Mode and use the portal.
 
-No manual scene wiring is required for SampleScene: GameManager already contains the
-MiningWorldAreaController and references the separate UndergroundOreSpawnData asset.
+No sample-scene wiring is required or included. If no controller is authored, the runtime creates
+one automatically and loads the UndergroundOreSpawnData resource. The setup menu is available
+when you want the controller and named child objects visible in the Hierarchy before Play Mode.
 
 TEST CHECKLIST
 --------------

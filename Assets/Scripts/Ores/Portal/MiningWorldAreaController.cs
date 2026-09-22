@@ -19,6 +19,8 @@ namespace MiningSimulator.Ores
     public sealed class MiningWorldAreaController : MonoBehaviour
     {
         public const string UndergroundUnlockSaveKey = "MiningSimulator.UndergroundUnlocked.v1";
+        private const string UndergroundSpawnDataResourcePath =
+            "MiningSimulator/UndergroundOreSpawnData";
 
         [Header("Portal Unlock")]
         [Min(0), SerializeField] private int requiredRebirths = 3;
@@ -73,6 +75,12 @@ namespace MiningSimulator.Ores
             return owner.AddComponent<MiningWorldAreaController>();
         }
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+        private static void BootstrapRuntime()
+        {
+            EnsureRuntime();
+        }
+
         public static void ResetSavedUnlock()
         {
             PlayerPrefs.DeleteKey(UndergroundUnlockSaveKey);
@@ -89,6 +97,7 @@ namespace MiningSimulator.Ores
 
         private void Awake()
         {
+            undergroundSpawnData ??= Resources.Load<OreSpawnData>(UndergroundSpawnDataResourcePath);
             ResolveReferences();
             undergroundUnlocked = PlayerPrefs.GetInt(UndergroundUnlockSaveKey, 0) == 1;
             CaptureGroundLighting();
@@ -190,7 +199,18 @@ namespace MiningSimulator.Ores
             rebirthSystem ??= FindFirstObjectByType<MiningRebirthSystem>(FindObjectsInactive.Include);
             if (groundSpawner == null)
             {
-                groundSpawner = FindFirstObjectByType<OreSpawner>(FindObjectsInactive.Include);
+                foreach (OreSpawner candidate in FindObjectsByType<OreSpawner>(
+                             FindObjectsInactive.Include, FindObjectsSortMode.None))
+                {
+                    if (candidate == null || candidate == undergroundSpawner ||
+                        candidate.gameObject.name == "Underground Ore System")
+                    {
+                        continue;
+                    }
+
+                    groundSpawner = candidate;
+                    break;
+                }
             }
             if (groundEnvironment == null)
             {
@@ -200,22 +220,18 @@ namespace MiningSimulator.Ores
 
         private void EnsureUndergroundWorld()
         {
-            if (undergroundEnvironment == null)
+            EnsureUndergroundHierarchy();
+
+            // The editor setup creates the named environment root so designers can see and
+            // select the Underground hierarchy. Its generated cave children are still created
+            // lazily in Play Mode to avoid serializing runtime-created materials into a scene.
+            if (undergroundEnvironment != null && undergroundEnvironment.transform.childCount == 0)
             {
-                undergroundEnvironment = new GameObject("Underground Environment");
                 BuildCave(undergroundEnvironment.transform);
             }
 
             if (groundSpawner != null)
             {
-                if (undergroundSpawner == null)
-                {
-                    GameObject spawnerObject = new("Underground Ore System");
-                    spawnerObject.SetActive(false);
-                    spawnerObject.transform.SetParent(transform, false);
-                    undergroundSpawner = spawnerObject.AddComponent<OreSpawner>();
-                }
-
                 undergroundSpawner.ConfigureAsAreaClone(groundSpawner, undergroundSpawnData,
                     undergroundAreaCenter, undergroundAreaSize);
             }
@@ -223,6 +239,68 @@ namespace MiningSimulator.Ores
             undergroundEnvironment.SetActive(false);
             if (undergroundSpawner != null) undergroundSpawner.gameObject.SetActive(false);
         }
+
+        private void EnsureUndergroundHierarchy()
+        {
+            if (undergroundEnvironment == null)
+            {
+                Transform existingEnvironment = transform.Find("Underground Environment");
+                undergroundEnvironment = existingEnvironment != null
+                    ? existingEnvironment.gameObject
+                    : new GameObject("Underground Environment");
+            }
+            if (undergroundEnvironment.transform.parent != transform)
+            {
+                undergroundEnvironment.transform.SetParent(transform, false);
+            }
+
+            if (undergroundSpawner == null)
+            {
+                Transform existingSpawner = transform.Find("Underground Ore System");
+                if (existingSpawner != null)
+                {
+                    undergroundSpawner = existingSpawner.GetComponent<OreSpawner>();
+                }
+
+                if (undergroundSpawner == null && groundSpawner != null)
+                {
+                    GameObject spawnerObject = new("Underground Ore System");
+                    spawnerObject.SetActive(false);
+                    spawnerObject.transform.SetParent(transform, false);
+                    undergroundSpawner = spawnerObject.AddComponent<OreSpawner>();
+                }
+
+                if (undergroundSpawner != null)
+                {
+                    undergroundSpawner.gameObject.SetActive(false);
+                }
+            }
+        }
+
+#if UNITY_EDITOR
+        /// <summary>
+        /// Called by the editor setup menu for a designer-authored gameplay scene. It creates only
+        /// the named hierarchy and serialized references; the cave geometry remains runtime-built.
+        /// </summary>
+        public void PrepareEditorHierarchy()
+        {
+            if (Application.isPlaying)
+            {
+                return;
+            }
+
+            undergroundSpawnData ??= Resources.Load<OreSpawnData>(UndergroundSpawnDataResourcePath);
+            ResolveReferences();
+            EnsureUndergroundHierarchy();
+            undergroundEnvironment.SetActive(false);
+            if (undergroundSpawner != null)
+            {
+                undergroundSpawner.ConfigureAsAreaClone(groundSpawner, undergroundSpawnData,
+                    undergroundAreaCenter, undergroundAreaSize);
+                undergroundSpawner.gameObject.SetActive(false);
+            }
+        }
+#endif
 
         private void BuildCave(Transform root)
         {
