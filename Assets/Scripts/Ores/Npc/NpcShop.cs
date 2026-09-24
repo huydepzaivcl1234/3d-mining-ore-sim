@@ -25,6 +25,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private RuntimeAnimatorController wanderingTraderAnimatorController;
 
         private int purchasedCount;
+        private Transform activeWorldSpawnPoint;
 
         public int NpcCost => npcData != null ? npcData.PurchaseCost : 0;
         public int PurchasedCount => purchasedCount;
@@ -59,6 +60,12 @@ namespace MiningSimulator.Ores
         public void SetOreSpawner(OreSpawner targetSpawner)
         {
             if (targetSpawner != null) oreSpawner = targetSpawner;
+        }
+
+        /// <summary>Optional arrival marker for purchasing miners in the active world.</summary>
+        public void SetWorldSpawnPoint(Transform target)
+        {
+            activeWorldSpawnPoint = target;
         }
 
         private void Awake()
@@ -186,7 +193,8 @@ namespace MiningSimulator.Ores
                 return false;
             }
 
-            Vector3 origin = spawnPoint != null ? spawnPoint.position : transform.position;
+            Transform source = activeWorldSpawnPoint != null ? activeWorldSpawnPoint : spawnPoint;
+            Vector3 origin = source != null ? source.position : transform.position;
             if (!TryFindAvailableSpawnPosition(origin, out Vector3 position))
             {
                 return false;

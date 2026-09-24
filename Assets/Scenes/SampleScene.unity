@@ -15677,20 +15677,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c9cd843c843df5e4eb4a4e602b0b3302, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CaveIdleGame.CameraWallClip
-  probeRadius: 0.5
-  obstacleLayers:
-    m_Bits: 9
-  pushStrength: 10
-  autoNearClip: 1
-  minNearClip: 0.05
-  normalNearClip: 0.3
-  orbitTarget: {fileID: 0}
-  desiredDistance: 10
-  minDistance: 1.5
-  recoverySpeed: 5
-  _cam: {fileID: 0}
-  _currentDistance: 0
-  _velocity: {x: 0, y: 0, z: 0}
 --- !u!1 &330788427
 GameObject:
   m_ObjectHideFlags: 0
@@ -22403,7 +22389,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.OreSpawner
   wallet: {fileID: 5319940143687006134}
   spawnedOreParent: {fileID: 0}
-  spawnData: {fileID: 11400000, guid: b6c0c4c0580f44a69bf14fb54e455f1b, type: 2}
+  spawnData: {fileID: 11400000, guid: acc197e110f3c3079f40fc71384d1dd7, type: 2}
   upgradeSystem: {fileID: 1144114548}
   uiData: {fileID: 11400000, guid: 0fc641ac29720e2837d73e6212818c58, type: 2}
   rewardPopupPrefab: {fileID: 595523728496385370, guid: 60732089bc3d5a74cac36ef83399977d, type: 3}
@@ -74792,7 +74778,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3308872666089106981, guid: b44682073049f3e42b951c8675cc86fd, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: 5.35
       objectReference: {fileID: 0}
     - target: {fileID: 3308872666089106981, guid: b44682073049f3e42b951c8675cc86fd, type: 3}
       propertyPath: m_LocalRotation.w
@@ -74845,6 +74831,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 7731708680386513935, guid: b44682073049f3e42b951c8675cc86fd, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2090299861}
+    - targetCorrespondingSourceObject: {fileID: 7731708680386513935, guid: b44682073049f3e42b951c8675cc86fd, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2090299863}
   m_SourcePrefab: {fileID: 100100000, guid: b44682073049f3e42b951c8675cc86fd, type: 3}
 --- !u!1 &1549131512
 GameObject:
@@ -102194,6 +102183,24 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 1.5
   m_Center: {x: 0, y: 2.2679904, z: 0}
+--- !u!114 &2090299863
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2090299860}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 50135ca80aa881f42a2b1d6d9c25155b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningPortalGate
+  destination: 1
+  areaController: {fileID: 0}
+  maintenancePanel: {fileID: 372295637}
+  enterWhenCameraFocusCrossesPortal: 1
+  cameraEntryRadius: 1.75
+  cameraRearmRadius: 3
 --- !u!1 &2092369744
 GameObject:
   m_ObjectHideFlags: 0

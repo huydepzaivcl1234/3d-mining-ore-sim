@@ -1,0 +1,11 @@
+Unity world swap patch (main @ 86688a604d902861583261fad2b8fe53bef3eaf3)
+No scenes are included. Back up the project before extracting into the project root.
+
+In Unity (Edit Mode):
+1. Resolve any scene-load/compile errors first. A broken SampleScene cannot be repaired by these scripts.
+2. On MiningWorldAreaController in your scene, assign Ground Environment, Underground Environment, Ground Spawner, Underground Spawner, Underground Camera Focus. Optionally assign Ground Camera Focus and Underground NPC Spawn Point. Keep GameManager, UI, NpcShop, progression, and wallet OUTSIDE the two world roots.
+3. Assign DIFFERENT OreSpawnData assets on the two existing OreSpawner objects. Check SpawnOnEnable, MaximumAliveOres, the AreaCenter/AreaSize relative to the spawner transform, GroundLayers and ground platform Collider. An Underground spawner transform must be at your Underground platform, not on Ground.
+4. Select your existing Ground portal gate and use Mining Simulator > Setup > Create Return Portal From Selected Gate. Move the newly created return portal to your desired place underground; it must stay beneath the Underground world root. Destination is set to Ground; verify both gates' Area Controller fields. On Ground portal set Destination=Underground, on return gate Destination=Ground.
+5. If you have world-specific miners under a world root, assign their own OreSpawner in Inspector. NPCs outside both roots are treated as shared; they move between authored focus points and are rebound automatically.
+6. Keep existing Ground/UnderGround NavMeshSurface components and bake both floors; inspect their geometry/layer masks. Save scene yourself (Ctrl+S). No SampleScene shipped in this ZIP.
+7. Test Ground -> Underground -> Ground, Buy NPC in each world, Mine ore, UI and currencies, then re-enter Play Mode. Unity Editor validation has not been run in this workspace.
