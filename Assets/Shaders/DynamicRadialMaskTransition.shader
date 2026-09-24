@@ -2,6 +2,7 @@ Shader "UI/Mining/DynamicRadialMaskTransition"
 {
     Properties
     {
+        [PerRendererData] _MainTex ("Sprite Texture", 2D) = "white" {}
         _Center ("Portal viewport center", Vector) = (0.5, 0.5, 0, 0)
         _Radius ("Animated radius (0 to 2.8)", Range(0, 2.8)) = 0
         _Phase ("0 cover / 1 reveal", Float) = 0
@@ -32,6 +33,9 @@ Shader "UI/Mining/DynamicRadialMaskTransition"
             #pragma fragment Frag
             #pragma target 3.0
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+
+            TEXTURE2D(_MainTex);
+            SAMPLER(sampler_MainTex);
 
             struct Attributes
             {
@@ -110,7 +114,8 @@ Shader "UI/Mining/DynamicRadialMaskTransition"
                 float mixEnergy = saturate(active * (rim + halo * 0.25 + outer * 0.55));
                 float3 rgb = lerp(_MaskColor.rgb,
                     _EdgeColor.rgb * _EdgeGlow * max(wave, 0.0), mixEnergy);
-                return half4(rgb * input.color.rgb, alpha);
+                half4 sprite = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, input.uv);
+                return half4(rgb * input.color.rgb * sprite.rgb, alpha * sprite.a);
             }
             ENDHLSL
         }

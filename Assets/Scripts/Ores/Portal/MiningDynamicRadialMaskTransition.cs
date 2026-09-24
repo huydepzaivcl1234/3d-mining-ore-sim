@@ -73,6 +73,8 @@ namespace MiningSimulator.Ores
         private float shakeMagnitude;
         private float shakeStartTime;
 
+        public bool IsPlaying => currentTransition != null;
+
         [ContextMenu("Test Radial Transition to Underground")]
         private void TestToUnderground() => PlayPreview();
 

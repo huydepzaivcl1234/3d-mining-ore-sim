@@ -57,6 +57,7 @@ namespace MiningSimulator.Editor
             visual.transform.localPosition = new Vector3(0f, 0f, 0.05f);
             visual.transform.localRotation = Quaternion.identity;
             visual.transform.localScale = new Vector3(2.4f, 2.4f, 1f);
+            FaceCamera(visual.transform, Camera.main);
 
             Collider quadCollider = visual.GetComponent<Collider>();
             if (quadCollider != null) Undo.DestroyObjectImmediate(quadCollider);
@@ -66,6 +67,39 @@ namespace MiningSimulator.Editor
             EditorSceneManager.MarkSceneDirty(gate.gameObject.scene);
             Selection.activeGameObject = visual;
             EditorGUIUtility.PingObject(visual);
+        }
+
+        [MenuItem("Mining Simulator/Portal/Face Selected Toxic Visual Toward Main Camera")]
+        private static void FaceSelectedVisual()
+        {
+            Transform visual = Selection.activeTransform;
+            Camera camera = Camera.main;
+            if (visual == null || camera == null)
+            {
+                EditorUtility.DisplayDialog("Portal visual",
+                    "Select Toxic Slime Portal Visual and ensure a camera tagged MainCamera exists in the scene.", "OK");
+                return;
+            }
+
+            Undo.RecordObject(visual, "Face Toxic Portal Visual Toward Camera");
+            FaceCamera(visual, camera);
+            EditorSceneManager.MarkSceneDirty(visual.gameObject.scene);
+        }
+
+        [MenuItem("Mining Simulator/Portal/Face Selected Toxic Visual Toward Main Camera", true)]
+        private static bool ValidateFaceSelectedVisual()
+        {
+            return Selection.activeTransform != null &&
+                   Selection.activeTransform.name == ChildName &&
+                   Selection.activeGameObject.scene.IsValid();
+        }
+
+        private static void FaceCamera(Transform visual, Camera camera)
+        {
+            if (camera == null) return;
+            Vector3 towardCamera = camera.transform.position - visual.position;
+            if (towardCamera.sqrMagnitude > 0.0001f)
+                visual.rotation = Quaternion.LookRotation(towardCamera.normalized, Vector3.up);
         }
 
         [MenuItem("Mining Simulator/Portal/Add Toxic Slime Visual to Selected Gate", true)]
