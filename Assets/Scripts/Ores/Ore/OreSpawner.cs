@@ -14,6 +14,8 @@ namespace MiningSimulator.Ores
         [SerializeField] private Transform spawnedOreParent;
         [SerializeField] private OreSpawnData spawnData;
         [Header("Lava World (same Ground)")]
+        [Tooltip("Independent spawn timing, limits and area for Lava World. Leave empty to use Ground settings.")]
+        [SerializeField] private OreSpawnData lavaSpawnData;
         [Tooltip("Only these ore assets spawn in Lava World. Edit this list on the scene Ore System.")]
         [SerializeField] private List<OreSpawnEntry> lavaOreSpawnTable = new();
         [SerializeField] private bool lavaWorldActive;
@@ -34,16 +36,19 @@ namespace MiningSimulator.Ores
         private Coroutine spawnRoutine;
         private bool initialSpawnCompleted;
 
+        private OreSpawnData ActiveSpawnData =>
+            lavaWorldActive && lavaSpawnData != null ? lavaSpawnData : spawnData;
+
         public int ActiveCount => activeOres.Count;
         public int PooledCount => inactivePooledOres.Count;
-        public OreSpawnData SpawnData => spawnData;
+        public OreSpawnData SpawnData => ActiveSpawnData;
         public bool LavaWorldActive => lavaWorldActive;
         public IReadOnlyList<OreSpawnEntry> ActiveOreSpawnTable => lavaWorldActive
-            ? lavaOreSpawnTable : spawnData != null ? spawnData.OreSpawnTable : System.Array.Empty<OreSpawnEntry>();
+            ? lavaOreSpawnTable : ActiveSpawnData != null ? ActiveSpawnData.OreSpawnTable : System.Array.Empty<OreSpawnEntry>();
         public event System.Action WorldChanged;
         public MiningUpgradeSystem UpgradeSystem => upgradeSystem;
-        public Vector3 SpawnAreaCenter => spawnData != null ? spawnData.AreaCenter : Vector3.zero;
-        public Vector3 SpawnAreaSize => spawnData != null ? spawnData.AreaSize : Vector3.zero;
+        public Vector3 SpawnAreaCenter => ActiveSpawnData != null ? ActiveSpawnData.AreaCenter : Vector3.zero;
+        public Vector3 SpawnAreaSize => ActiveSpawnData != null ? ActiveSpawnData.AreaSize : Vector3.zero;
         public event System.Action<Ore, float> OreRewardGranted;
 
         private void Awake()
@@ -72,7 +77,7 @@ namespace MiningSimulator.Ores
         public bool TryReserveClosestOre(MiningNpc miner, Vector3 origin, int miningPower,
             Ore excludedOre, Ore additionallyExcludedOre, out Ore reservedOre, out int slotIndex)
         {
-            if (spawnData == null)
+            if (ActiveSpawnData == null)
             {
                 reservedOre = null;
                 slotIndex = -1;
@@ -148,14 +153,14 @@ namespace MiningSimulator.Ores
         private void OnEnable()
         {
             RegisterExistingOres();
-            if (spawnData == null || !spawnData.SpawnOnEnable)
+            if (ActiveSpawnData == null || !ActiveSpawnData.SpawnOnEnable)
             {
                 return;
             }
 
             if (!initialSpawnCompleted)
             {
-                int amount = Mathf.Min(spawnData.InitialSpawnCount, spawnData.MaximumAliveOres);
+                int amount = Mathf.Min(ActiveSpawnData.InitialSpawnCount, ActiveSpawnData.MaximumAliveOres);
                 for (int i = activeOres.Count; i < amount; i++)
                 {
                     SpawnOne();
@@ -281,11 +286,11 @@ namespace MiningSimulator.Ores
             }
             lavaWorldActive = active;
             WorldChanged?.Invoke();
-            if (isActiveAndEnabled && spawnData != null)
+            if (isActiveAndEnabled && ActiveSpawnData != null)
             {
-                int target = Mathf.Min(spawnData.InitialSpawnCount, spawnData.MaximumAliveOres);
+                int target = Mathf.Min(ActiveSpawnData.InitialSpawnCount, ActiveSpawnData.MaximumAliveOres);
                 for (int i = 0; i < target; i++) if (!SpawnOne()) break;
-                if (spawnData.SpawnOnEnable) spawnRoutine = StartCoroutine(SpawnLoop());
+                if (ActiveSpawnData.SpawnOnEnable) spawnRoutine = StartCoroutine(SpawnLoop());
             }
             return true;
         }
@@ -300,8 +305,8 @@ namespace MiningSimulator.Ores
 
         public bool SpawnOne()
         {
-            if (spawnData == null || spawnData.MaximumAliveOres <= 0 ||
-                activeOres.Count >= spawnData.MaximumAliveOres)
+            if (ActiveSpawnData == null || ActiveSpawnData.MaximumAliveOres <= 0 ||
+                activeOres.Count >= ActiveSpawnData.MaximumAliveOres)
             {
                 return false;
             }
@@ -318,8 +323,8 @@ namespace MiningSimulator.Ores
                 return false;
             }
 
-            Vector2 yRange = spawnData.RandomYRotationRange;
-            float randomY = spawnData.RandomYRotation
+            Vector2 yRange = ActiveSpawnData.RandomYRotationRange;
+            float randomY = ActiveSpawnData.RandomYRotation
                 ? UnityEngine.Random.Range(Mathf.Min(yRange.x, yRange.y), Mathf.Max(yRange.x, yRange.y))
                 : 0f;
             Quaternion rotation = Quaternion.Euler(0f, randomY, 0f) *
@@ -344,8 +349,8 @@ namespace MiningSimulator.Ores
             GameObject instance = ore.gameObject;
             instance.transform.SetPositionAndRotation(position, rotation);
             float scale = UnityEngine.Random.Range(
-                Mathf.Max(0.01f, Mathf.Min(spawnData.UniformScaleRange.x, spawnData.UniformScaleRange.y)),
-                Mathf.Max(0.01f, Mathf.Max(spawnData.UniformScaleRange.x, spawnData.UniformScaleRange.y)));
+                Mathf.Max(0.01f, Mathf.Min(ActiveSpawnData.UniformScaleRange.x, ActiveSpawnData.UniformScaleRange.y)),
+                Mathf.Max(0.01f, Mathf.Max(ActiveSpawnData.UniformScaleRange.x, ActiveSpawnData.UniformScaleRange.y)));
             instance.transform.localScale = data.Prefab.transform.localScale * scale;
             ore.Initialize(data, wallet, upgradeSystem, false);
             EnsureCircularNavigationObstacle(ore);
@@ -367,7 +372,7 @@ namespace MiningSimulator.Ores
 
         private bool TryChooseSpacedPosition(out Vector3 position)
         {
-            for (int attempt = 0; attempt < spawnData.PlacementAttempts; attempt++)
+            for (int attempt = 0; attempt < ActiveSpawnData.PlacementAttempts; attempt++)
             {
                 position = ChoosePosition();
                 if (HasMinimumOreSpacing(position))
@@ -382,7 +387,7 @@ namespace MiningSimulator.Ores
 
         private bool HasMinimumOreSpacing(Vector3 position)
         {
-            float minimumSpacing = spawnData.NpcPassageWidth;
+            float minimumSpacing = ActiveSpawnData.NpcPassageWidth;
             foreach (Ore activeOre in activeOres)
             {
                 if (activeOre == null)
@@ -436,7 +441,7 @@ namespace MiningSimulator.Ores
                 return;
             }
 
-            int maximumPooledOres = spawnData != null ? spawnData.MaximumPooledOres : 0;
+            int maximumPooledOres = ActiveSpawnData != null ? ActiveSpawnData.MaximumPooledOres : 0;
             if (inactivePooledOres.Count > maximumPooledOres)
             {
                 inactivePooledOres.Remove(ore);
@@ -474,7 +479,7 @@ namespace MiningSimulator.Ores
                 float speedMultiplier = upgradeSystem != null
                     ? upgradeSystem.GetMultiplier(MiningUpgradeType.OreSpawnSpeed)
                     : 1f;
-                yield return new WaitForSeconds(spawnData.SecondsPerSpawn / speedMultiplier);
+                yield return new WaitForSeconds(ActiveSpawnData.SecondsPerSpawn / speedMultiplier);
                 SpawnOne();
             }
         }
@@ -536,7 +541,7 @@ namespace MiningSimulator.Ores
 
         private float GetEffectiveSpawnChancePercent(OreSpawnEntry entry)
         {
-            OreRaritySpawnRule rule = spawnData.GetRarityRule(entry.Ore.Rarity);
+            OreRaritySpawnRule rule = ActiveSpawnData.GetRarityRule(entry.Ore.Rarity);
             float rarityMultiplier = rule != null ? rule.BaseChanceMultiplier : 1f;
             float baseChancePercent = Mathf.Clamp(entry.SpawnChancePercent, 0f, 100f) *
                                       rarityMultiplier;
@@ -557,7 +562,7 @@ namespace MiningSimulator.Ores
 
         private void KeepAboveSurface(GameObject instance, float surfaceY)
         {
-            if (!spawnData.KeepOreAboveSurface)
+            if (!ActiveSpawnData.KeepOreAboveSurface)
             {
                 return;
             }
@@ -585,7 +590,7 @@ namespace MiningSimulator.Ores
 
             if (hasBounds)
             {
-                float requiredLift = surfaceY + spawnData.SurfaceClearance - combinedBounds.min.y;
+                float requiredLift = surfaceY + ActiveSpawnData.SurfaceClearance - combinedBounds.min.y;
                 if (requiredLift > 0f)
                 {
                     instance.transform.position += Vector3.up * requiredLift;
@@ -610,11 +615,11 @@ namespace MiningSimulator.Ores
                 UnityEngine.Random.Range(-areaSize.z * 0.5f, areaSize.z * 0.5f));
             Vector3 world = transform.TransformPoint(local);
 
-            if (spawnData.AlignToGround)
+            if (ActiveSpawnData.AlignToGround)
             {
-                Vector3 rayOrigin = world + Vector3.up * spawnData.GroundRayStartHeight;
+                Vector3 rayOrigin = world + Vector3.up * ActiveSpawnData.GroundRayStartHeight;
                 int hitCount = Physics.RaycastNonAlloc(rayOrigin, Vector3.down, groundHitBuffer,
-                    spawnData.GroundRayDistance, spawnData.GroundLayers,
+                    ActiveSpawnData.GroundRayDistance, ActiveSpawnData.GroundLayers,
                     QueryTriggerInteraction.Ignore);
                 float closestDistance = float.PositiveInfinity;
                 for (int index = 0; index < hitCount; index++)
@@ -631,7 +636,7 @@ namespace MiningSimulator.Ores
                 }
             }
 
-            world.y += spawnData.HeightOffset;
+            world.y += ActiveSpawnData.HeightOffset;
             return world;
         }
 
@@ -736,15 +741,18 @@ namespace MiningSimulator.Ores
 
         private void OnDrawGizmosSelected()
         {
-            if (spawnData == null)
-            {
-                return;
-            }
-
-            Gizmos.color = spawnData.SpawnAreaGizmoColor;
             Matrix4x4 previous = Gizmos.matrix;
             Gizmos.matrix = transform.localToWorldMatrix;
-            Gizmos.DrawWireCube(SpawnAreaCenter, SpawnAreaSize);
+            if (spawnData != null)
+            {
+                Gizmos.color = spawnData.SpawnAreaGizmoColor;
+                Gizmos.DrawWireCube(spawnData.AreaCenter, spawnData.AreaSize);
+            }
+            if (lavaSpawnData != null)
+            {
+                Gizmos.color = new Color(1f, 0.28f, 0.08f, 0.85f);
+                Gizmos.DrawWireCube(lavaSpawnData.AreaCenter, lavaSpawnData.AreaSize);
+            }
             Gizmos.matrix = previous;
         }
     }

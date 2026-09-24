@@ -47,7 +47,13 @@ namespace MiningSimulator.Ores
 
         private void Awake()
         {
+            if (oreSpawner == null)
+                oreSpawner = FindFirstObjectByType<OreSpawner>(FindObjectsInactive.Include);
+            if (progressionSystem == null)
+                progressionSystem = FindFirstObjectByType<NpcProgressionSystem>(
+                    FindObjectsInactive.Include);
             if (cardTransform != null) restingScale = cardTransform.localScale;
+            ResolveOreUnlockLabel();
         }
 
         private void OnEnable()
@@ -142,6 +148,7 @@ namespace MiningSimulator.Ores
 
         public void Refresh()
         {
+            ResolveOreUnlockLabel();
             if (compactPcXpLabel) displayedPercent = -1;
             int level = progressionSystem != null ? progressionSystem.CurrentLevel : 1;
             int power = progressionSystem != null ? progressionSystem.CurrentMiningPower : 0;
@@ -182,6 +189,17 @@ namespace MiningSimulator.Ores
                     : string.Format(MiningLocalization.Text("{0} • power {1}/{2}",
                             "{0} • sức đào {1}/{2}"),
                         MiningLocalization.Text(next.DisplayName), power, next.MiningPowerRequired);
+        }
+
+        private void ResolveOreUnlockLabel()
+        {
+            if (rewardText != null && rewardText.gameObject.activeSelf) return;
+            Transform card = cardTransform != null ? cardTransform
+                : transform.Find("Card_Visual");
+            Transform liveText = card != null
+                ? card.Find("Stats_Well/Reward_Text") : null;
+            if (liveText != null && liveText.TryGetComponent(out TextMeshProUGUI label))
+                rewardText = label;
         }
 
         private void Play(AudioClip clip)

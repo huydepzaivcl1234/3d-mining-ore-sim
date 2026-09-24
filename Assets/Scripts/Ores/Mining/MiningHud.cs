@@ -29,6 +29,30 @@ namespace MiningSimulator.Ores
 
         private readonly MiningAnimatedCurrencyValue moneyCounter = new();
 
+        private void Awake()
+        {
+            if (npcShop == null)
+                npcShop = FindFirstObjectByType<NpcShop>(FindObjectsInactive.Include);
+            // The compact PC layout moves the authored count label inside NPC Shop.
+            // Older serialized HUD references can still point to an inactive copy.
+            Canvas canvas = GetComponentInParent<Canvas>(true);
+            if (canvas == null)
+            {
+                foreach (Canvas candidate in FindObjectsByType<Canvas>(
+                    FindObjectsInactive.Include, FindObjectsSortMode.None))
+                {
+                    if (candidate.name != "Mining HUD Canvas" ||
+                        candidate.gameObject.scene != gameObject.scene) continue;
+                    canvas = candidate;
+                    break;
+                }
+            }
+            Transform label = canvas != null
+                ? canvas.transform.Find("NPC Shop/NPC Count") : null;
+            if (label != null && label.TryGetComponent(out TextMeshProUGUI count))
+                npcCountText = count;
+        }
+
         private void OnEnable()
         {
             gameData ??= wallet != null ? wallet.GameData : null;
@@ -127,8 +151,13 @@ namespace MiningSimulator.Ores
             {
                 int count = npcShop != null ? npcShop.PurchasedCount : 0;
                 int maximum = npcShop != null ? npcShop.MaximumMiners : 0;
-                npcCountText.text = string.Format(MiningLocalization.Text(
-                    "Mining NPCs: {0}/{1}", npcCountFormat), count, maximum);
+                // The compact pill is 97 px wide. Use a complete short label there;
+                // keep the authored long format for larger HUD layouts.
+                string format = npcCountText.rectTransform.rect.width > 0f &&
+                    npcCountText.rectTransform.rect.width < 150f
+                        ? MiningLocalization.Text("{0}/{1} NPC", "{0}/{1} NPC")
+                        : MiningLocalization.Text("Mining NPCs: {0}/{1}", npcCountFormat);
+                npcCountText.text = string.Format(format, count, maximum);
             }
 
             if (buyButtonLabel != null)

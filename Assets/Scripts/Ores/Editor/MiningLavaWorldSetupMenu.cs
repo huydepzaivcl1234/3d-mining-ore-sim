@@ -41,6 +41,34 @@ namespace MiningSimulator.Editor
             OreData[] ores = CreateOres();
             if (ores == null) return;
             var serializedSpawner = new SerializedObject(spawners[0]);
+            SerializedProperty lavaSettings = serializedSpawner.FindProperty("lavaSpawnData");
+            if (lavaSettings != null && lavaSettings.objectReferenceValue == null)
+            {
+                OreSpawnData groundSettings = spawners[0].SpawnData;
+                if (groundSettings == null)
+                {
+                    EditorUtility.DisplayDialog("Lava World",
+                        "Assign Ground Spawn Data on Ore System before creating Lava spawn settings.", "OK");
+                    return;
+                }
+                const string spawnFolder = "Assets/GameData/Spawning";
+                const string lavaPath = spawnFolder + "/LavaOreSpawnData.asset";
+                if (!AssetDatabase.IsValidFolder(spawnFolder))
+                    AssetDatabase.CreateFolder("Assets/GameData", "Spawning");
+                OreSpawnData lavaData = AssetDatabase.LoadAssetAtPath<OreSpawnData>(lavaPath);
+                if (lavaData == null)
+                {
+                    lavaData = Object.Instantiate(groundSettings);
+                    lavaData.name = "LavaOreSpawnData";
+                    // Ore entries remain scene editable on Ore System > Lava World.
+                    SerializedObject lavaFields = new(lavaData);
+                    lavaFields.FindProperty("oreSpawnTable").ClearArray();
+                    lavaFields.ApplyModifiedPropertiesWithoutUndo();
+                    AssetDatabase.CreateAsset(lavaData, lavaPath);
+                    AssetDatabase.SaveAssets();
+                }
+                lavaSettings.objectReferenceValue = lavaData;
+            }
             SerializedProperty table = serializedSpawner.FindProperty("lavaOreSpawnTable");
             if (table.arraySize == 0)
             {
@@ -50,13 +78,34 @@ namespace MiningSimulator.Editor
                     table.GetArrayElementAtIndex(i).FindPropertyRelative("ore").objectReferenceValue = ores[i];
                     table.GetArrayElementAtIndex(i).FindPropertyRelative("spawnChancePercent").floatValue = Chances[i];
                 }
-                serializedSpawner.ApplyModifiedProperties();
             }
+            serializedSpawner.ApplyModifiedProperties();
             var world = gate.GetComponent<MiningLavaWorldController>();
             if (world == null) world = Undo.AddComponent<MiningLavaWorldController>(gate);
             var serializedWorld = new SerializedObject(world);
             serializedWorld.FindProperty("oreSpawner").objectReferenceValue = spawners[0];
             serializedWorld.FindProperty("transition").objectReferenceValue = radial;
+            // Reuse the authored Ground. The sample LavaWorldBuilder creates a second box,
+            // so only import its shader and make a material asset for this scene surface.
+            Transform ground = GameObject.Find("Ground")?.transform;
+            if (ground != null)
+            {
+                SerializedProperty mesh = serializedWorld.FindProperty("groundRenderer");
+                SerializedProperty terrain = serializedWorld.FindProperty("groundTerrain");
+                Terrain groundTerrain = ground.GetComponent<Terrain>() ??
+                    ground.GetComponentInChildren<Terrain>(true);
+                if (groundTerrain != null)
+                {
+                    if (terrain.objectReferenceValue == null)
+                        terrain.objectReferenceValue = groundTerrain;
+                }
+                else if (mesh.objectReferenceValue == null)
+                    mesh.objectReferenceValue = ground.GetComponent<Renderer>() ??
+                        ground.GetComponentInChildren<Renderer>(true);
+            }
+            SerializedProperty lavaMaterial = serializedWorld.FindProperty("lavaGroundMaterial");
+            if (lavaMaterial.objectReferenceValue == null)
+                lavaMaterial.objectReferenceValue = EnsureLavaMaterial();
             SerializedProperty treeRoots = serializedWorld.FindProperty("surroundingTrees");
             SerializedProperty terrains = serializedWorld.FindProperty("groundTerrains");
             if (terrains.arraySize == 0)
@@ -93,6 +142,27 @@ namespace MiningSimulator.Editor
         {
             string name = value.ToLowerInvariant();
             return name.StartsWith("tree") || name.StartsWith("pine") || name.Contains(" trees") || name.Contains("forest");
+        }
+
+        private static Material EnsureLavaMaterial()
+        {
+            const string path = "Assets/GameData/Materials/LavaFloor.mat";
+            Material existing = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (existing != null) return existing;
+            Shader shader = AssetDatabase.LoadAssetAtPath<Shader>(
+                "Assets/Shaders/StylizedLavaFloor_URP.shader");
+            if (shader == null)
+            {
+                Debug.LogWarning("Lava shader is missing. Import StylizedLavaFloor_URP.shader first.");
+                return null;
+            }
+            const string folder = "Assets/GameData/Materials";
+            if (!AssetDatabase.IsValidFolder(folder))
+                AssetDatabase.CreateFolder("Assets/GameData", "Materials");
+            Material material = new(shader) { name = "LavaFloor" };
+            AssetDatabase.CreateAsset(material, path);
+            AssetDatabase.SaveAssets();
+            return material;
         }
 
         private static OreData[] CreateOres()

@@ -66,7 +66,7 @@ namespace MiningSimulator.Ores
                 float value = upgradeType == MiningUpgradeType.NpcCapacity
                     ? definition.ValuePerStack : definition.PercentPerStack;
                 string format = upgradeType == MiningUpgradeType.NpcCapacity
-                    ? MiningLocalization.Text("+{0:0.##} miners / level [{1}/{2}]", "+{0:0.##} thợ / cấp [{1}/{2}]")
+                    ? MiningLocalization.Text("+{0:0.##} miner/Lv {1}/{2}", "+{0:0.##} thợ/cấp {1}/{2}")
                     : MiningLocalization.Text("+{0:0.##}% / level [{1}/{2}]", "+{0:0.##}% / cấp [{1}/{2}]");
                 detailText.text = string.Format(format, value, stacks, definition.MaximumStacks);
             }

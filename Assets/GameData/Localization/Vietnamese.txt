@@ -196,3 +196,5 @@ TRADER_NOT_ENOUGH_ITEMS = KHÔNG ĐỦ VẬT PHẨM
 TRADER_NOT_ENOUGH_FUNDS = KHÔNG ĐỦ TIỀN HOẶC TÚI ĐỒ ĐÃ ĐẦY
 TRADER_CLOSE = ĐÓNG
 +{0:0.##}% / level [{1}/{2}] = +{0:0.##}% / cấp [{1}/{2}]
++{0:0.##} miner/Lv {1}/{2} = +{0:0.##} thợ/cấp {1}/{2}
+{0}/{1} NPC = {0}/{1} NPC

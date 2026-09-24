@@ -1,16 +1,33 @@
-BẢN SỬA DOCKER / QUEST — Unity 6
+SỬA NPC COUNT, TEXT NÂNG CẤP, LAVA WORLD — Unity 6
 
-1. Thoát Play Mode; giải nén ZIP vào thư mục gốc project.
-2. Mở Unity, chờ biên dịch, chạy SampleScene.
-3. Thử mở Shop/Upgrade: cả nền Docker và ba nút biến mất mượt.
-   Đóng panel: cả Docker và ba nút hiện lại, bấm được.
-4. Bấm nút Quest trong Docker: Quest Panel mở, đóng và mở lại được.
+Giải nén ZIP vào gốc project (có thư mục Assets), thoát Play Mode trước.
+Không có SampleScene trong ZIP; không commit/push.
 
-Hai script giữ nguyên đường dẫn và .meta đã có. ZIP KHÔNG chứa SampleScene.
-Docker, các nút, Quest Panel và vị trí UI vẫn chỉnh trực tiếp trong Scene.
-Nếu Console còn "referenced script ... missing", thoát Play Mode và chạy
-Mining Simulator > UI > Remove Old Inventory Candy Visuals, rồi lưu scene:
-đây là component cũ trên Inventory button đã bị xóa từ gói trước.
+NPC count: HUD dùng nhãn NPC Shop/NPC Count đang ở scene, cập nhật từ NpcShop.
+Ở layout gọn, dòng hiển thị 1/1 NPC thay cho chuỗi dài bị cắt.
+Nâng cấp miner capacity: dòng EN/VN ngắn gọn, vẫn giữ cấp và giới hạn.
 
-Kiểm tra tĩnh đường gọi và tham chiếu đã hoàn tất; không chạy được Unity Play
-Mode trong môi trường đóng gói này.
+Thiết lập Lava (chỉ cần chạy một lần, KHÔNG dùng LavaWorldBuilder.cs vì
+file tham khảo đó dựng thêm sàn/hộp dưới đất):
+1. Mở scene, chọn cổng hiện có (đã có MiningPortalPreviewGate).
+2. Mining Simulator > Portal > Setup Lava World On Selected Gate.
+3. Trên Ore System > Ore Spawner:
+   - Spawn Data là Ground; Lava Spawn Data là asset mới ở
+     Assets/GameData/Spawning/LavaOreSpawnData.asset.
+   - Lava Ore Spawn Table trên chính Ore System là danh sách quặng Lava,
+     chỉnh Ore, Spawn Chance, prefab và Mining Power Required trong OreData.
+   - Chỉnh Lava Spawn Data để thay Area Center/Size, tốc độ, số ore, ground layers,
+     align ground. Gizmos Ground và Lava đều vẽ khi chọn Ore System.
+4. Trên cổng > Mining Lava World Controller: kiểm tra Ground Renderer
+   (hoặc Ground Terrain), và Lava Ground Material. Tool tạo material tại
+   Assets/GameData/Materials/LavaFloor.mat. Chỉnh màu, Crack Density, Flow
+   Speed, Emission trong Inspector của material. Shader ở Assets/Shaders.
+   Cổng đổi material của Ground có sẵn rồi khôi phục khi quay về;
+   không tạo platform, không đổi vị trí UI/NPC.
+5. Play: kiểm tra count trước/sau thuê miner, cả EN/VN, chuyển Ground/Lava,
+   ore xuất hiện theo world và Next Ore Unlock hiển thị từ đúng bảng quặng.
+   Nếu dùng Unity Terrain mà shader tùy biến không hỗ trợ Terrain trên máy,
+   gán material Terrain tương thích URP trong Lava Ground Material.
+
+Chưa có Unity Editor ở môi trường này để chạy Play Mode/compile shader;
+cần xác nhận bằng Console trên máy của bạn sau khi import.
