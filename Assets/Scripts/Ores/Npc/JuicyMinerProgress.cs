@@ -36,7 +36,9 @@ namespace MiningSimulator.Ores
         public void SetOreSpawner(OreSpawner targetSpawner)
         {
             if (targetSpawner == null) return;
+            if (isActiveAndEnabled && oreSpawner != null) oreSpawner.WorldChanged -= Refresh;
             oreSpawner = targetSpawner;
+            if (isActiveAndEnabled) oreSpawner.WorldChanged += Refresh;
             Refresh();
         }
 
@@ -48,6 +50,7 @@ namespace MiningSimulator.Ores
         private void OnEnable()
         {
             MiningLocalization.LanguageChanged += Refresh;
+            if (oreSpawner != null) { oreSpawner.WorldChanged -= Refresh; oreSpawner.WorldChanged += Refresh; }
             if (progressionSystem != null)
             {
                 progressionSystem.ProgressionChanged += OnProgressionChanged;
@@ -61,6 +64,7 @@ namespace MiningSimulator.Ores
         private void OnDisable()
         {
             MiningLocalization.LanguageChanged -= Refresh;
+            if (oreSpawner != null) oreSpawner.WorldChanged -= Refresh;
             if (progressionSystem != null)
             {
                 progressionSystem.ProgressionChanged -= OnProgressionChanged;
@@ -152,7 +156,7 @@ namespace MiningSimulator.Ores
             }
 
             OreData next = null;
-            foreach (OreSpawnEntry entry in oreSpawner.SpawnData.OreSpawnTable)
+            foreach (OreSpawnEntry entry in oreSpawner.ActiveOreSpawnTable)
             {
                 OreData ore = entry?.Ore;
                 // Match the actual unlock notifier: only configured, spawnable ores count.

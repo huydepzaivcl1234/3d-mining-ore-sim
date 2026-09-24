@@ -15,6 +15,9 @@ namespace MiningSimulator.Ores
         Gem = 8,
 
         Netherite = 9,
+        Basalt = 10,
+        EmberOre = 11,
+        MoltenCore = 12,
 
 
     }

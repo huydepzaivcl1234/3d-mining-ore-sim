@@ -122,7 +122,7 @@ namespace MiningSimulator.Ores
             }
 
             oreTableBuffer.Clear();
-            oreTableBuffer.AddRange(oreSpawner.SpawnData.OreSpawnTable);
+            oreTableBuffer.AddRange(oreSpawner.ActiveOreSpawnTable);
             foreach (OreSpawnEntry entry in oreTableBuffer)
             {
                 OreData ore = entry.Ore;

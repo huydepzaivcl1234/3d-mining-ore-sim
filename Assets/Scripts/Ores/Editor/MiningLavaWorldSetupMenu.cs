@@ -1,0 +1,135 @@
+#if UNITY_EDITOR
+using System.Collections.Generic;
+using MiningSimulator.Ores;
+using UnityEditor;
+using UnityEditor.SceneManagement;
+using UnityEngine;
+
+namespace MiningSimulator.Editor
+{
+    /// <summary>Author scene references and editable Lava ore entries on the existing spawner.</summary>
+    public static class MiningLavaWorldSetupMenu
+    {
+        private const string Folder = "Assets/GameData/Ores/Lava";
+        private static readonly string[] Templates = { "Stone", "Iron", "Netherite" };
+        private static readonly string[] Names = { "Basalt", "Ember Ore", "Molten Core" };
+        private static readonly OreKind[] Kinds = { OreKind.Basalt, OreKind.EmberOre, OreKind.MoltenCore };
+        private static readonly int[] Powers = { 1, 8, 35 };
+        private static readonly float[] Chances = { 75f, 20f, 5f };
+
+        [MenuItem("Mining Simulator/Portal/Setup Lava World On Selected Gate")]
+        private static void Setup()
+        {
+            GameObject gate = Selection.activeGameObject;
+            if (gate == null || !gate.scene.IsValid())
+            {
+                EditorUtility.DisplayDialog("Lava World", "Select your existing portal in the Hierarchy.", "OK");
+                return;
+            }
+            var spawners = Object.FindObjectsByType<OreSpawner>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            if (spawners.Length != 1)
+            {
+                EditorUtility.DisplayDialog("Lava World", "Expected one scene OreSpawner. Keep the existing Ore System.", "OK");
+                return;
+            }
+            var radial = gate.GetComponent<MiningDynamicRadialMaskTransition>();
+            if (radial == null || gate.GetComponent<MiningPortalPreviewGate>() == null)
+            {
+                EditorUtility.DisplayDialog("Lava World", "First run Mining Simulator/Portal/Setup Enter Preview On Selected Gate.", "OK");
+                return;
+            }
+            OreData[] ores = CreateOres();
+            if (ores == null) return;
+            var serializedSpawner = new SerializedObject(spawners[0]);
+            SerializedProperty table = serializedSpawner.FindProperty("lavaOreSpawnTable");
+            if (table.arraySize == 0)
+            {
+                table.arraySize = ores.Length;
+                for (int i = 0; i < ores.Length; i++)
+                {
+                    table.GetArrayElementAtIndex(i).FindPropertyRelative("ore").objectReferenceValue = ores[i];
+                    table.GetArrayElementAtIndex(i).FindPropertyRelative("spawnChancePercent").floatValue = Chances[i];
+                }
+                serializedSpawner.ApplyModifiedProperties();
+            }
+            var world = gate.GetComponent<MiningLavaWorldController>();
+            if (world == null) world = Undo.AddComponent<MiningLavaWorldController>(gate);
+            var serializedWorld = new SerializedObject(world);
+            serializedWorld.FindProperty("oreSpawner").objectReferenceValue = spawners[0];
+            serializedWorld.FindProperty("transition").objectReferenceValue = radial;
+            SerializedProperty treeRoots = serializedWorld.FindProperty("surroundingTrees");
+            SerializedProperty terrains = serializedWorld.FindProperty("groundTerrains");
+            if (terrains.arraySize == 0)
+            {
+                var sceneTerrains = new List<Terrain>();
+                foreach (Terrain terrain in Object.FindObjectsByType<Terrain>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                    if (terrain != null && terrain.gameObject.scene == gate.scene) sceneTerrains.Add(terrain);
+                terrains.arraySize = sceneTerrains.Count;
+                for (int i = 0; i < sceneTerrains.Count; i++)
+                    terrains.GetArrayElementAtIndex(i).objectReferenceValue = sceneTerrains[i];
+            }
+            if (treeRoots.arraySize == 0)
+            {
+                var found = new List<GameObject>();
+                foreach (Transform candidate in Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                {
+                    if (candidate == null || candidate == gate.transform || !candidate.gameObject.scene.IsValid() || !IsTreeName(candidate.name)) continue;
+                    bool namedAncestor = false;
+                    for (Transform parent = candidate.parent; parent != null; parent = parent.parent)
+                        if (IsTreeName(parent.name)) { namedAncestor = true; break; }
+                    if (!namedAncestor) found.Add(candidate.gameObject);
+                }
+                treeRoots.arraySize = found.Count;
+                for (int i = 0; i < found.Count; i++)
+                    treeRoots.GetArrayElementAtIndex(i).objectReferenceValue = found[i];
+            }
+            serializedWorld.ApplyModifiedProperties();
+            EditorSceneManager.MarkSceneDirty(gate.scene);
+            Selection.activeGameObject = gate;
+            EditorUtility.DisplayDialog("Lava World", "Inspect Ore System > Lava World and Portal > Surrounding Trees. Assign any missed trees and lava decorations in the scene, then save the scene yourself.", "OK");
+        }
+
+        private static bool IsTreeName(string value)
+        {
+            string name = value.ToLowerInvariant();
+            return name.StartsWith("tree") || name.StartsWith("pine") || name.Contains(" trees") || name.Contains("forest");
+        }
+
+        private static OreData[] CreateOres()
+        {
+            OreData[] ores = new OreData[Names.Length];
+            for (int i = 0; i < ores.Length; i++)
+            {
+                string path = Folder + "/" + Names[i] + ".asset";
+                ores[i] = AssetDatabase.LoadAssetAtPath<OreData>(path);
+                if (ores[i] != null) continue;
+                OreData template = AssetDatabase.LoadAssetAtPath<OreData>("Assets/GameData/Ores/" + Templates[i] + ".asset");
+                if (template == null || template.Prefab == null)
+                {
+                    EditorUtility.DisplayDialog("Lava World", "Missing template ore or prefab: " + Templates[i], "OK");
+                    return null;
+                }
+            }
+            if (!AssetDatabase.IsValidFolder(Folder)) AssetDatabase.CreateFolder("Assets/GameData/Ores", "Lava");
+            for (int i = 0; i < ores.Length; i++)
+            {
+                if (ores[i] != null) continue;
+                string path = Folder + "/" + Names[i] + ".asset";
+                OreData template = AssetDatabase.LoadAssetAtPath<OreData>("Assets/GameData/Ores/" + Templates[i] + ".asset");
+                OreData data = Object.Instantiate(template);
+                data.name = Names[i];
+                var serialized = new SerializedObject(data);
+                serialized.FindProperty("kind").enumValueIndex = (int)Kinds[i];
+                serialized.FindProperty("displayName").stringValue = Names[i];
+                serialized.FindProperty("description").stringValue = "Lava World ore. Assign a unique prefab to change its appearance.";
+                serialized.FindProperty("miningPowerRequired").intValue = Powers[i];
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+                AssetDatabase.CreateAsset(data, path);
+                ores[i] = data;
+            }
+            AssetDatabase.SaveAssets();
+            return ores;
+        }
+    }
+}
+#endif

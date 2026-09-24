@@ -31,6 +31,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private string vietnameseCancel = "HỦY";
 
         private MiningDynamicRadialMaskTransition transition;
+        private MiningLavaWorldController lavaWorld;
         private bool wasOpened;
         private int openedFrame = -1;
 
@@ -79,9 +80,10 @@ namespace MiningSimulator.Ores
                      keyboard.numpadEnterKey.wasPressedThisFrame) Confirm();
         }
 
-        public void Show(MiningDynamicRadialMaskTransition preview)
+        public void Show(MiningDynamicRadialMaskTransition preview, MiningLavaWorldController world = null)
         {
             if (preview == null) return;
+            lavaWorld = world;
             transition = preview;
             wasOpened = true;
             openedFrame = Time.frameCount;
@@ -100,14 +102,17 @@ namespace MiningSimulator.Ores
         {
             if (!IsOpen) return;
             MiningDynamicRadialMaskTransition preview = transition;
+            MiningLavaWorldController world = lavaWorld;
             Hide();
-            if (preview != null) preview.PlayPreview();
+            if (world != null) world.Travel();
+            else if (preview != null) preview.PlayPreview();
         }
 
         public void Hide()
         {
             wasOpened = false;
             transition = null;
+            lavaWorld = null;
             if (canvasGroup != null)
             {
                 canvasGroup.blocksRaycasts = false;
@@ -118,10 +123,18 @@ namespace MiningSimulator.Ores
 
         private void RefreshText()
         {
-            if (titleText != null) titleText.text = MiningLocalization.Text(
-                englishTitle, vietnameseTitle);
-            if (messageText != null) messageText.text = MiningLocalization.Text(
-                englishMessage, vietnameseMessage);
+            if (titleText != null) titleText.text = lavaWorld != null
+                ? MiningLocalization.Text(lavaWorld.IsInLavaWorld ? "GROUND PORTAL" : "LAVA WORLD PORTAL",
+                    lavaWorld.IsInLavaWorld ? "CỔNG VỀ MẶT ĐẤT" : "CỔNG THẾ GIỚI DUNG NHAM")
+                : MiningLocalization.Text(englishTitle, vietnameseTitle);
+            if (messageText != null) messageText.text = lavaWorld != null
+                ? MiningLocalization.Text(lavaWorld.IsInLavaWorld
+                    ? "Return to Ground? Your miners and progress stay with you."
+                    : "Enter Lava World? The ground stays; trees and the ore table change.",
+                    lavaWorld.IsInLavaWorld
+                    ? "Về mặt đất? Thợ mỏ và tiến trình vẫn được giữ."
+                    : "Đến thế giới dung nham? Giữ nền đất, ẩn cây và đổi bảng quặng.")
+                : MiningLocalization.Text(englishMessage, vietnameseMessage);
             if (enterLabel != null) enterLabel.text = MiningLocalization.Text(
                 englishEnter, vietnameseEnter);
             if (cancelLabel != null) cancelLabel.text = MiningLocalization.Text(

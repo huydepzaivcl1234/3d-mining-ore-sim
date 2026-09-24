@@ -15814,6 +15814,8 @@ GameObject:
   - component: {fileID: 330585544}
   - component: {fileID: 330585547}
   - component: {fileID: 330585548}
+  - component: {fileID: 330585550}
+  - component: {fileID: 330585549}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -15951,6 +15953,46 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c9cd843c843df5e4eb4a4e602b0b3302, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CaveIdleGame.CameraWallClip
+--- !u!135 &330585549
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 330585543}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 0.35
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &330585550
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 330585543}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 39e5c12d270583ae35a8c92223a405a4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningOrbitCamera
+  controlledCamera: {fileID: 330585545}
+  gameData: {fileID: 11400000, guid: fa0fc8680dcb4e63a9939950274281de, type: 2}
+  collisionLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  collisionRadius: 0.35
+  collisionPadding: 0.08
 --- !u!1 &330788427
 GameObject:
   m_ObjectHideFlags: 0
@@ -39878,7 +39920,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &804404557
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -58921,8 +58963,6 @@ MonoBehaviour:
     m_Bits: 4294967295
   collisionRadius: 0.35
   collisionPadding: 0.08
-  focusCollisionHeight: 1
-  collisionRecoverySpeed: 18
 --- !u!1 &1183823968
 GameObject:
   m_ObjectHideFlags: 0
@@ -77250,9 +77290,9 @@ MonoBehaviour:
   openAmount: 1
   popDuration: 0.26
   closeDuration: 0.35
-  sfxSource: {fileID: 0}
-  popClip: {fileID: 0}
-  warpClip: {fileID: 0}
+  sfxSource: {fileID: 5305833074821520351}
+  popClip: {fileID: 8300000, guid: d3d65f11176076946863f253030c757f, type: 3}
+  warpClip: {fileID: 8300000, guid: 2525c7c7f1a50854497752bee70d3ed6, type: 3}
 --- !u!23 &1586105419
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -77344,9 +77384,9 @@ MonoBehaviour:
   zoomFovReduction: 3
   coverShakeStrength: 0.04
   landingShakeStrength: 0.07
-  audioSource: {fileID: 0}
-  whooshClip: {fileID: 0}
-  impactClip: {fileID: 0}
+  audioSource: {fileID: 540886640128433024}
+  whooshClip: {fileID: 8300000, guid: 75ecae3a5c183ef4e9a32742313386ad, type: 3}
+  impactClip: {fileID: 8300000, guid: 0be390704418597499f913e81cfb2f72, type: 3}
 --- !u!135 &1586105422
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -84700,6 +84740,7 @@ GameObject:
   - component: {fileID: 1731362888}
   - component: {fileID: 1731362887}
   - component: {fileID: 1731362886}
+  - component: {fileID: 1731362890}
   m_Layer: 0
   m_Name: Cancel Button
   m_TagString: Untagged
@@ -84809,6 +84850,19 @@ RectTransform:
   m_AnchoredPosition: {x: 133, y: -112}
   m_SizeDelta: {x: 245, y: 70}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1731362890
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1731362885}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0070ec9617d249bd810d206cdbb58840, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningButtonSfx
+  audioManager: {fileID: 2127211622}
 --- !u!1 &1732094760
 GameObject:
   m_ObjectHideFlags: 0
@@ -91801,6 +91855,7 @@ GameObject:
   - component: {fileID: 1876909321}
   - component: {fileID: 1876909320}
   - component: {fileID: 1876909322}
+  - component: {fileID: 1876909323}
   m_Layer: 0
   m_Name: Enter Button
   m_TagString: Untagged
@@ -91910,6 +91965,19 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &1876909323
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1876909318}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0070ec9617d249bd810d206cdbb58840, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningButtonSfx
+  audioManager: {fileID: 2127211622}
 --- !u!1 &1886237831
 GameObject:
   m_ObjectHideFlags: 0

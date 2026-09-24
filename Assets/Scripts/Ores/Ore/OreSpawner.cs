@@ -13,6 +13,10 @@ namespace MiningSimulator.Ores
         [SerializeField] private PlayerWallet wallet;
         [SerializeField] private Transform spawnedOreParent;
         [SerializeField] private OreSpawnData spawnData;
+        [Header("Lava World (same Ground)")]
+        [Tooltip("Only these ore assets spawn in Lava World. Edit this list on the scene Ore System.")]
+        [SerializeField] private List<OreSpawnEntry> lavaOreSpawnTable = new();
+        [SerializeField] private bool lavaWorldActive;
         [SerializeField] private MiningUpgradeSystem upgradeSystem;
         [SerializeField] private MiningUiData uiData;
         [SerializeField] private OreRewardPopup rewardPopupPrefab;
@@ -33,6 +37,10 @@ namespace MiningSimulator.Ores
         public int ActiveCount => activeOres.Count;
         public int PooledCount => inactivePooledOres.Count;
         public OreSpawnData SpawnData => spawnData;
+        public bool LavaWorldActive => lavaWorldActive;
+        public IReadOnlyList<OreSpawnEntry> ActiveOreSpawnTable => lavaWorldActive
+            ? lavaOreSpawnTable : spawnData != null ? spawnData.OreSpawnTable : System.Array.Empty<OreSpawnEntry>();
+        public event System.Action WorldChanged;
         public MiningUpgradeSystem UpgradeSystem => upgradeSystem;
         public Vector3 SpawnAreaCenter => spawnData != null ? spawnData.AreaCenter : Vector3.zero;
         public Vector3 SpawnAreaSize => spawnData != null ? spawnData.AreaSize : Vector3.zero;
@@ -194,7 +202,7 @@ namespace MiningSimulator.Ores
         /// </summary>
         public bool SpawnGuaranteedOre(OreData oreData)
         {
-            if (oreData == null || oreData.Prefab == null)
+            if (oreData == null || oreData.Prefab == null || !IsOreInActiveWorld(oreData))
             {
                 return false;
             }
@@ -241,6 +249,53 @@ namespace MiningSimulator.Ores
                 ore.gameObject.SetActive(false);
                 Destroy(ore.gameObject);
             }
+        }
+
+        public bool IsOreInActiveWorld(OreData oreData)
+        {
+            if (oreData == null) return false;
+            foreach (OreSpawnEntry entry in ActiveOreSpawnTable)
+                if (entry != null && entry.Ore == oreData) return true;
+            return false;
+        }
+
+        /// <summary>Switch the existing spawner's ore table and replace only active ores.</summary>
+        public bool SetLavaWorld(bool active)
+        {
+            if (lavaWorldActive == active) return true;
+            if (active && !HasSpawnableLavaOre())
+            {
+                Debug.LogWarning("Lava World has no unlocked ore with a prefab. Configure the Lava World table on Ore System.", this);
+                return false;
+            }
+            if (spawnRoutine != null) { StopCoroutine(spawnRoutine); spawnRoutine = null; }
+            guaranteedOreQueue.Clear();
+            foreach (Ore ore in new List<Ore>(activeOres))
+            {
+                if (ore == null) continue;
+                ore.Depleted -= HandleOreDepleted;
+                ore.RewardGranted -= HandleRewardGranted;
+                activeOres.Remove(ore);
+                ore.gameObject.SetActive(false);
+                if (poolOwnedOres.ContainsKey(ore)) ReturnOreToPool(ore);
+            }
+            lavaWorldActive = active;
+            WorldChanged?.Invoke();
+            if (isActiveAndEnabled && spawnData != null)
+            {
+                int target = Mathf.Min(spawnData.InitialSpawnCount, spawnData.MaximumAliveOres);
+                for (int i = 0; i < target; i++) if (!SpawnOne()) break;
+                if (spawnData.SpawnOnEnable) spawnRoutine = StartCoroutine(SpawnLoop());
+            }
+            return true;
+        }
+
+        public bool HasSpawnableLavaOre()
+        {
+            foreach (OreSpawnEntry entry in lavaOreSpawnTable)
+                if (entry != null && entry.Ore != null && entry.Ore.Prefab != null &&
+                    entry.SpawnChancePercent > 0 && HasSufficientPower(entry.Ore.MiningPowerRequired)) return true;
+            return false;
         }
 
         public bool SpawnOne()
@@ -426,7 +481,7 @@ namespace MiningSimulator.Ores
 
         private OreData ChooseOre()
         {
-            if (dayNightSystem != null &&
+            if (!lavaWorldActive && dayNightSystem != null &&
                 dayNightSystem.TryChooseSpecialOre(UnityEngine.Random.value * 100f,
                     out OreData specialOre) && specialOre != null && specialOre.Prefab != null &&
                 HasSufficientPower(specialOre.MiningPowerRequired) &&
@@ -436,7 +491,7 @@ namespace MiningSimulator.Ores
             }
 
             OreSpawnEntry selectedEntry = PercentageChanceSelector.Choose(
-                spawnData.OreSpawnTable,
+                ActiveOreSpawnTable,
                 GetEffectiveSpawnChancePercent,
                 IsSpawnableOreEntry,
                 UnityEngine.Random.value);
@@ -445,7 +500,7 @@ namespace MiningSimulator.Ores
 
         private bool IsSpawnableOreEntry(OreSpawnEntry entry)
         {
-            return entry.Ore != null && entry.Ore.Prefab != null &&
+            return entry != null && entry.Ore != null && entry.Ore.Prefab != null &&
                    HasSufficientPower(entry.Ore.MiningPowerRequired);
         }
 

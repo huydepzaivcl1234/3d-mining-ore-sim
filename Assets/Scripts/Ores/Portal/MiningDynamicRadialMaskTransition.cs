@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
@@ -62,6 +63,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private AudioClip whooshClip;
         [SerializeField] private AudioClip impactClip;
 
+        private Action onCovered;
         private Material runtimeMaterial;
         private Canvas generatedCanvas;
         private Coroutine currentTransition;
@@ -82,7 +84,10 @@ namespace MiningSimulator.Ores
         private void TestToGround() => PlayPreview();
 
         /// <summary>Preview the cover/pause/reveal animation. Does not switch areas.</summary>
-        public void PlayPreview()
+        public void PlayPreview() => PlayTransition(null);
+
+        /// <summary>Calls coveredAction once the screen is completely opaque.</summary>
+        public void PlayTransition(Action coveredAction)
         {
             if (!Application.isPlaying)
             {
@@ -101,6 +106,7 @@ namespace MiningSimulator.Ores
                 return;
             }
 
+            onCovered = coveredAction;
             activeCamera = gameplayCamera != null ? gameplayCamera : Camera.main;
             originalFov = activeCamera != null ? activeCamera.fieldOfView : 60f;
             UpdateMaterialSettings();
@@ -182,8 +188,11 @@ namespace MiningSimulator.Ores
                 yield return null;
             }
 
-            // At this point the entire screen is covered. No world change yet.
+            // Switch the world while the screen is fully covered.
             runtimeMaterial.SetFloat(RadiusId, 1.75f);
+            Action swap = onCovered;
+            onCovered = null;
+            swap?.Invoke();
             elapsed = 0f;
             while (elapsed < coveredPause)
             {
@@ -289,6 +298,7 @@ namespace MiningSimulator.Ores
             shakeEndTime = 0f;
             if (overlayImage != null) overlayImage.enabled = false;
             currentTransition = null;
+            onCovered = null;
             activeCamera = null;
         }
 

@@ -37,7 +37,7 @@ namespace MiningSimulator.Ores
 
         public void Interact()
         {
-            if (CanInteract) previewPanel.Show(radialTransition);
+            if (CanInteract) previewPanel.Show(radialTransition, GetComponent<MiningLavaWorldController>());
         }
 
         public void SetInteractionFocused(bool focused)
