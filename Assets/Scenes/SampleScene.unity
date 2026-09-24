@@ -1594,14 +1594,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0, b: 0, a: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: -396679019, guid: ffcef062a608da34a920d9e77c77b874, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -8333,8 +8333,8 @@ GameObject:
   - component: {fileID: 193955309}
   - component: {fileID: 193955310}
   - component: {fileID: 193955311}
-  - component: {fileID: 193955313}
   - component: {fileID: 193955315}
+  - component: {fileID: 193955316}
   m_Layer: 5
   m_Name: Inventory Menu Button
   m_TagString: Untagged
@@ -8480,23 +8480,6 @@ MonoBehaviour:
   extraPadding: 10
   authoredPosition: {x: -90, y: -368}
   hasAuthoredPosition: 1
---- !u!114 &193955313
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 193955302}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f2c68cb6c888493fb33c48cb2e33c0b9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningHudFlyIn
-  target: {fileID: 193955308}
-  direction: 3
-  slideDistance: 250
-  delay: 0.12
-  duration: 0.45
 --- !u!114 &193955315
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8519,7 +8502,7 @@ MonoBehaviour:
       m_Calls: []
   m_Sprite: {fileID: -562808509, guid: 42350283a62ea574db017326fad6d95e, type: 3}
   m_Type: 0
-  m_PreserveAspect: 0
+  m_PreserveAspect: 1
   m_FillCenter: 1
   m_FillMethod: 4
   m_FillAmount: 1
@@ -8527,6 +8510,24 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &193955316
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 193955302}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b266ab34a65d7c4f9eb9ecd7d9c1fae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningUiSmoothFade
+  target: {fileID: 193955308}
+  fadeOnEnable: 0
+  direction: 0
+  slideDistance: 180
+  delay: 0
+  duration: 0.45
 --- !u!1 &195194757
 GameObject:
   m_ObjectHideFlags: 0
@@ -13646,13 +13647,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 289181567}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f2c68cb6c888493fb33c48cb2e33c0b9, type: 3}
+  m_Script: {fileID: 11500000, guid: 8b266ab34a65d7c4f9eb9ecd7d9c1fae, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningHudFlyIn
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningUiSmoothFade
   target: {fileID: 289181568}
-  direction: 3
-  slideDistance: 250
-  delay: 0.16
+  fadeOnEnable: 0
+  direction: 0
+  slideDistance: 180
+  delay: 0
   duration: 0.45
 --- !u!1 &290911131
 GameObject:
@@ -42243,7 +42245,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 168, y: -52}
-  m_SizeDelta: {x: 130, y: 36}
+  m_SizeDelta: {x: 138, y: 36}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &841593409
 MonoBehaviour:
@@ -55076,14 +55078,14 @@ MonoBehaviour:
   flashColor: {r: 0.18, g: 0.035, b: 0.24, a: 1}
   flashOpacity: 1
   hudFlyIns:
-  - {fileID: 8061789145596664031}
-  - {fileID: 6569625072390773872}
-  - {fileID: 841593416}
-  - {fileID: 1818660681}
-  - {fileID: 7364283642902135033}
-  - {fileID: 193955313}
-  - {fileID: 289181577}
-  - {fileID: 1183823980}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   menuExitDuration: 0.38
   cameraZoomDuration: 0.85
   flashStartDelay: 0.45
@@ -57267,8 +57269,8 @@ GameObject:
   - component: {fileID: 1162699421}
   - component: {fileID: 1162699424}
   - component: {fileID: 1162699423}
-  - component: {fileID: 1162699422}
   - component: {fileID: 1162699425}
+  - component: {fileID: 1162699426}
   m_Layer: 5
   m_Name: Docker
   m_TagString: Untagged
@@ -57298,23 +57300,6 @@ RectTransform:
   m_AnchoredPosition: {x: -219.73, y: 76.59668}
   m_SizeDelta: {x: 439.46, y: 140.6754}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1162699422
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1162699420}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f2c68cb6c888493fb33c48cb2e33c0b9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningHudFlyIn
-  target: {fileID: 1162699421}
-  direction: 0
-  slideDistance: 180
-  delay: 0
-  duration: 0.45
 --- !u!114 &1162699423
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -57373,6 +57358,24 @@ MonoBehaviour:
   extraPadding: 8
   authoredPosition: {x: 0, y: 0}
   hasAuthoredPosition: 0
+--- !u!114 &1162699426
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1162699420}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b266ab34a65d7c4f9eb9ecd7d9c1fae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningUiSmoothFade
+  target: {fileID: 1162699421}
+  fadeOnEnable: 0
+  direction: 0
+  slideDistance: 180
+  delay: 0
+  duration: 0.45
 --- !u!1 &1165979061
 GameObject:
   m_ObjectHideFlags: 0
@@ -59341,13 +59344,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 1183823968}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f2c68cb6c888493fb33c48cb2e33c0b9, type: 3}
+  m_Script: {fileID: 11500000, guid: 8b266ab34a65d7c4f9eb9ecd7d9c1fae, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningHudFlyIn
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningUiSmoothFade
   target: {fileID: 1183823976}
-  direction: 3
-  slideDistance: 250
-  delay: 0.2
+  fadeOnEnable: 0
+  direction: 0
+  slideDistance: 180
+  delay: 0
   duration: 0.45
 --- !u!1 &1186401794
 GameObject:
@@ -83592,7 +83596,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 113, y: 18}
+  m_AnchoredPosition: {x: 119.6, y: 18.5}
   m_SizeDelta: {x: 25, y: 25}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1706222338
@@ -87002,14 +87006,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0, b: 0, a: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: -1875783197, guid: d761c93e48e604842af3b9163ba2332d, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -112388,7 +112392,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 3, y: -2}
+  m_AnchoredPosition: {x: 28.5, y: -2}
   m_SizeDelta: {x: 150, y: 26}
   m_Pivot: {x: 0, y: 1}
 --- !u!1 &6082127026978545995
@@ -113421,8 +113425,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 0, y: -36}
-  m_SizeDelta: {x: 23, y: 23}
+  m_AnchoredPosition: {x: 6.1, y: -38.74997}
+  m_SizeDelta: {x: 29.076, y: 26.5}
   m_Pivot: {x: 0, y: 1}
 --- !u!1 &6727883834534263104
 GameObject:
@@ -113845,7 +113849,7 @@ MonoBehaviour:
   questSystem: {fileID: 5319940143687006135}
   panelCoordinator: {fileID: 450512002}
   panelRoot: {fileID: 197496805}
-  gameplayOpenButton: {fileID: 1183823969}
+  gameplayOpenButton: {fileID: 0}
   mainMenuOpenButton: {fileID: 1561272212}
   closeButton: {fileID: 422061725}
   titleLabel: {fileID: 1737616560}

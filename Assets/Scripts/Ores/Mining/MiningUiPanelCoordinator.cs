@@ -24,6 +24,9 @@ namespace MiningSimulator.Ores
         [SerializeField] private RectTransform gemHud;
         [SerializeField] private RectTransform shopMenuButton;
         [SerializeField] private RectTransform questMenuButton;
+        [Tooltip("One CanvasGroup fades the authored Docker background and all its buttons together.")]
+        [SerializeField] private RectTransform dock;
+        [SerializeField] private RectTransform questPanel;
         [Tooltip("Auto-found in Awake when left empty.")]
         [SerializeField] private MiningOrbitCamera orbitCamera;
 
@@ -44,6 +47,9 @@ namespace MiningSimulator.Ores
         public void RegisterInventoryUi(RectTransform menuButton, RectTransform panel)
         {
             inventoryMenuButton = menuButton;
+            if (dock == null && menuButton != null && menuButton.parent != null &&
+                menuButton.parent.name == "Docker")
+                dock = menuButton.parent as RectTransform;
             inventoryPanel = panel;
             inventoryPanelHome = GetPosition(panel);
         }
@@ -61,10 +67,15 @@ namespace MiningSimulator.Ores
             }
         }
 
-        public void RegisterQuestUi(RectTransform questButton)
+        public void RegisterQuestUi(RectTransform questButton, RectTransform panel = null)
         {
-            if (questButton == null) return;
-            questMenuButton = questButton;
+            if (questButton != null)
+            {
+                questMenuButton = questButton;
+                if (dock == null && questButton.parent != null && questButton.parent.name == "Docker")
+                    dock = questButton.parent as RectTransform;
+            }
+            if (panel != null) questPanel = panel;
         }
 
         private float TransitionDuration => uiData != null ? uiData.PanelTransitionDuration : 0.28f;
@@ -96,6 +107,7 @@ namespace MiningSimulator.Ores
                 HideModalImmediately(rebirthPanel);
                 HideModalImmediately(audioSettingsPanel);
                 HideModalImmediately(inventoryPanel);
+                HideModalImmediately(questPanel);
             }
         }
 
@@ -158,6 +170,7 @@ namespace MiningSimulator.Ores
                 HideModalImmediately(rebirthPanel);
                 HideModalImmediately(audioSettingsPanel);
                 HideModalImmediately(inventoryPanel);
+                HideModalImmediately(questPanel);
                 activeModal = null;
                 orbitCamera?.SetInputLocked(false);
                 HideBackdrop();
@@ -190,6 +203,14 @@ namespace MiningSimulator.Ores
 
         private void ResolveOptionalHudReferences()
         {
+            // The Docker belongs to the Canvas; fading only its children leaves the background visible.
+            if (dock == null)
+            {
+                Transform parent = inventoryMenuButton != null ? inventoryMenuButton.parent :
+                    questMenuButton != null ? questMenuButton.parent : null;
+                if (parent != null && parent.name == "Docker")
+                    dock = parent as RectTransform;
+            }
             // The two shop buttons can be scene-authored outside the compact status panel.
             if (pcQuickActions == null)
             {
@@ -197,7 +218,7 @@ namespace MiningSimulator.Ores
                 if (quickCanvas != null)
                     pcQuickActions = quickCanvas.Find("PC Quick Actions") as RectTransform;
             }
-            if (gemHud != null && shopMenuButton != null && questMenuButton != null)
+            if (dock != null && gemHud != null && shopMenuButton != null && questMenuButton != null)
             {
                 return;
             }
@@ -220,6 +241,7 @@ namespace MiningSimulator.Ores
                 return;
             }
 
+            dock ??= canvas.Find("Docker") as RectTransform;
             gemHud ??= canvas.Find("Gem HUD") as RectTransform;
             shopMenuButton ??= canvas.Find("Shop Menu Button") as RectTransform;
             questMenuButton ??= canvas.Find("Quest Menu Button") as RectTransform;
@@ -233,6 +255,8 @@ namespace MiningSimulator.Ores
                 return audioSettingsPanel;
             if (inventoryPanel != null && inventoryPanel.gameObject.activeSelf)
                 return inventoryPanel;
+            if (questPanel != null && questPanel.gameObject.activeSelf)
+                return questPanel;
             return null;
         }
 
@@ -243,12 +267,16 @@ namespace MiningSimulator.Ores
             FadeBasePanel(rebirthHud, visible);
             FadeBasePanel(audioMenuButton, visible);
             FadeBasePanel(npcProgressHud, visible);
-            FadeBasePanel(inventoryMenuButton, visible);
+            FadeBasePanel(dock, visible);
+            if (!IsInDock(inventoryMenuButton)) FadeBasePanel(inventoryMenuButton, visible);
             FadeBasePanel(effectToast, visible);
             FadeBasePanel(gemHud, visible);
-            FadeBasePanel(shopMenuButton, visible);
-            FadeBasePanel(questMenuButton, visible);
+            if (!IsInDock(shopMenuButton)) FadeBasePanel(shopMenuButton, visible);
+            if (!IsInDock(questMenuButton)) FadeBasePanel(questMenuButton, visible);
         }
+
+        private bool IsInDock(RectTransform panel) =>
+            panel != null && dock != null && panel != dock && panel.IsChildOf(dock);
 
         private void FadeBasePanel(RectTransform panel, bool visible)
         {
@@ -274,11 +302,12 @@ namespace MiningSimulator.Ores
             SetBasePanelImmediately(rebirthHud, visible);
             SetBasePanelImmediately(audioMenuButton, visible);
             SetBasePanelImmediately(npcProgressHud, visible);
-            SetBasePanelImmediately(inventoryMenuButton, visible);
+            SetBasePanelImmediately(dock, visible);
+            if (!IsInDock(inventoryMenuButton)) SetBasePanelImmediately(inventoryMenuButton, visible);
             SetBasePanelImmediately(effectToast, visible);
             SetBasePanelImmediately(gemHud, visible);
-            SetBasePanelImmediately(shopMenuButton, visible);
-            SetBasePanelImmediately(questMenuButton, visible);
+            if (!IsInDock(shopMenuButton)) SetBasePanelImmediately(shopMenuButton, visible);
+            if (!IsInDock(questMenuButton)) SetBasePanelImmediately(questMenuButton, visible);
         }
 
         private static void SetBasePanelImmediately(RectTransform panel, bool visible)

@@ -110,14 +110,17 @@ namespace MiningSimulator.Ores
 
         private void Awake()
         {
+            ResolveSceneUi();
             panelCoordinator?.RegisterQuestUi(gameplayOpenButton != null
-                ? gameplayOpenButton.transform as RectTransform
-                : null);
+                ? gameplayOpenButton.transform as RectTransform : null, panelRoot);
             panelRoot?.gameObject.SetActive(false);
         }
 
         private void OnEnable()
         {
+            ResolveSceneUi();
+            panelCoordinator?.RegisterQuestUi(gameplayOpenButton != null
+                ? gameplayOpenButton.transform as RectTransform : null, panelRoot);
             AddListeners();
             if (questSystem != null)
             {
@@ -134,6 +137,29 @@ namespace MiningSimulator.Ores
             RemoveListeners();
             if (questSystem != null) questSystem.QuestsChanged -= Refresh;
             MiningLocalization.LanguageChanged -= Refresh;
+        }
+
+        // Buttons may be moved into the authored Docker after the Quest UI was created.
+        // Resolve its real scene button before wiring OnClick; keep the serialized fields editable.
+        private void ResolveSceneUi()
+        {
+            if (panelCoordinator == null)
+                panelCoordinator = FindFirstObjectByType<MiningUiPanelCoordinator>(
+                    FindObjectsInactive.Include);
+
+            Canvas canvas = GetComponentInParent<Canvas>(true);
+            if (canvas == null && panelRoot != null)
+                canvas = panelRoot.GetComponentInParent<Canvas>(true);
+            if (canvas == null) return;
+
+            if (panelRoot == null)
+                panelRoot = canvas.transform.Find("Quest Panel") as RectTransform;
+            Transform docker = canvas.transform.Find("Docker");
+            Transform authoredButton = docker != null
+                ? docker.Find("Quest Menu Button")
+                : canvas.transform.Find("Quest Menu Button");
+            Button dockButton = authoredButton != null ? authoredButton.GetComponent<Button>() : null;
+            if (dockButton != null) gameplayOpenButton = dockButton;
         }
 
         private void Update()
