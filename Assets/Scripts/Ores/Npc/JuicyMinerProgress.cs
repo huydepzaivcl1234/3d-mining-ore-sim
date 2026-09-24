@@ -23,6 +23,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private TextMeshProUGUI rewardText;
         [SerializeField] private TextMeshProUGUI xpLabelText;
         [SerializeField] private TextMeshProUGUI xpPercentText;
+        [SerializeField] private bool compactPcXpLabel;
         [SerializeField] private AudioSource audioSource;
         [SerializeField] private AudioClip gainXpSound;
         [SerializeField] private AudioClip levelUpSound;
@@ -32,6 +33,8 @@ namespace MiningSimulator.Ores
         private int lastLevel;
         private float lastExperience;
         private int displayedPercent = -1;
+        private float displayedXp = float.NaN;
+        private int displayedRequired = -1;
 
         public void SetOreSpawner(OreSpawner targetSpawner)
         {
@@ -78,11 +81,18 @@ namespace MiningSimulator.Ores
         private void Update()
         {
             // Follow the existing MicroBar animation instead of animating a second fake XP fill.
-            if (xpPercentText == null || experienceBar == null) return;
+            if (experienceBar == null) return;
             int percent = Mathf.RoundToInt(experienceBar.HPPercent * 100f);
-            if (percent == displayedPercent) return;
+            float xp = progressionSystem != null ? progressionSystem.CurrentExperience : 0f;
+            int required = progressionSystem != null ? progressionSystem.ExperienceRequired : 1;
+            if (percent == displayedPercent && (!compactPcXpLabel ||
+                (Mathf.Approximately(xp, displayedXp) && required == displayedRequired))) return;
             displayedPercent = percent;
-            xpPercentText.text = $"{percent}%";
+            displayedXp = xp;
+            displayedRequired = required;
+            if (xpPercentText != null) xpPercentText.text = $"{percent}%";
+            if (compactPcXpLabel && xpLabelText != null && progressionSystem != null)
+                xpLabelText.text = $"{MiningLocalization.Text("WORK XP", "KINH NGHIỆM")}: {xp:0.##} / {required} XP ({percent}%)";
         }
 
         private void OnProgressionChanged()
@@ -132,6 +142,7 @@ namespace MiningSimulator.Ores
 
         public void Refresh()
         {
+            if (compactPcXpLabel) displayedPercent = -1;
             int level = progressionSystem != null ? progressionSystem.CurrentLevel : 1;
             int power = progressionSystem != null ? progressionSystem.CurrentMiningPower : 0;
             if (titleText != null) titleText.text = MiningLocalization.Text(
@@ -141,10 +152,11 @@ namespace MiningSimulator.Ores
                 MiningLocalization.Text("Miner level {0}", "Thợ mỏ cấp {0}"), level);
             if (powerLabelText != null) powerLabelText.text = MiningLocalization.Text(
                 "MINING POWER", "SỨC ĐÀO");
-            if (powerValueText != null) powerValueText.text = power.ToString();
+            if (powerValueText != null) powerValueText.text = compactPcXpLabel
+                ? $"{MiningLocalization.Text("Power", "Sức đào")}: {power}" : power.ToString();
             if (rewardLabelText != null) rewardLabelText.text =
                 MiningLocalization.Text("NEXT ORE UNLOCK", "MỞ QUẶNG KẾ TIẾP");
-            if (xpLabelText != null) xpLabelText.text = MiningLocalization.Text(
+            if (xpLabelText != null && !compactPcXpLabel) xpLabelText.text = MiningLocalization.Text(
                 "WORK XP", "KINH NGHIỆM");
 
             if (rewardText == null) return;
@@ -165,9 +177,11 @@ namespace MiningSimulator.Ores
             }
             rewardText.text = next == null
                 ? MiningLocalization.Text("All configured ores unlocked", "Đã mở mọi quặng")
-                : string.Format(MiningLocalization.Text("{0} • power {1}/{2}",
-                        "{0} • sức đào {1}/{2}"),
-                    MiningLocalization.Text(next.DisplayName), power, next.MiningPowerRequired);
+                : compactPcXpLabel
+                    ? $"{MiningLocalization.Text("Next", "Tiếp")}: {MiningLocalization.Text(next.DisplayName)} ({power}/{next.MiningPowerRequired})"
+                    : string.Format(MiningLocalization.Text("{0} • power {1}/{2}",
+                            "{0} • sức đào {1}/{2}"),
+                        MiningLocalization.Text(next.DisplayName), power, next.MiningPowerRequired);
         }
 
         private void Play(AudioClip clip)

@@ -40,8 +40,7 @@ namespace MiningSimulator.Ores
             new("BACK", "QUAY LẠI"),
             new("CANCEL", "ĐỂ SAU"),
             new("BUY NPC", "Mua npc"),
-            new("EMPTY", "TRỐNG"),
-            new("Right mouse: rotate • WASD: move", "Chuột phải: xoay • WASD: di chuyển")
+            new("EMPTY", "TRỐNG")
         };
 
         private static MiningLanguage currentLanguage;

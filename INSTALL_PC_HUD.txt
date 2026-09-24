@@ -1,0 +1,10 @@
+PC HUD COMPACT — UNITY 6
+
+1. Exit Play Mode. Extract this ZIP into the ROOT of the Unity project; allow overwriting the listed C# files. No scene is included.
+2. Wait for Unity compilation. Open your gameplay scene (Mining HUD Canvas).
+3. Run Mining Simulator > UI > Arrange Compact PC Gameplay HUD. Run it again if you already applied v2; it repairs the existing authored objects. Save the scene with Ctrl+S.
+4. Test in Play Mode: Settings/SET opens the play-scene settings panel; R toggles Rebirth details; XP and next ore remain inside the top bar; money and gems do not overlap; Hire, Upgrades, Quest, Inventory, Shop remain clickable.
+
+RULE FOR ALL FUTURE HUD CHANGES: Inspect CanvasGroup on the HUD root and buttons. For visible clickable controls keep alpha=1, interactable=true, blocksRaycasts=true. Their Image/Graphic must have Raycast Target enabled (or an enabled child hit target). Check the parent CanvasGroup too. Modal transitions may temporarily change interaction through MiningUiPanelCoordinator.
+
+The menu makes editable scene objects; it never writes SampleScene.unity to this ZIP. No commit or push was performed. Unity Editor runtime testing is required on your machine.

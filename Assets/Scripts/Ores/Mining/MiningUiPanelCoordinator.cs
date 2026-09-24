@@ -11,6 +11,7 @@ namespace MiningSimulator.Ores
     {
         [SerializeField] private MiningUiData uiData;
         [SerializeField] private RectTransform shopPanel;
+        [SerializeField] private RectTransform pcQuickActions;
         [SerializeField] private RectTransform rebirthHud;
         [SerializeField] private RectTransform audioMenuButton;
         [SerializeField] private RectTransform upgradePanel;
@@ -27,6 +28,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private MiningOrbitCamera orbitCamera;
 
         private Vector2 shopHome;
+        private Vector2 pcQuickActionsHome;
         private Vector2 rebirthHome;
         private Vector2 audioMenuHome;
         private Vector2 upgradeHome;
@@ -204,6 +206,7 @@ namespace MiningSimulator.Ores
             }
 
             shopHome = GetPosition(shopPanel);
+            pcQuickActionsHome = GetPosition(pcQuickActions);
             rebirthHome = GetPosition(rebirthHud);
             audioMenuHome = GetPosition(audioMenuButton);
             upgradeHome = GetPosition(upgradePanel);
@@ -229,6 +232,13 @@ namespace MiningSimulator.Ores
 
         private void ResolveOptionalHudReferences()
         {
+            // The two shop buttons can be scene-authored outside the compact status panel.
+            if (pcQuickActions == null)
+            {
+                Transform quickCanvas = transform.Find("Mining HUD Canvas");
+                if (quickCanvas != null)
+                    pcQuickActions = quickCanvas.Find("PC Quick Actions") as RectTransform;
+            }
             if (gemHud != null && shopMenuButton != null && questMenuButton != null)
             {
                 return;
@@ -271,6 +281,7 @@ namespace MiningSimulator.Ores
         private void AnimateBasePanels(bool visible)
         {
             AnimateBasePanel(shopPanel, shopHome, ShopSlideDirection, visible);
+            AnimateBasePanel(pcQuickActions, pcQuickActionsHome, ShopSlideDirection, visible);
             AnimateBasePanel(rebirthHud, rebirthHome, RebirthHudSlideDirection, visible);
             AnimateBasePanel(audioMenuButton, audioMenuHome, AudioMenuSlideDirection, visible);
             AnimateBasePanel(npcProgressHud, npcProgressHome, NpcProgressHudSlideDirection, visible);
@@ -303,6 +314,7 @@ namespace MiningSimulator.Ores
         private void SetBasePanelsImmediately(bool visible)
         {
             SetBasePanelImmediately(shopPanel, shopHome, ShopSlideDirection, visible);
+            SetBasePanelImmediately(pcQuickActions, pcQuickActionsHome, ShopSlideDirection, visible);
             SetBasePanelImmediately(rebirthHud, rebirthHome, RebirthHudSlideDirection, visible);
             SetBasePanelImmediately(audioMenuButton, audioMenuHome, AudioMenuSlideDirection, visible);
             SetBasePanelImmediately(npcProgressHud, npcProgressHome,

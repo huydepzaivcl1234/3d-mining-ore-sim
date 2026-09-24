@@ -147,10 +147,6 @@ namespace MiningSimulator.Ores
 
         private void HandleLanguageChanged()
         {
-            if (statusText != null)
-            {
-                statusText.text = MiningLocalization.Text("Right mouse: rotate • WASD: move");
-            }
             RefreshMoneyText();
             RefreshOtherText();
         }
