@@ -33,15 +33,6 @@ namespace MiningSimulator.Ores.Editor
         private static readonly string[] PanelAnimation =
         {
             "panelTransitionDuration",
-            "panelSlideExtraDistance",
-            "shopSlideDirection",
-            "rebirthHudSlideDirection",
-            "audioMenuSlideDirection",
-            "inventoryMenuSlideDirection",
-            "npcProgressHudSlideDirection",
-            "gemHudSlideDirection",
-            "shopMenuButtonSlideDirection",
-            "modalSlideDirection",
             "modalBackdropFadeDuration"
         };
 
@@ -95,7 +86,7 @@ namespace MiningSimulator.Ores.Editor
 
             DrawSection("Experience Animation", ExperienceAnimation);
             DrawSection("Button Animation", ButtonAnimation);
-            DrawSection("Panel Animation", PanelAnimation);
+            DrawSection("HUD / Panel Fade (CanvasGroup)", PanelAnimation);
             DrawSection("Reward Popup Animation", RewardPopupAnimation);
             DrawSection("Gift Popup Animation", GiftPopupAnimation);
             DrawSection("Unlock Toast Animation", ToastAnimation);

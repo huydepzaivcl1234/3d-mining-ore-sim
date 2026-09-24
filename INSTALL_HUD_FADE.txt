@@ -1,0 +1,8 @@
+HUD FADE IN PLACE — Unity 6
+
+1. Close Unity, extract this ZIP into the ROOT folder of your Unity project, and allow replacement of the three listed scripts.
+2. Open Unity. The existing scene and prefab references remain intact; you do not need to run a layout tool.
+3. In Play Mode, open and close Settings, Upgrade, Rebirth, Inventory, Shop and Quest, and start a game from the Main Menu. Check that each HUD item stays at its authored scene position, fades smoothly, and cannot receive clicks while hidden.
+4. Adjust Panel Transition Duration and Modal Backdrop Fade Duration in Assets/GameData/UI/MiningUiData.asset. HUD startup reveal uses the existing MiningHudFlyIn Duration and Delay.
+
+CanvasGroup rule: alpha controls visibility; interactable and blocksRaycasts control clicks. During a fade the HUD is not clickable. After a complete fade-in it becomes clickable. No scene (.unity) file, commit or push is included. The old slide fields remain serialized for safe scene compatibility but no longer move the HUD.

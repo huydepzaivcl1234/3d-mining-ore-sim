@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace MiningSimulator.Ores
 {
-    /// <summary>Coordinates exclusive mining modals and smooth HUD slide transitions.</summary>
+    /// <summary>Coordinates exclusive mining modals and smooth CanvasGroup fades.</summary>
     [DisallowMultipleComponent]
     public sealed class MiningUiPanelCoordinator : MonoBehaviour
     {
@@ -27,20 +27,10 @@ namespace MiningSimulator.Ores
         [Tooltip("Auto-found in Awake when left empty.")]
         [SerializeField] private MiningOrbitCamera orbitCamera;
 
-        private Vector2 shopHome;
-        private Vector2 pcQuickActionsHome;
-        private Vector2 rebirthHome;
-        private Vector2 audioMenuHome;
         private Vector2 upgradeHome;
         private Vector2 rebirthPanelHome;
         private Vector2 audioSettingsHome;
-        private Vector2 inventoryMenuHome;
         private Vector2 inventoryPanelHome;
-        private Vector2 effectToastHome;
-        private Vector2 gemHudHome;
-        private Vector2 shopMenuButtonHome;
-        private Vector2 questMenuButtonHome;
-
         private Vector2 npcProgressHome;
         private RectTransform activeModal;
         private bool initialized;
@@ -55,7 +45,6 @@ namespace MiningSimulator.Ores
         {
             inventoryMenuButton = menuButton;
             inventoryPanel = panel;
-            inventoryMenuHome = GetPosition(menuButton);
             inventoryPanelHome = GetPosition(panel);
         }
 
@@ -65,12 +54,10 @@ namespace MiningSimulator.Ores
             if (gem != null)
             {
                 gemHud = gem;
-                gemHudHome = GetPosition(gemHud);
             }
             if (shopButton != null)
             {
                 shopMenuButton = shopButton;
-                shopMenuButtonHome = GetPosition(shopMenuButton);
             }
         }
 
@@ -78,29 +65,9 @@ namespace MiningSimulator.Ores
         {
             if (questButton == null) return;
             questMenuButton = questButton;
-            questMenuButtonHome = GetPosition(questMenuButton);
         }
 
         private float TransitionDuration => uiData != null ? uiData.PanelTransitionDuration : 0.28f;
-        private float SlideExtraDistance => uiData != null ? uiData.PanelSlideExtraDistance : 80f;
-        private Vector2 ShopSlideDirection => GetDirection(
-            uiData != null ? uiData.ShopSlideDirection : Vector2.left, Vector2.left);
-        private Vector2 RebirthHudSlideDirection => GetDirection(
-            uiData != null ? uiData.RebirthHudSlideDirection : Vector2.up, Vector2.up);
-        private Vector2 AudioMenuSlideDirection => GetDirection(
-            uiData != null ? uiData.AudioMenuSlideDirection : Vector2.right, Vector2.right);
-        private Vector2 InventoryMenuSlideDirection => GetDirection(
-            uiData != null ? uiData.InventoryMenuSlideDirection : Vector2.right, Vector2.right);
-        private Vector2 NpcProgressHudSlideDirection => GetDirection(
-            uiData != null ? uiData.NpcProgressHudSlideDirection : Vector2.up, Vector2.up);
-        private Vector2 GemHudSlideDirection => GetDirection(
-            uiData != null ? uiData.GemHudSlideDirection : Vector2.up, Vector2.up);
-        private Vector2 ShopMenuButtonSlideDirection => GetDirection(
-            uiData != null ? uiData.ShopMenuButtonSlideDirection : Vector2.right, Vector2.right);
-        private Vector2 EffectToastSlideDirection => Vector2.left;
-        private Vector2 ModalSlideDirection => GetDirection(
-            uiData != null ? uiData.ModalSlideDirection : Vector2.down, Vector2.down);
-
         private void Awake()
         {
             if (orbitCamera == null)
@@ -120,7 +87,7 @@ namespace MiningSimulator.Ores
             {
                 SetBasePanelsImmediately(false);
                 activeModal.anchoredPosition = GetHomePosition(activeModal);
-                SetInteraction(activeModal, true);
+                SetCanvasAlpha(activeModal, 1f, true);
             }
             else
             {
@@ -149,12 +116,14 @@ namespace MiningSimulator.Ores
 
             activeModal = panel;
             panel.gameObject.SetActive(true);
-            panel.anchoredPosition = GetModalHiddenPosition(panel);
-            SetInteraction(panel, true);
+            panel.anchoredPosition = GetHomePosition(panel);
+            SetCanvasAlpha(panel, 0f, false);
             AnimateBasePanels(false);
             orbitCamera?.SetInputLocked(true);
             ShowBackdrop(panel);
-            StartCoroutine(AnimateRect(panel, GetHomePosition(panel), TransitionDuration));
+            CanvasGroup group = GetCanvasGroup(panel);
+            StartCoroutine(AnimateCanvasGroupAlpha(group, 1f, TransitionDuration,
+                () => { if (activeModal == panel) SetInteraction(panel, true); }));
         }
 
         public void ClosePanel(RectTransform panel)
@@ -170,23 +139,21 @@ namespace MiningSimulator.Ores
             AnimateBasePanels(true);
             orbitCamera?.SetInputLocked(false);
             HideBackdrop();
-            StartCoroutine(AnimateRect(panel, GetModalHiddenPosition(panel), TransitionDuration, () =>
+            CanvasGroup group = GetCanvasGroup(panel);
+            StartCoroutine(AnimateCanvasGroupAlpha(group, 0f, TransitionDuration, () =>
             {
-                if (activeModal == panel)
-                {
-                    activeModal = null;
-                }
+                if (activeModal == panel) activeModal = null;
                 panel.gameObject.SetActive(false);
             }));
         }
 
-        /// <summary>Uses the same base-HUD slide as modal panels without opening a modal.</summary>
+        /// <summary>Fades the HUD in place without changing any authored RectTransform.</summary>
         public void SetBaseHudVisible(bool visible)
         {
             EnsureInitialized();
+            StopAllCoroutines();
             if (!visible)
             {
-                StopAllCoroutines();
                 HideModalImmediately(upgradePanel);
                 HideModalImmediately(rebirthPanel);
                 HideModalImmediately(audioSettingsPanel);
@@ -205,20 +172,11 @@ namespace MiningSimulator.Ores
                 return;
             }
 
-            shopHome = GetPosition(shopPanel);
-            pcQuickActionsHome = GetPosition(pcQuickActions);
-            rebirthHome = GetPosition(rebirthHud);
-            audioMenuHome = GetPosition(audioMenuButton);
             upgradeHome = GetPosition(upgradePanel);
             rebirthPanelHome = GetPosition(rebirthPanel);
             audioSettingsHome = GetPosition(audioSettingsPanel);
-            inventoryMenuHome = GetPosition(inventoryMenuButton);
             inventoryPanelHome = GetPosition(inventoryPanel);
-            effectToastHome = GetPosition(effectToast);
             npcProgressHome = GetPosition(npcProgressHud);
-            gemHudHome = GetPosition(gemHud);
-            shopMenuButtonHome = GetPosition(shopMenuButton);
-            questMenuButtonHome = GetPosition(questMenuButton);
             initialized = true;
         }
 
@@ -280,98 +238,55 @@ namespace MiningSimulator.Ores
 
         private void AnimateBasePanels(bool visible)
         {
-            AnimateBasePanel(shopPanel, shopHome, ShopSlideDirection, visible);
-            AnimateBasePanel(pcQuickActions, pcQuickActionsHome, ShopSlideDirection, visible);
-            AnimateBasePanel(rebirthHud, rebirthHome, RebirthHudSlideDirection, visible);
-            AnimateBasePanel(audioMenuButton, audioMenuHome, AudioMenuSlideDirection, visible);
-            AnimateBasePanel(npcProgressHud, npcProgressHome, NpcProgressHudSlideDirection, visible);
-            AnimateBasePanel(inventoryMenuButton, inventoryMenuHome, InventoryMenuSlideDirection,
-                visible);
-            AnimateBasePanel(effectToast, effectToastHome, EffectToastSlideDirection, visible);
-            AnimateBasePanel(gemHud, gemHudHome, GemHudSlideDirection, visible);
-            AnimateBasePanel(shopMenuButton, shopMenuButtonHome, ShopMenuButtonSlideDirection,
-                visible);
-            AnimateBasePanel(questMenuButton, questMenuButtonHome, ShopMenuButtonSlideDirection,
-                visible);
+            FadeBasePanel(shopPanel, visible);
+            FadeBasePanel(pcQuickActions, visible);
+            FadeBasePanel(rebirthHud, visible);
+            FadeBasePanel(audioMenuButton, visible);
+            FadeBasePanel(npcProgressHud, visible);
+            FadeBasePanel(inventoryMenuButton, visible);
+            FadeBasePanel(effectToast, visible);
+            FadeBasePanel(gemHud, visible);
+            FadeBasePanel(shopMenuButton, visible);
+            FadeBasePanel(questMenuButton, visible);
         }
 
-        private void AnimateBasePanel(RectTransform panel, Vector2 home, Vector2 direction,
-            bool visible)
+        private void FadeBasePanel(RectTransform panel, bool visible)
         {
-            if (panel == null)
-            {
-                return;
-            }
-
+            if (panel == null) return;
             panel.gameObject.SetActive(true);
-            SetInteraction(panel, visible);
-            float panelDistance = Mathf.Abs(direction.x) * panel.rect.width +
-                                  Mathf.Abs(direction.y) * panel.rect.height;
-            Vector2 hidden = home + direction * (panelDistance + SlideExtraDistance);
-            StartCoroutine(AnimateRect(panel, visible ? home : hidden, TransitionDuration));
+            // The HUD must not receive a click while fading, including the first visible frame.
+            SetInteraction(panel, false);
+            CanvasGroup group = GetCanvasGroup(panel);
+            StartCoroutine(AnimateCanvasGroupAlpha(group, visible ? 1f : 0f,
+                TransitionDuration, () => { if (visible) SetInteraction(panel, true); }));
         }
 
         private void SetBasePanelsImmediately(bool visible)
         {
-            SetBasePanelImmediately(shopPanel, shopHome, ShopSlideDirection, visible);
-            SetBasePanelImmediately(pcQuickActions, pcQuickActionsHome, ShopSlideDirection, visible);
-            SetBasePanelImmediately(rebirthHud, rebirthHome, RebirthHudSlideDirection, visible);
-            SetBasePanelImmediately(audioMenuButton, audioMenuHome, AudioMenuSlideDirection, visible);
-            SetBasePanelImmediately(npcProgressHud, npcProgressHome,
-                NpcProgressHudSlideDirection, visible);
-            SetBasePanelImmediately(inventoryMenuButton, inventoryMenuHome,
-                InventoryMenuSlideDirection, visible);
-            SetBasePanelImmediately(effectToast, effectToastHome, EffectToastSlideDirection,
-                visible);
-            SetBasePanelImmediately(gemHud, gemHudHome, GemHudSlideDirection, visible);
-            SetBasePanelImmediately(shopMenuButton, shopMenuButtonHome,
-                ShopMenuButtonSlideDirection, visible);
-            SetBasePanelImmediately(questMenuButton, questMenuButtonHome,
-                ShopMenuButtonSlideDirection, visible);
+            SetBasePanelImmediately(shopPanel, visible);
+            SetBasePanelImmediately(pcQuickActions, visible);
+            SetBasePanelImmediately(rebirthHud, visible);
+            SetBasePanelImmediately(audioMenuButton, visible);
+            SetBasePanelImmediately(npcProgressHud, visible);
+            SetBasePanelImmediately(inventoryMenuButton, visible);
+            SetBasePanelImmediately(effectToast, visible);
+            SetBasePanelImmediately(gemHud, visible);
+            SetBasePanelImmediately(shopMenuButton, visible);
+            SetBasePanelImmediately(questMenuButton, visible);
         }
 
-        private void SetBasePanelImmediately(RectTransform panel, Vector2 home, Vector2 direction,
-            bool visible)
+        private static void SetBasePanelImmediately(RectTransform panel, bool visible)
         {
-            if (panel == null)
-            {
-                return;
-            }
-
+            if (panel == null) return;
             panel.gameObject.SetActive(true);
-            float panelDistance = Mathf.Abs(direction.x) * panel.rect.width +
-                                  Mathf.Abs(direction.y) * panel.rect.height;
-            panel.anchoredPosition = visible
-                ? home
-                : home + direction * (panelDistance + SlideExtraDistance);
-            SetInteraction(panel, visible);
+            SetCanvasAlpha(panel, visible ? 1f : 0f, visible);
         }
 
-        private void HideModalImmediately(RectTransform panel)
+        private static void HideModalImmediately(RectTransform panel)
         {
-            if (panel == null)
-            {
-                return;
-            }
-
-            panel.anchoredPosition = GetModalHiddenPosition(panel);
-            SetInteraction(panel, false);
+            if (panel == null) return;
+            SetCanvasAlpha(panel, 0f, false);
             panel.gameObject.SetActive(false);
-        }
-
-        private Vector2 GetModalHiddenPosition(RectTransform panel)
-        {
-            RectTransform canvasRect = panel != null
-                ? panel.GetComponentInParent<Canvas>()?.transform as RectTransform
-                : null;
-            float canvasWidth = canvasRect != null ? canvasRect.rect.width : 1920f;
-            float canvasHeight = canvasRect != null ? canvasRect.rect.height : 1080f;
-            float horizontalDistance = canvasWidth * 0.5f + panel.rect.width * 0.5f;
-            float verticalDistance = canvasHeight * 0.5f + panel.rect.height * 0.5f;
-            float distance = Mathf.Abs(ModalSlideDirection.x) * horizontalDistance +
-                             Mathf.Abs(ModalSlideDirection.y) * verticalDistance;
-            return GetHomePosition(panel) +
-                   ModalSlideDirection * (distance + SlideExtraDistance);
         }
 
         private Vector2 GetHomePosition(RectTransform panel)
@@ -403,22 +318,26 @@ namespace MiningSimulator.Ores
             return panel != null ? panel.anchoredPosition : Vector2.zero;
         }
 
-        private static Vector2 GetDirection(Vector2 configured, Vector2 fallback)
+        private static CanvasGroup GetCanvasGroup(RectTransform panel)
         {
-            return configured.sqrMagnitude > 0.0001f ? configured.normalized : fallback;
+            return panel.GetComponent<CanvasGroup>() ?? panel.gameObject.AddComponent<CanvasGroup>();
         }
 
-        private static void SetInteraction(RectTransform panel, bool enabled)
+        private static void SetCanvasAlpha(RectTransform panel, float alpha, bool interactive)
         {
-            if (panel == null)
-            {
-                return;
-            }
+            if (panel == null) return;
+            CanvasGroup group = GetCanvasGroup(panel);
+            group.alpha = alpha;
+            group.interactable = interactive;
+            group.blocksRaycasts = interactive;
+        }
 
-            CanvasGroup group = panel.GetComponent<CanvasGroup>() ??
-                                panel.gameObject.AddComponent<CanvasGroup>();
-            group.interactable = enabled;
-            group.blocksRaycasts = enabled;
+        private static void SetInteraction(RectTransform panel, bool interactive)
+        {
+            if (panel == null) return;
+            CanvasGroup group = GetCanvasGroup(panel);
+            group.interactable = interactive;
+            group.blocksRaycasts = interactive;
         }
 
         private void ShowBackdrop(RectTransform panel)
@@ -513,7 +432,7 @@ namespace MiningSimulator.Ores
             while (elapsed < safeDuration)
             {
                 elapsed += Time.unscaledDeltaTime;
-                group.alpha = Mathf.Lerp(start, target, Mathf.Clamp01(elapsed / safeDuration));
+                group.alpha = Mathf.SmoothStep(start, target, Mathf.Clamp01(elapsed / safeDuration));
                 yield return null;
             }
 
@@ -521,28 +440,5 @@ namespace MiningSimulator.Ores
             completed?.Invoke();
         }
 
-        private static IEnumerator AnimateRect(RectTransform panel, Vector2 destination,
-            float duration, Action completed = null)
-        {
-            if (panel == null)
-            {
-                yield break;
-            }
-
-            Vector2 start = panel.anchoredPosition;
-            float safeDuration = Mathf.Max(0.01f, duration);
-            float elapsed = 0f;
-            while (elapsed < safeDuration)
-            {
-                elapsed += Time.unscaledDeltaTime;
-                float normalized = Mathf.Clamp01(elapsed / safeDuration);
-                float eased = 1f - Mathf.Pow(1f - normalized, 3f);
-                panel.anchoredPosition = Vector2.LerpUnclamped(start, destination, eased);
-                yield return null;
-            }
-
-            panel.anchoredPosition = destination;
-            completed?.Invoke();
-        }
     }
 }

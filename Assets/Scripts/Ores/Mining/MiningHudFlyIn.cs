@@ -3,135 +3,114 @@ using UnityEngine;
 
 namespace MiningSimulator.Ores
 {
-    /// <summary>Animation-only fly-in for an authored HUD RectTransform.</summary>
+    /// <summary>Reveals scene-authored HUD in place with a smooth CanvasGroup fade.</summary>
     [DisallowMultipleComponent]
     public sealed class MiningHudFlyIn : MonoBehaviour
     {
-        public enum SlideDirection
-        {
-            FromTop,
-            FromBottom,
-            FromLeft,
-            FromRight
-        }
+        // Retained for existing scenes and the cinematic setup tool. No direction moves UI.
+        public enum SlideDirection { FromTop, FromBottom, FromLeft, FromRight }
 
         [SerializeField] private RectTransform target;
-        [SerializeField] private SlideDirection direction = SlideDirection.FromTop;
-        [Min(10f), SerializeField] private float slideDistance = 180f;
+        [HideInInspector, SerializeField] private SlideDirection direction = SlideDirection.FromTop;
+        [HideInInspector, SerializeField] private float slideDistance = 180f;
         [Min(0f), SerializeField] private float delay;
         [Min(0.05f), SerializeField] private float duration = 0.45f;
 
-        private Vector2 targetPosition;
         private Coroutine routine;
-        private bool hasTargetPosition;
+        private CanvasGroup group;
+        private float originalAlpha;
+        private bool originalInteractable;
+        private bool originalBlocksRaycasts;
+        private bool hasOriginalState;
 
-        /// <summary>Total unscaled time needed before this HUD reaches its authored position.</summary>
         public float TotalDuration => delay + duration;
 
-        public void Configure(RectTransform authoredTarget, SlideDirection slideDirection,
-            float distance, float startDelay, float animationDuration)
+        public void Configure(RectTransform authoredTarget, SlideDirection unusedDirection,
+            float unusedDistance, float startDelay, float animationDuration)
         {
             target = authoredTarget;
-            direction = slideDirection;
-            slideDistance = Mathf.Max(10f, distance);
+            // Keep old serialized values so running the existing setup tool remains harmless.
+            direction = unusedDirection;
+            slideDistance = unusedDistance;
             delay = Mathf.Max(0f, startDelay);
             duration = Mathf.Max(0.05f, animationDuration);
         }
 
         public void Play()
         {
-            if (target == null)
+            if (!EnsureGroup() || !gameObject.activeInHierarchy) return;
+            if (routine != null) StopCoroutine(routine);
+            if (!hasOriginalState)
             {
-                target = transform as RectTransform;
+                originalAlpha = group.alpha;
+                originalInteractable = group.interactable;
+                originalBlocksRaycasts = group.blocksRaycasts;
+                hasOriginalState = true;
             }
-            if (target == null || !gameObject.activeInHierarchy)
-            {
-                return;
-            }
-
-            StopAndRestore();
-            targetPosition = target.anchoredPosition;
-            hasTargetPosition = true;
-            target.anchoredPosition = targetPosition + DirectionOffset();
-            routine = StartCoroutine(Animate());
+            group.alpha = 0f;
+            group.interactable = false;
+            group.blocksRaycasts = false;
+            routine = StartCoroutine(FadeIn());
         }
 
         public void StopAndRestore()
         {
-            if (routine != null)
-            {
-                StopCoroutine(routine);
-                routine = null;
-            }
-            if (hasTargetPosition && target != null)
-            {
-                target.anchoredPosition = targetPosition;
-            }
-            hasTargetPosition = false;
+            if (routine != null) StopCoroutine(routine);
+            routine = null;
+            if (!hasOriginalState) return;
+            hasOriginalState = false;
+            if (group == null) return;
+            group.alpha = originalAlpha;
+            group.interactable = originalInteractable;
+            group.blocksRaycasts = originalBlocksRaycasts;
         }
 
-        /// <summary>
-        /// Forces the last cached authored position without starting another animation.
-        /// Safe to call after the fly-in has already completed.
-        /// </summary>
         public void CompleteImmediately()
         {
-            StopAndRestore();
+            if (routine != null) StopCoroutine(routine);
+            routine = null;
+            hasOriginalState = false;
+            if (!EnsureGroup()) return;
+            group.alpha = 1f;
+            group.interactable = true;
+            group.blocksRaycasts = true;
         }
 
-        private void OnDisable()
+        private void OnDisable() => StopAndRestore();
+
+        private bool EnsureGroup()
         {
-            StopAndRestore();
+            if (target == null) target = transform as RectTransform;
+            if (target == null) return false;
+            if (group == null || group.transform != target)
+                group = target.GetComponent<CanvasGroup>() ?? target.gameObject.AddComponent<CanvasGroup>();
+            return true;
         }
 
-        private IEnumerator Animate()
+        private IEnumerator FadeIn()
         {
-            float wait = 0f;
-            while (wait < delay)
+            float waited = 0f;
+            while (waited < delay)
             {
-                wait += Time.unscaledDeltaTime;
+                waited += Time.unscaledDeltaTime;
                 yield return null;
             }
-
-            Vector2 start = target.anchoredPosition;
             float elapsed = 0f;
             while (elapsed < duration)
             {
                 elapsed += Time.unscaledDeltaTime;
-                float t = Mathf.Clamp01(elapsed / duration);
-                target.anchoredPosition = Vector2.LerpUnclamped(
-                    start, targetPosition, EaseOutBack(t));
+                group.alpha = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / duration));
                 yield return null;
             }
-
-            target.anchoredPosition = targetPosition;
-            hasTargetPosition = false;
+            group.alpha = 1f;
+            group.interactable = true;
+            group.blocksRaycasts = true;
             routine = null;
-        }
-
-        private Vector2 DirectionOffset()
-        {
-            return direction switch
-            {
-                SlideDirection.FromTop => Vector2.up * slideDistance,
-                SlideDirection.FromBottom => Vector2.down * slideDistance,
-                SlideDirection.FromLeft => Vector2.left * slideDistance,
-                SlideDirection.FromRight => Vector2.right * slideDistance,
-                _ => Vector2.zero
-            };
-        }
-
-        private static float EaseOutBack(float t)
-        {
-            const float overshoot = 1.70158f;
-            return 1f + (overshoot + 1f) * Mathf.Pow(t - 1f, 3f) +
-                   overshoot * Mathf.Pow(t - 1f, 2f);
         }
 
 #if UNITY_EDITOR
         private void OnValidate()
         {
-            slideDistance = Mathf.Max(10f, slideDistance);
             delay = Mathf.Max(0f, delay);
             duration = Mathf.Max(0.05f, duration);
         }
