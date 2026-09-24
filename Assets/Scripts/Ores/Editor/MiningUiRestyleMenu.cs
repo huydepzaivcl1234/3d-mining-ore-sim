@@ -119,8 +119,6 @@ namespace MiningSimulator.Ores.Editor
             new("NPC Shop/Buy Mining NPC", 3),
             new("NPC Shop/Header", 0),
             new("NPC Shop/Open Upgrades", 3),
-            new("PortalMaintenancePanel/Card", 1),
-            new("PortalMaintenancePanel/Card/CloseButton", 2),
             new("Quest Menu Button", 1),
             new("Quest Panel/Quest Card", 1),
             new("Quest Panel/Quest Card/Header", 1),

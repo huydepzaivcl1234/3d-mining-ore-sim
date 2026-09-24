@@ -20,9 +20,10 @@ MonoBehaviour:
   durability: 60
   clickDamage: 4
   baseSellValue: 18
+  gemReward: 1
   experienceReward: 10
   destroyDelay: 0
-  maximumMiningNpcs: 5
+  maximumMiningNpcs: 1
   npcStandDistance: 1.4
   rareOre: 0
   rarity: 2
@@ -33,5 +34,8 @@ MonoBehaviour:
   hitPunchScale: 0.08
   hitPunchLift: 0.12
   hitPunchDuration: 0.16
+  breakSquashAmount: 0.22
+  breakStretchAmount: 0.14
+  breakAnimationDuration: 0.32
   prefab: {fileID: 7470786444139727848, guid: 4d5ac31473de7da42a7fd2b3e54721d1, type: 3}
   mapColor: {r: 0.55, g: 0.6, b: 0.66, a: 1}

@@ -29,63 +29,14 @@ namespace MiningSimulator.Ores
         private readonly RaycastHit[] groundHitBuffer = new RaycastHit[32];
         private Coroutine spawnRoutine;
         private bool initialSpawnCompleted;
-        private bool hasAreaOverride;
-        private Vector3 areaCenterOverride;
-        private Vector3 areaSizeOverride;
 
         public int ActiveCount => activeOres.Count;
         public int PooledCount => inactivePooledOres.Count;
         public OreSpawnData SpawnData => spawnData;
         public MiningUpgradeSystem UpgradeSystem => upgradeSystem;
-        public Vector3 SpawnAreaCenter => hasAreaOverride && spawnData != null
-            ? areaCenterOverride
-            : spawnData != null ? spawnData.AreaCenter : Vector3.zero;
-        public Vector3 SpawnAreaSize => hasAreaOverride && spawnData != null
-            ? areaSizeOverride
-            : spawnData != null ? spawnData.AreaSize : Vector3.zero;
+        public Vector3 SpawnAreaCenter => spawnData != null ? spawnData.AreaCenter : Vector3.zero;
+        public Vector3 SpawnAreaSize => spawnData != null ? spawnData.AreaSize : Vector3.zero;
         public event System.Action<Ore, float> OreRewardGranted;
-
-        /// <summary>Copies immutable gameplay references for a second area spawner.</summary>
-        public void ConfigureAsAreaClone(OreSpawner source)
-        {
-            if (source == null) return;
-            wallet = source.wallet;
-            spawnData = source.spawnData;
-            upgradeSystem = source.upgradeSystem;
-            uiData = source.uiData;
-            rewardPopupPrefab = source.rewardPopupPrefab;
-            dayNightSystem = source.dayNightSystem;
-            progressionSystem = source.progressionSystem;
-            spawnedOreParent = transform;
-            hasAreaOverride = false;
-        }
-
-        /// <summary>
-        /// Copies the shared runtime references while allowing an area to use its own ore table
-        /// and footprint. The underground clone intentionally has no day/night special roll, so
-        /// its table remains the only source of ore types for that area.
-        /// </summary>
-        public void ConfigureAsAreaClone(OreSpawner source, OreSpawnData areaSpawnData,
-            Vector3 areaCenter, Vector3 areaSize)
-        {
-            ConfigureAsAreaClone(source);
-            if (areaSpawnData == null)
-            {
-                spawnData = null;
-                Debug.LogError("Underground OreSpawner requires a dedicated UndergroundOreSpawnData asset. " +
-                    "It will stay empty instead of spawning ground ores.", this);
-            }
-            else
-            {
-                spawnData = areaSpawnData;
-            }
-
-            areaCenterOverride = areaCenter;
-            areaSizeOverride = new Vector3(Mathf.Abs(areaSize.x), Mathf.Abs(areaSize.y),
-                Mathf.Abs(areaSize.z));
-            hasAreaOverride = true;
-            dayNightSystem = null;
-        }
 
         private void Awake()
         {

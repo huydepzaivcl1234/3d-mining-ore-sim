@@ -56,7 +56,7 @@ MonoBehaviour:
     moneyReward: 250
     sizeMultiplier: 1
     miningPowerRequired: 7
-    maximumMiningNpcs: 5
+    maximumMiningNpcs: 3
     npcStandDistance: 1.25
   - type: 1
     displayName: Diamond Lucky Block
@@ -67,7 +67,7 @@ MonoBehaviour:
     moneyReward: 1000
     sizeMultiplier: 1
     miningPowerRequired: 15
-    maximumMiningNpcs: 5
+    maximumMiningNpcs: 3
     npcStandDistance: 1.25
   - type: 2
     displayName: Rainbow Lucky Block
@@ -78,5 +78,5 @@ MonoBehaviour:
     moneyReward: 3500
     sizeMultiplier: 1
     miningPowerRequired: 30
-    maximumMiningNpcs: 5
+    maximumMiningNpcs: 3
     npcStandDistance: 1.25

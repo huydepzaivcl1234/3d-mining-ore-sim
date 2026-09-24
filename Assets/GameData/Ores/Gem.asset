@@ -23,7 +23,7 @@ MonoBehaviour:
   gemReward: 1
   experienceReward: 5
   destroyDelay: 0
-  maximumMiningNpcs: 3
+  maximumMiningNpcs: 1
   npcStandDistance: 1.4
   rareOre: 0
   rarity: 0

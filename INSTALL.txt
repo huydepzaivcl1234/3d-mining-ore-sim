@@ -1,11 +1,11 @@
-Unity world swap patch (main @ 86688a604d902861583261fad2b8fe53bef3eaf3)
-No scenes are included. Back up the project before extracting into the project root.
+UNITY 6 / URP - RADIAL TRANSITION PREVIEW ONLY
 
-In Unity (Edit Mode):
-1. Resolve any scene-load/compile errors first. A broken SampleScene cannot be repaired by these scripts.
-2. On MiningWorldAreaController in your scene, assign Ground Environment, Underground Environment, Ground Spawner, Underground Spawner, Underground Camera Focus. Optionally assign Ground Camera Focus and Underground NPC Spawn Point. Keep GameManager, UI, NpcShop, progression, and wallet OUTSIDE the two world roots.
-3. Assign DIFFERENT OreSpawnData assets on the two existing OreSpawner objects. Check SpawnOnEnable, MaximumAliveOres, the AreaCenter/AreaSize relative to the spawner transform, GroundLayers and ground platform Collider. An Underground spawner transform must be at your Underground platform, not on Ground.
-4. Select your existing Ground portal gate and use Mining Simulator > Setup > Create Return Portal From Selected Gate. Move the newly created return portal to your desired place underground; it must stay beneath the Underground world root. Destination is set to Ground; verify both gates' Area Controller fields. On Ground portal set Destination=Underground, on return gate Destination=Ground.
-5. If you have world-specific miners under a world root, assign their own OreSpawner in Inspector. NPCs outside both roots are treated as shared; they move between authored focus points and are rebound automatically.
-6. Keep existing Ground/UnderGround NavMeshSurface components and bake both floors; inspect their geometry/layer masks. Save scene yourself (Ctrl+S). No SampleScene shipped in this ZIP.
-7. Test Ground -> Underground -> Ground, Buy NPC in each world, Mine ore, UI and currencies, then re-enter Play Mode. Unity Editor validation has not been run in this workspace.
+1. Copy Assets/Shaders and Assets/Scripts/Ores/Portal into your Unity project Assets/ folder.
+2. Add MiningDynamicRadialMaskTransition to an existing scene GameObject (for example, Mining Portal Gate). Do not add or replace any scene from this ZIP.
+3. In Inspector, assign Portal Gate (Transform), Gameplay Camera, and Transition Shader (UI/Mining/DynamicRadialMaskTransition). If Portal Gate is empty, Play Mode looks for a GameObject named Mining Portal Gate; if none exists, the preview starts at Fallback Viewport Center.
+4. Assign your Whoosh Clip and Impact Clip. An AudioSource is created on the component GameObject on first preview when absent. Select Use Lava Edge to switch gold to lava. All effect timings and colors can be changed in Inspector.
+5. Enter Play Mode, right-click the component title in Inspector, select Test Radial Transition to Underground or Test Radial Transition to Ground. Both actions play the same visual effect. There is NO world change, no portal interaction hookup and no new world in this preview.
+6. A full-screen Screen Space Overlay Canvas is created at runtime only if Overlay Image is unassigned. Assign a scene-authored full-stretch UI Image to Overlay Image if you want to inspect or edit the canvas beforehand. The Image must be white and without another graphic material.
+7. Overlay UI draws after normal camera post processing in URP: the shader has a visible procedural soft glow, but real Bloom on this overlay requires a suitable renderer feature before post processing.
+
+Includes scripts/shader with .meta GUIDs; no scene or backup files.

@@ -33,9 +33,6 @@ namespace MiningSimulator.Ores
         [SerializeField] private AudioClip sunriseRoosterSfx;
         [Tooltip("Loop played only while the Coin Rain event is active.")]
         [SerializeField] private AudioClip coinRainAmbience;
-        [Tooltip("Loop played while the player is in the Underground area.")]
-        [SerializeField] private AudioClip undergroundAmbience;
-        [Range(0f, 1f), SerializeField] private float undergroundAmbienceVolume = 0.55f;
         [Header("Being Stalked Event")]
         [SerializeField] private AudioClip stalkedCatchSfx;
         [SerializeField] private AudioClip stalkedJumpscareSfx;
@@ -81,8 +78,6 @@ namespace MiningSimulator.Ores
         public int NightAmbienceCount => 1 + additionalNightAmbiences.Length;
         public AudioClip SunriseRoosterSfx => sunriseRoosterSfx;
         public AudioClip CoinRainAmbience => coinRainAmbience;
-        public AudioClip UndergroundAmbience => undergroundAmbience;
-        public float UndergroundAmbienceVolume => undergroundAmbienceVolume;
         public AudioClip StalkedCatchSfx => stalkedCatchSfx;
         public AudioClip StalkedJumpscareSfx => stalkedJumpscareSfx;
         public float AmbienceVolume => ambienceVolume;
@@ -191,7 +186,6 @@ namespace MiningSimulator.Ores
         {
             musicVolume = Mathf.Clamp01(musicVolume);
             ambienceVolume = Mathf.Clamp01(ambienceVolume);
-            undergroundAmbienceVolume = Mathf.Clamp01(undergroundAmbienceVolume);
             ambienceFadeDuration = Mathf.Max(0f, ambienceFadeDuration);
             morningAmbiencePauseRange.x = Mathf.Max(0f, morningAmbiencePauseRange.x);
             morningAmbiencePauseRange.y = Mathf.Max(morningAmbiencePauseRange.x,

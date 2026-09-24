@@ -116,7 +116,6 @@ namespace MiningSimulator.Ores
             achievementSystem?.ResetAllData();
             questSystem?.ResetAllData();
             MiningComputerStation.ResetAllLoadedStations();
-            MiningWorldAreaController.ResetSavedUnlock();
             wallet?.ResetMoney();
             wallet?.ResetGems();
             ApplyPermanentBoost();
