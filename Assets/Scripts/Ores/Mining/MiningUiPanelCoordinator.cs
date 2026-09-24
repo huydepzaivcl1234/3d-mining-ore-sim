@@ -254,7 +254,13 @@ namespace MiningSimulator.Ores
         {
             if (panel == null) return;
             panel.gameObject.SetActive(true);
-            // The HUD must not receive a click while fading, including the first visible frame.
+            if (panel.TryGetComponent(out MiningUiSmoothFade fade))
+            {
+                if (visible) fade.Show();
+                else fade.Hide();
+                return;
+            }
+            // Existing HUD panels without the reusable component still fade normally.
             SetInteraction(panel, false);
             CanvasGroup group = GetCanvasGroup(panel);
             StartCoroutine(AnimateCanvasGroupAlpha(group, visible ? 1f : 0f,
@@ -279,7 +285,12 @@ namespace MiningSimulator.Ores
         {
             if (panel == null) return;
             panel.gameObject.SetActive(true);
-            SetCanvasAlpha(panel, visible ? 1f : 0f, visible);
+            if (panel.TryGetComponent(out MiningUiSmoothFade fade))
+            {
+                if (visible) fade.CompleteImmediately();
+                else fade.HideImmediately();
+            }
+            else SetCanvasAlpha(panel, visible ? 1f : 0f, visible);
         }
 
         private static void HideModalImmediately(RectTransform panel)

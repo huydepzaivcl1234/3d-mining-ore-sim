@@ -82,22 +82,22 @@ namespace MiningSimulator.Ores.Editor
             buttons.Add(settings.transform as RectTransform);
             buttons.Add(exit.transform as RectTransform);
 
-            List<MiningHudFlyIn> flyIns = new();
-            AddFlyIn(canvasRect, flyIns, "NPC Shop", MiningHudFlyIn.SlideDirection.FromLeft,
+            List<MiningUiSmoothFade> flyIns = new();
+            AddFlyIn(canvasRect, flyIns, "NPC Shop", MiningUiSmoothFade.SlideDirection.FromLeft,
                 230f, 0f);
-            AddFlyIn(canvasRect, flyIns, "Rebirth HUD", MiningHudFlyIn.SlideDirection.FromTop,
+            AddFlyIn(canvasRect, flyIns, "Rebirth HUD", MiningUiSmoothFade.SlideDirection.FromTop,
                 180f, 0.02f);
-            AddFlyIn(canvasRect, flyIns, "Gem HUD", MiningHudFlyIn.SlideDirection.FromTop,
+            AddFlyIn(canvasRect, flyIns, "Gem HUD", MiningUiSmoothFade.SlideDirection.FromTop,
                 180f, 0.07f);
-            AddFlyIn(canvasRect, flyIns, "NPC Progress HUD", MiningHudFlyIn.SlideDirection.FromRight,
+            AddFlyIn(canvasRect, flyIns, "NPC Progress HUD", MiningUiSmoothFade.SlideDirection.FromRight,
                 230f, 0.04f);
-            AddFlyIn(canvasRect, flyIns, "Audio Menu Button", MiningHudFlyIn.SlideDirection.FromRight,
+            AddFlyIn(canvasRect, flyIns, "Audio Menu Button", MiningUiSmoothFade.SlideDirection.FromRight,
                 180f, 0.08f);
-            AddFlyIn(canvasRect, flyIns, "Inventory Menu Button", MiningHudFlyIn.SlideDirection.FromRight,
+            AddFlyIn(canvasRect, flyIns, "Inventory Menu Button", MiningUiSmoothFade.SlideDirection.FromRight,
                 180f, 0.12f);
-            AddFlyIn(canvasRect, flyIns, "Shop Menu Button", MiningHudFlyIn.SlideDirection.FromRight,
+            AddFlyIn(canvasRect, flyIns, "Shop Menu Button", MiningUiSmoothFade.SlideDirection.FromRight,
                 180f, 0.16f);
-            AddFlyIn(canvasRect, flyIns, "Quest Menu Button", MiningHudFlyIn.SlideDirection.FromRight,
+            AddFlyIn(canvasRect, flyIns, "Quest Menu Button", MiningUiSmoothFade.SlideDirection.FromRight,
                 180f, 0.20f);
 
             SerializedObject cinematicFields = new(cinematic);
@@ -313,8 +313,8 @@ namespace MiningSimulator.Ores.Editor
             }
         }
 
-        private static void AddFlyIn(Transform root, ICollection<MiningHudFlyIn> results,
-            string objectName, MiningHudFlyIn.SlideDirection direction, float distance,
+        private static void AddFlyIn(Transform root, ICollection<MiningUiSmoothFade> results,
+            string objectName, MiningUiSmoothFade.SlideDirection direction, float distance,
             float delay)
         {
             Transform target = Find(root, objectName);
@@ -323,8 +323,8 @@ namespace MiningSimulator.Ores.Editor
             {
                 return;
             }
-            MiningHudFlyIn flyIn = rect.GetComponent<MiningHudFlyIn>() ??
-                                   Undo.AddComponent<MiningHudFlyIn>(rect.gameObject);
+            MiningUiSmoothFade flyIn = rect.GetComponent<MiningUiSmoothFade>() ??
+                                   Undo.AddComponent<MiningUiSmoothFade>(rect.gameObject);
             Undo.RecordObject(flyIn, "Configure HUD Fly In");
             flyIn.Configure(rect, direction, distance, delay, 0.45f);
             EditorUtility.SetDirty(flyIn);

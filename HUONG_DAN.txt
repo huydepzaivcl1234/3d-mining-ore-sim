@@ -1,0 +1,19 @@
+CÀI BẢN SỬA INVENTORY + UI SMOOTH FADE
+Nguồn: GitHub main tại thời điểm đóng gói. Không có SampleScene trong ZIP.
+
+1. THOÁT Unity. Giải nén ZIP vào đúng thư mục gốc project (nơi có thư mục Assets).
+2. Chạy Remove-Old-Inventory-Code.cmd tại thư mục gốc project. Script chỉ xóa 4 script giao diện Inventory cũ và MiningHudFlyIn cũ, cùng .meta của chúng; không xóa scene / prefab.
+3. Mở Unity, mở SampleScene, chạy:
+   Mining Simulator > UI > Remove Old Inventory Candy Visuals
+   Lệnh xóa "Juicy Inventory Visuals" và Missing Script của nút Inventory, bật Image,
+   giữ nguyên RectTransform, Button và logic mở Inventory. Nó tự tìm icon btn_inventory
+   trong Assets/Prefabs/UI. Nếu chưa tìm thấy icon: thêm Image và gán sprite của bạn
+   trên Inventory Menu Button, rồi chạy lại lệnh. SAVE scene.
+4. Component mới trên nút: "Mining Ui Smooth Fade" (Add Component:
+   Mining Simulator/UI/Smooth Fade (Buttons and HUD)). Gắn vào nút khác để coordinator
+   làm chúng mờ/hiện khi mở panel. Có thể bật Fade On Enable để tự hiện lúc bật GameObject;
+   hoặc gọi Show(), Hide(), Play() qua script. CanvasGroup được thêm tự động,
+   nút ẩn không nhận click. Vị trí/size của RectTransform không thay đổi.
+
+Chưa thể chạy Unity Editor để kiểm tra scene trong môi trường đóng gói. Kiểm tra sau
+khi import: nút Inventory hiện icon, bấm mở panel, đóng panel, và mở lại được.

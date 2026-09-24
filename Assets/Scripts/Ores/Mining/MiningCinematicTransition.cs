@@ -38,7 +38,7 @@ namespace MiningSimulator.Ores
         [Range(0.1f, 1f), SerializeField] private float flashOpacity = 1f;
 
         [Header("HUD Fly In")]
-        [SerializeField] private MiningHudFlyIn[] hudFlyIns;
+        [SerializeField] private MiningUiSmoothFade[] hudFlyIns;
 
         [Header("Timing")]
         [Min(0.1f), SerializeField] private float menuExitDuration = 0.4f;
@@ -353,7 +353,7 @@ namespace MiningSimulator.Ores
             {
                 return;
             }
-            foreach (MiningHudFlyIn flyIn in hudFlyIns)
+            foreach (MiningUiSmoothFade flyIn in hudFlyIns)
             {
                 flyIn?.Play();
             }
@@ -365,7 +365,7 @@ namespace MiningSimulator.Ores
             {
                 return;
             }
-            foreach (MiningHudFlyIn flyIn in hudFlyIns)
+            foreach (MiningUiSmoothFade flyIn in hudFlyIns)
             {
                 flyIn?.StopAndRestore();
             }
@@ -378,7 +378,7 @@ namespace MiningSimulator.Ores
             {
                 return result;
             }
-            foreach (MiningHudFlyIn flyIn in hudFlyIns)
+            foreach (MiningUiSmoothFade flyIn in hudFlyIns)
             {
                 if (flyIn != null)
                 {
@@ -394,7 +394,7 @@ namespace MiningSimulator.Ores
             {
                 return;
             }
-            foreach (MiningHudFlyIn flyIn in hudFlyIns)
+            foreach (MiningUiSmoothFade flyIn in hudFlyIns)
             {
                 flyIn?.CompleteImmediately();
             }

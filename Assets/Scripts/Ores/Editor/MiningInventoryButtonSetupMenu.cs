@@ -1,5 +1,5 @@
 #if UNITY_EDITOR
-using TMPro;
+using System;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -7,134 +7,111 @@ using UnityEngine.UI;
 
 namespace MiningSimulator.Ores.Editor
 {
-    /// <summary>Authors the Inventory button visuals into the open scene without moving its root.</summary>
+    /// <summary>Removes only the legacy Inventory button presentation from the open scene.</summary>
     public static class MiningInventoryButtonSetupMenu
     {
-        private const string VisualRootName = "Juicy Inventory Visuals";
-
-        [MenuItem("Mining Simulator/UI/Build Inventory Menu Button")]
-        public static void Build()
+        [MenuItem("Mining Simulator/UI/Remove Old Inventory Candy Visuals")]
+        public static void RemoveOldVisuals()
         {
-            if (EditorApplication.isPlayingOrWillChangePlaymode)
-            {
-                EditorUtility.DisplayDialog("Exit Play Mode",
-                    "Stop Play Mode before building the Inventory button so the authored objects can be saved.",
-                    "OK");
-                return;
-            }
+            if (EditorApplication.isPlayingOrWillChangePlaymode) return;
 
-            MiningInventoryPanel inventory = Object.FindFirstObjectByType<MiningInventoryPanel>(
+            MiningInventoryPanel inventory = UnityEngine.Object.FindFirstObjectByType<MiningInventoryPanel>(
                 FindObjectsInactive.Include);
             if (inventory == null)
             {
-                Debug.LogWarning("Open the mining scene first: MiningInventoryPanel was not found. No scene was changed.");
+                Debug.LogWarning("Open the gameplay scene before cleaning up Inventory.");
                 return;
             }
 
-            SerializedObject inventoryFields = new(inventory);
-            Button button = inventoryFields.FindProperty("openButton")?.objectReferenceValue as Button;
+            SerializedObject fields = new(inventory);
+            Button button = fields.FindProperty("openButton")?.objectReferenceValue as Button;
             if (button == null)
             {
-                Debug.LogWarning("Inventory open button reference is missing. No scene was changed.", inventory);
+                Debug.LogWarning("Inventory openButton is not assigned.", inventory);
                 return;
             }
 
-            TextMeshProUGUI title = FindAuthoredTitle(button.transform);
-            if (title == null)
+            Sprite authoredSprite = FindButtonSprite();
+            Transform oldVisuals = button.transform.Find("Juicy Inventory Visuals");
+            if (authoredSprite == null && oldVisuals != null)
             {
-                Debug.LogWarning("Inventory button title was not found. No scene was changed.", button);
+                Transform icon = oldVisuals.Find("Icon Socket/Inventory Icon");
+                if (icon != null && icon.TryGetComponent(out Image oldIcon))
+                    authoredSprite = oldIcon.sprite;
+            }
+            Image image = button.GetComponent<Image>();
+            if (image == null && authoredSprite == null)
+            {
+                Debug.LogWarning("No Inventory button sprite found. Assign an Image and your own sprite " +
+                                 "to Inventory Menu Button, then run this command again.", button);
                 return;
             }
 
             Undo.IncrementCurrentGroup();
-            int undoGroup = Undo.GetCurrentGroup();
-            Undo.SetCurrentGroupName("Build Inventory Menu Button");
+            int group = Undo.GetCurrentGroup();
+            Undo.SetCurrentGroupName("Remove Old Inventory Candy Visuals");
 
-            RectTransform visualRoot = EnsureChild(button.transform as RectTransform, VisualRootName);
-            _ = GetOrAdd<CanvasRenderer>(visualRoot.gameObject);
-            _ = GetOrAdd<MiningInventoryButtonGraphic>(visualRoot.gameObject);
+            if (image == null) image = Undo.AddComponent<Image>(button.gameObject);
+            Undo.RecordObject(image, "Restore Inventory Button Image");
+            Undo.RecordObject(button, "Restore Inventory Button Click Target");
+            if (authoredSprite != null) image.sprite = authoredSprite;
+            image.enabled = true;
+            image.color = Color.white;
+            image.raycastTarget = true;
+            image.preserveAspect = true;
+            button.targetGraphic = image;
 
-            RectTransform socket = EnsureChild(visualRoot, "Icon Socket");
-            _ = GetOrAdd<CanvasRenderer>(socket.gameObject);
-            _ = GetOrAdd<MiningInventoryIconMaskGraphic>(socket.gameObject);
-            _ = GetOrAdd<Mask>(socket.gameObject);
+            // This component also works on any other UI button via Add Component.
+            if (button.GetComponent<MiningUiSmoothFade>() == null)
+                Undo.AddComponent<MiningUiSmoothFade>(button.gameObject);
 
-            RectTransform icon = EnsureChild(socket, "Inventory Icon");
-            _ = GetOrAdd<CanvasRenderer>(icon.gameObject);
-            _ = GetOrAdd<Image>(icon.gameObject);
-            _ = GetOrAdd<AspectRatioFitter>(icon.gameObject);
-
-            Transform staleHotkey = visualRoot.Find("Hotkey");
-            if (staleHotkey != null)
+            if (oldVisuals != null)
             {
-                Undo.DestroyObjectImmediate(staleHotkey.gameObject);
+                Undo.DestroyObjectImmediate(oldVisuals.gameObject);
             }
 
-            JuicyInventoryButton presentation = button.GetComponent<JuicyInventoryButton>() ??
-                                                Undo.AddComponent<JuicyInventoryButton>(button.gameObject);
-
-            Component[] affected = button.GetComponentsInChildren<Component>(true);
-            Undo.RecordObjects(affected, "Style Inventory Menu Button");
-            presentation.Configure(button, title);
-
-            SetLayerRecursively(visualRoot, button.gameObject.layer);
-            foreach (Component component in affected)
+            // After deleting the old script file this removes its missing-script reference
+            // from this button only. It does not touch any other objects in the scene.
+            GameObjectUtility.RemoveMonoBehavioursWithMissingScript(button.gameObject);
+            foreach (MonoBehaviour component in button.GetComponents<MonoBehaviour>())
             {
-                if (component != null) EditorUtility.SetDirty(component);
+                if (component != null && component.GetType().Name == "JuicyInventoryButton")
+                    Undo.DestroyObjectImmediate(component);
             }
+
+            foreach (Component component in button.GetComponents<Component>())
+            {
+                if (component != null && component.GetType().Name == "MiningCandyGradient")
+                    Undo.DestroyObjectImmediate(component);
+            }
+
+            EditorUtility.SetDirty(image);
             EditorUtility.SetDirty(button);
-            EditorUtility.SetDirty(presentation);
             EditorSceneManager.MarkSceneDirty(button.gameObject.scene);
-            Undo.CollapseUndoOperations(undoGroup);
-
             Selection.activeGameObject = button.gameObject;
-            EditorGUIUtility.PingObject(button.gameObject);
-            Debug.Log("Inventory button authored into the Scene. Root anchors, position and size were preserved. Save the scene when satisfied.", button);
+            Undo.CollapseUndoOperations(group);
+            Debug.Log("Old Inventory visuals removed. The authored button, RectTransform and " +
+                      "click wiring are intact. Save the scene.", button);
         }
 
-        [MenuItem("Mining Simulator/UI/Build Inventory Menu Button", true)]
-        private static bool CanBuild() => !EditorApplication.isPlayingOrWillChangePlaymode;
+        [MenuItem("Mining Simulator/UI/Remove Old Inventory Candy Visuals", true)]
+        private static bool CanRemove() => !EditorApplication.isPlayingOrWillChangePlaymode;
 
-        private static TextMeshProUGUI FindAuthoredTitle(Transform button)
+        private static Sprite FindButtonSprite()
         {
-            Transform named = button.Find("Text (TMP)");
-            if (named != null)
+            string[] ids = AssetDatabase.FindAssets("t:Sprite", new[] { "Assets/Prefabs/UI" });
+            Sprite fallback = null;
+            foreach (string id in ids)
             {
-                TextMeshProUGUI label = named.GetComponent<TextMeshProUGUI>();
-                if (label != null) return label;
+                string path = AssetDatabase.GUIDToAssetPath(id);
+                string name = System.IO.Path.GetFileNameWithoutExtension(path);
+                if (name.IndexOf("btn_inventory", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    name.IndexOf("btn_invent", StringComparison.OrdinalIgnoreCase) >= 0)
+                    return AssetDatabase.LoadAssetAtPath<Sprite>(path);
+                if (fallback == null && name.IndexOf("invent", StringComparison.OrdinalIgnoreCase) >= 0)
+                    fallback = AssetDatabase.LoadAssetAtPath<Sprite>(path);
             }
-
-            Transform visualRoot = button.Find(VisualRootName);
-            foreach (TextMeshProUGUI label in button.GetComponentsInChildren<TextMeshProUGUI>(true))
-            {
-                if (visualRoot == null || !label.transform.IsChildOf(visualRoot)) return label;
-            }
-            return null;
-        }
-
-        private static RectTransform EnsureChild(RectTransform parent, string childName)
-        {
-            Transform existing = parent != null ? parent.Find(childName) : null;
-            if (existing is RectTransform existingRect) return existingRect;
-
-            GameObject child = new(childName, typeof(RectTransform));
-            Undo.RegisterCreatedObjectUndo(child, $"Create {childName}");
-            Undo.SetTransformParent(child.transform, parent, $"Parent {childName}");
-            child.layer = parent.gameObject.layer;
-            return child.GetComponent<RectTransform>();
-        }
-
-        private static T GetOrAdd<T>(GameObject target) where T : Component
-        {
-            T existing = target.GetComponent<T>();
-            return existing != null ? existing : Undo.AddComponent<T>(target);
-        }
-
-        private static void SetLayerRecursively(Transform root, int layer)
-        {
-            if (root == null) return;
-            root.gameObject.layer = layer;
-            foreach (Transform child in root) SetLayerRecursively(child, layer);
+            return fallback;
         }
     }
 }
