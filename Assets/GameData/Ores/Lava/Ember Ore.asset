@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Ember Ore
   description: what kind of ore in lava??
   tier: 4
-  miningPowerRequired: 1
+  miningPowerRequired: 8
   durability: 5500
   clickDamage: 1
   baseSellValue: 1500

@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Molten Core
   description: Super hot core.Very hot
   tier: 10
-  miningPowerRequired: 1
+  miningPowerRequired: 35
   durability: 8000
   clickDamage: 1
   baseSellValue: 3500
