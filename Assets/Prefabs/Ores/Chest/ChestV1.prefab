@@ -418,6 +418,13 @@ MonoBehaviour:
   lidRewardIcon: {fileID: 5804094277636457274}
   rewardText: {fileID: 8943460712013159494}
   hitCollider: {fileID: 7573909355169460635}
+  healthBarPrefab: {fileID: 7923854003312105274, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
+  overheadOffset: {x: 0, y: 0.3, z: 0}
+  healthBarWorldScale: 0.65
+  rewardHeightAboveBar: 0.55
+  lockBreakSfx: {fileID: 0}
+  chestOpenSfx: {fileID: 0}
+  itemRollTickSfx: {fileID: 0}
   hitsToBreak: 5
   lidOpenEuler: {x: -95, y: 0, z: 0}
   lockBreakSeconds: 0.2

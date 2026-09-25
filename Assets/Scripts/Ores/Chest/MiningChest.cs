@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
+using Microlight.MicroBar;
 using UnityEngine;
 
 namespace MiningSimulator.Ores
@@ -29,6 +30,15 @@ namespace MiningSimulator.Ores
         [SerializeField] private SpriteRenderer lidRewardIcon;
         [SerializeField] private TextMeshPro rewardText;
         [SerializeField] private Collider hitCollider;
+        [Header("Overhead presentation")]
+        [SerializeField] private MicroBar healthBarPrefab;
+        [SerializeField] private Vector3 overheadOffset = new Vector3(0f, .3f, 0f);
+        [Min(.01f), SerializeField] private float healthBarWorldScale = .65f;
+        [Min(0f), SerializeField] private float rewardHeightAboveBar = .55f;
+        [Header("Chest SFX (optional overrides; uses game audio defaults otherwise)")]
+        [SerializeField] private AudioClip lockBreakSfx;
+        [SerializeField] private AudioClip chestOpenSfx;
+        [SerializeField] private AudioClip itemRollTickSfx;
         [Min(1), SerializeField] private int hitsToBreak = 5;
         [SerializeField] private Vector3 lidOpenEuler = new Vector3(-95f, 0f, 0f);
         [Min(0.01f), SerializeField] private float lockBreakSeconds = .2f;
@@ -59,6 +69,9 @@ namespace MiningSimulator.Ores
         private bool rewardPending;
         private MiningItemData selectedItem;
         private int selectedAmount;
+        private MicroBar healthBar;
+        private MiningAudioManager audioManager;
+        private float nextRollSfxTime;
 
         public ChestKind Kind => kind;
         public bool CanMine => isActiveAndEnabled && !opening && !rewardPending && remainingHits > 0;
@@ -97,6 +110,20 @@ namespace MiningSimulator.Ores
             opening = rewardPending = false;
             selectedItem = null;
             selectedAmount = 0;
+            nextRollSfxTime = 0f;
+            audioManager ??= FindFirstObjectByType<MiningAudioManager>(FindObjectsInactive.Include);
+            if (healthBar == null && healthBarPrefab != null)
+            {
+                healthBar = Instantiate(healthBarPrefab, transform);
+                healthBar.name = "Chest Health Bar";
+                healthBar.Initialize(Mathf.Max(1, hitsToBreak));
+            }
+            if (healthBar != null)
+            {
+                healthBar.gameObject.SetActive(true);
+                healthBar.SetNewMaxHP(Mathf.Max(1, hitsToBreak), true);
+                healthBar.UpdateBar(remainingHits, true);
+            }
             if (lidHinge != null) lidHinge.localRotation = closedRotation;
             if (lockModel != null)
             {
@@ -119,9 +146,14 @@ namespace MiningSimulator.Ores
         {
             if (rewardPending) return ClaimPendingItem();
             if (!CanMine) return false;
-            if (--remainingHits <= 0)
+            --remainingHits;
+            if (healthBar != null) healthBar.UpdateBar(remainingHits, true);
+            if (remainingHits <= 0)
             {
                 opening = true;
+                if (healthBar != null) healthBar.gameObject.SetActive(false);
+                PlayChestSfx(lockBreakSfx, audioManager != null && audioManager.AudioData != null
+                    ? audioManager.AudioData.OreBreakSfx : null);
                 StartCoroutine(OpenAndReward());
             }
             return true;
@@ -147,6 +179,8 @@ namespace MiningSimulator.Ores
                 lockModel.gameObject.SetActive(false);
             }
 
+            PlayChestSfx(chestOpenSfx, audioManager != null && audioManager.AudioData != null
+                ? audioManager.AudioData.WheelRewardSfx : null);
             if (lidHinge != null)
             {
                 float elapsed = 0f;
@@ -248,6 +282,7 @@ namespace MiningSimulator.Ores
                     MiningItemData preview = RollItem();
                     DisplayIcon(preview);
                     ShowText(preview != null ? preview.DisplayName : "?", false);
+                    PlayRollTick();
                     nextTick += Mathf.Lerp(.045f, .32f, progress * progress);
                 }
                 elapsed += Time.deltaTime;
@@ -267,6 +302,7 @@ namespace MiningSimulator.Ores
                 if (elapsed >= nextTick)
                 {
                     ShowText($"{selectedItem.DisplayName}  x{UnityEngine.Random.Range(1, 11)}", false);
+                    PlayRollTick();
                     nextTick += Mathf.Lerp(.05f, .22f, progress);
                 }
                 elapsed += Time.deltaTime;
@@ -314,6 +350,31 @@ namespace MiningSimulator.Ores
         private void LateUpdate()
         {
             Camera camera = Camera.main;
+            Vector3 top = hitCollider != null
+                ? new Vector3(hitCollider.bounds.center.x, hitCollider.bounds.max.y, hitCollider.bounds.center.z)
+                : transform.position;
+            Vector3 barPosition = top + overheadOffset;
+            if (healthBar != null && healthBar.gameObject.activeSelf)
+            {
+                Transform bar = healthBar.transform;
+                bar.position = barPosition;
+                SetWorldScale(bar, healthBarWorldScale);
+                if (camera != null) bar.rotation = Quaternion.LookRotation(
+                    bar.position - camera.transform.position, camera.transform.up);
+            }
+            // Position in world space: the icon is authored under the moving lid hinge.
+            // Updating its world position keeps the roll centered above the chest as the lid opens.
+            if (lidRewardIcon != null)
+            {
+                lidRewardIcon.transform.position = barPosition + Vector3.up * rewardHeightAboveBar;
+                SetWorldScale(lidRewardIcon.transform, .5f);
+            }
+            if (rewardText != null)
+            {
+                rewardText.transform.position = barPosition + Vector3.up *
+                    (rewardHeightAboveBar + (lidRewardIcon != null && lidRewardIcon.gameObject.activeSelf ? .55f : .1f));
+                SetWorldScale(rewardText.transform, .2f);
+            }
             if (camera == null) return;
             if (lidRewardIcon != null && lidRewardIcon.gameObject.activeSelf)
                 lidRewardIcon.transform.rotation = Quaternion.LookRotation(
@@ -321,6 +382,28 @@ namespace MiningSimulator.Ores
             if (rewardText != null && rewardText.gameObject.activeSelf)
                 rewardText.transform.rotation = Quaternion.LookRotation(
                     rewardText.transform.position - camera.transform.position, camera.transform.up);
+        }
+
+        private static void SetWorldScale(Transform target, float scale)
+        {
+            Vector3 parentScale = target.parent != null ? target.parent.lossyScale : Vector3.one;
+            target.localScale = new Vector3(
+                scale / Mathf.Max(.001f, Mathf.Abs(parentScale.x)),
+                scale / Mathf.Max(.001f, Mathf.Abs(parentScale.y)),
+                scale / Mathf.Max(.001f, Mathf.Abs(parentScale.z)));
+        }
+
+        private void PlayRollTick()
+        {
+            if (Time.unscaledTime < nextRollSfxTime) return;
+            nextRollSfxTime = Time.unscaledTime + .11f;
+            PlayChestSfx(itemRollTickSfx, audioManager != null && audioManager.AudioData != null
+                ? audioManager.AudioData.WheelSpinSfx : null);
+        }
+
+        private void PlayChestSfx(AudioClip configured, AudioClip fallback)
+        {
+            if (audioManager != null) audioManager.PlaySfx(configured != null ? configured : fallback);
         }
 
         private void OnDisable()

@@ -14,6 +14,7 @@ namespace MiningSimulator.Editor
         private const string WoodPath = "Assets/Prefabs/Ores/Chest/ChestV1.prefab";
         private const string ItemPath = "Assets/Prefabs/Ores/Chest/ChestV2.prefab";
         private const string DatabasePath = "Assets/GameData/Items/MiningItemDatabase.asset";
+        private const string HealthBarPath = "Assets/Microlight/MicroBar/Prefabs/SimpleBars/Sprite_SimpleMicroBarSRP.prefab";
 
         [MenuItem("Mining Simulator/Tools/Setup Independent Chests")]
         private static void Setup()
@@ -94,13 +95,14 @@ namespace MiningSimulator.Editor
                     lid.SetParent(hinge, true);
                 }
 
-                Transform rewardAnchor = hinge != null ? hinge : root.transform;
+                Transform rewardAnchor = root.transform;
                 Transform iconTransform = rewardAnchor.Find("Chest Reward Icon");
+                if (iconTransform == null) iconTransform = FindChild(root.transform, "Chest Reward Icon");
                 if (iconTransform == null)
                 {
                     iconTransform = new GameObject("Chest Reward Icon", typeof(SpriteRenderer)).transform;
                     iconTransform.SetParent(rewardAnchor, false);
-                    iconTransform.localPosition = new Vector3(0f, .65f, .25f);
+                    iconTransform.localPosition = new Vector3(0f, 1.5f, 0f);
                     iconTransform.localScale = Vector3.one * .5f;
                     iconTransform.GetComponent<SpriteRenderer>().sortingOrder = 20;
                     iconTransform.gameObject.SetActive(false);
@@ -131,6 +133,9 @@ namespace MiningSimulator.Editor
                 AssignIfEmpty(fields, "lidRewardIcon", iconTransform.GetComponent<SpriteRenderer>());
                 AssignIfEmpty(fields, "rewardText", textTransform.GetComponent<TextMeshPro>());
                 AssignIfEmpty(fields, "hitCollider", collider);
+                GameObject barPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(HealthBarPath);
+                if (barPrefab != null)
+                    AssignIfEmpty(fields, "healthBarPrefab", barPrefab.GetComponent<Microlight.MicroBar.MicroBar>());
                 if (kind == MiningChest.ChestKind.ItemRoll) PopulateInitialItemTable(fields);
                 fields.ApplyModifiedPropertiesWithoutUndo();
                 PrefabUtility.SaveAsPrefabAsset(root, path);
