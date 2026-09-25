@@ -100,7 +100,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningNpc
   oreSpawner: {fileID: 0}
-  npcData: {fileID: 11400000, guid: c48d624e49324697a2ff1f170be6b3c0, type: 2}
+  npcData: {fileID: 0}
   progressionSystem: {fileID: 0}
   audioManager: {fileID: 0}
   toolPivot: {fileID: 7375554733236698209}

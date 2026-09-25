@@ -74394,6 +74394,9 @@ MonoBehaviour:
   groundTerrains:
   - {fileID: 1893700428}
   lavaDecorations: []
+  groundRenderer: {fileID: 0}
+  groundTerrain: {fileID: 1893700428}
+  lavaGroundMaterial: {fileID: 2100000, guid: cf4b4a4571bf33449a42918540f6f9d8, type: 2}
 --- !u!1 &1586372219
 GameObject:
   m_ObjectHideFlags: 0
@@ -86087,6 +86090,7 @@ MonoBehaviour:
   wallet: {fileID: 5319940143687006134}
   spawnedOreParent: {fileID: 0}
   spawnData: {fileID: 11400000, guid: b6c0c4c0580f44a69bf14fb54e455f1b, type: 2}
+  lavaSpawnData: {fileID: 11400000, guid: 137cbc58ec504a54286c93761a44cc0f, type: 2}
   lavaOreSpawnTable:
   - ore: {fileID: 11400000, guid: 67652f07623e84545a0e2158fa6a38b7, type: 2}
     spawnChancePercent: 75
