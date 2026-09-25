@@ -855,14 +855,14 @@ MonoBehaviour:
     _dualGhostBars: 1
     _ghostBarDamageColor: {r: 1, g: 0.7607843, b: 0.7607843, a: 1}
     _ghostBarHealColor: {r: 1, g: 1, b: 1, a: 1}
-    _damageAnim: 2
-    _damageAnimDuration: 0.5
-    _damageAnimDelay: 0.1
+    _damageAnim: 1
+    _damageAnimDuration: 0.01
+    _damageAnimDelay: 0
     _damageFlashColor: {r: 1, g: 1, b: 1, a: 1}
     _damageAnimStrength: 0.283
     _healAnim: 2
-    _healAnimDuration: 0.5
-    _healAnimDelay: 0.1
+    _healAnimDuration: 0.01
+    _healAnimDelay: 0
     _healFlashColor: {r: 1, g: 1, b: 1, a: 1}
     _healAnimStrength: 0.5
   editorMode: 1

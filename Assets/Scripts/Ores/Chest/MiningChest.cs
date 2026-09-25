@@ -73,6 +73,9 @@ namespace MiningSimulator.Ores
         private Vector3 initialLockScale;
         private Vector3 initialLockPosition;
         private Quaternion initialLockRotation;
+        private Collider[] chestColliders;
+        private bool[] initialColliderStates;
+        private Vector3 lastChestTop;
         private bool capturedModelState;
         private int remainingHits;
         private bool opening;
@@ -171,11 +174,47 @@ namespace MiningSimulator.Ores
         private void CaptureModelState()
         {
             if (capturedModelState) return;
+            AlignLidHingeWithBody();
             closedRotation = lidHinge != null ? lidHinge.localRotation : Quaternion.identity;
             initialLockScale = lockModel != null ? lockModel.localScale : Vector3.one;
             initialLockPosition = lockModel != null ? lockModel.localPosition : Vector3.zero;
             initialLockRotation = lockModel != null ? lockModel.localRotation : Quaternion.identity;
+            chestColliders = GetComponentsInChildren<Collider>(true);
+            initialColliderStates = new bool[chestColliders.Length];
+            for (int index = 0; index < chestColliders.Length; index++)
+                initialColliderStates[index] = chestColliders[index].enabled;
             capturedModelState = true;
+        }
+
+        private void AlignLidHingeWithBody()
+        {
+            if (lidHinge == null) return;
+            MeshRenderer lid = lidHinge.GetComponentInChildren<MeshRenderer>(true);
+            MeshRenderer body = GetComponent<MeshRenderer>();
+            MeshFilter lidFilter = lid != null ? lid.GetComponent<MeshFilter>() : null;
+            MeshFilter bodyFilter = body != null ? body.GetComponent<MeshFilter>() : null;
+            if (lidFilter == null || lidFilter.sharedMesh == null ||
+                bodyFilter == null || bodyFilter.sharedMesh == null) return;
+
+            // The lock is at the front (+Z). Give the lid its own pivot at the
+            // rear edge. ChestV2 has a MeshCollider on the authored hinge, so
+            // moving that hinge would move its collider away from the model.
+            Transform lidModel = lid.transform;
+            Vector3 lidPosition = lidModel.position;
+            Quaternion lidRotation = lidModel.rotation;
+            Bounds lidBounds = lidFilter.sharedMesh.bounds;
+            Bounds bodyBounds = bodyFilter.sharedMesh.bounds;
+            Vector3 lidBottom = transform.InverseTransformPoint(lidModel.TransformPoint(
+                new Vector3(lidBounds.center.x, lidBounds.min.y, lidBounds.center.z)));
+            Vector3 bodyBack = transform.InverseTransformPoint(body.transform.TransformPoint(
+                new Vector3(bodyBounds.center.x, bodyBounds.max.y, bodyBounds.min.z)));
+            var pivotObject = new GameObject("Chest Lid Rotation Pivot");
+            Transform pivot = pivotObject.transform;
+            pivot.SetParent(transform, false);
+            pivot.localPosition = new Vector3(lidBottom.x, lidBottom.y, bodyBack.z);
+            lidModel.SetParent(pivot, true);
+            lidModel.SetPositionAndRotation(lidPosition, lidRotation);
+            lidHinge = pivot;
         }
 
         public void Initialize(PlayerWallet targetWallet, MiningItemSystem targetItemSystem,
@@ -228,7 +267,10 @@ namespace MiningSimulator.Ores
                 lidRewardIcon.gameObject.SetActive(false);
             }
             if (rewardText != null) rewardText.gameObject.SetActive(false);
-            if (hitCollider != null) hitCollider.enabled = true;
+            for (int index = 0; index < chestColliders.Length; index++)
+                if (chestColliders[index] != null)
+                    chestColliders[index].enabled = initialColliderStates[index];
+            lastChestTop = GetChestTop();
         }
 
         public bool MineOnce()
@@ -257,6 +299,9 @@ namespace MiningSimulator.Ores
             {
                 reservedMiners.Clear();
                 opening = true;
+                lastChestTop = GetChestTop();
+                foreach (Collider chestCollider in chestColliders)
+                    if (chestCollider != null) chestCollider.enabled = false;
                 if (healthBar != null) healthBar.gameObject.SetActive(false);
                 PlayChestSfx(lockBreakSfx);
                 StartCoroutine(OpenAndReward());
@@ -594,7 +639,7 @@ namespace MiningSimulator.Ores
         {
             return hitCollider != null && hitCollider.enabled
                 ? new Vector3(hitCollider.bounds.center.x, hitCollider.bounds.max.y, hitCollider.bounds.center.z)
-                : transform.position;
+                : lastChestTop;
         }
 
         private void UpdateHealthText()

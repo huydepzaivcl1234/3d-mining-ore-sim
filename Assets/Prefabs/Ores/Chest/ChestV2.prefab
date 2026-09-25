@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 4877813555996924592}
   - component: {fileID: 4661132642221502714}
   - component: {fileID: 752940554670434940}
+  - component: {fileID: 3490179333242350188}
   m_Layer: 0
   m_Name: ChestV2_Top
   m_TagString: Untagged
@@ -90,6 +91,28 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!64 &3490179333242350188
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 593483206251477871}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 1
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 1453601853735715910, guid: 35bc3884dfa23b048b61b99c0548b6e2, type: 3}
 --- !u!1 &2136525000640390942
 GameObject:
   m_ObjectHideFlags: 0
@@ -429,7 +452,7 @@ GameObject:
   - component: {fileID: 1074260120997126324}
   - component: {fileID: 2957878326140998782}
   - component: {fileID: 4841782137650314953}
-  - component: {fileID: 4204802903208892000}
+  - component: {fileID: 8326900467186561689}
   m_Layer: 0
   m_Name: ChestV2
   m_TagString: Untagged
@@ -531,7 +554,7 @@ MonoBehaviour:
   lootModel: {fileID: 3029058858692502786}
   lidRewardIcon: {fileID: 4116140903890133750}
   rewardText: {fileID: 1168755852445971595}
-  hitCollider: {fileID: 4204802903208892000}
+  hitCollider: {fileID: 0}
   healthBarPrefab: {fileID: 7923854003312105274, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
   moneyPopupPrefab: {fileID: 0}
   moneyPopupUiData: {fileID: 0}
@@ -541,9 +564,9 @@ MonoBehaviour:
   chestHitSfx: {fileID: 8300000, guid: d04fd1e8cab81b24eb47edb3171e8616, type: 3}
   lockBreakSfx: {fileID: 8300000, guid: 58b42f4346b5cbb4ba370d31c0f88bc9, type: 3}
   chestOpenSfx: {fileID: 8300000, guid: 074b323928eb80a48aa07bdb39fd5dfb, type: 3}
-  itemRollTickSfx: {fileID: 8300000, guid: bc9b89f6417d1b645a585b7e48a470aa, type: 3}
+  itemRollTickSfx: {fileID: 0}
   hitsToBreak: 7
-  npcMiningPowerRequired: 1
+  npcMiningPowerRequired: 15
   maximumMiningNpcs: 3
   npcDamageMultiplier: 1
   npcMaxVerticalTargetDistance: 8
@@ -576,8 +599,8 @@ MonoBehaviour:
   - 1
   iconRollSeconds: 2.8
   quantityRollSeconds: 1.25
---- !u!65 &4204802903208892000
-BoxCollider:
+--- !u!64 &8326900467186561689
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -594,9 +617,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 0.7439767, y: 0.50256914, z: 0.51408947}
-  m_Center: {x: -0.37198836, y: 0.25128457, z: 0.2366735}
+  serializedVersion: 5
+  m_Convex: 1
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 6979885711738185594, guid: 35bc3884dfa23b048b61b99c0548b6e2, type: 3}
 --- !u!1 &4278527189661072688
 GameObject:
   m_ObjectHideFlags: 0
