@@ -64,7 +64,7 @@ foreach ($target in $targets) {
 
 if ($plan.Count -eq 0) {
     Write-Host 'No duplicate Ore or JuicyMinerProgress class found under Assets.'
-    exit 0
+    return
 }
 
 $backup = Join-Path (Split-Path -Parent $project) (

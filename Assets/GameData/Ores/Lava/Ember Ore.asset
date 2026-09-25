@@ -37,5 +37,5 @@ MonoBehaviour:
   breakSquashAmount: 0.22
   breakStretchAmount: 0.14
   breakAnimationDuration: 0.32
-  prefab: {fileID: 7470786444139727848, guid: 4d5ac31473de7da42a7fd2b3e54721d1, type: 3}
+  prefab: {fileID: 3544494553555780457, guid: 78711bbd9190a994aa707e26b2db1ae8, type: 3}
   mapColor: {r: 0.55, g: 0.6, b: 0.66, a: 1}

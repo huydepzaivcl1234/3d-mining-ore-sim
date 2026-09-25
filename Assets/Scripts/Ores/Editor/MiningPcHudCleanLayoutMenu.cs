@@ -134,6 +134,7 @@ namespace MiningSimulator.Editor
             }
             JuicyMinerProgress presenter = panel.GetComponent<JuicyMinerProgress>();
             if (presenter != null) SetReference(presenter, "compactPcXpLabel", null);
+            MiningPcHudProgressTextRepair.RepairPanel(panel);
         }
 
         private static void CompactRebirth(Transform root)

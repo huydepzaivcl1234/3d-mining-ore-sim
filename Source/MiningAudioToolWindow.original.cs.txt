@@ -40,7 +40,7 @@ namespace MiningSimulator.Editor
 
             if (audioData == null)
             {
-                EditorGUILayout.HelpBox("Chưa có MiningAudioData. Hãy tạo dữ liệu âm thanh bên dưới.",
+                EditorGUILayout.HelpBox("Chưa có MiningAudioData. Hãy bấm nút Setup bên dưới.",
                     MessageType.Warning);
             }
             else
@@ -65,9 +65,10 @@ namespace MiningSimulator.Editor
             }
 
             EditorGUILayout.Space();
-            if (audioData == null && GUILayout.Button("Tạo MiningAudioData"))
+            if (GUILayout.Button("Setup / Cập nhật Managers và HUD"))
             {
-                CreateAudioDataIfMissing();
+                MiningOreSetupMenu.CreateOrUpdateStarterOres();
+                LoadAudioData();
             }
 
             if (GUILayout.Button("Mở MiningRuntime Prefab"))
@@ -85,32 +86,6 @@ namespace MiningSimulator.Editor
             ReleaseAudioDataEditor();
             audioData = AssetDatabase.LoadAssetAtPath<MiningAudioData>(AudioDataPath);
             Repaint();
-        }
-
-        private void CreateAudioDataIfMissing()
-        {
-            MiningAudioData existing = AssetDatabase.LoadAssetAtPath<MiningAudioData>(AudioDataPath);
-            if (existing == null)
-            {
-                if (AssetDatabase.LoadMainAssetAtPath(AudioDataPath) != null)
-                {
-                    Debug.LogError($"Cannot create MiningAudioData: another asset occupies {AudioDataPath}.");
-                    return;
-                }
-                const string gameDataFolder = "Assets/GameData";
-                const string audioFolder = "Assets/GameData/Audio";
-                if (!AssetDatabase.IsValidFolder(gameDataFolder))
-                    AssetDatabase.CreateFolder("Assets", "GameData");
-                if (!AssetDatabase.IsValidFolder(audioFolder))
-                    AssetDatabase.CreateFolder(gameDataFolder, "Audio");
-                existing = CreateInstance<MiningAudioData>();
-                AssetDatabase.CreateAsset(existing, AudioDataPath);
-                AssetDatabase.SaveAssets();
-            }
-
-            LoadAudioData();
-            Selection.activeObject = audioData;
-            EditorGUIUtility.PingObject(audioData);
         }
 
         private void ReleaseAudioDataEditor()
