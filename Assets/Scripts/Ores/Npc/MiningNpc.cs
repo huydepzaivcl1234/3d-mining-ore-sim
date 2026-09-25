@@ -19,6 +19,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private NpcData npcData;
         [SerializeField] private NpcProgressionSystem progressionSystem;
         [SerializeField] private MiningAudioManager audioManager;
+        private MiningItemSystem itemSystem;
         [SerializeField] private Transform toolPivot;
 
         [Header("Animator")]
@@ -84,7 +85,7 @@ namespace MiningSimulator.Ores
         private Ore ignoredOre;
         private LuckyBlock ignoredLuckyBlock;
         private MiningChest ignoredChest;
-        private Ore avoidanceOre;
+        private Component avoidanceObstacle;
         private LuckyBlockDropSystem luckyBlockSystem;
         private Rigidbody body;
         private float nextTargetRefreshTime;
@@ -102,7 +103,7 @@ namespace MiningSimulator.Ores
         private Vector3 detourDirection;
         private Vector3 detourWaypoint;
         private Vector3 detourExitWaypoint;
-        private Ore detourWaypointOre;
+        private Component detourWaypointObstacle;
         private bool hasMoveTarget;
         private bool hasDetourWaypoint;
         private bool hasDetourExitWaypoint;
@@ -238,6 +239,7 @@ namespace MiningSimulator.Ores
             {
                 audioManager = FindFirstObjectByType<MiningAudioManager>(FindObjectsInactive.Include);
             }
+            itemSystem ??= FindFirstObjectByType<MiningItemSystem>(FindObjectsInactive.Include);
 
             if (animator != null)
             {
@@ -430,11 +432,12 @@ namespace MiningSimulator.Ores
 
             Vector3 movementDirection = movementOffset.normalized;
             float probeDistance = Mathf.Min(npcData.ObstacleProbeDistance, movementOffset.magnitude);
-            if (TryGetBlockingOre(movementDirection, probeDistance, out Ore blockingOre,
+            if (TryGetBlockingMineable(movementDirection, probeDistance, out Component blocker,
                 out Vector3 blockingPoint))
             {
+                Ore blockingOre = blocker as Ore;
                 if (!hasCommandedTarget && Time.time >= nextTargetSwitchTime &&
-                    blockingOre != ignoredOre &&
+                    blockingOre != null && blockingOre != ignoredOre &&
                     CanMine(blockingOre) && IsBlockingOreCloser(blockingOre, currentPosition) &&
                     TrySwitchTarget(blockingOre))
                 {
@@ -443,19 +446,31 @@ namespace MiningSimulator.Ores
                     return;
                 }
 
-                // With a global path the route around this ore is already planned, so the heading
+                // A chest can spawn after the path was calculated. Drop that stale
+                // path so the next query includes its carved footprint; steer
+                // around it locally on this frame too.
+                if (hasGlobalPath && blocker is MiningChest)
+                {
+                    currentPath.Clear();
+                    pathWaypointIndex = 0;
+                    currentPathSource = MiningPathSource.None;
+                    nextRepathTime = 0f;
+                    hasGlobalPath = false;
+                }
+
+                // With a global path the route around an ore is already planned, so the heading
                 // is left alone. The probe above still runs purely so a non-commanded miner can
                 // opportunistically claim a closer ore it happens to walk past (handled in the
                 // branch above) - that is a gameplay feature, not steering.
                 if (!hasGlobalPath)
                 {
                     movementDirection = ResolveBlockedPath(
-                        movementDirection, currentPosition, blockingOre, blockingPoint);
+                        movementDirection, currentPosition, blocker, blockingPoint);
                 }
             }
             else if (!hasGlobalPath)
             {
-                avoidanceOre = null;
+                avoidanceObstacle = null;
                 if (Time.time < detourDirectionUntil && detourDirection.sqrMagnitude > Mathf.Epsilon)
                 {
                     movementDirection = detourDirection;
@@ -485,6 +500,7 @@ namespace MiningSimulator.Ores
             {
                 if (isMining && npcData != null)
                 {
+                    itemSystem ??= FindFirstObjectByType<MiningItemSystem>(FindObjectsInactive.Include);
                     AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
                     if (stateInfo.shortNameHash == mineStateHash && !animator.IsInTransition(0) &&
                         stateInfo.length > 0.0001f)
@@ -495,7 +511,9 @@ namespace MiningSimulator.Ores
                         // intact - unlike forcing the normalized time directly, which can snap
                         // the rig into a broken pose if the state relies on more than a single
                         // plain clip.
-                        animator.speed = stateInfo.length / Mathf.Max(0.0001f, npcData.SecondsPerHit);
+                        float miningSpeed = itemSystem != null ? itemSystem.MiningSpeedMultiplier : 1f;
+                        animator.speed = stateInfo.length * miningSpeed /
+                            Mathf.Max(0.0001f, npcData.SecondsPerHit);
                     }
                 }
                 else if (!Mathf.Approximately(animator.speed, 1f))
@@ -844,6 +862,7 @@ namespace MiningSimulator.Ores
 
         private void ApplyDamageToTarget()
         {
+            itemSystem ??= FindFirstObjectByType<MiningItemSystem>(FindObjectsInactive.Include);
             if (targetChest != null)
             {
                 float damage = progressionSystem != null
@@ -856,14 +875,16 @@ namespace MiningSimulator.Ores
                 float damage = progressionSystem != null
                     ? progressionSystem.CurrentDamagePerHit
                     : npcData.DamagePerHit;
-                targetLuckyBlock.ApplyNpcDamage(damage);
+                targetLuckyBlock.ApplyNpcDamage(itemSystem != null
+                    ? itemSystem.RollOreLuckyDamage(damage) : damage);
             }
             else
             {
                 float damage = progressionSystem != null
                     ? progressionSystem.CurrentDamagePerHit
                     : npcData.DamagePerHit;
-                targetOre?.ApplyNpcDamage(damage);
+                targetOre?.ApplyNpcDamage(itemSystem != null
+                    ? itemSystem.RollOreLuckyDamage(damage) : damage);
             }
         }
 
@@ -1039,10 +1060,11 @@ namespace MiningSimulator.Ores
             lastProgressTime = Time.time;
         }
 
-        private bool TryGetBlockingOre(Vector3 direction, float distance, out Ore blockingOre,
+        private bool TryGetBlockingMineable(Vector3 direction, float distance,
+            out Component blocker,
             out Vector3 blockingPoint)
         {
-            blockingOre = null;
+            blocker = null;
             blockingPoint = Vector3.zero;
             Vector3 origin = body.position + Vector3.up * npcData.ColliderRadius;
             int hitCount = Physics.SphereCastNonAlloc(origin, GetObstacleProbeRadius(),
@@ -1053,28 +1075,29 @@ namespace MiningSimulator.Ores
             {
                 RaycastHit hit = obstacleHits[index];
                 Ore ore = hit.collider != null ? hit.collider.GetComponentInParent<Ore>() : null;
-                if (ore == null || ore == targetOre || hit.distance >= closestDistance)
-                {
-                    continue;
-                }
+                MiningChest chest = hit.collider != null
+                    ? hit.collider.GetComponentInParent<MiningChest>() : null;
+                if (hit.distance >= closestDistance ||
+                    (ore == null || ore == targetOre || ore.IsDepleted) &&
+                    (chest == null || chest == targetChest || !chest.CanMine)) continue;
 
-                blockingOre = ore;
+                blocker = ore != null && ore != targetOre && !ore.IsDepleted ? ore : chest;
                 blockingPoint = hit.point;
                 closestDistance = hit.distance;
             }
 
-            return blockingOre != null;
+            return blocker != null;
         }
 
         private Vector3 CalculateObstacleAvoidance(Vector3 forward, Vector3 currentPosition,
-            Ore blockingOre, Vector3 blockingPoint)
+            Component blocker, Vector3 blockingPoint)
         {
             Vector3 toBlocker = blockingPoint - currentPosition;
             toBlocker.y = 0f;
             Vector3 side = Vector3.Cross(Vector3.up, forward).normalized;
-            if (blockingOre != avoidanceOre)
+            if (blocker != avoidanceObstacle)
             {
-                avoidanceOre = blockingOre;
+                avoidanceObstacle = blocker;
                 float sideDot = Vector3.Dot(toBlocker, side);
                 if (Mathf.Abs(sideDot) <= Mathf.Epsilon)
                 {
@@ -1088,9 +1111,9 @@ namespace MiningSimulator.Ores
         }
 
         private Vector3 ResolveBlockedPath(Vector3 forward, Vector3 currentPosition,
-            Ore blockingOre, Vector3 blockingPoint)
+            Component blocker, Vector3 blockingPoint)
         {
-            if (TryCreateDetourWaypoint(forward, currentPosition, blockingOre,
+            if (TryCreateDetourWaypoint(forward, currentPosition, blocker,
                 out Vector3 waypointDirection))
             {
                 return waypointDirection;
@@ -1104,7 +1127,7 @@ namespace MiningSimulator.Ores
             }
 
             Vector3 normalAvoidance = CalculateObstacleAvoidance(
-                forward, currentPosition, blockingOre, blockingPoint);
+                forward, currentPosition, blocker, blockingPoint);
             Vector3 bestDirection = normalAvoidance;
             float bestClearance = GetOreClearance(normalAvoidance, npcData.DetourProbeDistance);
 
@@ -1135,8 +1158,23 @@ namespace MiningSimulator.Ores
             return detourDirection;
         }
 
+        private static bool IsMineableObstacleActive(Component obstacle)
+        {
+            if (obstacle is Ore ore) return ore.isActiveAndEnabled && !ore.IsDepleted;
+            if (obstacle is MiningChest chest) return chest.CanMine;
+            return false;
+        }
+
+        private static bool TryGetMineableObstacleBounds(Component obstacle, out Bounds bounds)
+        {
+            if (obstacle is Ore ore) return ore.TryGetWorldBounds(out bounds);
+            if (obstacle is MiningChest chest) return chest.TryGetWorldBounds(out bounds);
+            bounds = default;
+            return false;
+        }
+
         private bool TryCreateDetourWaypoint(Vector3 forward, Vector3 currentPosition,
-            Ore blockingOre, out Vector3 waypointDirection)
+            Component blocker, out Vector3 waypointDirection)
         {
             waypointDirection = Vector3.zero;
 
@@ -1148,8 +1186,8 @@ namespace MiningSimulator.Ores
             // made progress past the ore (looked "stuck"/jittering in place, most noticeable on
             // a middle-click commanded target since commanded NPCs aren't allowed to just switch
             // to a different ore instead - see the `!hasCommandedTarget` check in FixedUpdate).
-            if (hasDetourWaypoint && blockingOre == detourWaypointOre && blockingOre != null &&
-                blockingOre.isActiveAndEnabled && !blockingOre.IsDepleted)
+            if (hasDetourWaypoint && blocker == detourWaypointObstacle &&
+                IsMineableObstacleActive(blocker))
             {
                 waypointDirection = detourWaypoint - currentPosition;
                 waypointDirection.y = 0f;
@@ -1160,7 +1198,7 @@ namespace MiningSimulator.Ores
                 }
             }
 
-            if (blockingOre == null || !blockingOre.TryGetWorldBounds(out Bounds bounds))
+            if (!TryGetMineableObstacleBounds(blocker, out Bounds bounds))
             {
                 return false;
             }
@@ -1207,10 +1245,10 @@ namespace MiningSimulator.Ores
             detourWaypoint = choosePositive ? positiveWaypoint : negativeWaypoint;
             detourExitWaypoint = choosePositive ? positiveExit : negativeExit;
             avoidanceSide = choosePositive ? 1f : -1f;
-            detourWaypointOre = blockingOre;
+            detourWaypointObstacle = blocker;
             hasDetourWaypoint = true;
             hasDetourExitWaypoint = true;
-            avoidanceOre = blockingOre;
+            avoidanceObstacle = blocker;
             detourDirectionUntil = Time.time + npcData.DetourDirectionHoldTime;
 
             waypointDirection = detourWaypoint - currentPosition;
@@ -1230,8 +1268,7 @@ namespace MiningSimulator.Ores
         private bool TryGetDetourWaypoint(Vector3 currentPosition, out Vector3 waypoint)
         {
             waypoint = default;
-            if (!hasDetourWaypoint || detourWaypointOre == null ||
-                !detourWaypointOre.isActiveAndEnabled || detourWaypointOre.IsDepleted)
+            if (!hasDetourWaypoint || !IsMineableObstacleActive(detourWaypointObstacle))
             {
                 ClearDetour();
                 return false;
@@ -1310,10 +1347,10 @@ namespace MiningSimulator.Ores
             {
                 RaycastHit hit = obstacleHits[index];
                 Ore ore = hit.collider != null ? hit.collider.GetComponentInParent<Ore>() : null;
-                if (ore == null || ore == targetOre)
-                {
-                    continue;
-                }
+                MiningChest chest = hit.collider != null
+                    ? hit.collider.GetComponentInParent<MiningChest>() : null;
+                if ((ore == null || ore == targetOre || ore.IsDepleted) &&
+                    (chest == null || chest == targetChest || !chest.CanMine)) continue;
 
                 nearestDistance = Mathf.Min(nearestDistance, hit.distance);
             }
@@ -1425,7 +1462,7 @@ namespace MiningSimulator.Ores
                 return true;
             }
 
-            return !TryGetBlockingOre(toStand / distance, distance, out _, out _);
+            return !TryGetBlockingMineable(toStand / distance, distance, out _, out _);
         }
 
         /// <summary>
@@ -1622,7 +1659,7 @@ namespace MiningSimulator.Ores
             detourDirectionUntil = 0f;
             detourWaypoint = Vector3.zero;
             detourExitWaypoint = Vector3.zero;
-            detourWaypointOre = null;
+            detourWaypointObstacle = null;
             hasDetourWaypoint = false;
             hasDetourExitWaypoint = false;
         }

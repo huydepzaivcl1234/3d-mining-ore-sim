@@ -16,6 +16,8 @@ namespace MiningSimulator.Editor
         private static readonly OreKind[] Kinds = { OreKind.Basalt, OreKind.EmberOre, OreKind.MoltenCore };
         private static readonly int[] Powers = { 1, 8, 35 };
         private static readonly float[] Chances = { 75f, 20f, 5f };
+        private static readonly string[] ExtraNames = { "Dry Lava", "Lava Core" };
+        private static readonly float[] ExtraChances = { 12f, 2f };
 
         [MenuItem("Mining Simulator/Portal/Setup Lava World On Selected Gate")]
         private static void Setup()
@@ -78,6 +80,23 @@ namespace MiningSimulator.Editor
                     table.GetArrayElementAtIndex(i).FindPropertyRelative("ore").objectReferenceValue = ores[i];
                     table.GetArrayElementAtIndex(i).FindPropertyRelative("spawnChancePercent").floatValue = Chances[i];
                 }
+            }
+            // Keep the scene's existing Lava chances and ore order. Add only
+            // the new entries when the user runs this opt-in setup menu.
+            for (int extra = 0; extra < ExtraNames.Length; extra++)
+            {
+                OreData ore = AssetDatabase.LoadAssetAtPath<OreData>(
+                    Folder + "/" + ExtraNames[extra] + ".asset");
+                if (ore == null) continue;
+                bool present = false;
+                for (int index = 0; index < table.arraySize; index++)
+                    if (table.GetArrayElementAtIndex(index).FindPropertyRelative("ore")
+                            .objectReferenceValue == ore) { present = true; break; }
+                if (present) continue;
+                int next = table.arraySize++;
+                table.GetArrayElementAtIndex(next).FindPropertyRelative("ore").objectReferenceValue = ore;
+                table.GetArrayElementAtIndex(next).FindPropertyRelative("spawnChancePercent")
+                    .floatValue = ExtraChances[extra];
             }
             serializedSpawner.ApplyModifiedProperties();
             var world = gate.GetComponent<MiningLavaWorldController>();

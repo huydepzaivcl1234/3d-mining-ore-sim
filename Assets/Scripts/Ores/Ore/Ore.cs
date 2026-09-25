@@ -302,6 +302,11 @@ namespace MiningSimulator.Ores
 
         public bool ApplyDamage(int damage)
         {
+            return ApplyPlayerDamage(damage);
+        }
+
+        public bool ApplyPlayerDamage(float damage)
+        {
             if (data == null || IsDepleted || damage <= 0)
             {
                 return false;

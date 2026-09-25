@@ -121,7 +121,10 @@ namespace MiningSimulator.Ores
             }
 
             morningHandled = true;
-            if (!data.CoinRainEnabled || Random.value * 100f > data.CoinRainChancePerMorningPercent)
+            MiningItemSystem items = FindFirstObjectByType<MiningItemSystem>(FindObjectsInactive.Include);
+            float chance = Mathf.Clamp(data.CoinRainChancePerMorningPercent +
+                (items != null ? items.EventChanceBonusPercent : 0f), 0f, 100f);
+            if (!data.CoinRainEnabled || Random.value * 100f > chance)
             {
                 return;
             }

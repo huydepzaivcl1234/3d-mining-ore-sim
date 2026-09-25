@@ -109,8 +109,11 @@ namespace MiningSimulator.Ores
 
             // Lets the NPC shop settle after the gameplay screen becomes active.
             yield return new WaitForSecondsRealtime(1f);
+            MiningItemSystem items = FindFirstObjectByType<MiningItemSystem>(FindObjectsInactive.Include);
+            float chance = data != null ? Mathf.Clamp(data.StalkedEventChanceAtSceneStartPercent +
+                (items != null ? items.EventChanceBonusPercent : 0f), 0f, 100f) : 0f;
             if (data == null || !data.StalkedEventEnabled ||
-                Random.value * 100f > data.StalkedEventChanceAtSceneStartPercent)
+                Random.value * 100f > chance)
             {
                 yield break;
             }

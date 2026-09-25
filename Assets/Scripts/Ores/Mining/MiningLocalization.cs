@@ -226,7 +226,10 @@ namespace MiningSimulator.Ores
                 {
                     MiningItemEffectType.NpcDamage => Text("NPC DMG", "DMG NPC"),
                     MiningItemEffectType.MoneyReward => Text("MONEY", "VÀNG"),
-                    MiningItemEffectType.NpcMoveSpeed => Text("NPC SPEED", "TỐC NPC"),
+                MiningItemEffectType.NpcMoveSpeed => Text("NPC SPEED", "TỐC NPC"),
+                MiningItemEffectType.MiningSpeed => Text("MINING SPEED", "TỐC ĐÀO"),
+                MiningItemEffectType.OreLuckyCritical => Text("CRITICAL", "CHÍ MẠNG"),
+                MiningItemEffectType.EventChance => Text("EVENT CHANCE", "TỈ LỆ SỰ KIỆN"),
                     _ => Text("BUFF", "BUFF")
                 };
             }
@@ -236,6 +239,9 @@ namespace MiningSimulator.Ores
                 MiningItemEffectType.NpcDamage => Text("NPC damage", "Sát thương NPC"),
                 MiningItemEffectType.MoneyReward => Text("Money earned", "Vàng nhận được"),
                 MiningItemEffectType.NpcMoveSpeed => Text("NPC move speed", "Tốc chạy NPC"),
+                MiningItemEffectType.MiningSpeed => Text("Mining speed", "Tốc độ đào"),
+                MiningItemEffectType.OreLuckyCritical => Text("Ore/Lucky critical damage", "Chí mạng quặng/Lucky Block"),
+                MiningItemEffectType.EventChance => Text("Good and bad event chance", "Tỉ lệ sự kiện tốt và xấu"),
                 _ => Text("Effect", "Hiệu ứng")
             };
         }

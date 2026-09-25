@@ -18,6 +18,8 @@ namespace MiningSimulator.Ores
         Basalt = 10,
         EmberOre = 11,
         MoltenCore = 12,
+        DryLava = 13,
+        LavaCore = 14,
 
 
     }

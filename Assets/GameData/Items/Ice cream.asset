@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d697d1ce92e7572c4046ac7b833d40b, type: 3}
+  m_Name: Ice cream
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningItemData
+  itemId: Ice cream
+  displayName: Ice cream
+  description: 'Increase good and bad event chances by 10 percentage points. '
+  rarity: 3
+  worldModel: {fileID: 5305367537970599588, guid: bc74e538d58fa504e92c2ec6d2399268, type: 3}
+  inventoryIcon: {fileID: 0}
+  iconFallback: E
+  fallbackColor: {r: 0.26, g: 0.82, b: 0.18, a: 1}
+  worldScale: 0.42
+  modelLocalPosition: {x: 0, y: 0, z: 0}
+  modelLocalEulerAngles: {x: 0, y: 0, z: 0}
+  selectionChancePercent: 10
+  maximumStack: 64
+  traderCanBuy: 1
+  traderCanSell: 1
+  traderMinimumOfferAmount: 1
+  traderMaximumOfferAmount: 3
+  traderBuyValue: 3000
+  traderCoinBuyMaximum: 20000
+  traderGemBuyValue: 4
+  traderGemBuyMaximum: 5
+  traderSellValue: 3
+  traderGemSellMaximum: 4
+  useType: 0
+  effectType: 5
+  effectPercent: 10
+  criticalChancePercent: 15
+  effectDurationSeconds: 180
+  giftRewards: []
+  giftSpinDurationSeconds: 3.5
+  giftSpinRotations: 6

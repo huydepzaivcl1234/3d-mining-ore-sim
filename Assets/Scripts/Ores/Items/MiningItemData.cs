@@ -17,7 +17,10 @@ namespace MiningSimulator.Ores
     {
         NpcDamage = 0,
         MoneyReward = 1,
-        NpcMoveSpeed = 2
+        NpcMoveSpeed = 2,
+        MiningSpeed = 3,
+        OreLuckyCritical = 4,
+        EventChance = 5
     }
 
     public enum MiningItemUseType
@@ -123,6 +126,8 @@ namespace MiningSimulator.Ores
         [Header("Timed Effect")]
         [SerializeField] private MiningItemEffectType effectType;
         [Min(0f), SerializeField] private float effectPercent = 25f;
+        [Tooltip("Only for Ore/Lucky critical effects: chance per mining hit. Critical damage gains Effect Percent on top of normal damage.")]
+        [Range(0f, 100f), SerializeField] private float criticalChancePercent = 15f;
         [Min(0.1f), SerializeField] private float effectDurationSeconds = 30f;
 
         [Header("Gift Box")]
@@ -157,6 +162,7 @@ namespace MiningSimulator.Ores
         public MiningItemUseType UseType => useType;
         public MiningItemEffectType EffectType => effectType;
         public float EffectPercent => effectPercent;
+        public float CriticalChancePercent => criticalChancePercent;
         public float EffectDurationSeconds => effectDurationSeconds;
         public IReadOnlyList<MiningGiftReward> GiftRewards => giftRewards;
         public float GiftSpinDurationSeconds => giftSpinDurationSeconds;
@@ -167,6 +173,8 @@ namespace MiningSimulator.Ores
 
         public string GetEffectSummary()
         {
+            if (effectType == MiningItemEffectType.OreLuckyCritical)
+                return $"{EffectName} {criticalChancePercent:0.##}% / +{effectPercent:0.##}% / {effectDurationSeconds:0.#}s";
             return $"{EffectName} +{effectPercent:0.##}% / {effectDurationSeconds:0.#}s";
         }
 
@@ -174,6 +182,8 @@ namespace MiningSimulator.Ores
         {
             return useType == MiningItemUseType.GiftBox
                 ? MiningLocalization.Text("OPEN TO SPIN")
+                : effectType == MiningItemEffectType.OreLuckyCritical
+                ? $"{ShortEffectName} {criticalChancePercent:0.##}% / +{effectPercent:0.##}%"
                 : $"{ShortEffectName} +{effectPercent:0.##}%";
         }
 

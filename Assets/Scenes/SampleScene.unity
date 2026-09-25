@@ -23599,7 +23599,7 @@ MonoBehaviour:
   - prefab: {fileID: 4841782137650314953, guid: a4e34a86eb69d034aa2fe30ec63d10d5, type: 3}
     weight: 1
   attemptIntervalSeconds: 10
-  dropChancePerAttemptPercent: 25
+  dropChancePerAttemptPercent: 10
   maximumActiveChests: 3
   areaSize: {x: 20, y: 20}
   groundProbeHeight: 30
@@ -69727,8 +69727,8 @@ Transform:
   m_GameObject: {fileID: 1586105416}
   serializedVersion: 2
   m_LocalRotation: {x: 0.013691877, y: 0.7069742, z: -0.013691877, w: 0.7069742}
-  m_LocalPosition: {x: -21.61, y: 1.93, z: 0.05}
-  m_LocalScale: {x: 2.4, y: 2.4, z: 1}
+  m_LocalPosition: {x: -21.5918, y: 2.3682, z: 0.05}
+  m_LocalScale: {x: 2.4, y: 3.5244002, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 996078877246501140}
@@ -69745,10 +69745,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 75b54560c56943d7b511d432ad8b5faa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.ToxicSlimePortalVisual
-  swirlSpeed: 2.5
+  swirlSpeed: 1.75
   bubbleDensity: 8
-  rimSplash: 0.05
-  glowStrength: 2
+  rimSplash: 0.01
+  glowStrength: 2.59
   coreColor: {r: 0.016, g: 0.09, b: 0.03, a: 1}
   slimeColor: {r: 0.17, g: 0.88, b: 0.07, a: 1}
   rimColor: {r: 1, g: 1.8, b: 0.01, a: 1}
@@ -69851,10 +69851,10 @@ MonoBehaviour:
   zoomFovReduction: 3
   coverShakeStrength: 0.04
   landingShakeStrength: 0.07
-  audioManager: {fileID: 0}
+  audioManager: {fileID: 2127211622}
   audioSource: {fileID: 540886640128433024}
-  whooshClip: {fileID: 8300000, guid: 75ecae3a5c183ef4e9a32742313386ad, type: 3}
-  impactClip: {fileID: 8300000, guid: 0be390704418597499f913e81cfb2f72, type: 3}
+  whooshClip: {fileID: 0}
+  impactClip: {fileID: 0}
 --- !u!135 &1586105422
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -69874,7 +69874,7 @@ SphereCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 1.5
+  m_Radius: 0.45796877
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &1586105423
 MonoBehaviour:
@@ -69914,12 +69914,12 @@ MonoBehaviour:
   groundRenderer: {fileID: 0}
   groundTerrain: {fileID: 1893700428}
   lavaGroundMaterial: {fileID: 2100000, guid: cf4b4a4571bf33449a42918540f6f9d8, type: 2}
-  minerProgression: {fileID: 0}
-  wallet: {fileID: 0}
-  audioManager: {fileID: 0}
-  requiredMinerLevel: 2
-  requiredMiningPower: 8
-  requiredMoney: 1000
+  minerProgression: {fileID: 655586588}
+  wallet: {fileID: 5319940143687006134}
+  audioManager: {fileID: 2127211622}
+  requiredMinerLevel: 4
+  requiredMiningPower: 45
+  requiredMoney: 10000000
 --- !u!1 &1586372219
 GameObject:
   m_ObjectHideFlags: 0
@@ -81070,6 +81070,10 @@ MonoBehaviour:
     spawnChancePercent: 20
   - ore: {fileID: 11400000, guid: 1890c1e888cdf1d48af9b9365b6a9700, type: 2}
     spawnChancePercent: 5
+  - ore: {fileID: 11400000, guid: 692553f6ce6d43bd8160d5a03237666e, type: 2}
+    spawnChancePercent: 12
+  - ore: {fileID: 11400000, guid: b528ecfd450147099ce3589fa165896d, type: 2}
+    spawnChancePercent: 2
   lavaWorldActive: 0
   upgradeSystem: {fileID: 1144114548}
   uiData: {fileID: 11400000, guid: 0fc641ac29720e2837d73e6212818c58, type: 2}
@@ -83832,7 +83836,7 @@ Terrain:
   m_GroupingID: 0
   m_RenderingLayerMask: 1
   m_AllowAutoConnect: 1
-  m_EnableHeightmapRayTracing: 1
+  m_EnableHeightmapRayTracing: 0
   m_EnableTreesAndDetailsRayTracing: 0
   m_EnableHeightmapLODFrustumCulling: 1
   m_TreeMotionVectorModeOverride: 3

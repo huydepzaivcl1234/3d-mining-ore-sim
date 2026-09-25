@@ -90,6 +90,17 @@ namespace MiningSimulator.Ores
         public float NpcDamageMultiplier => GetEffectMultiplier(MiningItemEffectType.NpcDamage);
         public float MoneyRewardMultiplier => GetEffectMultiplier(MiningItemEffectType.MoneyReward);
         public float NpcMoveSpeedMultiplier => GetEffectMultiplier(MiningItemEffectType.NpcMoveSpeed);
+        public float MiningSpeedMultiplier => GetEffectMultiplier(MiningItemEffectType.MiningSpeed);
+        public float EventChanceBonusPercent => GetActiveEffectPercent(MiningItemEffectType.EventChance);
+
+        public float RollOreLuckyDamage(float baseDamage)
+        {
+            if (activeEffects.TryGetValue(MiningItemEffectType.OreLuckyCritical,
+                    out RuntimeEffect effect) && effect.item != null && Time.time < effect.endTime &&
+                UnityEngine.Random.value * 100f < effect.item.CriticalChancePercent)
+                return baseDamage * (1f + effect.item.EffectPercent * .01f);
+            return baseDamage;
+        }
 
         public event Action InventoryChanged;
         public event Action EffectsChanged;
@@ -381,12 +392,13 @@ namespace MiningSimulator.Ores
 
         private float GetEffectMultiplier(MiningItemEffectType type)
         {
-            if (!activeEffects.TryGetValue(type, out RuntimeEffect effect) ||
-                effect.item == null || Time.time >= effect.endTime)
-            {
-                return 1f;
-            }
-            return 1f + effect.item.EffectPercent * 0.01f;
+            return 1f + GetActiveEffectPercent(type) * .01f;
+        }
+
+        private float GetActiveEffectPercent(MiningItemEffectType type)
+        {
+            return activeEffects.TryGetValue(type, out RuntimeEffect effect) &&
+                effect.item != null && Time.time < effect.endTime ? effect.item.EffectPercent : 0f;
         }
 
         private int GetAvailableSpace(MiningItemData item)

@@ -10,9 +10,11 @@ namespace MiningSimulator.Ores
     {
         [SerializeField] private Camera targetCamera;
         [SerializeField] private MiningGameData gameData;
+        private MiningItemSystem itemSystem;
 
         private void Awake()
         {
+            itemSystem = FindFirstObjectByType<MiningItemSystem>(FindObjectsInactive.Include);
             if (targetCamera == null)
             {
                 targetCamera = Camera.main;
@@ -32,6 +34,8 @@ namespace MiningSimulator.Ores
                 return;
             }
 
+            itemSystem ??= FindFirstObjectByType<MiningItemSystem>(FindObjectsInactive.Include);
+
             Ray ray = targetCamera.ScreenPointToRay(pointer.position.ReadValue());
             if (!Physics.Raycast(ray, out RaycastHit hit, gameData.ClickMaximumDistance,
                 gameData.ClickableLayers, QueryTriggerInteraction.Ignore))
@@ -49,12 +53,16 @@ namespace MiningSimulator.Ores
             LuckyBlock luckyBlock = hit.collider.GetComponentInParent<LuckyBlock>();
             if (luckyBlock != null)
             {
-                luckyBlock.MineOnce();
+                int baseDamage = luckyBlock.Variant != null ? luckyBlock.Variant.ClickDamage : 1;
+                luckyBlock.ApplyPlayerDamage(itemSystem != null
+                    ? itemSystem.RollOreLuckyDamage(baseDamage) : baseDamage);
                 return;
             }
 
             Ore ore = hit.collider.GetComponentInParent<Ore>();
-            ore?.MineOnce();
+            if (ore != null && ore.Data != null)
+                ore.ApplyPlayerDamage(itemSystem != null
+                    ? itemSystem.RollOreLuckyDamage(ore.Data.ClickDamage) : ore.Data.ClickDamage);
         }
     }
 }

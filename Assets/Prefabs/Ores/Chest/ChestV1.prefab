@@ -444,7 +444,7 @@ MonoBehaviour:
   healthBarPrefab: {fileID: 7923854003312105274, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
   moneyPopupPrefab: {fileID: 595523728496385370, guid: 60732089bc3d5a74cac36ef83399977d, type: 3}
   moneyPopupUiData: {fileID: 11400000, guid: 0fc641ac29720e2837d73e6212818c58, type: 2}
-  overheadOffset: {x: 0, y: 0.3, z: 0}
+  overheadOffset: {x: 0, y: 0.6, z: 0}
   healthBarWorldScale: 0.65
   rewardHeightAboveBar: 0.55
   chestHitSfx: {fileID: 8300000, guid: ba137dd840868be4ba729d4d80b49649, type: 3}
