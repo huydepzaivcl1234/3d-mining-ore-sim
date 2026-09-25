@@ -14,19 +14,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.OreData
   kind: 12
   displayName: Molten Core
-  description: Lava World ore. Assign a unique prefab to change its appearance.
+  description: Super hot core.Very hot
   tier: 10
-  miningPowerRequired: 35
-  durability: 5000
+  miningPowerRequired: 1
+  durability: 8000
   clickDamage: 1
-  baseSellValue: 1000
+  baseSellValue: 3500
   gemReward: 1
-  experienceReward: 450
+  experienceReward: 2500
   destroyDelay: 0
   maximumMiningNpcs: 3
   npcStandDistance: 1.4
   rareOre: 0
-  rarity: 4
+  rarity: 3
   spawnRotationOffset: {x: -90, y: 0, z: 0}
   spawnHeightOffset: -0.5
   healthBarWorldOffset: {x: 0, y: 0.25, z: 0}

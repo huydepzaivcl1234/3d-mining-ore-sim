@@ -41,11 +41,13 @@ namespace MiningSimulator.Ores
         private bool shopThemeActive;
         private bool mainMenuMusicActive;
         private bool coinRainAmbienceActive;
+        private bool lavaWorldAmbienceActive;
         private bool ambienceFadedForPeriodChange;
         private MiningMainMenu mainMenu;
         private Tween ambienceFade;
         private Tween musicFade;
         private Coroutine ambiencePlaylist;
+        private Coroutine worldAmbienceTransition;
         private AudioClip currentPlaylistAmbience;
 
         public MiningAudioData AudioData => audioData;
@@ -207,6 +209,7 @@ namespace MiningSimulator.Ores
 
             if (audioData == null || dayNightSystem == null || ambienceSource == null ||
                 mainMenuMusicActive || shopThemeActive || coinRainAmbienceActive ||
+                lavaWorldAmbienceActive || worldAmbienceTransition != null ||
                 ambienceFadedForPeriodChange ||
                 !ambienceSource.isPlaying || audioData.AmbienceFadeDuration <= 0f)
             {
@@ -222,6 +225,7 @@ namespace MiningSimulator.Ores
 
         private void OnDisable()
         {
+            StopWorldAmbienceSwitch();
             StopAmbiencePlaylist();
             if (oreSpawner != null)
             {
@@ -301,6 +305,7 @@ namespace MiningSimulator.Ores
 
             shopThemeActive = false;
             mainMenuMusicActive = true;
+            StopWorldAmbienceSwitch();
             StopAmbiencePlaylist();
             ambienceFadedForPeriodChange = false;
             FadeAmbienceTo(0f, true);
@@ -312,6 +317,7 @@ namespace MiningSimulator.Ores
         public void PlayShopMusic()
         {
             shopThemeActive = true;
+            StopWorldAmbienceSwitch();
             StopAmbiencePlaylist();
             FadeAmbienceTo(0f, true);
             AudioClip shopTheme = audioData != null && audioData.ShopMusic != null
@@ -354,6 +360,7 @@ namespace MiningSimulator.Ores
 
         public void StopBackgroundMusic()
         {
+            StopWorldAmbienceSwitch();
             StopAmbiencePlaylist();
             StopAudioFades();
             musicSource?.Stop();
@@ -364,6 +371,7 @@ namespace MiningSimulator.Ores
         public void SetMusicMuted(bool muted)
         {
             musicMuted = muted;
+            if (muted) StopWorldAmbienceSwitch();
             if (musicSource != null)
             {
                 musicSource.mute = muted;
@@ -467,6 +475,56 @@ namespace MiningSimulator.Ores
             {
                 PlaySfx(audioData.WheelRewardSfx);
             }
+        }
+
+        public void PlayPortalWhooshSfx()
+        {
+            if (audioData != null) PlaySfx(audioData.LavaPortalWhooshSfx);
+        }
+
+        public void PlayPortalImpactSfx()
+        {
+            if (audioData != null) PlaySfx(audioData.LavaPortalImpactSfx);
+        }
+
+        /// <summary>Switches the single managed ambience channel between Lava and Ground.</summary>
+        public void SetLavaWorldAmbience(bool active)
+        {
+            if (lavaWorldAmbienceActive == active) return;
+            lavaWorldAmbienceActive = active;
+            StopWorldAmbienceSwitch();
+            if (audioData == null || ambienceSource == null || musicMuted ||
+                mainMenuMusicActive || shopThemeActive || coinRainAmbienceActive) return;
+            StopAmbiencePlaylist();
+            StopAmbienceFade();
+            if (ambienceSource.isPlaying && audioData.AmbienceFadeDuration > 0f)
+                worldAmbienceTransition = StartCoroutine(FadeOutAndSwitchWorldAmbience());
+            else PlayWorldAmbience(true);
+        }
+
+        private IEnumerator FadeOutAndSwitchWorldAmbience()
+        {
+            float duration = Mathf.Max(0.01f, audioData.AmbienceFadeDuration * 0.5f);
+            float start = ambienceSource.volume;
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float t = Mathf.Clamp01(elapsed / duration);
+                ambienceSource.volume = Mathf.Lerp(start, 0f, t * t * (3f - 2f * t));
+                yield return null;
+            }
+            ambienceSource.Stop();
+            worldAmbienceTransition = null;
+            if (!musicMuted && !mainMenuMusicActive && !shopThemeActive && !coinRainAmbienceActive)
+                PlayWorldAmbience(true);
+        }
+
+        private void StopWorldAmbienceSwitch()
+        {
+            if (worldAmbienceTransition == null) return;
+            StopCoroutine(worldAmbienceTransition);
+            worldAmbienceTransition = null;
         }
 
         public void PlayMiningImpactSfx(bool oreBroken)
@@ -646,6 +704,9 @@ namespace MiningSimulator.Ores
             }
             EnsureClipLoaded(audioData.SunriseRoosterSfx);
             EnsureClipLoaded(audioData.CoinRainAmbience);
+            EnsureClipLoaded(audioData.LavaWorldAmbience);
+            EnsureClipLoaded(audioData.LavaPortalWhooshSfx);
+            EnsureClipLoaded(audioData.LavaPortalImpactSfx);
             EnsureClipLoaded(audioData.StalkedCatchSfx);
             EnsureClipLoaded(audioData.StalkedJumpscareSfx);
             EnsureClipLoaded(audioData.OreHitSfx);
@@ -740,7 +801,7 @@ namespace MiningSimulator.Ores
         private void HandlePeriodChanged(MiningTimePeriod period)
         {
             ambienceFadedForPeriodChange = false;
-            if (coinRainAmbienceActive)
+            if (coinRainAmbienceActive || lavaWorldAmbienceActive)
             {
                 return;
             }
@@ -786,6 +847,12 @@ namespace MiningSimulator.Ores
             bool isNight = dayNightSystem != null &&
                 dayNightSystem.CurrentPeriod == MiningTimePeriod.Night;
             StopAmbiencePlaylist();
+            if (lavaWorldAmbienceActive && EnsureClipLoaded(audioData.LavaWorldAmbience))
+            {
+                PlayAmbienceClip(audioData.LavaWorldAmbience, fadeIn);
+                ambienceSource.loop = true;
+                return;
+            }
             AudioClip ambience = isNight
                 ? audioData.GetRandomNightAmbience(currentPlaylistAmbience)
                 : audioData.GetRandomMorningAmbience(currentPlaylistAmbience);
@@ -816,6 +883,7 @@ namespace MiningSimulator.Ores
             }
 
             StopAmbiencePlaylist();
+            StopWorldAmbienceSwitch();
             PlayAmbienceClip(audioData.CoinRainAmbience, true);
             ambienceSource.loop = true;
         }
@@ -990,7 +1058,9 @@ namespace MiningSimulator.Ores
 
         private float GetMusicVolume() => audioData.MusicVolume * masterVolume * musicVolume;
 
-        private float GetAmbienceVolume() => audioData.AmbienceVolume * masterVolume * musicVolume;
+        private float GetAmbienceVolume() => audioData.AmbienceVolume * masterVolume * musicVolume *
+            (lavaWorldAmbienceActive && audioData.LavaWorldAmbience != null
+                ? audioData.LavaWorldAmbienceVolume : 1f);
 
         private void StopAudioFades()
         {

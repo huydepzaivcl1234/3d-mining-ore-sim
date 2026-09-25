@@ -33,6 +33,15 @@ namespace MiningSimulator.Ores
         [SerializeField] private AudioClip sunriseRoosterSfx;
         [Tooltip("Loop played only while the Coin Rain event is active.")]
         [SerializeField] private AudioClip coinRainAmbience;
+        [Header("Lava World Ambience")]
+        [Tooltip("Looped while Lava World is active. Replaces day/night ambience and yields to menu, shop and Coin Rain.")]
+        [SerializeField] private AudioClip lavaWorldAmbience;
+        [Tooltip("Multiplies the normal ambience volume; Master and Music sliders still apply.")]
+        [Range(0f, 1f), SerializeField] private float lavaWorldAmbienceVolume = 0.85f;
+        [Tooltip("Cue at the start of the portal's radial cover animation.")]
+        [SerializeField] private AudioClip lavaPortalWhooshSfx;
+        [Tooltip("Cue as the portal's radial reveal animation begins.")]
+        [SerializeField] private AudioClip lavaPortalImpactSfx;
         [Header("Being Stalked Event")]
         [SerializeField] private AudioClip stalkedCatchSfx;
         [SerializeField] private AudioClip stalkedJumpscareSfx;
@@ -78,6 +87,10 @@ namespace MiningSimulator.Ores
         public int NightAmbienceCount => 1 + additionalNightAmbiences.Length;
         public AudioClip SunriseRoosterSfx => sunriseRoosterSfx;
         public AudioClip CoinRainAmbience => coinRainAmbience;
+        public AudioClip LavaWorldAmbience => lavaWorldAmbience;
+        public float LavaWorldAmbienceVolume => lavaWorldAmbienceVolume;
+        public AudioClip LavaPortalWhooshSfx => lavaPortalWhooshSfx;
+        public AudioClip LavaPortalImpactSfx => lavaPortalImpactSfx;
         public AudioClip StalkedCatchSfx => stalkedCatchSfx;
         public AudioClip StalkedJumpscareSfx => stalkedJumpscareSfx;
         public float AmbienceVolume => ambienceVolume;
@@ -186,6 +199,7 @@ namespace MiningSimulator.Ores
         {
             musicVolume = Mathf.Clamp01(musicVolume);
             ambienceVolume = Mathf.Clamp01(ambienceVolume);
+            lavaWorldAmbienceVolume = Mathf.Clamp01(lavaWorldAmbienceVolume);
             ambienceFadeDuration = Mathf.Max(0f, ambienceFadeDuration);
             morningAmbiencePauseRange.x = Mathf.Max(0f, morningAmbiencePauseRange.x);
             morningAmbiencePauseRange.y = Mathf.Max(morningAmbiencePauseRange.x,

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.OreData
   kind: 10
   displayName: Basalt
-  description: Lava World ore. Assign a unique prefab to change its appearance.
+  description: regular stone in lava world
   tier: 10
   miningPowerRequired: 1
   durability: 3000

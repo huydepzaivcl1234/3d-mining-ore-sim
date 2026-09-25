@@ -1,0 +1,31 @@
+# Preview colors; Unity setup builds editable URP materials.
+newmtl Crust
+Kd 0.1100 0.1050 0.1200
+Ka 0 0 0
+Ks 0 0 0
+illum 2
+
+newmtl Slate
+Kd 0.1900 0.1600 0.1600
+Ka 0 0 0
+Ks 0 0 0
+illum 2
+
+newmtl Ash
+Kd 0.3000 0.2400 0.2100
+Ka 0 0 0
+Ks 0 0 0
+illum 2
+
+newmtl Lava
+Kd 0.5200 0.1400 0.0450
+Ka 0 0 0
+Ks 0 0 0
+illum 2
+
+newmtl Glow
+Kd 0.9300 0.4300 0.0900
+Ka 0 0 0
+Ks 0 0 0
+illum 2
+

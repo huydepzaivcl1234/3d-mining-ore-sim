@@ -85,6 +85,53 @@ namespace MiningSimulator.Editor
             var serializedWorld = new SerializedObject(world);
             serializedWorld.FindProperty("oreSpawner").objectReferenceValue = spawners[0];
             serializedWorld.FindProperty("transition").objectReferenceValue = radial;
+            SerializedProperty progression = serializedWorld.FindProperty("minerProgression");
+            SerializedProperty wallet = serializedWorld.FindProperty("wallet");
+            SerializedProperty managerRef = serializedWorld.FindProperty("audioManager");
+            MiningAudioManager audioManager = null;
+            foreach (Component component in Object.FindObjectsByType<MonoBehaviour>(
+                FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (component == null || component.gameObject.scene != gate.scene) continue;
+                if (component is NpcProgressionSystem level && progression.objectReferenceValue == null)
+                    progression.objectReferenceValue = level;
+                if (component is PlayerWallet sceneWallet && wallet.objectReferenceValue == null)
+                    wallet.objectReferenceValue = sceneWallet;
+                if (component is MiningAudioManager sceneManager) audioManager = sceneManager;
+            }
+            if (managerRef.objectReferenceValue == null)
+                managerRef.objectReferenceValue = audioManager;
+            audioManager ??= managerRef.objectReferenceValue as MiningAudioManager;
+            if (audioManager != null)
+            {
+                SerializedObject serializedTransition = new(radial);
+                SerializedProperty transitionManager = serializedTransition.FindProperty("audioManager");
+                transitionManager.objectReferenceValue = audioManager;
+                MiningAudioData data = audioManager.AudioData;
+                if (data != null)
+                {
+                    SerializedObject audioSettings = new(data);
+                    SerializedProperty lavaClip = audioSettings.FindProperty("lavaWorldAmbience");
+                    if (lavaClip.objectReferenceValue == null)
+                        lavaClip.objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioClip>(
+                            "Assets/Audio/Lava/LavaAmbience.wav");
+                    MigratePortalClip(serializedTransition, audioSettings,
+                        "whooshClip", "lavaPortalWhooshSfx");
+                    MigratePortalClip(serializedTransition, audioSettings,
+                        "impactClip", "lavaPortalImpactSfx");
+                    SerializedProperty whoosh = audioSettings.FindProperty("lavaPortalWhooshSfx");
+                    if (whoosh.objectReferenceValue == null)
+                        whoosh.objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioClip>(
+                            "Assets/Audio/Lava/PortalWhoosh.wav");
+                    SerializedProperty impact = audioSettings.FindProperty("lavaPortalImpactSfx");
+                    if (impact.objectReferenceValue == null)
+                        impact.objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioClip>(
+                            "Assets/Audio/Lava/PortalImpact.wav");
+                    audioSettings.ApplyModifiedProperties();
+                    AssetDatabase.SaveAssetIfDirty(data);
+                }
+                serializedTransition.ApplyModifiedProperties();
+            }
             // Reuse the authored Ground. The sample LavaWorldBuilder creates a second box,
             // so only import its shader and make a material asset for this scene surface.
             Transform ground = GameObject.Find("Ground")?.transform;
@@ -133,9 +180,26 @@ namespace MiningSimulator.Editor
                     treeRoots.GetArrayElementAtIndex(i).objectReferenceValue = found[i];
             }
             serializedWorld.ApplyModifiedProperties();
+            // Remove only the unused source created by the previous Lava setup, never a user source.
+            Transform obsoleteSource = gate.transform.Find("Lava World Ambience");
+            if (obsoleteSource != null && obsoleteSource.GetComponents<Component>().Length == 2 &&
+                obsoleteSource.GetComponent<AudioSource>() is AudioSource oldSource &&
+                oldSource.clip == null)
+                Undo.DestroyObjectImmediate(obsoleteSource.gameObject);
             EditorSceneManager.MarkSceneDirty(gate.scene);
             Selection.activeGameObject = gate;
-            EditorUtility.DisplayDialog("Lava World", "Inspect Ore System > Lava World and Portal > Surrounding Trees. Assign any missed trees and lava decorations in the scene, then save the scene yourself.", "OK");
+            EditorUtility.DisplayDialog("Lava World", "Inspect the portal's Level, Power and Money requirements; Audio > MiningAudioData now owns all Lava ambience and portal SFX. Save your scene and audio asset.", "OK");
+        }
+
+        private static void MigratePortalClip(SerializedObject transition,
+            SerializedObject audioSettings, string oldField, string newField)
+        {
+            SerializedProperty oldClip = transition.FindProperty(oldField);
+            SerializedProperty newClip = audioSettings.FindProperty(newField);
+            if (oldClip == null || newClip == null || oldClip.objectReferenceValue == null) return;
+            if (newClip.objectReferenceValue == null)
+                newClip.objectReferenceValue = oldClip.objectReferenceValue;
+            oldClip.objectReferenceValue = null;
         }
 
         private static bool IsTreeName(string value)

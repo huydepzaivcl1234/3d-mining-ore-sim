@@ -101,6 +101,11 @@ namespace MiningSimulator.Ores
         public void Confirm()
         {
             if (!IsOpen) return;
+            if (lavaWorld != null && !lavaWorld.CanTravel(out _, out _))
+            {
+                RefreshText();
+                return;
+            }
             MiningDynamicRadialMaskTransition preview = transition;
             MiningLavaWorldController world = lavaWorld;
             Hide();
@@ -123,12 +128,17 @@ namespace MiningSimulator.Ores
 
         private void RefreshText()
         {
+            string englishLock = null;
+            string vietnameseLock = null;
+            bool locked = lavaWorld != null && !lavaWorld.CanTravel(
+                out englishLock, out vietnameseLock);
             if (titleText != null) titleText.text = lavaWorld != null
                 ? MiningLocalization.Text(lavaWorld.IsInLavaWorld ? "GROUND PORTAL" : "LAVA WORLD PORTAL",
                     lavaWorld.IsInLavaWorld ? "CỔNG VỀ MẶT ĐẤT" : "CỔNG THẾ GIỚI DUNG NHAM")
                 : MiningLocalization.Text(englishTitle, vietnameseTitle);
             if (messageText != null) messageText.text = lavaWorld != null
-                ? MiningLocalization.Text(lavaWorld.IsInLavaWorld
+                ? locked ? MiningLocalization.Text(englishLock, vietnameseLock)
+                : MiningLocalization.Text(lavaWorld.IsInLavaWorld
                     ? "Return to Ground? Your miners and progress stay with you."
                     : "Enter Lava World? The ground stays; trees and the ore table change.",
                     lavaWorld.IsInLavaWorld
@@ -136,7 +146,8 @@ namespace MiningSimulator.Ores
                     : "Đến thế giới dung nham? Giữ nền đất, ẩn cây và đổi bảng quặng.")
                 : MiningLocalization.Text(englishMessage, vietnameseMessage);
             if (enterLabel != null) enterLabel.text = MiningLocalization.Text(
-                englishEnter, vietnameseEnter);
+                locked ? "LOCKED" : englishEnter, locked ? "CHƯA MỞ" : vietnameseEnter);
+            if (enterButton != null) enterButton.interactable = !locked;
             if (cancelLabel != null) cancelLabel.text = MiningLocalization.Text(
                 englishCancel, vietnameseCancel);
         }

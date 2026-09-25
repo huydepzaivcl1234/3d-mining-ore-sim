@@ -28,8 +28,10 @@ MonoBehaviour:
   nightAmbiencePauseRange: {x: 2, y: 5}
   sunriseRoosterSfx: {fileID: 8300000, guid: 4caad48eb5424c0f9bb4cc6172f006fd, type: 3}
   coinRainAmbience: {fileID: 8300000, guid: 256f376d46cc5504985640d35469ad3a, type: 3}
-  undergroundAmbience: {fileID: 8300000, guid: e59c2f4e0ff60a4479b7893c9971c5fa, type: 3}
-  undergroundAmbienceVolume: 0.55
+  lavaWorldAmbience: {fileID: 8300000, guid: 0e29b736f757ee04880aaab37a51f83f, type: 3}
+  lavaWorldAmbienceVolume: 0.005
+  lavaPortalWhooshSfx: {fileID: 8300000, guid: 75ecae3a5c183ef4e9a32742313386ad, type: 3}
+  lavaPortalImpactSfx: {fileID: 8300000, guid: 0be390704418597499f913e81cfb2f72, type: 3}
   stalkedCatchSfx: {fileID: 8300000, guid: a7fcd3cb2495843408b8bf42b797a897, type: 3}
   stalkedJumpscareSfx: {fileID: 8300000, guid: f3c811ecf0fea6a4a8f2585e63c37933, type: 3}
   ambienceVolume: 0.45

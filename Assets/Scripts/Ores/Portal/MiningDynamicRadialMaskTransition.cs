@@ -58,10 +58,12 @@ namespace MiningSimulator.Ores
         [Range(0f, 0.2f), SerializeField] private float coverShakeStrength = 0.04f;
         [Range(0f, 0.2f), SerializeField] private float landingShakeStrength = 0.07f;
 
-        [Header("Audio (assign your own clips)")]
-        [SerializeField] private AudioSource audioSource;
-        [SerializeField] private AudioClip whooshClip;
-        [SerializeField] private AudioClip impactClip;
+        [Header("Shared Audio Manager")]
+        [SerializeField] private MiningAudioManager audioManager;
+        // Kept hidden for one import so the setup tool can migrate older scene clip assignments.
+        [HideInInspector, SerializeField] private AudioSource audioSource;
+        [HideInInspector, SerializeField] private AudioClip whooshClip;
+        [HideInInspector, SerializeField] private AudioClip impactClip;
 
         private Action onCovered;
         private Material runtimeMaterial;
@@ -107,6 +109,8 @@ namespace MiningSimulator.Ores
             }
 
             onCovered = coveredAction;
+            if (audioManager == null)
+                audioManager = FindFirstObjectByType<MiningAudioManager>(FindObjectsInactive.Include);
             activeCamera = gameplayCamera != null ? gameplayCamera : Camera.main;
             originalFov = activeCamera != null ? activeCamera.fieldOfView : 60f;
             UpdateMaterialSettings();
@@ -162,17 +166,9 @@ namespace MiningSimulator.Ores
 
         private IEnumerator AnimatePreview()
         {
-            if (audioSource == null)
-            {
-                audioSource = GetComponent<AudioSource>();
-                if (audioSource == null) audioSource = gameObject.AddComponent<AudioSource>();
-            }
-            audioSource.playOnAwake = false;
-            audioSource.spatialBlend = 0f;
-
             runtimeMaterial.SetFloat(PhaseId, 0f);
             runtimeMaterial.SetFloat(RadiusId, 0f);
-            if (whooshClip != null) audioSource.PlayOneShot(whooshClip);
+            audioManager?.PlayPortalWhooshSfx();
             BeginShake(coverShakeStrength, coverDuration * 0.55f);
 
             float elapsed = 0f;
@@ -202,7 +198,7 @@ namespace MiningSimulator.Ores
             }
 
             runtimeMaterial.SetFloat(PhaseId, 1f);
-            if (impactClip != null) audioSource.PlayOneShot(impactClip);
+            audioManager?.PlayPortalImpactSfx();
             BeginShake(landingShakeStrength, revealDuration * 0.5f);
             elapsed = 0f;
             while (elapsed < revealDuration)

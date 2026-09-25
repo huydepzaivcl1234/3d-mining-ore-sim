@@ -14,14 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.OreData
   kind: 11
   displayName: Ember Ore
-  description: Lava World ore. Assign a unique prefab to change its appearance.
+  description: what kind of ore in lava??
   tier: 4
-  miningPowerRequired: 8
-  durability: 60
-  clickDamage: 4
-  baseSellValue: 18
+  miningPowerRequired: 1
+  durability: 5500
+  clickDamage: 1
+  baseSellValue: 1500
   gemReward: 1
-  experienceReward: 10
+  experienceReward: 1000
   destroyDelay: 0
   maximumMiningNpcs: 1
   npcStandDistance: 1.4

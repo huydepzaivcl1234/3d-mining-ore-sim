@@ -2,6 +2,10 @@ Shader "Custom/StylizedLavaFloor_URP"
 {
     Properties
     {
+        [Header(Whole_Map_Mapping)]
+        _MapCenter ("Map Center XZ (set by portal)", Vector) = (0, 0, 0, 0)
+        _MapSize ("Map Width and Depth (set by portal)", Vector) = (100, 100, 0, 0)
+        _WarpStrength ("Organic Vein Bend", Range(0, 0.35)) = 0.13
         [Header(Obsidian_Crust)] 
         _CrustColor ("Crust Rock Tint (Obsidian / Basalt)", Color) = (0.08, 0.07, 0.09, 1.0)
         _CrustSmoothness ("Crust Smoothness", Range(0.0, 1.0)) = 0.2
@@ -72,6 +76,9 @@ Shader "Custom/StylizedLavaFloor_URP"
             };
 
             CBUFFER_START(UnityPerMaterial)
+                float4 _MapCenter;
+                float4 _MapSize;
+                float _WarpStrength;
                 float4 _CrustColor;
                 float _CrustSmoothness;
                 float _CrustTiling;
@@ -168,8 +175,16 @@ Shader "Custom/StylizedLavaFloor_URP"
 
             half4 frag(Varyings input) : SV_Target
             {
-                // World-space UV mapping for perfectly seamless tiling across all floor blocks
-                float2 worldUV = input.positionWS.xz;
+                // Normalize over the FULL Ground bounds, not over each world unit or mesh UV tile.
+                // One procedural pattern spans the whole editable floor without texture seams.
+                float2 mapUV = (input.positionWS.xz - _MapCenter.xy) /
+                    max(_MapSize.xy, float2(0.01, 0.01)) + 0.5;
+                float2 bend = float2(
+                    sin(mapUV.y * 11.7 + sin(mapUV.x * 5.3)) +
+                    0.45 * sin(mapUV.x * 21.2 - mapUV.y * 9.4),
+                    cos(mapUV.x * 10.1 + cos(mapUV.y * 6.7)) +
+                    0.45 * cos(mapUV.y * 19.1 + mapUV.x * 8.8));
+                float2 worldUV = mapUV + bend * _WarpStrength;
 
                 // 1. Calculate Volcanic Rock Cracked Crust Mask
                 float crackDistance = VoronoiCracks(worldUV * _CrackDensity);
