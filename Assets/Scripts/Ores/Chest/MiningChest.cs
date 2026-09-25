@@ -32,10 +32,13 @@ namespace MiningSimulator.Ores
         [SerializeField] private Collider hitCollider;
         [Header("Overhead presentation")]
         [SerializeField] private MicroBar healthBarPrefab;
+        [SerializeField] private OreRewardPopup moneyPopupPrefab;
+        [SerializeField] private MiningUiData moneyPopupUiData;
         [SerializeField] private Vector3 overheadOffset = new Vector3(0f, .3f, 0f);
         [Min(.01f), SerializeField] private float healthBarWorldScale = .65f;
         [Min(0f), SerializeField] private float rewardHeightAboveBar = .55f;
-        [Header("Chest SFX (optional overrides; uses game audio defaults otherwise)")]
+        [Header("Chest SFX (empty slots are silent)")]
+        [SerializeField] private AudioClip chestHitSfx;
         [SerializeField] private AudioClip lockBreakSfx;
         [SerializeField] private AudioClip chestOpenSfx;
         [SerializeField] private AudioClip itemRollTickSfx;
@@ -70,8 +73,11 @@ namespace MiningSimulator.Ores
         private MiningItemData selectedItem;
         private int selectedAmount;
         private MicroBar healthBar;
+        private TextMeshPro healthText;
+        private MiningHitPunch hitPunch;
         private MiningAudioManager audioManager;
         private float nextRollSfxTime;
+        private static AudioSource sharedChestAudioSource;
 
         public ChestKind Kind => kind;
         public bool CanMine => isActiveAndEnabled && !opening && !rewardPending && remainingHits > 0;
@@ -111,18 +117,24 @@ namespace MiningSimulator.Ores
             selectedItem = null;
             selectedAmount = 0;
             nextRollSfxTime = 0f;
+            hitPunch ??= GetComponent<MiningHitPunch>();
+            hitPunch ??= gameObject.AddComponent<MiningHitPunch>();
+            hitPunch.Configure(transform, .075f, .075f, .2f);
             audioManager ??= FindFirstObjectByType<MiningAudioManager>(FindObjectsInactive.Include);
             if (healthBar == null && healthBarPrefab != null)
             {
                 healthBar = Instantiate(healthBarPrefab, transform);
                 healthBar.name = "Chest Health Bar";
                 healthBar.Initialize(Mathf.Max(1, hitsToBreak));
+                healthText = healthBar.GetComponentInChildren<TextMeshPro>(true);
             }
             if (healthBar != null)
             {
+                healthText ??= healthBar.GetComponentInChildren<TextMeshPro>(true);
                 healthBar.gameObject.SetActive(true);
                 healthBar.SetNewMaxHP(Mathf.Max(1, hitsToBreak), true);
                 healthBar.UpdateBar(remainingHits, true);
+                UpdateHealthText();
             }
             if (lidHinge != null) lidHinge.localRotation = closedRotation;
             if (lockModel != null)
@@ -147,15 +159,17 @@ namespace MiningSimulator.Ores
             if (rewardPending) return ClaimPendingItem();
             if (!CanMine) return false;
             --remainingHits;
-            if (healthBar != null) healthBar.UpdateBar(remainingHits, true);
+            if (healthBar != null) healthBar.UpdateBar(remainingHits);
+            UpdateHealthText();
+            hitPunch?.Play();
             if (remainingHits <= 0)
             {
                 opening = true;
                 if (healthBar != null) healthBar.gameObject.SetActive(false);
-                PlayChestSfx(lockBreakSfx, audioManager != null && audioManager.AudioData != null
-                    ? audioManager.AudioData.OreBreakSfx : null);
+                PlayChestSfx(lockBreakSfx);
                 StartCoroutine(OpenAndReward());
             }
+            else PlayChestSfx(chestHitSfx);
             return true;
         }
 
@@ -169,8 +183,8 @@ namespace MiningSimulator.Ores
                 while (elapsed < lockBreakSeconds)
                 {
                     elapsed += Time.deltaTime;
-                    float t = Mathf.Clamp01(elapsed / lockBreakSeconds);
-                    lockModel.localScale = Vector3.Lerp(start, start * .65f, t);
+                    float t = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / lockBreakSeconds));
+                    lockModel.localScale = Vector3.Lerp(start, Vector3.zero, t);
                     lockModel.localPosition = startPosition +
                         (Vector3.down * .85f + Vector3.forward * .2f) * (t * t);
                     lockModel.localRotation = initialLockRotation * Quaternion.Euler(0f, 0f, 110f * t);
@@ -179,8 +193,7 @@ namespace MiningSimulator.Ores
                 lockModel.gameObject.SetActive(false);
             }
 
-            PlayChestSfx(chestOpenSfx, audioManager != null && audioManager.AudioData != null
-                ? audioManager.AudioData.WheelRewardSfx : null);
+            PlayChestSfx(chestOpenSfx);
             if (lidHinge != null)
             {
                 float elapsed = 0f;
@@ -188,7 +201,8 @@ namespace MiningSimulator.Ores
                 while (elapsed < lidOpenSeconds)
                 {
                     elapsed += Time.deltaTime;
-                    float t = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / lidOpenSeconds));
+                    float progress = Mathf.Clamp01(elapsed / lidOpenSeconds);
+                    float t = progress * progress * (3f - 2f * progress);
                     lidHinge.localRotation = Quaternion.Slerp(closedRotation, open, t);
                     yield return null;
                 }
@@ -207,7 +221,13 @@ namespace MiningSimulator.Ores
                     wallet.AddMoney(amount);
                     amount = wallet.CurrentMoney - balance;
                 }
-                ShowText($"+{MiningMoneyFormatter.Format(amount)}", true);
+                if (moneyPopupPrefab != null && moneyPopupUiData != null)
+                {
+                    Vector3 top = GetChestTop();
+                    OreRewardPopup popup = Instantiate(moneyPopupPrefab, top, Quaternion.identity);
+                    popup.Initialize(amount, top, moneyPopupUiData);
+                }
+                else ShowText($"+{MiningMoneyFormatter.Format(amount)}", true);
             }
             else
             {
@@ -350,9 +370,7 @@ namespace MiningSimulator.Ores
         private void LateUpdate()
         {
             Camera camera = Camera.main;
-            Vector3 top = hitCollider != null
-                ? new Vector3(hitCollider.bounds.center.x, hitCollider.bounds.max.y, hitCollider.bounds.center.z)
-                : transform.position;
+            Vector3 top = GetChestTop();
             Vector3 barPosition = top + overheadOffset;
             if (healthBar != null && healthBar.gameObject.activeSelf)
             {
@@ -384,6 +402,19 @@ namespace MiningSimulator.Ores
                     rewardText.transform.position - camera.transform.position, camera.transform.up);
         }
 
+        private Vector3 GetChestTop()
+        {
+            return hitCollider != null && hitCollider.enabled
+                ? new Vector3(hitCollider.bounds.center.x, hitCollider.bounds.max.y, hitCollider.bounds.center.z)
+                : transform.position;
+        }
+
+        private void UpdateHealthText()
+        {
+            if (healthText != null)
+                healthText.text = $"{remainingHits} / {Mathf.Max(1, hitsToBreak)}";
+        }
+
         private static void SetWorldScale(Transform target, float scale)
         {
             Vector3 parentScale = target.parent != null ? target.parent.lossyScale : Vector3.one;
@@ -397,13 +428,29 @@ namespace MiningSimulator.Ores
         {
             if (Time.unscaledTime < nextRollSfxTime) return;
             nextRollSfxTime = Time.unscaledTime + .11f;
-            PlayChestSfx(itemRollTickSfx, audioManager != null && audioManager.AudioData != null
-                ? audioManager.AudioData.WheelSpinSfx : null);
+            PlayChestSfx(itemRollTickSfx);
         }
 
-        private void PlayChestSfx(AudioClip configured, AudioClip fallback)
+        private void PlayChestSfx(AudioClip clip)
         {
-            if (audioManager != null) audioManager.PlaySfx(configured != null ? configured : fallback);
+            if (clip == null || audioManager == null || audioManager.AudioData == null ||
+                audioManager.SfxMuted) return;
+            if (sharedChestAudioSource == null)
+            {
+                var channel = new GameObject("Chest SFX Channel");
+                channel.transform.SetParent(audioManager.transform, false);
+                sharedChestAudioSource = channel.AddComponent<AudioSource>();
+                sharedChestAudioSource.playOnAwake = false;
+                sharedChestAudioSource.spatialBlend = 0f;
+            }
+            sharedChestAudioSource.Stop();
+            sharedChestAudioSource.outputAudioMixerGroup = audioManager.AudioData.SfxMixerGroup;
+            sharedChestAudioSource.volume = audioManager.AudioData.SfxVolume *
+                audioManager.MasterVolume * audioManager.SfxVolume;
+            sharedChestAudioSource.pitch = UnityEngine.Random.Range(
+                audioManager.AudioData.MinimumPitch, audioManager.AudioData.MaximumPitch);
+            sharedChestAudioSource.clip = clip;
+            sharedChestAudioSource.Play();
         }
 
         private void OnDisable()

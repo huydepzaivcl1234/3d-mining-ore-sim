@@ -15,6 +15,8 @@ namespace MiningSimulator.Editor
         private const string ItemPath = "Assets/Prefabs/Ores/Chest/ChestV2.prefab";
         private const string DatabasePath = "Assets/GameData/Items/MiningItemDatabase.asset";
         private const string HealthBarPath = "Assets/Microlight/MicroBar/Prefabs/SimpleBars/Sprite_SimpleMicroBarSRP.prefab";
+        private const string MoneyPopupPath = "Assets/Prefabs/UI/OreRewardPopup.prefab";
+        private const string UiDataPath = "Assets/GameData/UI/MiningUiData.asset";
 
         [MenuItem("Mining Simulator/Tools/Setup Independent Chests")]
         private static void Setup()
@@ -136,6 +138,13 @@ namespace MiningSimulator.Editor
                 GameObject barPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(HealthBarPath);
                 if (barPrefab != null)
                     AssignIfEmpty(fields, "healthBarPrefab", barPrefab.GetComponent<Microlight.MicroBar.MicroBar>());
+                if (kind == MiningChest.ChestKind.WoodMoney)
+                {
+                    GameObject popupPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(MoneyPopupPath);
+                    if (popupPrefab != null)
+                        AssignIfEmpty(fields, "moneyPopupPrefab", popupPrefab.GetComponent<OreRewardPopup>());
+                    AssignIfEmpty(fields, "moneyPopupUiData", AssetDatabase.LoadAssetAtPath<MiningUiData>(UiDataPath));
+                }
                 if (kind == MiningChest.ChestKind.ItemRoll) PopulateInitialItemTable(fields);
                 fields.ApplyModifiedPropertiesWithoutUndo();
                 PrefabUtility.SaveAsPrefabAsset(root, path);

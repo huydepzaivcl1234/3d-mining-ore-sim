@@ -536,6 +536,7 @@ MonoBehaviour:
   overheadOffset: {x: 0, y: 0.3, z: 0}
   healthBarWorldScale: 0.65
   rewardHeightAboveBar: 0.55
+  chestHitSfx: {fileID: 0}
   lockBreakSfx: {fileID: 0}
   chestOpenSfx: {fileID: 0}
   itemRollTickSfx: {fileID: 0}
