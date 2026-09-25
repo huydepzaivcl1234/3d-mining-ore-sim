@@ -17,10 +17,10 @@ MonoBehaviour:
   description: 'Increase NPC mining swing and hit speed by 15 percent. '
   rarity: 2
   worldModel: {fileID: 2579262722937850041, guid: 86c3bf2ce4713e74aa9f6f3ec6f01480, type: 3}
-  inventoryIcon: {fileID: 0}
+  inventoryIcon: {fileID: -1582530520, guid: fb02805d54e997d4fa24e4f8030d8766, type: 3}
   iconFallback: S
   fallbackColor: {r: 0.26, g: 0.82, b: 0.18, a: 1}
-  worldScale: 0.42
+  worldScale: 5
   modelLocalPosition: {x: 0, y: 0, z: 0}
   modelLocalEulerAngles: {x: 0, y: 0, z: 0}
   selectionChancePercent: 10

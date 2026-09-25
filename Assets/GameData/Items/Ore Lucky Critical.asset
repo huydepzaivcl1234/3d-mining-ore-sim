@@ -10,18 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7d697d1ce92e7572c4046ac7b833d40b, type: 3}
-  m_Name: Pea
+  m_Name: Ore Lucky Critical
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningItemData
-  itemId: Pea
-  displayName: Pea
-  description: 15 percent critical chance to deal 145 percent extra damage to ores
-    and Lucky Blocks.
+  itemId: ore_lucky_critical
+  displayName: Ore Lucky Critical
+  description: 15 percent critical chance to deal 145 percent extra damage to ores and Lucky Blocks.
+    th\u1EDDi gian."
   rarity: 2
-  worldModel: {fileID: 3497661880722294818, guid: 492d59b740506494086bb01c4b392b14, type: 3}
-  inventoryIcon: {fileID: 405525012, guid: fb02805d54e997d4fa24e4f8030d8766, type: 3}
+  worldModel: {fileID: 0}
+  inventoryIcon: {fileID: 0}
   iconFallback: C
   fallbackColor: {r: 0.26, g: 0.82, b: 0.18, a: 1}
-  worldScale: 5
+  worldScale: 0.42
   modelLocalPosition: {x: 0, y: 0, z: 0}
   modelLocalEulerAngles: {x: 0, y: 0, z: 0}
   selectionChancePercent: 10

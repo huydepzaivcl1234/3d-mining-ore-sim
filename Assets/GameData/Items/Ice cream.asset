@@ -17,10 +17,10 @@ MonoBehaviour:
   description: 'Increase good and bad event chances by 10 percentage points. '
   rarity: 3
   worldModel: {fileID: 5305367537970599588, guid: bc74e538d58fa504e92c2ec6d2399268, type: 3}
-  inventoryIcon: {fileID: 0}
+  inventoryIcon: {fileID: -2037846295, guid: fb02805d54e997d4fa24e4f8030d8766, type: 3}
   iconFallback: E
   fallbackColor: {r: 0.26, g: 0.82, b: 0.18, a: 1}
-  worldScale: 0.42
+  worldScale: 5
   modelLocalPosition: {x: 0, y: 0, z: 0}
   modelLocalEulerAngles: {x: 0, y: 0, z: 0}
   selectionChancePercent: 10

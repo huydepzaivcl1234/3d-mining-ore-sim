@@ -54,10 +54,12 @@ namespace MiningSimulator.Ores
                     FindObjectsInactive.Include);
             if (cardTransform != null) restingScale = cardTransform.localScale;
             ResolveOreUnlockLabel();
+            RestoreProgressVisuals();
         }
 
         private void OnEnable()
         {
+            RestoreProgressVisuals();
             MiningLocalization.LanguageChanged += Refresh;
             if (oreSpawner != null) { oreSpawner.WorldChanged -= Refresh; oreSpawner.WorldChanged += Refresh; }
             if (progressionSystem != null)
@@ -208,6 +210,44 @@ namespace MiningSimulator.Ores
                 ? card.Find("Stats_Well/Reward_Text") : null;
             if (liveText != null && liveText.TryGetComponent(out TextMeshProUGUI label))
                 rewardText = label;
+        }
+
+        private void RestoreProgressVisuals()
+        {
+            if (cardTransform == null) cardTransform = transform.Find("Card_Visual") as RectTransform;
+            if (cardTransform == null) return;
+            cardTransform.gameObject.SetActive(true);
+            Transform track = cardTransform.Find("XP_Trench");
+            if (track != null) track.gameObject.SetActive(true);
+            if (experienceBar == null) experienceBar = GetComponentInChildren<MicroBar>(true);
+            if (experienceBar != null) experienceBar.gameObject.SetActive(true);
+
+            // Older compact layouts removed the title and disabled the legacy labels.
+            // Use the existing card and live presenter rather than a second XP controller.
+            if (titleText == null)
+            {
+                Transform existing = cardTransform.Find("PC Progress Title");
+                if (existing != null) titleText = existing.GetComponent<TextMeshProUGUI>();
+                if (titleText == null)
+                {
+                    GameObject title = new("PC Progress Title", typeof(RectTransform),
+                        typeof(TextMeshProUGUI));
+                    title.transform.SetParent(cardTransform, false);
+                    RectTransform rect = (RectTransform)title.transform;
+                    rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(.5f, .5f);
+                    rect.sizeDelta = new Vector2(110f, 28f);
+                    rect.anchoredPosition = new Vector2(-116f, 13f);
+                    titleText = title.GetComponent<TextMeshProUGUI>();
+                    titleText.fontSize = 11f;
+                    titleText.alignment = TextAlignmentOptions.Center;
+                    titleText.color = Color.white;
+                    titleText.raycastTarget = false;
+                }
+            }
+
+            foreach (TextMeshProUGUI label in new[] { titleText, levelBadgeText,
+                         powerValueText, rewardText, xpLabelText })
+                if (label != null) label.gameObject.SetActive(true);
         }
 
         private void Play(AudioClip clip)

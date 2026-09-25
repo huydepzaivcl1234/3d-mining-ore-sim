@@ -1,0 +1,7 @@
+newmtl Basalt
+Kd 0.09 0.045 0.08
+Ka 0 0 0
+
+newmtl Magma
+Kd 1 0.33 0.045
+Ke 1 0.33 0.045

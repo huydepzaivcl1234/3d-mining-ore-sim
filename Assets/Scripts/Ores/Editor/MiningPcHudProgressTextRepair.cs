@@ -28,22 +28,164 @@ namespace MiningSimulator.Editor
                 if (canvas.gameObject.scene != activeScene || canvas.name != "Mining HUD Canvas")
                     continue;
                 RectTransform panel = canvas.transform.Find("NPC Progress HUD") as RectTransform;
-                if (panel == null) continue;
+                bool rebuilt = panel == null;
+                if (panel == null)
+                    panel = RestoreMissingPanel(canvas);
+                if (panel == null) return;
                 RepairPanel(panel);
+                if (rebuilt) FitRestoredPanel(panel);
                 Selection.activeGameObject = panel.gameObject;
-                Debug.Log("Restored miner progress title, LV, Power, next ore and XP labels. Save the scene.", panel);
+                Debug.Log("Restored miner progress card, LV, Power, next ore and live XP bar. Save the scene.", panel);
                 return;
             }
 
             EditorUtility.DisplayDialog("Miner progress",
-                "Open the play scene with Mining HUD Canvas > NPC Progress HUD.", "OK");
+                "Open the play scene containing Mining HUD Canvas.", "OK");
+        }
+
+        private static RectTransform RestoreMissingPanel(Canvas canvas)
+        {
+            NpcProgressionSystem progression = Object.FindFirstObjectByType<NpcProgressionSystem>(
+                FindObjectsInactive.Include);
+            OreSpawner spawner = Object.FindFirstObjectByType<OreSpawner>(FindObjectsInactive.Include);
+            if (progression == null || spawner == null || spawner.SpawnData == null)
+            {
+                EditorUtility.DisplayDialog("Miner progress",
+                    "The scene needs NPC Progression System and a configured Ore Spawner before the card can be restored.", "OK");
+                return null;
+            }
+
+            // This project already ships an authored MicroBar and all three legacy labels.
+            // Clone just that HUD, never a second manager, shop, NPC or whole runtime prefab.
+            GameObject runtime = AssetDatabase.LoadAssetAtPath<GameObject>(
+                "Assets/Prefabs/Systems/MiningRuntime.prefab");
+            Transform source = runtime != null ? runtime.transform.Find("Mining HUD Canvas/npc Progress Hud") : null;
+            if (source == null)
+            {
+                EditorUtility.DisplayDialog("Miner progress",
+                    "Could not find MiningRuntime.prefab > Mining HUD Canvas > npc Progress Hud.", "OK");
+                return null;
+            }
+
+            GameObject copy = Object.Instantiate(source.gameObject, canvas.transform, false);
+            copy.name = "NPC Progress HUD";
+            Undo.RegisterCreatedObjectUndo(copy, "Restore missing miner progress HUD");
+            RectTransform panel = copy.GetComponent<RectTransform>();
+            panel.anchorMin = panel.anchorMax = panel.pivot = new Vector2(.5f, 1f);
+            panel.anchoredPosition = new Vector2(0f, -16f);
+            panel.localScale = Vector3.one;
+
+            NpcProgressionHud hud = copy.GetComponent<NpcProgressionHud>();
+            if (hud != null)
+            {
+                SerializedObject fields = new(hud);
+                Set(fields, "progressionSystem", progression);
+                Set(fields, "npcShop", Object.FindFirstObjectByType<NpcShop>(FindObjectsInactive.Include));
+                fields.ApplyModifiedProperties();
+            }
+
+            // Build the existing styled progress card around the cloned MicroBar.
+            MiningSimulator.Ores.Editor.MiningJuicyMinerProgressSetupMenu.Build();
+            if (panel.Find("Card_Visual") == null)
+            {
+                Undo.DestroyObjectImmediate(copy);
+                EditorUtility.DisplayDialog("Miner progress",
+                    "Could not rebuild the XP card. Check the Unity Console for the missing prefab or MicroBar asset.", "OK");
+                return null;
+            }
+            EditorSceneManager.MarkSceneDirty(canvas.gameObject.scene);
+            return panel;
+        }
+
+        private static void FitRestoredPanel(RectTransform panel)
+        {
+            RectTransform card = panel.Find("Card_Visual") as RectTransform;
+            if (card == null) return;
+            Undo.RecordObject(panel, "Fit restored miner progress");
+            panel.sizeDelta = new Vector2(540f, 76f);
+            Undo.RecordObject(card, "Fit restored miner card");
+            card.anchorMin = card.anchorMax = card.pivot = new Vector2(.5f, .5f);
+            card.sizeDelta = new Vector2(540f, 76f);
+            card.anchoredPosition = Vector2.zero;
+            card.localScale = Vector3.one;
+
+            foreach (string old in new[] { "Header_Pill", "Stats_Well", "XP_Percent" })
+            {
+                Transform child = card.Find(old);
+                if (child == null) continue;
+                Undo.RecordObject(child.gameObject, "Hide oversized miner card decoration");
+                child.gameObject.SetActive(false);
+            }
+            Transform legacyCounter = panel.Find("Experience");
+            if (legacyCounter != null)
+            {
+                Undo.RecordObject(legacyCounter.gameObject, "Use compact XP label");
+                legacyCounter.gameObject.SetActive(false);
+            }
+            RectTransform trench = card.Find("XP_Trench") as RectTransform;
+            MicroBar bar = panel.GetComponentInChildren<MicroBar>(true);
+            if (trench == null || bar == null) return;
+            Undo.RecordObject(trench, "Fit restored XP track");
+            trench.anchorMin = trench.anchorMax = trench.pivot = new Vector2(.5f, .5f);
+            trench.anchoredPosition = new Vector2(0f, -19f);
+            trench.sizeDelta = new Vector2(505f, 20f);
+            RectTransform barRect = bar.transform as RectTransform;
+            Undo.SetTransformParent(barRect, trench, "Keep live XP bar inside track");
+            Undo.RecordObject(barRect, "Fit restored XP bar");
+            barRect.anchorMin = barRect.anchorMax = barRect.pivot = new Vector2(.5f, .5f);
+            barRect.anchoredPosition = Vector2.zero;
+            barRect.sizeDelta = new Vector2(495f, 16f);
+            barRect.localScale = Vector3.one;
+            barRect.SetAsFirstSibling();
         }
 
         public static void RepairPanel(RectTransform panel)
         {
             if (panel == null) return;
+            Undo.RecordObject(panel.gameObject, "Show miner progress HUD");
+            panel.gameObject.SetActive(true);
+            Canvas parentCanvas = panel.GetComponentInParent<Canvas>(true);
+            if (parentCanvas != null)
+            {
+                Undo.RecordObject(parentCanvas.gameObject, "Show mining HUD canvas");
+                parentCanvas.gameObject.SetActive(true);
+                Undo.RecordObject(parentCanvas, "Enable mining HUD canvas");
+                parentCanvas.enabled = true;
+            }
+            CanvasGroup group = panel.GetComponent<CanvasGroup>();
+            if (group != null)
+            {
+                Undo.RecordObject(group, "Reveal miner progress HUD");
+                group.alpha = 1f;
+            }
             RectTransform card = panel.Find("Card_Visual") as RectTransform;
-            if (card == null) return;
+            if (card == null)
+            {
+                Debug.LogWarning("Miner progress card is missing; run Build Juicy Miner Progress with the original HUD present.", panel);
+                return;
+            }
+            Undo.RecordObject(card.gameObject, "Show miner progress card");
+            card.gameObject.SetActive(true);
+            Transform backdrop = panel.Find("PC Progress Background");
+            if (backdrop != null)
+            {
+                Undo.RecordObject(backdrop.gameObject, "Show miner progress background");
+                backdrop.gameObject.SetActive(true);
+            }
+            Transform trench = card.Find("XP_Trench");
+            if (trench != null)
+            {
+                Undo.RecordObject(trench.gameObject, "Show XP track");
+                trench.gameObject.SetActive(true);
+            }
+            MicroBar liveBar = panel.GetComponentInChildren<MicroBar>(true);
+            if (liveBar != null)
+            {
+                Undo.RecordObject(liveBar.gameObject, "Show XP bar");
+                liveBar.gameObject.SetActive(true);
+                Undo.RecordObject(liveBar, "Enable XP bar");
+                liveBar.enabled = true;
+            }
 
             RectTransform pill = card.Find("PC Level Pill") as RectTransform;
             if (pill == null)
@@ -89,7 +231,7 @@ namespace MiningSimulator.Editor
             Set(fields, "powerValueText", power);
             Set(fields, "rewardText", reward);
             Set(fields, "xpLabelText", xp);
-            Set(fields, "experienceBar", panel.GetComponentInChildren<MicroBar>(true));
+            Set(fields, "experienceBar", liveBar);
             SetIfMissing(fields, "progressionSystem", Object.FindFirstObjectByType<NpcProgressionSystem>(FindObjectsInactive.Include));
             SetIfMissing(fields, "oreSpawner", Object.FindFirstObjectByType<OreSpawner>(FindObjectsInactive.Include));
             SerializedProperty compact = fields.FindProperty("compactPcXpLabel");
@@ -104,7 +246,7 @@ namespace MiningSimulator.Editor
                 if (originalFields.FindProperty("progressionSystem")?.objectReferenceValue == null)
                     Set(originalFields, "progressionSystem", Object.FindFirstObjectByType<NpcProgressionSystem>(FindObjectsInactive.Include));
                 if (originalFields.FindProperty("experienceBar")?.objectReferenceValue == null)
-                    Set(originalFields, "experienceBar", panel.GetComponentInChildren<MicroBar>(true));
+                    Set(originalFields, "experienceBar", liveBar);
                 originalFields.ApplyModifiedProperties();
             }
             EditorSceneManager.MarkSceneDirty(panel.gameObject.scene);
