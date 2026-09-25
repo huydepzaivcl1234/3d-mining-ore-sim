@@ -28,6 +28,7 @@ namespace MiningSimulator.Ores
         private readonly RaycastHit[] raycastHits = new RaycastHit[32];
         private Ore selectedOre;
         private LuckyBlock selectedLuckyBlock;
+        private MiningChest selectedChest;
 
         private void Awake()
         {
@@ -101,6 +102,7 @@ namespace MiningSimulator.Ores
 
             Ore nearestOre = null;
             LuckyBlock nearestBlock = null;
+            MiningChest nearestChest = null;
             float nearestDistance = float.PositiveInfinity;
             for (int index = 0; index < hitCount; index++)
             {
@@ -110,11 +112,22 @@ namespace MiningSimulator.Ores
                     continue;
                 }
 
+                MiningChest chest = hit.collider.GetComponentInParent<MiningChest>();
+                if (chest != null && chest.CanMine)
+                {
+                    nearestChest = chest;
+                    nearestOre = null;
+                    nearestBlock = null;
+                    nearestDistance = hit.distance;
+                    continue;
+                }
+
                 LuckyBlock block = hit.collider.GetComponentInParent<LuckyBlock>();
                 if (block != null && block.isActiveAndEnabled && !block.IsResolved)
                 {
                     nearestBlock = block;
                     nearestOre = null;
+                    nearestChest = null;
                     nearestDistance = hit.distance;
                     continue;
                 }
@@ -124,21 +137,31 @@ namespace MiningSimulator.Ores
                 {
                     nearestOre = ore;
                     nearestBlock = null;
+                    nearestChest = null;
                     nearestDistance = hit.distance;
                 }
             }
 
-            if (nearestBlock != null)
+            if (nearestChest != null)
+            {
+                CommandAllNpcs(nearestChest);
+                selectedChest = nearestChest;
+                selectedOre = null;
+                selectedLuckyBlock = null;
+            }
+            else if (nearestBlock != null)
             {
                 CommandAllNpcs(nearestBlock);
                 selectedLuckyBlock = nearestBlock;
                 selectedOre = null;
+                selectedChest = null;
             }
             else if (nearestOre != null)
             {
                 CommandAllNpcs(nearestOre);
                 selectedOre = nearestOre;
                 selectedLuckyBlock = null;
+                selectedChest = null;
             }
         }
 
@@ -162,8 +185,20 @@ namespace MiningSimulator.Ores
             }
         }
 
+        private static void CommandAllNpcs(MiningChest chest)
+        {
+            MiningNpc[] npcs = FindObjectsByType<MiningNpc>(FindObjectsInactive.Exclude,
+                FindObjectsSortMode.None);
+            foreach (MiningNpc npc in npcs) npc?.CommandMine(chest);
+        }
+
         private bool TryGetSelectedTopPosition(out Vector3 position)
         {
+            if (selectedChest != null && selectedChest.CanMine)
+            {
+                position = selectedChest.GetWorldTopCenter();
+                return true;
+            }
             if (selectedLuckyBlock != null && selectedLuckyBlock.isActiveAndEnabled &&
                 !selectedLuckyBlock.IsResolved)
             {
@@ -185,6 +220,7 @@ namespace MiningSimulator.Ores
         {
             selectedOre = null;
             selectedLuckyBlock = null;
+            selectedChest = null;
             SetMarkerVisible(false);
         }
 

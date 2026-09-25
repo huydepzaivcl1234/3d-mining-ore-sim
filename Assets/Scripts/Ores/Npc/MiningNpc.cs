@@ -80,8 +80,10 @@ namespace MiningSimulator.Ores
         private readonly RaycastHit[] obstacleHits = new RaycastHit[32];
         private Ore targetOre;
         private LuckyBlock targetLuckyBlock;
+        private MiningChest targetChest;
         private Ore ignoredOre;
         private LuckyBlock ignoredLuckyBlock;
+        private MiningChest ignoredChest;
         private Ore avoidanceOre;
         private LuckyBlockDropSystem luckyBlockSystem;
         private Rigidbody body;
@@ -89,6 +91,7 @@ namespace MiningSimulator.Ores
         private float nextTargetSwitchTime;
         private float ignoredOreUntil;
         private float ignoredLuckyBlockUntil;
+        private float ignoredChestUntil;
         private float lastProgressTime;
         private float avoidanceSide = 1f;
         private float detourDirectionUntil;
@@ -168,6 +171,15 @@ namespace MiningSimulator.Ores
             ignoredLuckyBlock = null;
             ignoredLuckyBlockUntil = 0f;
             SetTarget(block, slotIndex, true);
+            return true;
+        }
+
+        public bool CommandMine(MiningChest chest)
+        {
+            if (!CanMine(chest) || !chest.TryReserveMiner(this, CurrentMiningPower)) return false;
+            ignoredChest = null;
+            ignoredChestUntil = 0f;
+            SetTarget(chest, true);
             return true;
         }
 
@@ -311,12 +323,15 @@ namespace MiningSimulator.Ores
                 ignoredLuckyBlock = null;
             }
 
+            if (ignoredChest != null && Time.time >= ignoredChestUntil)
+                ignoredChest = null;
+
             if (!IsTargetValid())
             {
                 ReleaseTarget();
             }
 
-            if (targetOre == null && targetLuckyBlock == null &&
+            if (targetOre == null && targetLuckyBlock == null && targetChest == null &&
                 Time.time >= nextTargetRefreshTime)
             {
                 TryAcquireTarget(body != null ? body.position : transform.position);
@@ -594,6 +609,7 @@ namespace MiningSimulator.Ores
             LuckyBlock excludedBlock = Time.time < ignoredLuckyBlockUntil
                 ? ignoredLuckyBlock
                 : null;
+            MiningChest excludedChest = Time.time < ignoredChestUntil ? ignoredChest : null;
             bool foundOre = oreSpawner.TryReserveClosestOre(this, currentPosition,
                 CurrentMiningPower, excludedOre, out Ore ore, out int oreSlotIndex);
             LuckyBlock block = null;
@@ -602,6 +618,20 @@ namespace MiningSimulator.Ores
                               luckyBlockSystem.TryReserveClosestBlock(this, currentPosition,
                                   CurrentMiningPower, excludedBlock, out block,
                                   out blockSlotIndex);
+
+            bool foundChest = MiningChest.TryReserveClosest(this, currentPosition,
+                CurrentMiningPower, excludedChest, out MiningChest chest);
+            float oreDistance = foundOre ? ore.SqrDistanceToSurface(currentPosition) : float.PositiveInfinity;
+            float blockDistance = foundBlock ? block.SqrDistanceToSurface(currentPosition) : float.PositiveInfinity;
+            float chestDistance = foundChest ? chest.SqrDistanceToSurface(currentPosition) : float.PositiveInfinity;
+            if (foundChest && chestDistance <= oreDistance && chestDistance <= blockDistance)
+            {
+                if (foundOre) ore.ReleaseMiner(this);
+                if (foundBlock) block.ReleaseMiner(this);
+                SetTarget(chest);
+                return;
+            }
+            if (foundChest) chest.ReleaseMiner(this);
 
             if (foundOre && foundBlock)
             {
@@ -647,11 +677,14 @@ namespace MiningSimulator.Ores
         {
             Ore previousOre = targetOre;
             LuckyBlock previousBlock = targetLuckyBlock;
+            MiningChest previousChest = targetChest;
             targetOre = ore;
             targetLuckyBlock = null;
+            targetChest = null;
             reservedSlot = slotIndex;
             hasCommandedTarget = commandedTarget;
             previousBlock?.ReleaseMiner(this);
+            previousChest?.ReleaseMiner(this);
             if (previousOre != null && previousOre != ore)
             {
                 previousOre.ReleaseMiner(this);
@@ -671,11 +704,14 @@ namespace MiningSimulator.Ores
         {
             Ore previousOre = targetOre;
             LuckyBlock previousBlock = targetLuckyBlock;
+            MiningChest previousChest = targetChest;
             targetOre = null;
             targetLuckyBlock = block;
+            targetChest = null;
             reservedSlot = slotIndex;
             hasCommandedTarget = commandedTarget;
             previousOre?.ReleaseMiner(this);
+            previousChest?.ReleaseMiner(this);
             if (previousBlock != null && previousBlock != block)
             {
                 previousBlock.ReleaseMiner(this);
@@ -691,8 +727,32 @@ namespace MiningSimulator.Ores
             ResetProgressTracking();
         }
 
+        private void SetTarget(MiningChest chest, bool commandedTarget = false)
+        {
+            Ore previousOre = targetOre;
+            LuckyBlock previousBlock = targetLuckyBlock;
+            MiningChest previousChest = targetChest;
+            targetOre = null;
+            targetLuckyBlock = null;
+            targetChest = chest;
+            reservedSlot = -1;
+            hasCommandedTarget = commandedTarget;
+            previousOre?.ReleaseMiner(this);
+            previousBlock?.ReleaseMiner(this);
+            if (previousChest != null && previousChest != chest)
+                previousChest.ReleaseMiner(this);
+            SetMiningAnimationState(false);
+            nextTargetSwitchTime = Time.time + npcData.TargetSwitchCooldown;
+            stuckRepathAttempts = 0;
+            ClearDetour();
+            ResetGlobalPath();
+            ResetProgressTracking();
+        }
+
         private Vector3 GetPathTargetPosition(Vector3 currentPosition)
         {
+            if (targetChest != null)
+                return targetChest.GetClosestSurfacePoint(currentPosition);
             if (targetLuckyBlock != null)
             {
                 return targetLuckyBlock.GetMiningStandPosition(
@@ -740,6 +800,7 @@ namespace MiningSimulator.Ores
 
         private bool IsTargetValid()
         {
+            if (targetChest != null) return CanMine(targetChest);
             return targetLuckyBlock != null
                 ? CanMine(targetLuckyBlock)
                 : CanMine(targetOre);
@@ -758,8 +819,14 @@ namespace MiningSimulator.Ores
                    !block.IsResolved && block.CanAcceptMiner(this, CurrentMiningPower);
         }
 
+        private bool CanMine(MiningChest chest)
+        {
+            return npcData != null && chest != null && chest.CanAcceptMiner(this, CurrentMiningPower);
+        }
+
         private Vector3 GetTargetPosition()
         {
+            if (targetChest != null) return targetChest.transform.position;
             return targetLuckyBlock != null
                 ? targetLuckyBlock.transform.position
                 : targetOre != null ? targetOre.transform.position : transform.position;
@@ -767,6 +834,7 @@ namespace MiningSimulator.Ores
 
         private float SqrDistanceToTargetSurface(Vector3 currentPosition)
         {
+            if (targetChest != null) return targetChest.SqrDistanceToSurface(currentPosition);
             return targetLuckyBlock != null
                 ? targetLuckyBlock.SqrDistanceToSurface(currentPosition)
                 : targetOre != null
@@ -776,6 +844,13 @@ namespace MiningSimulator.Ores
 
         private void ApplyDamageToTarget()
         {
+            if (targetChest != null)
+            {
+                float damage = progressionSystem != null
+                    ? progressionSystem.CurrentDamagePerHit : npcData.DamagePerHit;
+                targetChest.ApplyNpcDamage(damage);
+                return;
+            }
             if (targetLuckyBlock != null)
             {
                 float damage = progressionSystem != null
@@ -813,7 +888,7 @@ namespace MiningSimulator.Ores
 
         private void TryAdoptVisibleOre(Vector3 currentPosition)
         {
-            if (hasCommandedTarget || targetLuckyBlock != null)
+            if (hasCommandedTarget || targetLuckyBlock != null || targetChest != null)
             {
                 return;
             }
@@ -869,8 +944,11 @@ namespace MiningSimulator.Ores
                 targetLuckyBlock.ReleaseMiner(this);
             }
 
+            if (targetChest != null) targetChest.ReleaseMiner(this);
+
             targetOre = null;
             targetLuckyBlock = null;
+            targetChest = null;
             reservedSlot = -1;
             hasCommandedTarget = false;
             hasMoveTarget = false;
@@ -927,6 +1005,11 @@ namespace MiningSimulator.Ores
             {
                 ignoredLuckyBlock = targetLuckyBlock;
                 ignoredLuckyBlockUntil = Time.time + npcData.IgnoredTargetDuration;
+            }
+            else if (targetChest != null)
+            {
+                ignoredChest = targetChest;
+                ignoredChestUntil = Time.time + npcData.IgnoredTargetDuration;
             }
             else
             {

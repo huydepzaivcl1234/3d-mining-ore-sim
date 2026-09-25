@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using TMPro;
 using Microlight.MicroBar;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace MiningSimulator.Ores
 {
@@ -43,10 +44,16 @@ namespace MiningSimulator.Ores
         [SerializeField] private AudioClip chestOpenSfx;
         [SerializeField] private AudioClip itemRollTickSfx;
         [Min(1), SerializeField] private int hitsToBreak = 5;
+        [Header("NPC mining")]
+        [Min(1), SerializeField] private int npcMiningPowerRequired = 1;
+        [Min(1), SerializeField] private int maximumMiningNpcs = 3;
+        [Min(.01f), SerializeField] private float npcDamageMultiplier = 1f;
+        [Min(0f), SerializeField] private float npcMaxVerticalTargetDistance = 8f;
         [SerializeField] private Vector3 lidOpenEuler = new Vector3(-95f, 0f, 0f);
         [Min(0.01f), SerializeField] private float lockBreakSeconds = .2f;
         [Min(0.01f), SerializeField] private float lidOpenSeconds = .55f;
         [Min(0f), SerializeField] private float rewardDisplaySeconds = 3f;
+        [Min(0f), SerializeField] private float fadeOutSeconds = .7f;
 
         [Header("Wood Chest: percent of current money")]
         [Range(0f, 100f), SerializeField] private float minimumMoneyPercent = 1f;
@@ -78,10 +85,77 @@ namespace MiningSimulator.Ores
         private MiningAudioManager audioManager;
         private float nextRollSfxTime;
         private static AudioSource sharedChestAudioSource;
+        private static readonly List<MiningChest> ActiveChests = new();
+        private readonly HashSet<MiningNpc> reservedMiners = new();
+        private readonly List<(MeshRenderer renderer, Material[] originals, Material[] copies,
+            Color[] colors)> fadeMaterials = new();
+        private float npcDamageRemainder;
+        private Color fadeTextColor;
+        private Color fadeIconColor;
 
         public ChestKind Kind => kind;
         public bool CanMine => isActiveAndEnabled && !opening && !rewardPending && remainingHits > 0;
         public int RemainingHits => remainingHits;
+
+        public static bool TryReserveClosest(MiningNpc miner, Vector3 position, int miningPower,
+            MiningChest excluded, out MiningChest selected)
+        {
+            selected = null;
+            float closest = float.PositiveInfinity;
+            foreach (MiningChest chest in ActiveChests)
+            {
+                if (chest == null || chest == excluded || !chest.CanAcceptMiner(miner, miningPower) ||
+                    Mathf.Abs(chest.transform.position.y - position.y) > chest.npcMaxVerticalTargetDistance)
+                    continue;
+                float distance = chest.SqrDistanceToSurface(position);
+                if (distance >= closest) continue;
+                selected = chest;
+                closest = distance;
+            }
+            return selected != null && selected.TryReserveMiner(miner, miningPower);
+        }
+
+        public bool CanAcceptMiner(MiningNpc miner, int miningPower)
+        {
+            reservedMiners.RemoveWhere(candidate => candidate == null);
+            return miner != null && CanMine && miningPower >= npcMiningPowerRequired &&
+                (reservedMiners.Contains(miner) || reservedMiners.Count < maximumMiningNpcs);
+        }
+
+        public bool TryReserveMiner(MiningNpc miner, int miningPower)
+        {
+            if (!CanAcceptMiner(miner, miningPower)) return false;
+            reservedMiners.Add(miner);
+            return true;
+        }
+
+        public void ReleaseMiner(MiningNpc miner)
+        {
+            if (miner != null) reservedMiners.Remove(miner);
+        }
+
+        public Vector3 GetWorldTopCenter() => GetChestTop();
+
+        public Vector3 GetClosestSurfacePoint(Vector3 position)
+        {
+            Vector3 closest = hitCollider != null ? hitCollider.ClosestPoint(position) : transform.position;
+            closest.y = position.y;
+            return closest;
+        }
+
+        public float SqrDistanceToSurface(Vector3 position)
+        {
+            Vector3 closest = GetClosestSurfacePoint(position);
+            Vector3 delta = position - closest;
+            delta.y = 0f;
+            return delta.sqrMagnitude;
+        }
+
+        private void OnEnable()
+        {
+            if (Application.isPlaying && gameObject.scene.IsValid() && !ActiveChests.Contains(this))
+                ActiveChests.Add(this);
+        }
 
         private void Awake() => CaptureModelState();
 
@@ -109,6 +183,9 @@ namespace MiningSimulator.Ores
         {
             CaptureModelState();
             StopAllCoroutines();
+            ResetFadeVisuals();
+            reservedMiners.Clear();
+            npcDamageRemainder = 0f;
             wallet = targetWallet;
             itemSystem = targetItemSystem;
             release = returnToSpawner;
@@ -158,12 +235,27 @@ namespace MiningSimulator.Ores
         {
             if (rewardPending) return ClaimPendingItem();
             if (!CanMine) return false;
-            --remainingHits;
+            return ApplyHit(1);
+        }
+
+        public bool ApplyNpcDamage(float damage)
+        {
+            if (!CanMine || damage <= 0f) return false;
+            float accumulated = damage * npcDamageMultiplier + npcDamageRemainder;
+            int hits = Mathf.FloorToInt(Mathf.Min(accumulated, remainingHits));
+            npcDamageRemainder = hits >= remainingHits ? 0f : accumulated - hits;
+            return hits <= 0 || ApplyHit(hits);
+        }
+
+        private bool ApplyHit(int hits)
+        {
+            remainingHits = Mathf.Max(0, remainingHits - hits);
             if (healthBar != null) healthBar.UpdateBar(remainingHits);
             UpdateHealthText();
             hitPunch?.Play();
             if (remainingHits <= 0)
             {
+                reservedMiners.Clear();
                 opening = true;
                 if (healthBar != null) healthBar.gameObject.SetActive(false);
                 PlayChestSfx(lockBreakSfx);
@@ -251,7 +343,7 @@ namespace MiningSimulator.Ores
             if (!rewardPending)
             {
                 if (rewardDisplaySeconds > 0f) yield return new WaitForSeconds(rewardDisplaySeconds);
-                release?.Invoke(this);
+                yield return FadeAndRelease();
             }
         }
 
@@ -349,7 +441,103 @@ namespace MiningSimulator.Ores
         private IEnumerator ReleaseAfterDisplay()
         {
             if (rewardDisplaySeconds > 0f) yield return new WaitForSeconds(rewardDisplaySeconds);
-            release?.Invoke(this);
+            yield return FadeAndRelease();
+        }
+
+        private IEnumerator FadeAndRelease()
+        {
+            if (fadeOutSeconds > 0f)
+            {
+                PrepareFadeMaterials();
+                fadeTextColor = rewardText != null ? rewardText.color : Color.white;
+                fadeIconColor = lidRewardIcon != null ? lidRewardIcon.color : Color.white;
+                float elapsed = 0f;
+                while (elapsed < fadeOutSeconds)
+                {
+                    elapsed += Time.deltaTime;
+                    float alpha = 1f - Mathf.SmoothStep(0f, 1f,
+                        Mathf.Clamp01(elapsed / fadeOutSeconds));
+                    SetFadeAlpha(alpha);
+                    if (rewardText != null)
+                    {
+                        Color color = fadeTextColor;
+                        color.a *= alpha;
+                        rewardText.color = color;
+                    }
+                    if (lidRewardIcon != null)
+                    {
+                        Color color = fadeIconColor;
+                        color.a *= alpha;
+                        lidRewardIcon.color = color;
+                    }
+                    yield return null;
+                }
+            }
+            if (release != null) release(this);
+            else Destroy(gameObject);
+        }
+
+        private void PrepareFadeMaterials()
+        {
+            foreach (MeshRenderer renderer in GetComponentsInChildren<MeshRenderer>(true))
+            {
+                if (renderer.GetComponent<TMP_Text>() != null ||
+                    renderer.GetComponentInParent<MicroBar>() != null) continue;
+                Material[] originals = renderer.sharedMaterials;
+                var copies = new Material[originals.Length];
+                var colors = new Color[originals.Length];
+                for (int index = 0; index < originals.Length; index++)
+                {
+                    if (originals[index] == null) continue;
+                    Material copy = new Material(originals[index]);
+                    if (copy.HasProperty("_Surface"))
+                    {
+                        copy.SetFloat("_Surface", 1f);
+                        copy.SetFloat("_SrcBlend", (float)BlendMode.SrcAlpha);
+                        copy.SetFloat("_DstBlend", (float)BlendMode.OneMinusSrcAlpha);
+                        copy.SetFloat("_ZWrite", 0f);
+                        copy.SetOverrideTag("RenderType", "Transparent");
+                        copy.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+                        copy.renderQueue = (int)RenderQueue.Transparent;
+                    }
+                    colors[index] = copy.HasProperty("_BaseColor")
+                        ? copy.GetColor("_BaseColor")
+                        : copy.HasProperty("_Color") ? copy.GetColor("_Color") : Color.white;
+                    copies[index] = copy;
+                }
+                renderer.sharedMaterials = copies;
+                fadeMaterials.Add((renderer, originals, copies, colors));
+            }
+        }
+
+        private void SetFadeAlpha(float alpha)
+        {
+            foreach (var entry in fadeMaterials)
+            {
+                for (int index = 0; index < entry.copies.Length; index++)
+                {
+                    Material material = entry.copies[index];
+                    if (material == null) continue;
+                    Color color = entry.colors[index];
+                    color.a *= alpha;
+                    if (material.HasProperty("_BaseColor")) material.SetColor("_BaseColor", color);
+                    if (material.HasProperty("_Color")) material.SetColor("_Color", color);
+                }
+            }
+        }
+
+        private void ResetFadeVisuals()
+        {
+            bool faded = fadeMaterials.Count > 0;
+            foreach (var entry in fadeMaterials)
+            {
+                if (entry.renderer != null) entry.renderer.sharedMaterials = entry.originals;
+                foreach (Material material in entry.copies)
+                    if (material != null) Destroy(material);
+            }
+            fadeMaterials.Clear();
+            if (faded && rewardText != null) rewardText.color = fadeTextColor;
+            if (faded && lidRewardIcon != null) lidRewardIcon.color = fadeIconColor;
         }
 
         private void DisplayIcon(MiningItemData item)
@@ -455,13 +643,21 @@ namespace MiningSimulator.Ores
 
         private void OnDisable()
         {
+            ActiveChests.Remove(this);
+            reservedMiners.Clear();
             StopAllCoroutines();
+            ResetFadeVisuals();
             opening = rewardPending = false;
         }
 
         private void OnValidate()
         {
             hitsToBreak = Mathf.Max(1, hitsToBreak);
+            npcMiningPowerRequired = Mathf.Max(1, npcMiningPowerRequired);
+            maximumMiningNpcs = Mathf.Max(1, maximumMiningNpcs);
+            npcDamageMultiplier = Mathf.Max(.01f, npcDamageMultiplier);
+            npcMaxVerticalTargetDistance = Mathf.Max(0f, npcMaxVerticalTargetDistance);
+            fadeOutSeconds = Mathf.Max(0f, fadeOutSeconds);
             minimumMoneyPercent = Mathf.Clamp(minimumMoneyPercent, 0f, 100f);
             maximumMoneyPercent = Mathf.Clamp(maximumMoneyPercent, 0f, 100f);
         }

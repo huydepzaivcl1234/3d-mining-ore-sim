@@ -424,15 +424,20 @@ MonoBehaviour:
   overheadOffset: {x: 0, y: 0.3, z: 0}
   healthBarWorldScale: 0.65
   rewardHeightAboveBar: 0.55
-  chestHitSfx: {fileID: 0}
-  lockBreakSfx: {fileID: 0}
-  chestOpenSfx: {fileID: 0}
-  itemRollTickSfx: {fileID: 0}
+  chestHitSfx: {fileID: 8300000, guid: ba137dd840868be4ba729d4d80b49649, type: 3}
+  lockBreakSfx: {fileID: 8300000, guid: 58b42f4346b5cbb4ba370d31c0f88bc9, type: 3}
+  chestOpenSfx: {fileID: 8300000, guid: 074b323928eb80a48aa07bdb39fd5dfb, type: 3}
+  itemRollTickSfx: {fileID: 8300000, guid: bc9b89f6417d1b645a585b7e48a470aa, type: 3}
   hitsToBreak: 5
+  npcMiningPowerRequired: 1
+  maximumMiningNpcs: 3
+  npcDamageMultiplier: 1
+  npcMaxVerticalTargetDistance: 8
   lidOpenEuler: {x: -95, y: 0, z: 0}
   lockBreakSeconds: 0.2
   lidOpenSeconds: 0.55
   rewardDisplaySeconds: 3
+  fadeOutSeconds: 0.7
   minimumMoneyPercent: 1
   maximumMoneyPercent: 100
   itemChances: []
