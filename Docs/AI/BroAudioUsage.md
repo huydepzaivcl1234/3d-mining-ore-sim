@@ -1,3 +1,7 @@
+# BroAudio usage (vendor documentation)
+
+Copied from the BroAudio package documentation.
+
 # Using BroAudio
 
 BroAudio is the audio middleware installed in this project. This file is about **using** it from gameplay code — playing and controlling sounds, and wiring the no-code components. It does not cover modifying the package itself.

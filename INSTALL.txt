@@ -1,9 +1,0 @@
-UNITY 6 / URP — TOXIC SLIME PORTAL (VISUAL ONLY)
-
-1) Extract this ZIP at the root of your Unity project. Keep the Assets folder paths as supplied. No SampleScene included.
-2) In the Hierarchy select your EXISTING Mining Portal Gate. Run Mining Simulator > Portal > Add Toxic Slime Visual to Selected Gate. This creates an editable Quad CHILD and ToxicSlimePortal.mat; it never removes your gate, gate collider, or existing portal artwork. Run again to select the same child.
-3) Position/rotate/scale Toxic Slime Portal Visual in Scene view so it faces your gameplay camera and fits inside your portal frame. If you want to replace your old artwork, hide only the old visual Renderer yourself; leave the gate and its interaction scripts in place. The new Quad has NO collider.
-4) Edit the Toxic Slime Portal Visual component in Inspector: Swirl Speed, Bubble Density, Rim Splash, HDR colors, Glow, Open Amount. Set Aspect Correction to the width / height of the visible quad when non-square. Add an AudioSource and assign Pop/Warp clips if you want sounds.
-5) Enter Play Mode. Open the component menu (three dots / gear) and choose Preview / Pop Portal Open, Preview / Close Portal, or Preview / Warp Pulse (Visual Only). The animation DOES NOT swap worlds or change portal input.
-6) For URP Bloom: enable HDR on camera / URP asset as appropriate and add a Bloom override to a scene Volume. Shader glow/soft halo still appears without Bloom. Visual similarity depends on camera exposure and rendering resolution.
-7) The portal is an edit-time scene object. Do not copy SampleScene from any package. Git commit/push is up to you.
