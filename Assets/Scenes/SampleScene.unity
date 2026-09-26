@@ -119,6 +119,63 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &6420751
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6420753}
+  - component: {fileID: 6420752}
+  m_Layer: 0
+  m_Name: Mushroom Spawn Zone
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &6420752
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6420751}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d0d9e5301d77bc4f8f2991f47318a72, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MonsterSpawnZone
+  monsters:
+  - prefab: {fileID: 2814797438900439487, guid: 3fc8239ff0fe7fd469ff0e115b0c552f, type: 3}
+    chance: 100
+  areaSize: {x: 16, y: 4, z: 16}
+  initialCount: 3
+  maximumAlive: 6
+  secondsPerSpawn: 5
+  minimumSpacing: 2
+  groundLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  player: {fileID: 2064186237}
+--- !u!4 &6420753
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6420751}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.9, y: 0.04, z: 46.7}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 336767597}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &8394372
 GameObject:
   m_ObjectHideFlags: 0
@@ -14680,6 +14737,28 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 336691870}
   m_CullTransparentMesh: 1
+--- !u!1 &336767596 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3548091683157375690, guid: 3fc8239ff0fe7fd469ff0e115b0c552f, type: 3}
+  m_PrefabInstance: {fileID: 1318969060}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &336767597 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6740146339672226398, guid: 3fc8239ff0fe7fd469ff0e115b0c552f, type: 3}
+  m_PrefabInstance: {fileID: 1318969060}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &336767598
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 336767596}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a6c4a9f0043804444b49179256844d6d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MonsterScenePreview
 --- !u!1 &339723565
 GameObject:
   m_ObjectHideFlags: 0
@@ -59042,6 +59121,97 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningButtonSfx
   audioManager: {fileID: 2127211622}
+--- !u!1001 &1318969060
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 6420753}
+    m_Modifications:
+    - target: {fileID: 3548091683157375690, guid: 3fc8239ff0fe7fd469ff0e115b0c552f, type: 3}
+      propertyPath: m_Name
+      value: Mushroom Preview (disabled during play)
+      objectReference: {fileID: 0}
+    - target: {fileID: 5619907306717549108, guid: 3fc8239ff0fe7fd469ff0e115b0c552f, type: 3}
+      propertyPath: microBar
+      value: 
+      objectReference: {fileID: 1456348157}
+    - target: {fileID: 5619907306717549108, guid: 3fc8239ff0fe7fd469ff0e115b0c552f, type: 3}
+      propertyPath: healthBar
+      value: 
+      objectReference: {fileID: 1456348158}
+    - target: {fileID: 5619907306717549108, guid: 3fc8239ff0fe7fd469ff0e115b0c552f, type: 3}
+      propertyPath: maxHealth
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 5619907306717549108, guid: 3fc8239ff0fe7fd469ff0e115b0c552f, type: 3}
+      propertyPath: healthLabel
+      value: 
+      objectReference: {fileID: 950174556}
+    - target: {fileID: 5619907306717549108, guid: 3fc8239ff0fe7fd469ff0e115b0c552f, type: 3}
+      propertyPath: regenAmount
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5619907306717549108, guid: 3fc8239ff0fe7fd469ff0e115b0c552f, type: 3}
+      propertyPath: regenInterval
+      value: 0.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5619907306717549108, guid: 3fc8239ff0fe7fd469ff0e115b0c552f, type: 3}
+      propertyPath: m_EditorClassIdentifier
+      value: Assembly-CSharp::MiningSimulator.Ores.MiningCombatActor
+      objectReference: {fileID: 0}
+    - target: {fileID: 6740146339672226398, guid: 3fc8239ff0fe7fd469ff0e115b0c552f, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6740146339672226398, guid: 3fc8239ff0fe7fd469ff0e115b0c552f, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6740146339672226398, guid: 3fc8239ff0fe7fd469ff0e115b0c552f, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6740146339672226398, guid: 3fc8239ff0fe7fd469ff0e115b0c552f, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6740146339672226398, guid: 3fc8239ff0fe7fd469ff0e115b0c552f, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6740146339672226398, guid: 3fc8239ff0fe7fd469ff0e115b0c552f, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6740146339672226398, guid: 3fc8239ff0fe7fd469ff0e115b0c552f, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6740146339672226398, guid: 3fc8239ff0fe7fd469ff0e115b0c552f, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6740146339672226398, guid: 3fc8239ff0fe7fd469ff0e115b0c552f, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6740146339672226398, guid: 3fc8239ff0fe7fd469ff0e115b0c552f, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 3548091683157375690, guid: 3fc8239ff0fe7fd469ff0e115b0c552f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 336767598}
+    - targetCorrespondingSourceObject: {fileID: 8802041286177586168, guid: 3fc8239ff0fe7fd469ff0e115b0c552f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 0}
+  m_SourcePrefab: {fileID: 100100000, guid: 3fc8239ff0fe7fd469ff0e115b0c552f, type: 3}
 --- !u!1 &1319165544
 GameObject:
   m_ObjectHideFlags: 0
@@ -93563,6 +93733,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningCombatActor
   maxHealth: 100
+  regenAmount: 1
+  regenInterval: 10
   healthBar: {fileID: 1456348158}
   microBar: {fileID: 1456348157}
   healthLabel: {fileID: 950174556}
@@ -93613,6 +93785,16 @@ MonoBehaviour:
       m_Action: Attack
       m_Flags: 0
     m_Flags: 0
+  damage: 1
+  attackRange: 1.75
+  attackAngle: 100
+  attackSpeed: 1
+  combatBlendSeconds: 0.15
+  hitTime: 0.45
+  hitOriginOffset: {x: 0, y: 1, z: 0}
+  targetLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
 --- !u!1 &2064186785
 GameObject:
   m_ObjectHideFlags: 0
@@ -109373,3 +109555,4 @@ SceneRoots:
   - {fileID: 1937557936}
   - {fileID: 1835622045}
   - {fileID: 1521490783}
+  - {fileID: 6420753}
