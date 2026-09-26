@@ -15,6 +15,12 @@ namespace MiningSimulator.Ores
         private float health;
         public float Health => health;
         public float MaxHealth => maxHealth;
+        public void ApplyDamage(float amount)
+        {
+            if (amount <= 0f || health <= 0f) return;
+            health = Mathf.Max(0f, health - amount);
+            Refresh();
+        }
 
         private void Awake()
         {
@@ -45,4 +51,3 @@ namespace MiningSimulator.Ores
         private void OnValidate() => maxHealth = Mathf.Max(1f, maxHealth);
     }
 }
-

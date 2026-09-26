@@ -12,6 +12,7 @@
     "com.unity.render-pipelines.universal": "17.5.0",
     "com.unity.test-framework": "1.7.0",
     "com.unity.timeline": "1.8.13",
+    "com.unity.toonshader": "0.10.0-preview",
     "com.unity.ugui": "2.5.0",
     "com.unity.vectorgraphics": "3.0.0-preview.7",
     "com.unity.visualscripting": "1.9.12",
