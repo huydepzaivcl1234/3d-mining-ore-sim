@@ -12,6 +12,13 @@ namespace MiningSimulator.Ores
         [SerializeField] private Camera controlledCamera;
         [SerializeField] private MiningGameData gameData;
 
+        [Header("Third Person (scene references)")]
+        [SerializeField] private Transform followTarget;
+        [SerializeField] private Vector3 followOffset = new(0f, 1.5f, 0f);
+        [Min(0.5f), SerializeField] private float followDistance = 4.5f;
+        [Range(-70f, 80f), SerializeField] private float followPitch = 18f;
+        [SerializeField] private bool rotateOnlyWhileRightMouseHeld = true;
+
         [Header("Collision")]
         [Tooltip("Static world layers that stop the camera body. The focus point is not a collider.")]
         [SerializeField] private LayerMask collisionLayers = ~0;
@@ -32,6 +39,7 @@ namespace MiningSimulator.Ores
         private Vector3 resolvedCameraPosition;
         private bool hasResolvedCameraPosition;
         private SphereCollider collisionEye;
+        private PlayerInput playerInput;
         private bool ownsRuntimeCollider;
         private Tween shakeTween;
         private float shakeEnvelope;
@@ -49,6 +57,14 @@ namespace MiningSimulator.Ores
                 distance = gameData.CameraDistance;
                 yaw = gameData.CameraYaw;
                 pitch = gameData.CameraPitch;
+            }
+            if (followTarget != null)
+            {
+                focusPoint = followTarget.position + followOffset;
+                yaw = followTarget.eulerAngles.y;
+                pitch = followPitch;
+                distance = followDistance;
+                playerInput = followTarget.GetComponentInChildren<PlayerInput>(true);
             }
         }
 
@@ -68,6 +84,25 @@ namespace MiningSimulator.Ores
         public void SetInputLocked(bool locked)
         {
             inputLocked = locked;
+            if (followTarget == null) return;
+            if (playerInput == null) playerInput = followTarget.GetComponentInChildren<PlayerInput>(true);
+            if (playerInput == null) return;
+            if (locked)
+            {
+                playerInput.DeactivateInput();
+                // Starter Assets stores movement outside PlayerInput. Clear the values so
+                // a menu opened while running cannot leave the character moving.
+                Component inputs = playerInput.GetComponent("StarterAssetsInputs");
+                if (inputs != null)
+                {
+                    System.Type type = inputs.GetType();
+                    type.GetField("move")?.SetValue(inputs, Vector2.zero);
+                    type.GetField("look")?.SetValue(inputs, Vector2.zero);
+                    type.GetField("jump")?.SetValue(inputs, false);
+                    type.GetField("sprint")?.SetValue(inputs, false);
+                }
+            }
+            else playerInput.ActivateInput();
         }
 
         private void LateUpdate()
@@ -84,6 +119,9 @@ namespace MiningSimulator.Ores
 
             EnsureCameraBodyCollider();
 
+            if (followTarget != null)
+                focusPoint = followTarget.position + followOffset;
+
             Quaternion rotation = Quaternion.Euler(pitch, yaw, 0f);
             Vector3 desiredPosition = focusPoint - rotation * Vector3.forward * distance;
             if (shakeEnvelope > 0f)
@@ -97,6 +135,11 @@ namespace MiningSimulator.Ores
             }
 
             Vector3 position = ResolveCameraPosition(desiredPosition);
+            if (followTarget != null)
+            {
+                position = ResolveFollowLineOfSight(position);
+                resolvedCameraPosition = position;
+            }
             controlledCamera.transform.SetPositionAndRotation(position, rotation);
         }
 
@@ -144,6 +187,7 @@ namespace MiningSimulator.Ores
         }
 
         public Camera ControlledCamera => controlledCamera;
+        public Transform FollowTarget => followTarget;
         public Vector3 FocusPoint => focusPoint;
         public Vector3 DefaultFocusPoint => gameData != null
             ? gameData.CameraFocusPoint
@@ -194,6 +238,8 @@ namespace MiningSimulator.Ores
 
         private void ReadKeyboard()
         {
+            // WASD belongs to the character when following it.
+            if (followTarget != null) return;
             Keyboard keyboard = Keyboard.current;
             if (keyboard == null)
             {
@@ -237,7 +283,7 @@ namespace MiningSimulator.Ores
             }
 
             Vector2 delta = mouse.delta.ReadValue();
-            if (mouse.rightButton.isPressed)
+            if (!rotateOnlyWhileRightMouseHeld || mouse.rightButton.isPressed)
             {
                 yaw += delta.x * gameData.CameraRotationDegreesPerPixel;
                 pitch = Mathf.Clamp(pitch - delta.y * gameData.CameraRotationDegreesPerPixel,
@@ -265,6 +311,17 @@ namespace MiningSimulator.Ores
             }
             resolvedCameraPosition = ResolveEyeOverlap(ResolveEyeMovement(desiredPosition));
             return resolvedCameraPosition;
+        }
+
+        private Vector3 ResolveFollowLineOfSight(Vector3 position)
+        {
+            Vector3 offset = position - focusPoint;
+            float length = offset.magnitude;
+            if (length <= BodyRadius ||
+                !TryGetClosestObstruction(focusPoint, offset, length, out RaycastHit hit))
+                return position;
+            return ResolveEyeOverlap(focusPoint + offset / length *
+                Mathf.Max(0f, hit.distance - collisionPadding));
         }
 
         private Vector3 ResolveEyeMovement(Vector3 targetPosition)
@@ -451,6 +508,9 @@ namespace MiningSimulator.Ores
                 return false;
             }
 
+            if (followTarget != null && (candidateTransform == followTarget ||
+                candidateTransform.IsChildOf(followTarget))) return false;
+
             // Ores, NPCs, drops, and falling Lucky Blocks must not make the camera pulse in and
             // out while they move. Static level geometry has no Rigidbody and remains blocking.
             return candidate.attachedRigidbody == null &&
@@ -461,6 +521,7 @@ namespace MiningSimulator.Ores
         {
             collisionRadius = Mathf.Max(0.01f, collisionRadius);
             collisionPadding = Mathf.Max(0f, collisionPadding);
+            followDistance = Mathf.Max(0.5f, followDistance);
             if (ownsRuntimeCollider && collisionEye != null)
             {
                 collisionEye.radius = collisionRadius;
