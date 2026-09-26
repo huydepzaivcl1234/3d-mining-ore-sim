@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using System.IO;
 using MiningSimulator.Ores;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -13,12 +14,25 @@ namespace MiningSimulator.Editor
         private const string AreaName = "Mining Occlusion Area";
         private const string MenuRoot = "Mining Simulator/Optimization/Occlusion Culling/";
         private static string bakingScenePath;
+        private static bool previewAfterBake;
+
+        [MenuItem(MenuRoot + "0. Set Up, Bake And Show In Scene")]
+        private static void SetUpBakeAndShow()
+        {
+            if (!TryGetEditableScene(out Scene scene)) return;
+            if (!PrepareScene(scene)) return;
+            BakeScene(scene, true);
+        }
 
         [MenuItem(MenuRoot + "1. Prepare Open Scene")]
         private static void Prepare()
         {
             if (!TryGetEditableScene(out Scene scene)) return;
+            PrepareScene(scene);
+        }
 
+        private static bool PrepareScene(Scene scene)
+        {
             Camera gameCamera = null;
             Terrain terrain = null;
             OreSpawner spawner = null;
@@ -35,7 +49,7 @@ namespace MiningSimulator.Editor
             if (gameCamera == null || terrain == null)
             {
                 Debug.LogError("Occlusion setup needs the play scene with Main Camera and Ground/Terrain.");
-                return;
+                return false;
             }
 
             Undo.RecordObject(gameCamera, "Enable main camera occlusion");
@@ -56,7 +70,8 @@ namespace MiningSimulator.Editor
             GameObject areaObject = null;
             foreach (GameObject root in scene.GetRootGameObjects())
                 if (root.name == AreaName) { areaObject = root; break; }
-            if (areaObject == null)
+            bool newArea = areaObject == null;
+            if (newArea)
             {
                 areaObject = new GameObject(AreaName);
                 SceneManager.MoveGameObjectToScene(areaObject, scene);
@@ -72,20 +87,26 @@ namespace MiningSimulator.Editor
                 ? spawner.SpawnAreaCenter : Vector3.zero;
             Vector3 size = spawner != null && spawner.SpawnData != null
                 ? spawner.SpawnAreaSize : new Vector3(20f, 0f, 20f);
-            Undo.RecordObject(areaObject.transform, "Fit mining occlusion area");
-            Undo.RecordObject(area, "Fit mining occlusion area");
-            areaObject.transform.position = center + Vector3.up * 10f;
-            areaObject.transform.rotation = Quaternion.identity;
-            areaObject.transform.localScale = Vector3.one;
-            area.center = Vector3.zero;
-            area.size = new Vector3(
-                Mathf.Max(64f, Mathf.Abs(size.x) + reach * 2f + 20f),
-                Mathf.Max(60f, reach * 2f + 20f),
-                Mathf.Max(64f, Mathf.Abs(size.z) + reach * 2f + 20f));
+            if (newArea)
+            {
+                // Once authored, the area remains editable in the Scene and is
+                // never moved or resized by running this setup menu again.
+                Undo.RecordObject(areaObject.transform, "Fit mining occlusion area");
+                Undo.RecordObject(area, "Fit mining occlusion area");
+                areaObject.transform.position = center + Vector3.up * 10f;
+                areaObject.transform.rotation = Quaternion.identity;
+                areaObject.transform.localScale = Vector3.one;
+                area.center = Vector3.zero;
+                area.size = new Vector3(
+                    Mathf.Max(64f, Mathf.Abs(size.x) + reach * 2f + 20f),
+                    Mathf.Max(60f, reach * 2f + 20f),
+                    Mathf.Max(64f, Mathf.Abs(size.z) + reach * 2f + 20f));
+            }
 
             EditorSceneManager.MarkSceneDirty(scene);
             Selection.activeGameObject = areaObject;
-            Debug.Log("Occlusion prepared on the existing camera and terrain. Area follows the ore spawn bounds and maximum camera zoom. Mark large permanent walls/rocks using menu 2, then run menu 3 to bake and save the scene.", areaObject);
+            Debug.Log("Occlusion Area is now an editable object in the scene. Mark any large permanent walls/rocks with menu 2, then bake with menu 3. Menu 0 prepares and bakes in one step.", areaObject);
+            return true;
         }
 
         [MenuItem(MenuRoot + "2. Mark Selected Permanent Walls Or Rocks")]
@@ -134,6 +155,11 @@ namespace MiningSimulator.Editor
         private static void Bake()
         {
             if (!TryGetEditableScene(out Scene scene)) return;
+            BakeScene(scene, false);
+        }
+
+        private static void BakeScene(Scene scene, bool preview)
+        {
             if (StaticOcclusionCulling.isRunning)
             {
                 Debug.LogWarning("An occlusion bake is already running.");
@@ -146,9 +172,11 @@ namespace MiningSimulator.Editor
             }
 
             bakingScenePath = scene.path;
+            previewAfterBake = preview;
             if (!StaticOcclusionCulling.Compute())
             {
                 bakingScenePath = null;
+                previewAfterBake = false;
                 Debug.LogError("Unity could not start the occlusion bake. Check the Occlusion Culling window and Console.");
                 return;
             }
@@ -163,6 +191,8 @@ namespace MiningSimulator.Editor
             EditorApplication.update -= SaveWhenFinished;
             Scene scene = SceneManager.GetSceneByPath(bakingScenePath);
             bakingScenePath = null;
+            bool preview = previewAfterBake;
+            previewAfterBake = false;
             if (!scene.IsValid() || !scene.isLoaded)
             {
                 Debug.LogWarning("Occlusion bake ended after the scene was closed. Reopen the scene and save it.");
@@ -174,6 +204,59 @@ namespace MiningSimulator.Editor
                 return;
             }
             Debug.Log($"Occlusion bake finished. Data size: {StaticOcclusionCulling.umbraDataSize / 1024f:0.#} KiB. Inspect the Occlusion Culling Visualization tab and compare Game view Stats before/after.");
+            if (preview) ShowInScene(scene);
+        }
+
+        [MenuItem(MenuRoot + "5. Show Baked Occlusion In Scene")]
+        private static void ShowInSceneMenu()
+        {
+            if (!TryGetEditableScene(out Scene scene)) return;
+            ShowInScene(scene);
+        }
+
+        private static void ShowInScene(Scene scene)
+        {
+            // A previous bake's displayed size can outlive the scene it belonged to.
+            // Confirm that THIS saved scene has a baked data reference first.
+            if (string.IsNullOrEmpty(scene.path) || !File.Exists(scene.path) ||
+                !HasBakedData(scene.path))
+            {
+                Debug.LogWarning("This scene does not reference baked occlusion data. Exit Play Mode, run '0. Set Up, Bake And Show In Scene', then save the scene.");
+                return;
+            }
+
+            Camera mainCamera = null;
+            foreach (GameObject root in scene.GetRootGameObjects())
+                foreach (Camera camera in root.GetComponentsInChildren<Camera>(true))
+                    if (camera.CompareTag("MainCamera")) { mainCamera = camera; break; }
+            if (mainCamera == null)
+            {
+                Debug.LogWarning("Could not find the Main Camera in the open scene.");
+                return;
+            }
+
+            EditorApplication.ExecuteMenuItem("Window/Rendering/Occlusion Culling");
+            Selection.activeGameObject = mainCamera.gameObject;
+            StaticOcclusionCullingVisualization.showOcclusionCulling = true;
+            StaticOcclusionCullingVisualization.showGeometryCulling = true;
+            StaticOcclusionCullingVisualization.showViewVolumes = true;
+            StaticOcclusionCullingVisualization.showVisibilityLines = true;
+            SceneView view = SceneView.lastActiveSceneView;
+            if (view != null)
+            {
+                view.AlignViewToObject(mainCamera.transform);
+                view.Repaint();
+            }
+            Debug.Log("Select the Visualization tab in the Occlusion window. Scene view now follows the selected Main Camera; move it behind a stationary wall or hill to check which renderers disappear.", mainCamera);
+        }
+
+        private static bool HasBakedData(string scenePath)
+        {
+            using StreamReader reader = new(scenePath);
+            for (int i = 0; i < 32 && reader.ReadLine() is { } line; i++)
+                if (line.TrimStart().StartsWith("m_OcclusionCullingData:"))
+                    return !line.Contains("{fileID: 0}");
+            return false;
         }
 
         [MenuItem(MenuRoot + "4. Cancel Running Bake")]
@@ -182,6 +265,7 @@ namespace MiningSimulator.Editor
             if (!StaticOcclusionCulling.isRunning) return;
             EditorApplication.update -= SaveWhenFinished;
             bakingScenePath = null;
+            previewAfterBake = false;
             StaticOcclusionCulling.Cancel();
             Debug.Log("Occlusion bake cancelled; the previous baked data is unchanged.");
         }
