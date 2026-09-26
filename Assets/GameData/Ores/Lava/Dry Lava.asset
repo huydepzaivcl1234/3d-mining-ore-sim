@@ -19,9 +19,9 @@ MonoBehaviour:
   miningPowerRequired: 15
   durability: 5500
   clickDamage: 1
-  baseSellValue: 1800
+  baseSellValue: 700
   gemReward: 1
-  experienceReward: 1000
+  experienceReward: 500
   destroyDelay: 0
   maximumMiningNpcs: 1
   npcStandDistance: 1.4

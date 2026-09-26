@@ -10,13 +10,11 @@ namespace MiningSimulator.Editor
     public static class MiningLowPolyModelSetupMenu
     {
         private const string Folder = "Assets/Prefabs/Ores/LavaModels";
-        private const string MinerFolder = "Assets/Prefabs/NPC/LowPoly";
 
-        [MenuItem("Mining Simulator/Models/Create Lava Ores and Low Poly Miner")]
+        [MenuItem("Mining Simulator/Models/Create Lava Ore Models")]
         private static void CreateModels()
         {
             EnsureFolder("Assets/Prefabs/Ores", "LavaModels");
-            EnsureFolder("Assets/Prefabs/NPC", "LowPoly");
             Mesh rock = SaveMesh(Folder + "/Faceted Lava Rock.asset", BuildRock());
             Mesh spike = SaveMesh(Folder + "/Lava Crystal.asset", BuildSpike());
             Material dry = SaveMaterial(Folder + "/Dry Lava Charcoal.mat", new Color(.13f, .11f, .12f));
@@ -28,13 +26,10 @@ namespace MiningSimulator.Editor
                 rock, spike, dry, dryGlow, .88f, false);
             CreateOre("Lava Core", "Assets/Prefabs/Ores/Molten_Core.prefab",
                 rock, spike, core, coreGlow, 1.05f, true);
-            CreateMiner();
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             EditorUtility.DisplayDialog("Low Poly Models",
-                "Dry Lava and Lava Core prefabs are assigned to their OreData assets. " +
-                "Replace the NPC System miner prefab with Assets/Prefabs/NPC/LowPoly/MiningNpc_LowPoly.prefab. " +
-                "The original Humanoid rig, controller, pickaxe and mining animation are preserved.", "OK");
+                "Dry Lava and Lava Core prefabs are assigned to their OreData assets.", "OK");
         }
 
         private static void CreateOre(string name, string template, Mesh rock, Mesh spike,
@@ -102,36 +97,6 @@ namespace MiningSimulator.Editor
                 AssetDatabase.LoadAssetAtPath<GameObject>(path);
             serialized.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(data);
-        }
-
-        private static void CreateMiner()
-        {
-            const string source = "Assets/Prefabs/NPC/MiningNpc.prefab";
-            const string path = MinerFolder + "/MiningNpc_LowPoly.prefab";
-            Material jacket = SaveMaterial(MinerFolder + "/Miner Jacket.mat", new Color(.2f, .38f, .43f));
-            Material trousers = SaveMaterial(MinerFolder + "/Miner Trousers.mat", new Color(.18f, .18f, .24f));
-            Material skin = SaveMaterial(MinerFolder + "/Miner Skin.mat", new Color(.69f, .43f, .26f));
-            Material helmet = SaveMaterial(MinerFolder + "/Miner Helmet.mat", new Color(.94f, .57f, .07f));
-            Material boots = SaveMaterial(MinerFolder + "/Miner Boots.mat", new Color(.12f, .12f, .15f));
-            Material lamp = SaveMaterial(MinerFolder + "/Miner Lamp.mat", new Color(1f, .82f, .29f), true);
-            GameObject root = PrefabUtility.LoadPrefabContents(source);
-            try
-            {
-                root.name = "MiningNpc_LowPoly";
-                LowPolyMinerSkin visual = root.GetComponent<LowPolyMinerSkin>();
-                if (visual == null) visual = root.AddComponent<LowPolyMinerSkin>();
-                SerializedObject serialized = new(visual);
-                serialized.FindProperty("jacket").objectReferenceValue = jacket;
-                serialized.FindProperty("trousers").objectReferenceValue = trousers;
-                serialized.FindProperty("skin").objectReferenceValue = skin;
-                serialized.FindProperty("helmet").objectReferenceValue = helmet;
-                serialized.FindProperty("boots").objectReferenceValue = boots;
-                serialized.FindProperty("lamp").objectReferenceValue = lamp;
-                serialized.ApplyModifiedPropertiesWithoutUndo();
-                if (PrefabUtility.SaveAsPrefabAsset(root, path) == null)
-                    throw new System.InvalidOperationException("Could not save " + path);
-            }
-            finally { PrefabUtility.UnloadPrefabContents(root); }
         }
 
         private static void AddMesh(Transform parent, string name, Mesh mesh, Material material,

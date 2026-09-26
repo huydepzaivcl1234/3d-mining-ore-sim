@@ -162,8 +162,6 @@ namespace MiningSimulator.Ores
             if (compactPcXpLabel) displayedPercent = -1;
             int level = progressionSystem != null ? progressionSystem.CurrentLevel : 1;
             int power = progressionSystem != null ? progressionSystem.CurrentMiningPower : 0;
-            if (titleText != null) titleText.text = MiningLocalization.Text(
-                "MINER PROGRESS", "TIẾN TRÌNH THỢ MỎ");
             if (levelBadgeText != null) levelBadgeText.text = $"LV.{level}";
             if (rankTitleText != null) rankTitleText.text = string.Format(
                 MiningLocalization.Text("Miner level {0}", "Thợ mỏ cấp {0}"), level);
@@ -222,30 +220,12 @@ namespace MiningSimulator.Ores
             if (experienceBar == null) experienceBar = GetComponentInChildren<MicroBar>(true);
             if (experienceBar != null) experienceBar.gameObject.SetActive(true);
 
-            // Older compact layouts removed the title and disabled the legacy labels.
-            // Use the existing card and live presenter rather than a second XP controller.
-            if (titleText == null)
-            {
-                Transform existing = cardTransform.Find("PC Progress Title");
-                if (existing != null) titleText = existing.GetComponent<TextMeshProUGUI>();
-                if (titleText == null)
-                {
-                    GameObject title = new("PC Progress Title", typeof(RectTransform),
-                        typeof(TextMeshProUGUI));
-                    title.transform.SetParent(cardTransform, false);
-                    RectTransform rect = (RectTransform)title.transform;
-                    rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(.5f, .5f);
-                    rect.sizeDelta = new Vector2(110f, 28f);
-                    rect.anchoredPosition = new Vector2(-116f, 13f);
-                    titleText = title.GetComponent<TextMeshProUGUI>();
-                    titleText.fontSize = 11f;
-                    titleText.alignment = TextAlignmentOptions.Center;
-                    titleText.color = Color.white;
-                    titleText.raycastTarget = false;
-                }
-            }
-
-            foreach (TextMeshProUGUI label in new[] { titleText, levelBadgeText,
+            // Compact HUD has no heading: the level, power and next ore occupy that row.
+            // Suppress the authored heading as well as older runtime-created headings.
+            if (titleText != null) titleText.gameObject.SetActive(false);
+            Transform oldHeading = cardTransform.Find("PC Progress Title");
+            if (oldHeading != null) oldHeading.gameObject.SetActive(false);
+            foreach (TextMeshProUGUI label in new[] { levelBadgeText,
                          powerValueText, rewardText, xpLabelText })
                 if (label != null) label.gameObject.SetActive(true);
         }

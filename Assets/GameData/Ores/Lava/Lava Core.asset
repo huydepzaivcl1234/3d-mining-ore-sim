@@ -16,17 +16,17 @@ MonoBehaviour:
   displayName: Lava Core
   description: Legendary Lava World ore; replace the prefab with your own model.
   tier: 10
-  miningPowerRequired: 50
-  durability: 8000
+  miningPowerRequired: 35
+  durability: 9500
   clickDamage: 1
-  baseSellValue: 7000
+  baseSellValue: 2500
   gemReward: 1
   experienceReward: 2500
   destroyDelay: 0
   maximumMiningNpcs: 3
   npcStandDistance: 1.4
   rareOre: 0
-  rarity: 4
+  rarity: 3
   spawnRotationOffset: {x: -90, y: 0, z: 0}
   spawnHeightOffset: -0.5
   healthBarWorldOffset: {x: 0, y: 0.25, z: 0}
