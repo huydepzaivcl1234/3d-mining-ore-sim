@@ -21,36 +21,27 @@ namespace MiningSimulator.Ores
 
         [Header("Editable Text")]
         [SerializeField] private string moneyFormat = "Tiền: {0}";
-        [SerializeField] private string npcCountFormat = "NPC đào quặng: {0}/{1}";
+        [Tooltip("English NPC count. {0} = miners owned; {1} = miner limit.")]
+        [SerializeField] private string npcCountEnglishFormat = "Miner: {0}";
+        [Tooltip("Vietnamese NPC count. {0} = miners owned; {1} = miner limit.")]
+        [SerializeField] private string npcCountVietnameseFormat = "Thợ mỏ: {0}";
         [SerializeField] private string buyButtonFormat = "Mua NPC đào ({0})";
         [SerializeField] private string purchasedMessage = "Đã mua NPC đào quặng!";
         [SerializeField] private string purchaseFailedMessage =
             "Không đủ tiền hoặc đã đạt giới hạn thợ mỏ.";
 
+        [Header("NPC Count Colors")]
+        [Tooltip("Normal color comes from the NPC Count text in the scene. This color is used at the limit.")]
+        [SerializeField] private Color fullNpcCountColor = new(1f, 0.26f, 0.22f, 1f);
+
         private readonly MiningAnimatedCurrencyValue moneyCounter = new();
+        private Color authoredNpcCountColor;
 
         private void Awake()
         {
             if (npcShop == null)
                 npcShop = FindFirstObjectByType<NpcShop>(FindObjectsInactive.Include);
-            // The compact PC layout moves the authored count label inside NPC Shop.
-            // Older serialized HUD references can still point to an inactive copy.
-            Canvas canvas = GetComponentInParent<Canvas>(true);
-            if (canvas == null)
-            {
-                foreach (Canvas candidate in FindObjectsByType<Canvas>(
-                    FindObjectsInactive.Include, FindObjectsSortMode.None))
-                {
-                    if (candidate.name != "Mining HUD Canvas" ||
-                        candidate.gameObject.scene != gameObject.scene) continue;
-                    canvas = candidate;
-                    break;
-                }
-            }
-            Transform label = canvas != null
-                ? canvas.transform.Find("NPC Shop/NPC Count") : null;
-            if (label != null && label.TryGetComponent(out TextMeshProUGUI count))
-                npcCountText = count;
+            authoredNpcCountColor = npcCountText != null ? npcCountText.color : Color.white;
         }
 
         private void OnEnable()
@@ -151,12 +142,11 @@ namespace MiningSimulator.Ores
             {
                 int count = npcShop != null ? npcShop.PurchasedCount : 0;
                 int maximum = npcShop != null ? npcShop.MaximumMiners : 0;
-                // The compact pill is 97 px wide. Use a complete short label there;
-                // keep the authored long format for larger HUD layouts.
-                string format = npcCountText.rectTransform.rect.width > 0f &&
-                    npcCountText.rectTransform.rect.width < 150f
-                        ? MiningLocalization.Text("{0}/{1} NPC", "{0}/{1} NPC")
-                        : MiningLocalization.Text("Mining NPCs: {0}/{1}", npcCountFormat);
+                npcCountText.color = maximum > 0 && count >= maximum
+                    ? fullNpcCountColor : authoredNpcCountColor;
+                // The selected Lean language chooses the scene-editable template.
+                string format = MiningLocalization.IsEnglish
+                    ? npcCountEnglishFormat : npcCountVietnameseFormat;
                 npcCountText.text = string.Format(format, count, maximum);
             }
 
