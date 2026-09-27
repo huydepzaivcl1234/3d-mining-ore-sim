@@ -21,11 +21,11 @@ MonoBehaviour:
   hitOriginOffset: {x: 0, y: 1, z: 0}
   hitHalfHeight: 0.9
   animationOverrides: {fileID: 0}
-  modelPrefab: {fileID: 9055589456794605990, guid: 4340f4c2a8d13cf4b82d9438b74c6a67, type: 3}
+  modelPrefab: {fileID: 3121710483567633262, guid: f9c8e4a2f32f5a44c84de13f78291df8, type: 3}
   handBone: 18
   modelLocalPosition: {x: 0, y: 0, z: 0}
   modelLocalEulerAngles: {x: 0, y: 0, z: 0}
-  modelLocalScale: {x: 1, y: 1, z: 1}
+  modelLocalScale: {x: 0.1, y: 0.1, z: 0.1}
   swingSfx: {fileID: 8300000, guid: 75ecae3a5c183ef4e9a32742313386ad, type: 3}
   swingVolume: 0.7
   strikeVfxPrefab: {fileID: 5676028574470708571, guid: 98e7c90c357559045900caa0a71473f6, type: 3}
