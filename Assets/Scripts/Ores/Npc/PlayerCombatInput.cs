@@ -26,14 +26,27 @@ public class PlayerCombatInput : MonoBehaviour
     [SerializeField] private Vector3 hitOriginOffset = new Vector3(0f, 1f, 0f);
     [SerializeField] private LayerMask targetLayers = ~0;
     private bool wasAttacking;
+    private MiningAudioManager feedbackAudio;
+    private LineRenderer attackArc;
+    private Material attackArcMaterial;
+    private float arcRemaining;
+    private Color arcColor;
+    private float arcDuration;
+    private WeaponAttackData equippedWeapon;
+    private bool hasEquipmentOverride;
+    private RuntimeAnimatorController originalController;
+    public WeaponAttackData Weapon => hasEquipmentOverride ? equippedWeapon : Stats != null ? Stats.defaultWeapon : null;
+    public bool HitsMultipleTargets => Weapon != null && Weapon.hitMode == WeaponHitMode.ForwardSweep;
     private MiningPlayerStatsData Stats => MiningPlayerStats.For(this);
-    public float Damage => Stats != null ? GetComponent<MiningPlayerStats>().Damage : Mathf.Max(0, damage);
-    public float AttackRange => Mathf.Max(0.1f, Stats != null ? Stats.attackRange : attackRange);
-    public float AttackAngle => Mathf.Clamp(Stats != null ? Stats.attackAngle : attackAngle, 1, 180);
-    public float AttackSpeed => Mathf.Max(0.1f, Stats != null ? Stats.attackSpeed : attackSpeed);
+    public float Damage => (Stats != null ? GetComponent<MiningPlayerStats>().Damage : Mathf.Max(0, damage)) * (Weapon != null ? Mathf.Max(0, Weapon.damageMultiplier) : 1f);
+    public float AttackRange => Mathf.Max(0.1f, Weapon != null ? Weapon.range : Stats != null ? Stats.attackRange : attackRange);
+    public float AttackAngle => Mathf.Clamp(Weapon != null ? Weapon.angle : Mathf.Min(30f, Stats != null ? Stats.attackAngle : attackAngle), 1, 180);
+    public float AttackSpeed => Mathf.Max(0.1f, (Stats != null ? Stats.attackSpeed : attackSpeed) * (Weapon != null ? Weapon.animationSpeedMultiplier : 1f));
     private float BlendSeconds => Mathf.Max(0.01f, Stats != null ? Stats.combatBlendSeconds : combatBlendSeconds);
-    private float HitTime => Mathf.Clamp01(Stats != null ? Stats.hitTime : hitTime);
-    private Vector3 HitOriginOffset => Stats != null ? Stats.hitOriginOffset : hitOriginOffset;
+    private float HitTime => Mathf.Clamp01(Weapon != null ? Weapon.hitTime : Stats != null ? Stats.hitTime : hitTime);
+    private Vector3 HitOriginOffset => Weapon != null ? Weapon.hitOriginOffset : Stats != null ? Stats.hitOriginOffset : hitOriginOffset;
+    private float HitHalfHeight => Weapon != null ? Mathf.Max(0.1f, Weapon.hitHalfHeight) : 0.9f;
+    private Vector3 StrikeForward => Vector3.ProjectOnPlane(transform.forward, Vector3.up).normalized;
     private bool hitApplied;
     private readonly HashSet<MiningCharacterHealth> hitTargets = new();
     private void OnEnable()
@@ -48,6 +61,8 @@ public class PlayerCombatInput : MonoBehaviour
         wasAttacking = false;
         hitApplied = false;
         combatMode = false;
+        arcRemaining = 0f;
+        if (attackArc != null) attackArc.enabled = false;
         if (animator != null && animator.runtimeAnimatorController != null)
         {
             int layer = animator.GetLayerIndex("combat layer");
@@ -57,6 +72,14 @@ public class PlayerCombatInput : MonoBehaviour
 
     private void LateUpdate()
     {
+        if (attackArc != null && attackArc.enabled)
+        {
+            arcRemaining -= Time.deltaTime;
+            Color color = arcColor;
+            color.a *= Mathf.Clamp01(arcRemaining / arcDuration);
+            attackArc.startColor = attackArc.endColor = color;
+            attackArc.enabled = arcRemaining > 0f;
+        }
         if (animator == null || animator.runtimeAnimatorController == null) return;
         int layer = animator.GetLayerIndex("combat layer");
         if (layer < 0) return;
@@ -82,10 +105,37 @@ public class PlayerCombatInput : MonoBehaviour
     {
         toggleCombat?.Dispose();
         attack?.Dispose();
+        if (attackArcMaterial != null) Destroy(attackArcMaterial);
     }
     private void Awake()
     {
         if (animator == null) animator = GetComponentInChildren<Animator>(true);
+        originalController = animator != null ? animator.runtimeAnimatorController : null;
+        feedbackAudio = FindFirstObjectByType<MiningAudioManager>();
+    }
+    private void Start()
+    {
+        if (Weapon != null && Weapon.animationOverrides != null && animator != null)
+            animator.runtimeAnimatorController = Weapon.animationOverrides;
+    }
+
+    // Future weapon inventory calls this; do not change equipment mid-animation.
+    public bool TryEquipWeapon(WeaponAttackData weapon)
+    {
+        if (wasAttacking) return false;
+        if (animator != null && animator.runtimeAnimatorController != null)
+        {
+            int layer = animator.GetLayerIndex("combat layer");
+            if (layer >= 0 && (animator.IsInTransition(layer) || animator.GetCurrentAnimatorStateInfo(layer).IsName("Attack"))) return false;
+        }
+        equippedWeapon = weapon;
+        hasEquipmentOverride = true;
+        if (animator != null)
+        {
+            animator.runtimeAnimatorController = weapon != null && weapon.animationOverrides != null ? weapon.animationOverrides : originalController;
+            if (animator.runtimeAnimatorController != null) animator.SetBool("CombatMode", combatMode);
+        }
+        return true;
     }
     private void Update()
     {
@@ -115,46 +165,144 @@ public class PlayerCombatInput : MonoBehaviour
             if (next.IsName("Attack")) state = next;
         }
         bool active = combatMode && state.IsName("Attack");
-        if (active && !wasAttacking) hitApplied = false;
+        if (active && !wasAttacking)
+        {
+            hitApplied = false;
+            if (feedbackAudio != null)
+                feedbackAudio.PlaySfx(Weapon != null && Weapon.swingSfx != null ? Weapon.swingSfx : Stats != null ? Stats.attackSfx : null,
+                    Weapon != null && Weapon.swingSfx != null ? Weapon.swingVolume : Stats != null ? Stats.attackSfxVolume : 1f);
+        }
         if (active && !hitApplied && state.normalizedTime >= HitTime)
         {
             hitApplied = true;
+            ShowAttackEffect();
             ApplyHit();
         }
         wasAttacking = active;
+    }
+
+    private void ShowAttackEffect()
+    {
+        var data = Stats;
+        if (data == null) return;
+        Vector3 origin = transform.TransformPoint(HitOriginOffset);
+        GameObject prefab = Weapon != null && Weapon.strikeVfxPrefab != null ? Weapon.strikeVfxPrefab : data.attackVfxPrefab;
+        if (prefab != null)
+        {
+            bool aligned = prefab.GetComponent<WeaponStrikeVfx>() != null;
+            var effect = SpawnEffect(prefab, aligned ? origin : origin + StrikeForward * AttackRange * 0.6f,
+                Quaternion.LookRotation(StrikeForward, Vector3.up));
+            if (effect.TryGetComponent<WeaponStrikeVfx>(out var visual))
+                visual.Configure(AttackRange, AttackAngle, AttackSpeed, HitsMultipleTargets);
+            return;
+        }
+        if (!data.showAttackArc) return;
+        if (attackArc == null)
+        {
+            var shader = Shader.Find("Sprites/Default");
+            if (shader == null) { Debug.LogWarning("Attack arc shader unavailable. Assign Attack Vfx Prefab in PlayerStatsData.", this); return; }
+            var visual = new GameObject("Attack Arc (visual only)");
+            visual.transform.SetParent(transform, false);
+            attackArc = visual.AddComponent<LineRenderer>();
+            attackArcMaterial = new Material(shader);
+            attackArc.sharedMaterial = attackArcMaterial;
+            attackArc.useWorldSpace = true;
+            attackArc.positionCount = 25;
+            attackArc.numCapVertices = 3;
+            attackArc.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            attackArc.receiveShadows = false;
+        }
+        arcColor = Weapon != null ? Weapon.trailColor : data.attackArcColor;
+        arcDuration = Mathf.Max(0.03f, data.attackArcSeconds / AttackSpeed);
+        arcRemaining = arcDuration;
+        attackArc.widthMultiplier = Mathf.Max(0.01f, data.attackArcWidth);
+        attackArc.startColor = attackArc.endColor = arcColor;
+        // Draw the strike's actual forward sector, not a full circle around Player.
+        for (int i = 0; i < attackArc.positionCount; i++)
+        {
+            float angle = Mathf.Lerp(-AttackAngle * 0.5f, AttackAngle * 0.5f, i / 24f);
+            attackArc.SetPosition(i, HitsMultipleTargets
+                ? origin + Quaternion.AngleAxis(angle, Vector3.up) * StrikeForward * AttackRange
+                : origin + StrikeForward * Mathf.Lerp(AttackRange * 0.3f, AttackRange, i / 24f));
+        }
+        attackArc.enabled = true;
     }
 
     private void ApplyHit()
     {
         Vector3 origin = transform.TransformPoint(HitOriginOffset);
         hitTargets.Clear();
-        foreach (var collider in Physics.OverlapSphere(origin, AttackRange, targetLayers,
+        MiningCharacterHealth closest = null;
+        Vector3 closestPoint = origin;
+        float closestDistance = float.PositiveInfinity;
+        // Broad phase covers a vertical band; horizontal angle must not reject
+        // mushrooms simply because their collider is below the player's fist.
+        foreach (var collider in Physics.OverlapCapsule(origin - Vector3.up * HitHalfHeight,
+                     origin + Vector3.up * HitHalfHeight, AttackRange, targetLayers,
                      QueryTriggerInteraction.Ignore))
         {
             var target = collider.GetComponentInParent<MiningCharacterHealth>();
-            if (target == null || target.transform.root == transform.root || hitTargets.Contains(target)) continue;
-            Vector3 direction = collider.ClosestPoint(origin) - origin;
+            if (target == null || target.Health <= 0 || target.transform == transform || target.transform.IsChildOf(transform)) continue;
+            Vector3 point = collider.ClosestPoint(origin);
+            Vector3 direction = point - origin;
+            if (Mathf.Abs(direction.y) > HitHalfHeight) continue;
+            direction.y = 0f;
+            if (direction.sqrMagnitude > AttackRange * AttackRange) continue;
             if (direction.sqrMagnitude > 0.0001f &&
-                Vector3.Angle(transform.forward, direction) > AttackAngle * 0.5f) continue;
-            hitTargets.Add(target);
-            target.ApplyDamage(Damage);
+                Vector3.Angle(StrikeForward, direction) > AttackAngle * 0.5f) continue;
+            if (HitsMultipleTargets)
+            {
+                if (hitTargets.Add(target)) DamageTarget(target, point);
+            }
+            else if (direction.sqrMagnitude < closestDistance)
+            {
+                closest = target;
+                closestDistance = direction.sqrMagnitude;
+                closestPoint = point;
+            }
         }
+        if (!HitsMultipleTargets && closest != null) DamageTarget(closest, closestPoint);
+    }
+
+    private void DamageTarget(MiningCharacterHealth target, Vector3 point)
+    {
+        if (Damage <= 0) return;
+        target.ApplyDamage(Damage);
+        if (Weapon != null && Weapon.impactVfxPrefab != null)
+            SpawnEffect(Weapon.impactVfxPrefab, point, Quaternion.LookRotation(-transform.forward, transform.up));
+    }
+
+    private GameObject SpawnEffect(GameObject prefab, Vector3 position, Quaternion rotation)
+    {
+        var effect = Instantiate(prefab, position, rotation);
+        float lifetime = Weapon != null ? Weapon.effectLifetime : Stats != null ? Stats.attackVfxLifetime : 2f;
+        Destroy(effect, Mathf.Max(0.1f, lifetime));
+        return effect;
     }
 
     private void OnDrawGizmosSelected()
     {
         Vector3 origin = transform.TransformPoint(HitOriginOffset);
         Gizmos.color = Application.isPlaying && wasAttacking && !hitApplied ? Color.red : Color.yellow;
-        Gizmos.DrawWireSphere(origin, AttackRange);
-        Vector3 previous = origin + Quaternion.AngleAxis(-AttackAngle * 0.5f, transform.up) * transform.forward * AttackRange;
+        // Display the same height band used by both weapon hit queries.
+        Gizmos.DrawLine(origin - Vector3.up * HitHalfHeight, origin + Vector3.up * HitHalfHeight);
+        Vector3 previous = origin + Quaternion.AngleAxis(-AttackAngle * 0.5f, Vector3.up) * StrikeForward * AttackRange;
         Gizmos.DrawLine(origin, previous);
+        Vector3 up = Vector3.up * HitHalfHeight;
+        Gizmos.DrawLine(origin - up, previous - up);
+        Gizmos.DrawLine(origin + up, previous + up);
         for (int i = 1; i <= 32; i++)
         {
             Vector3 point = origin + Quaternion.AngleAxis(-AttackAngle * 0.5f + AttackAngle * i / 32f,
-                transform.up) * transform.forward * AttackRange;
+                Vector3.up) * StrikeForward * AttackRange;
             Gizmos.DrawLine(previous, point);
+            Gizmos.DrawLine(previous + up, point + up);
+            Gizmos.DrawLine(previous - up, point - up);
+            if (i % 8 == 0) Gizmos.DrawLine(point - up, point + up);
             previous = point;
         }
         Gizmos.DrawLine(origin, previous);
+        Gizmos.DrawLine(origin - up, previous - up);
+        Gizmos.DrawLine(origin + up, previous + up);
     }
 }

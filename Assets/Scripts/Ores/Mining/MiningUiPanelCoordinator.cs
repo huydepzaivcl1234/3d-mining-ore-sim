@@ -41,6 +41,18 @@ namespace MiningSimulator.Ores
         private CanvasGroup backdropGroup;
         private RectTransform backdropRect;
         private Coroutine backdropRoutine;
+        private readonly Dictionary<CanvasGroup, HudState> additionalHudStates = new();
+        private readonly List<RectTransform> additionalHudRoots = new();
+        private bool suppressingAdditionalHud;
+        private float additionalHudHiddenAt;
+        private bool mainMenuOpen;
+        private readonly Dictionary<Renderer, bool> worldBarStates = new();
+        private float nextWorldBarScan;
+        private sealed class HudState
+        {
+            public float Alpha;
+            public bool Interactable, BlocksRaycasts;
+        }
 
         public MiningUiData UiData => uiData;
 
@@ -93,7 +105,7 @@ namespace MiningSimulator.Ores
         {
             ResolveOptionalHudReferences();
             CacheHomePositions();
-            activeModal = FindActiveModal();
+            activeModal = activeModal != null ? activeModal : FindActiveModal();
             if (activeModal != null)
             {
                 SetBasePanelsImmediately(false);
@@ -102,7 +114,7 @@ namespace MiningSimulator.Ores
             }
             else
             {
-                SetBasePanelsImmediately(true);
+                SetBasePanelsImmediately(!mainMenuOpen);
                 HideModalImmediately(upgradePanel);
                 HideModalImmediately(rebirthPanel);
                 HideModalImmediately(audioSettingsPanel);
@@ -121,12 +133,12 @@ namespace MiningSimulator.Ores
             EnsureInitialized();
             CacheAdditionalPanelHome(panel);
             StopAllCoroutines();
-            if (activeModal != null && activeModal != panel)
-            {
-                HideModalImmediately(activeModal);
-            }
-
+            var previousModal = activeModal;
             activeModal = panel;
+            if (previousModal != null && previousModal != panel)
+            {
+                HideModalImmediately(previousModal);
+            }
             panel.gameObject.SetActive(true);
             panel.anchoredPosition = GetHomePosition(panel);
             SetCanvasAlpha(panel, 0f, false);
@@ -146,9 +158,10 @@ namespace MiningSimulator.Ores
             }
 
             EnsureInitialized();
+            if (activeModal != panel) return; // An old panel closing must not reveal HUD behind a new modal.
             StopAllCoroutines();
             SetInteraction(panel, false);
-            AnimateBasePanels(true);
+            AnimateBasePanels(!mainMenuOpen);
             orbitCamera?.SetInputLocked(false);
             HideBackdrop();
             CanvasGroup group = GetCanvasGroup(panel);
@@ -166,6 +179,9 @@ namespace MiningSimulator.Ores
             StopAllCoroutines();
             if (!visible)
             {
+                var previousModal = activeModal;
+                activeModal = null;
+                HideModalImmediately(previousModal);
                 HideModalImmediately(upgradePanel);
                 HideModalImmediately(rebirthPanel);
                 HideModalImmediately(audioSettingsPanel);
@@ -175,7 +191,39 @@ namespace MiningSimulator.Ores
                 orbitCamera?.SetInputLocked(false);
                 HideBackdrop();
             }
-            AnimateBasePanels(visible);
+            AnimateBasePanels(visible && !mainMenuOpen && activeModal == null);
+        }
+        public void SetMainMenuOpen(bool open)
+        {
+            mainMenuOpen = open;
+            EnsureInitialized();
+            // Main menu remains the return view when Shop is opened from it.
+            if (activeModal != null) return;
+            StopAllCoroutines();
+            AnimateBasePanels(!mainMenuOpen && activeModal == null);
+        }
+        // Panels with their own animations retain their presentation and use only modal ownership.
+        public void NotifyExternalPanelOpened(RectTransform panel)
+        {
+            if (panel == null) return;
+            EnsureInitialized();
+            CacheAdditionalPanelHome(panel);
+            StopAllCoroutines();
+            var previous = activeModal;
+            activeModal = panel;
+            if (previous != null && previous != panel) HideModalImmediately(previous);
+            AnimateBasePanels(false);
+            orbitCamera?.SetInputLocked(true);
+            HideBackdrop();
+        }
+        public void NotifyExternalPanelClosed(RectTransform panel)
+        {
+            if (activeModal != panel) return;
+            activeModal = null;
+            StopAllCoroutines();
+            AnimateBasePanels(!mainMenuOpen);
+            orbitCamera?.SetInputLocked(false);
+            HideBackdrop();
         }
 
         private void CacheHomePositions()
@@ -262,6 +310,7 @@ namespace MiningSimulator.Ores
 
         private void AnimateBasePanels(bool visible)
         {
+            SetAdditionalHudVisible(visible, false);
             FadeBasePanel(shopPanel, visible);
             FadeBasePanel(pcQuickActions, visible);
             FadeBasePanel(rebirthHud, visible);
@@ -297,6 +346,7 @@ namespace MiningSimulator.Ores
 
         private void SetBasePanelsImmediately(bool visible)
         {
+            SetAdditionalHudVisible(visible, true);
             SetBasePanelImmediately(shopPanel, visible);
             SetBasePanelImmediately(pcQuickActions, visible);
             SetBasePanelImmediately(rebirthHud, visible);
@@ -310,6 +360,134 @@ namespace MiningSimulator.Ores
             if (!IsInDock(questMenuButton)) SetBasePanelImmediately(questMenuButton, visible);
         }
 
+        private bool IsExistingHudRoot(Transform root)
+        {
+            RectTransform[] known = { shopPanel, pcQuickActions, rebirthHud, audioMenuButton,
+                npcProgressHud, dock, inventoryMenuButton, effectToast, gemHud, shopMenuButton, questMenuButton };
+            foreach (var item in known)
+                if (item != null && (item == root || item.IsChildOf(root))) return true;
+            return false;
+        }
+        private bool IsModalRoot(Transform root)
+        {
+            RectTransform[] modals = { activeModal, upgradePanel, rebirthPanel, audioSettingsPanel, inventoryPanel, questPanel, backdropRect };
+            foreach (var panel in modals)
+                if (panel != null && (panel == root || panel.IsChildOf(root))) return true;
+            foreach (var panel in additionalPanelHomes.Keys)
+                if (panel != null && (panel == root || panel.IsChildOf(root))) return true;
+            // Startup/menu/transition views must never be treated as gameplay HUD.
+            return root.GetComponentInChildren<MiningMainMenu>(true) != null ||
+                root.GetComponentInChildren<JuicyPlaySelection>(true) != null ||
+                root.GetComponentInChildren<WanderingTraderPanel>(true) != null ||
+                root.GetComponentInChildren<MiningPortalPreviewPanel>(true) != null ||
+                root.name.Contains("Transition") || root.name == "Rebirth Flash";
+        }
+        private void SetAdditionalHudVisible(bool visible, bool immediate)
+        {
+            SetWorldBarsVisible(visible);
+            if (!visible)
+            {
+                Canvas canvas = shopPanel != null ? shopPanel.GetComponentInParent<Canvas>() :
+                    activeModal != null ? activeModal.GetComponentInParent<Canvas>() : null;
+                if (canvas == null) return;
+                suppressingAdditionalHud = true;
+                additionalHudHiddenAt = Time.unscaledTime + (immediate ? 0 : TransitionDuration);
+                foreach (Transform child in canvas.transform)
+                {
+                    if (!child.gameObject.activeInHierarchy || IsExistingHudRoot(child) || IsModalRoot(child)) continue;
+                    if (child.GetComponentInChildren<UnityEngine.UI.Graphic>(true) == null) continue;
+                    var root = child as RectTransform;
+                    if (root == null) continue;
+                    if (!additionalHudRoots.Contains(root)) additionalHudRoots.Add(root);
+                    CaptureAndHide(GetCanvasGroup(root), immediate);
+                    // A nested group can bypass its parent's alpha; suppress it explicitly too.
+                    foreach (var nested in root.GetComponentsInChildren<CanvasGroup>(true))
+                        if (nested.ignoreParentGroups) CaptureAndHide(nested, immediate);
+                }
+                return;
+            }
+            suppressingAdditionalHud = false;
+            foreach (var entry in additionalHudStates)
+            {
+                var group = entry.Key; var state = entry.Value;
+                if (group == null) continue;
+                if (immediate || !group.gameObject.activeInHierarchy)
+                {
+                    group.alpha = state.Alpha; group.interactable = state.Interactable; group.blocksRaycasts = state.BlocksRaycasts;
+                }
+                else StartCoroutine(AnimateCanvasGroupAlpha(group, state.Alpha, TransitionDuration, () =>
+                {
+                    if (group == null || suppressingAdditionalHud) return;
+                    group.interactable = state.Interactable; group.blocksRaycasts = state.BlocksRaycasts;
+                }));
+            }
+            if (immediate) { additionalHudStates.Clear(); additionalHudRoots.Clear(); }
+            else StartCoroutine(ReleaseAdditionalHudSnapshot());
+        }
+        private IEnumerator ReleaseAdditionalHudSnapshot()
+        {
+            float until = Time.unscaledTime + Mathf.Max(0.01f, TransitionDuration);
+            while (Time.unscaledTime <= until) yield return null;
+            if (suppressingAdditionalHud) yield break;
+            additionalHudStates.Clear(); additionalHudRoots.Clear();
+        }
+        private void CaptureAndHide(CanvasGroup group, bool immediate)
+        {
+            if (!additionalHudStates.ContainsKey(group))
+                additionalHudStates.Add(group, new HudState { Alpha = group.alpha, Interactable = group.interactable, BlocksRaycasts = group.blocksRaycasts });
+            group.interactable = false; group.blocksRaycasts = false;
+            if (immediate) group.alpha = 0;
+            else StartCoroutine(AnimateCanvasGroupAlpha(group, 0, TransitionDuration));
+        }
+        private void LateUpdate()
+        {
+            // Keep already captured HUD hidden if another presenter enables it while a modal is open.
+            if (!suppressingAdditionalHud) return;
+            if (Time.unscaledTime >= nextWorldBarScan)
+            {
+                nextWorldBarScan = Time.unscaledTime + 0.25f;
+                SetWorldBarsVisible(false);
+            }
+            foreach (var root in additionalHudRoots)
+            {
+                if (root == null || !root.gameObject.activeInHierarchy || IsModalRoot(root)) continue;
+                var group = root.GetComponent<CanvasGroup>();
+                if (group != null)
+                {
+                    group.interactable = false; group.blocksRaycasts = false;
+                    if (Time.unscaledTime >= additionalHudHiddenAt) group.alpha = 0;
+                }
+            }
+        }
+        private void OnDisable()
+        {
+            StopAllCoroutines();
+            SetAdditionalHudVisible(true, true);
+            orbitCamera?.SetInputLocked(false);
+        }
+        private void SetWorldBarsVisible(bool visible)
+        {
+            if (visible)
+            {
+                foreach (var entry in worldBarStates)
+                    if (entry.Key != null) entry.Key.forceRenderingOff = entry.Value;
+                worldBarStates.Clear();
+                return;
+            }
+            foreach (var health in FindObjectsByType<MiningCharacterHealth>(FindObjectsSortMode.None))
+                HideWorldBar(health.HealthBar);
+            foreach (var oreBar in FindObjectsByType<OreHealthBar>(FindObjectsSortMode.None))
+                HideWorldBar(oreBar.VisualRoot);
+        }
+        private void HideWorldBar(Transform root)
+        {
+            if (root == null) return;
+            foreach (var renderer in root.GetComponentsInChildren<Renderer>(true))
+            {
+                if (!worldBarStates.ContainsKey(renderer)) worldBarStates.Add(renderer, renderer.forceRenderingOff);
+                renderer.forceRenderingOff = true;
+            }
+        }
         private static void SetBasePanelImmediately(RectTransform panel, bool visible)
         {
             if (panel == null) return;

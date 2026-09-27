@@ -17,6 +17,7 @@ namespace MiningSimulator.Ores
         private bool initialized;
         private int initializedMaxHealth;
         private Collider[] oreColliders;
+        public Transform VisualRoot => visualRoot != null ? visualRoot : healthBar != null ? healthBar.transform : null;
 
         public void Configure(Ore targetOre, MicroBar targetBar, Transform targetVisualRoot)
         {

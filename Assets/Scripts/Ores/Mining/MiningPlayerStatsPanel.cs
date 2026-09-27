@@ -67,7 +67,7 @@ namespace MiningSimulator.Ores
             // Existing scenes can still show level/XP before running the layout update.
             if (levelLabel == null) Row(text, "LEVEL", "Lv.", player.Level.ToString());
             if (experienceLabel == null) text.Append($"{player.Experience:0.##} / {player.ExperienceRequired:0.##} XP\n\n");
-            Row(text, "DAMAGE", "Damage", player.Damage.ToString("0.##"));
+            Row(text, "DAMAGE", "Damage", (combat != null ? combat.Damage : player.Damage).ToString("0.##"));
             Row(text, "ATTACK_SPEED", "Attack speed", $"x{(combat != null ? combat.AttackSpeed : d.attackSpeed):0.##}");
             Row(text, "MOVEMENT_SPEED", "Movement speed", $"{d.MoveSpeed:0.##}m/s");
             Row(text, "RANGE", "Attack range", $"{(combat != null ? combat.AttackRange : d.attackRange):0.##}m");

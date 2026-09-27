@@ -21,6 +21,7 @@ namespace MiningSimulator.Ores
         private Camera healthCamera;
         private float health;
         public float Health => health;
+        public Transform HealthBar => healthBar;
         private MiningPlayerStatsData Stats => MiningPlayerStats.For(this);
         private float spawnedMaxHealth;
         public float MaxHealth => Mathf.Max(1f, Stats != null ? GetComponent<MiningPlayerStats>().MaxHealth : spawnedMaxHealth > 0 ? spawnedMaxHealth : maxHealth);

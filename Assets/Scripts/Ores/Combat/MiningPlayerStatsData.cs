@@ -21,6 +21,7 @@ namespace MiningSimulator.Ores
         [Min(0)] public float staminaResumeThreshold = 20;
         public AudioClip exhaustedBreathing;
         [Range(0, 1)] public float breathingVolume = 0.5f;
+        [Tooltip("Seconds of silence after exhausted breathing finishes before repeating.")]
         [Min(1)] public float breathingInterval = 3;
         [Range(0, 1)] public float lowStaminaFraction = 0.2f;
         public Color lowStaminaTextColor = Color.red;
@@ -34,6 +35,20 @@ namespace MiningSimulator.Ores
         [Min(0.1f)] public float regenInterval = 10;
         [Min(1)] public float respawnSeconds = 10;
         [Header("Combat")]
+        [Header("Jump / attack feedback")]
+        public AudioClip jumpSfx;
+        [Range(0, 1)] public float jumpSfxVolume = 0.6f;
+        public AudioClip attackSfx;
+        [Range(0, 1)] public float attackSfxVolume = 0.7f;
+        public bool showAttackArc = true;
+        public Color attackArcColor = new Color(0.3f, 0.85f, 1f, 1f);
+        [Min(0.01f)] public float attackArcWidth = 0.08f;
+        [Min(0.03f)] public float attackArcSeconds = 0.18f;
+        [Tooltip("Optional authored effect, spawned at the attack contact time. Leave empty to use the built-in arc.")]
+        public GameObject attackVfxPrefab;
+        [Min(0.1f)] public float attackVfxLifetime = 2f;
+        [Header("Combat stats")]
+        public WeaponAttackData defaultWeapon;
         [Min(0)] public float damage = 1;
         [Min(0.1f)] public float attackRange = 1.75f;
         [Range(1, 180)] public float attackAngle = 100;

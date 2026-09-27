@@ -34,11 +34,13 @@ namespace MiningSimulator.Ores
         private MiningLavaWorldController lavaWorld;
         private bool wasOpened;
         private int openedFrame = -1;
+        private MiningUiPanelCoordinator panelCoordinator;
 
         public bool IsOpen => gameObject.activeInHierarchy && wasOpened;
 
         private void Awake()
         {
+            panelCoordinator = FindAnyObjectByType<MiningUiPanelCoordinator>(FindObjectsInactive.Include);
             if (canvasGroup == null) canvasGroup = GetComponent<CanvasGroup>();
             enterButton?.onClick.AddListener(Confirm);
             cancelButton?.onClick.AddListener(Hide);
@@ -53,6 +55,7 @@ namespace MiningSimulator.Ores
 
         private void OnDisable()
         {
+            panelCoordinator?.NotifyExternalPanelClosed(transform as RectTransform);
             MiningLocalization.LanguageChanged -= RefreshText;
             wasOpened = false;
         }
@@ -88,6 +91,7 @@ namespace MiningSimulator.Ores
             wasOpened = true;
             openedFrame = Time.frameCount;
             gameObject.SetActive(true);
+            panelCoordinator?.NotifyExternalPanelOpened(transform as RectTransform);
             if (canvasGroup != null)
             {
                 canvasGroup.alpha = 1f;

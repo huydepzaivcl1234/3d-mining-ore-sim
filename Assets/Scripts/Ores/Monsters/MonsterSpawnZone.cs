@@ -23,6 +23,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private PlayerWallet wallet;
         [SerializeField] private MiningItemSystem inventory;
         private MiningPlayerStats playerStats;
+        private OreSpawner oreSpawner;
         private readonly List<MushroomMonster> alive = new();
         private float timer;
         public int AliveCount => alive.Count;
@@ -44,13 +45,21 @@ namespace MiningSimulator.Ores
             if (player != null) playerStats = player.GetComponent<MiningPlayerStats>();
             if (wallet == null) wallet = FindAnyObjectByType<PlayerWallet>();
             if (inventory == null) inventory = FindAnyObjectByType<MiningItemSystem>();
+            oreSpawner = FindAnyObjectByType<OreSpawner>();
             for (int i = 0; i < Mathf.Min(initialCount, maximumAlive); i++) SpawnOne();
         }
         public void GrantRewards(MonsterRewardData data, Vector3 origin, float goldMultiplier = 1)
         {
             if (data == null) return;
             if (playerStats != null) playerStats.AddExperience(Mathf.Max(0, data.experience));
-            if (wallet != null) wallet.AddMoney(Mathf.Max(0, data.gold) * Mathf.Max(0, goldMultiplier));
+            if (wallet != null)
+            {
+                float previousMoney = wallet.CurrentMoney;
+                wallet.AddMoney(Mathf.Max(0, data.gold) * Mathf.Max(0, goldMultiplier));
+                if (oreSpawner == null) oreSpawner = FindAnyObjectByType<OreSpawner>();
+                if (oreSpawner != null)
+                    oreSpawner.ShowMoneyRewardPopup(wallet.CurrentMoney - previousMoney, origin);
+            }
             if (data.drops == null) return;
             foreach (var drop in data.drops)
             {

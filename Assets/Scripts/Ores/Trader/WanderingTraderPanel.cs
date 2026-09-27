@@ -77,6 +77,7 @@ namespace MiningSimulator.Ores
         private CanvasGroup cardCanvasGroup;
         private Coroutine panelTransitionRoutine;
         private Coroutine pageTransitionRoutine;
+        private MiningUiPanelCoordinator panelCoordinator;
 
         public bool IsOpen => isOpen;
         public bool HasCompleteSceneLayout => layoutVersion >= CurrentLayoutVersion &&
@@ -102,6 +103,7 @@ namespace MiningSimulator.Ores
 
         private void Awake()
         {
+            panelCoordinator = FindAnyObjectByType<MiningUiPanelCoordinator>(FindObjectsInactive.Include);
             EnsureCompleteLayout();
             BindStaticButtons();
         }
@@ -119,6 +121,14 @@ namespace MiningSimulator.Ores
 
         private void OnDisable()
         {
+            panelCoordinator?.NotifyExternalPanelClosed(transform as RectTransform);
+            if (isOpen)
+            {
+                isOpen = false;
+                var callback = closedAction;
+                closedAction = null;
+                callback?.Invoke();
+            }
             UnsubscribeSources();
             MiningLocalization.LanguageChanged -= RefreshLocalizedText;
             panelTransitionRoutine = null;
@@ -168,6 +178,7 @@ namespace MiningSimulator.Ores
             isOpen = true;
             FindRuntimeSources();
             gameObject.SetActive(true);
+            panelCoordinator?.NotifyExternalPanelOpened(transform as RectTransform);
             transform.SetAsLastSibling();
             SubscribeSources();
             RefreshBalance();

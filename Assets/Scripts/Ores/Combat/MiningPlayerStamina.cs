@@ -60,8 +60,9 @@ namespace MiningSimulator.Ores
             else regenTimer = 0;
             if (Exhausted && !dead && Time.time >= nextBreathing && Time.deltaTime > 0)
             {
-                nextBreathing = Time.time + Mathf.Max(1, data.breathingInterval);
                 AudioClip clip = data.exhaustedBreathing != null ? data.exhaustedBreathing : GetBreathingFallback();
+                // Interval is silence AFTER the clip, not between clip start times.
+                nextBreathing = Time.time + clip.length + Mathf.Max(1, data.breathingInterval);
                 if (audioManager != null) audioManager.PlaySfx(clip, data.breathingVolume);
                 else
                 {

@@ -304,9 +304,22 @@ namespace MiningSimulator.Ores
             if (playerBody != null) playerBody.enabled = bodyEnabled;
             if (movement != null) movement.enabled = movementEnabled;
             if (combat != null) combat.enabled = combatEnabled;
-            if (playerInput != null && inputEnabled) playerInput.ActivateInput();
+            if (CanRestorePlayerInput()) playerInput.ActivateInput();
             Cursor.lockState = cursorLock;
             Cursor.visible = cursorVisible;
+        }
+
+        private bool CanRestorePlayerInput()
+        {
+            if (!Application.isPlaying || playerInput == null || !inputEnabled ||
+                !playerInput.isActiveAndEnabled) return false;
+
+            // PlayerInput unregisters before tearing down its actions. During scene
+            // unload or Play Mode exit, enabled alone does not guarantee input is ready.
+            var activePlayers = PlayerInput.all;
+            for (int i = 0; i < activePlayers.Count; i++)
+                if (activePlayers[i] == playerInput) return true;
+            return false;
         }
 
         private void OnDrawGizmosSelected()

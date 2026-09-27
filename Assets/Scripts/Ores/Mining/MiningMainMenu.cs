@@ -78,11 +78,13 @@ namespace MiningSimulator.Ores
         private bool closing;
         private Vector2 cardHomePosition;
         private readonly MiningAnimatedCurrencyValue gemCounter = new();
+        private MiningUiPanelCoordinator panelCoordinator;
 
         public bool IsOpen => isActiveAndEnabled && gameObject.activeInHierarchy;
 
         private void Awake()
         {
+            panelCoordinator = FindAnyObjectByType<MiningUiPanelCoordinator>(FindObjectsInactive.Include);
             if (!ResolveReferences())
             {
                 Debug.LogError("Main Menu is missing authored references. Run " +
@@ -144,6 +146,7 @@ namespace MiningSimulator.Ores
 
         private void OnDisable()
         {
+            panelCoordinator?.SetMainMenuOpen(false);
             RemoveListeners();
             MiningLocalization.LanguageChanged -= RefreshLocalization;
             if (wallet != null)
@@ -386,6 +389,7 @@ namespace MiningSimulator.Ores
 
         private void ShowImmediately()
         {
+            panelCoordinator?.SetMainMenuOpen(true);
             closing = false;
             canvasGroup.alpha = 1f;
             canvasGroup.interactable = true;

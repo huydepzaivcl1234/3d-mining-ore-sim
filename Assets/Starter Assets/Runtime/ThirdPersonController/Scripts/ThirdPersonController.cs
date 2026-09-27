@@ -16,6 +16,7 @@ namespace StarterAssets
     {
         // External gameplay systems may gate sprint without modifying held input.
         public bool SprintAllowed { get; set; } = true;
+        public event System.Action Jumped;
         [Header("Player")]
         [Tooltip("Move speed of the character in m/s")]
         public float MoveSpeed = 2.0f;
@@ -111,6 +112,9 @@ namespace StarterAssets
         private const float _threshold = 0.01f;
 
         private bool _hasAnimator;
+        private float _lastFootstepTime = -10f;
+        private float _lastLandingTime = -10f;
+        private AudioSource _footstepSource;
 
         private bool IsCurrentDeviceMouse
         {
@@ -312,10 +316,11 @@ namespace StarterAssets
                 }
 
                 // Jump
-                if (_input.jump && _jumpTimeoutDelta <= 0.0f)
+                if (_input.jump && _jumpTimeoutDelta <= 0.0f && _verticalVelocity <= 0f)
                 {
                     // the square root of H * -2 * G = how much velocity needed to reach desired height
                     _verticalVelocity = Mathf.Sqrt(JumpHeight * -2f * Gravity);
+                    Jumped?.Invoke();
 
                     // update animator if using character
                     if (_hasAnimator)
@@ -383,21 +388,46 @@ namespace StarterAssets
 
         private void OnFootstep(AnimationEvent animationEvent)
         {
-            if (animationEvent.animatorClipInfo.weight > 0.5f)
+            if (isActiveAndEnabled && animationEvent.animatorClipInfo.weight > 0.01f)
+                PlayFootstep();
+        }
+
+        private void PlayFootstep()
+        {
+            if (Time.time - _lastFootstepTime < 0.25f || FootstepAudioClips == null ||
+                FootstepAudioClips.Length == 0) return;
+            int start = Random.Range(0, FootstepAudioClips.Length);
+            AudioClip clip = null;
+            for (int i = 0; i < FootstepAudioClips.Length; i++)
             {
-                if (FootstepAudioClips.Length > 0)
-                {
-                    var index = Random.Range(0, FootstepAudioClips.Length);
-                    AudioSource.PlayClipAtPoint(FootstepAudioClips[index], transform.TransformPoint(_controller.center), FootstepAudioVolume);
-                }
+                clip = FootstepAudioClips[(start + i) % FootstepAudioClips.Length];
+                if (clip != null) break;
             }
+            if (clip == null) return;
+            PlayMovementSound(clip);
+            _lastFootstepTime = Time.time;
+        }
+
+        private void PlayMovementSound(AudioClip clip)
+        {
+            if (clip == null) return;
+            if (_footstepSource == null)
+            {
+                _footstepSource = gameObject.AddComponent<AudioSource>();
+                _footstepSource.playOnAwake = false;
+                _footstepSource.loop = false;
+                _footstepSource.spatialBlend = 0;
+            }
+            _footstepSource.PlayOneShot(clip, FootstepAudioVolume);
         }
 
         private void OnLand(AnimationEvent animationEvent)
         {
-            if (animationEvent.animatorClipInfo.weight > 0.5f)
+            if (isActiveAndEnabled && animationEvent.animatorClipInfo.weight > 0.01f &&
+                Time.time - _lastLandingTime >= 0.1f)
             {
-                AudioSource.PlayClipAtPoint(LandingAudioClip, transform.TransformPoint(_controller.center), FootstepAudioVolume);
+                PlayMovementSound(LandingAudioClip);
+                _lastLandingTime = Time.time;
             }
         }
     }

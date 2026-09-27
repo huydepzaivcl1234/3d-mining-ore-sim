@@ -15,6 +15,7 @@ namespace MiningSimulator.Ores
         public float ExperienceRequired { get; private set; } = 100;
         public float ExperienceProgress => Mathf.Clamp01(Experience / Mathf.Max(1, ExperienceRequired));
         private ThirdPersonController movement;
+        private MiningAudioManager feedbackAudio;
         private const string ProgressSaveKey = "MiningSimulator.PlayerProgress.v1";
         private bool dirty, saveBlocked;
         private float nextSave;
@@ -29,6 +30,7 @@ namespace MiningSimulator.Ores
         private void Awake()
         {
             movement = GetComponent<ThirdPersonController>();
+            feedbackAudio = FindFirstObjectByType<MiningAudioManager>();
             if (data != null) SetProgress(data.startingLevel, data.startingExperience, data.experienceRequired);
             LoadProgress();
             dirty = false;
@@ -108,7 +110,20 @@ namespace MiningSimulator.Ores
         }
         private void OnApplicationPause(bool paused) { if (paused) SaveProgress(); }
         private void OnApplicationQuit() => SaveProgress();
-        private void OnDisable() => SaveProgress();
+        private void OnEnable()
+        {
+            if (movement != null) movement.Jumped += PlayJumpSound;
+        }
+        private void OnDisable()
+        {
+            if (movement != null) movement.Jumped -= PlayJumpSound;
+            SaveProgress();
+        }
+        private void PlayJumpSound()
+        {
+            if (data != null && feedbackAudio != null)
+                feedbackAudio.PlaySfx(data.jumpSfx, data.jumpSfxVolume);
+        }
         // Movement's public fields are compatibility inputs, not a second authoring source.
         private void Update()
         {

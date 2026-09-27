@@ -692,6 +692,13 @@ namespace MiningSimulator.Ores
             popup.Initialize(reward, popupPosition, uiData, rewardIcon);
         }
 
+        public void ShowMoneyRewardPopup(float amount, Vector3 worldPosition)
+        {
+            if (amount <= 0 || rewardPopupPrefab == null || uiData == null) return;
+            OreRewardPopup popup = Instantiate(rewardPopupPrefab, worldPosition, Quaternion.identity);
+            popup.Initialize(amount, worldPosition, uiData);
+        }
+
         private void RegisterExistingOres()
         {
             activeOres.Clear();

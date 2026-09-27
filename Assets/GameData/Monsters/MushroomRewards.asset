@@ -12,6 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5ce228d6dde5489e959cc89554e9ce6d, type: 3}
   m_Name: MushroomRewards
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MonsterRewardData
+  minimumLevel: 1
+  higherLevelChance: 0.35
+  statGrowthPerLevel: 0.75
+  goldGrowthPerLevel: 0.75
+  randomStatMultiplier: {x: 0.9, y: 1.1}
   experience: 5
   gold: 5
   drops:
@@ -19,7 +24,22 @@ MonoBehaviour:
     chancePercent: 25
     minimumAmount: 1
     maximumAmount: 1
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: b15fd69cba1745d883c50d76ef368102, type: 3}
+  - item: {fileID: 11400000, guid: d4439c8d4fb6e8c4cb8932645ca7aa8b, type: 2}
+    chancePercent: 25
+    minimumAmount: 1
+    maximumAmount: 1
+    icon: {fileID: 21300000, guid: c26ae78dbb2856e994d61e87f0479213, type: 3}
+  - item: {fileID: 11400000, guid: c1a7e2ced9de9bf42b9f38b6cf7528e1, type: 2}
+    chancePercent: 25
+    minimumAmount: 1
+    maximumAmount: 1
+    icon: {fileID: 21300000, guid: d37bf89ecc3967faa5e72f980158a324, type: 3}
+  - item: {fileID: 11400000, guid: f18a9bc3efc342d4b64dde59a7745142, type: 2}
+    chancePercent: 5
+    minimumAmount: 1
+    maximumAmount: 1
+    icon: {fileID: 21300000, guid: a4d44f5cb6e14a2f8d3d78eea1b7c4f0, type: 3}
   iconSize: 0.45
   launchUpSpeed: 4
   launchOutSpeed: 2

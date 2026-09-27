@@ -31,10 +31,21 @@ MonoBehaviour:
   lowStaminaBlinkSeconds: 0.7
   deathSfx: {fileID: 8300000, guid: 0362f56cab11ef541a59c49359bd75dd, type: 3}
   deathSfxVolume: 0.7
-  maxHealth: 1
+  maxHealth: 50
   regenAmount: 1
   regenInterval: 10
   respawnSeconds: 10
+  jumpSfx: {fileID: 8300000, guid: 0f062bf8909197443b0ae295c32acbd0, type: 3}
+  jumpSfxVolume: 0.6
+  attackSfx: {fileID: 8300000, guid: 0be390704418597499f913e81cfb2f72, type: 3}
+  attackSfxVolume: 0.7
+  showAttackArc: 1
+  attackArcColor: {r: 0.3, g: 0.85, b: 1, a: 1}
+  attackArcWidth: 0.08
+  attackArcSeconds: 0.18
+  attackVfxPrefab: {fileID: 0}
+  attackVfxLifetime: 2
+  defaultWeapon: {fileID: 11400000, guid: 6e98aad775ccd484f97815e60ac8f209, type: 2}
   damage: 1
   attackRange: 1.75
   attackAngle: 100
