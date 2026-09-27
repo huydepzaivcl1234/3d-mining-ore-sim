@@ -56,6 +56,17 @@ public sealed class WeaponAttackTests
         }
     }
 
+    [Test] public void SecondCombatToggleReturnsToStandingAndDisableResetsIt()
+    {
+        combat.SetCombatMode(true);
+        Assert.That(combat.IsCombatMode, Is.True);
+        combat.SetCombatMode(false);
+        Assert.That(combat.IsCombatMode, Is.False);
+        combat.SetCombatMode(true);
+        combat.enabled = false;
+        Assert.That(combat.IsCombatMode, Is.False);
+    }
+
     [Test] public void AutoAimSelectsNearestLivingMonsterNotOrdinaryHealthTarget()
     {
         Target(Vector3.forward * 0.5f);

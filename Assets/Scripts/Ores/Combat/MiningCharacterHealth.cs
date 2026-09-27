@@ -19,6 +19,8 @@ namespace MiningSimulator.Ores
         [SerializeField] private MicroBar microBar;
         [SerializeField] private TMP_Text healthLabel;
         private Camera healthCamera;
+        private PlayerCombatInput combatInput;
+        private bool displayedCombatMode;
         private float health;
         public float Health => health;
         public Transform HealthBar => healthBar;
@@ -58,7 +60,13 @@ namespace MiningSimulator.Ores
             Refresh(false, UpdateAnim.Heal);
         }
 
-        private void OnEnable() => regenTimer = 0f;
+        private void OnEnable()
+        {
+            regenTimer = 0f;
+            MiningLocalization.LanguageChanged += RefreshLabel;
+        }
+
+        private void OnDisable() => MiningLocalization.LanguageChanged -= RefreshLabel;
 
         private void Update()
         {
@@ -84,6 +92,7 @@ namespace MiningSimulator.Ores
 
         private void Awake()
         {
+            combatInput = GetComponent<PlayerCombatInput>();
             health = MaxHealth;
             initializedMaxHealth = MaxHealth;
             if (microBar == null && healthBar != null)
@@ -95,6 +104,8 @@ namespace MiningSimulator.Ores
 
         private void LateUpdate()
         {
+            bool mode = combatInput != null && combatInput.IsCombatMode;
+            if (mode != displayedCombatMode) RefreshLabel();
             if (healthBar == null) return;
             if (healthCamera == null) healthCamera = Camera.main;
             if (healthCamera != null)
@@ -108,12 +119,21 @@ namespace MiningSimulator.Ores
             // Only initialization/respawn snaps. Damage and healing use the
             // animation authored on the MicroBar (Flash, Fill, etc.).
             if (microBar != null) microBar.UpdateBar(health, skipAnimation, updateType);
+            RefreshLabel();
+        }
+
+        private void RefreshLabel()
+        {
+            displayedCombatMode = combatInput != null && combatInput.IsCombatMode;
             if (healthLabel != null)
             {
                 var player = GetComponent<MiningPlayerStats>();
                 var monster = GetComponent<MushroomMonster>();
                 int level = player != null ? player.Level : monster != null ? monster.Level : 1;
-                healthLabel.text = $"Lv. {level} | {Mathf.Ceil(health):0} / {Mathf.Ceil(MaxHealth):0}";
+                string status = combatInput != null
+                    ? MiningLocalization.Text(displayedCombatMode ? "Combat" : "Standing") + "\n"
+                    : string.Empty;
+                healthLabel.text = $"{status}Lv. {level} | {Mathf.Ceil(health):0} / {Mathf.Ceil(MaxHealth):0}";
             }
         }
 

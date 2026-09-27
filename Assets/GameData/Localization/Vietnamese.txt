@@ -223,3 +223,5 @@ PLAYER_SPECTATOR_HELP = WASD: di chuyển | Space/Ctrl: lên/xuống | Giữ chu
 +{0:0.##}% / level [{1}/{2}] = +{0:0.##}% / cấp [{1}/{2}]
 +{0:0.##} miner/Lv {1}/{2} = +{0:0.##} thợ/cấp {1}/{2}
 {0}/{1} NPC = {0}/{1} NPC
+Standing = Standing
+Combat = Combat

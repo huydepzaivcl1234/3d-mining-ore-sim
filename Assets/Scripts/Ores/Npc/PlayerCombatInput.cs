@@ -15,6 +15,8 @@ public class PlayerCombatInput : MonoBehaviour
     [SerializeField] private InputAction autoAim = new InputAction(
         "Auto Aim", InputActionType.Button, "<Keyboard>/f");
     [SerializeField] private string drawWeaponParameter = "DrawWeapon";
+    [SerializeField] private string sheathWeaponParameter = "SheathWeapon";
+    public bool IsCombatMode => combatMode;
     [Min(0.1f), SerializeField] private float aimRange = 15f;
     [Min(0f), SerializeField] private float aimTurnSpeed = 720f;
     private MushroomMonster aimedMonster;
@@ -67,7 +69,7 @@ public class PlayerCombatInput : MonoBehaviour
         ClearAim();
         wasAttacking = false;
         hitApplied = false;
-        combatMode = false;
+        SetCombatMode(false);
         arcRemaining = 0f;
         if (attackArc != null) attackArc.enabled = false;
         if (animator != null && animator.runtimeAnimatorController != null)
@@ -147,14 +149,7 @@ public class PlayerCombatInput : MonoBehaviour
         if (HasParameter("AttackSpeed", AnimatorControllerParameterType.Float)) animator.SetFloat("AttackSpeed", AttackSpeed);
         if (toggleCombat != null && toggleCombat.WasPressedThisFrame())
         {
-            combatMode = !combatMode;
-            if (HasParameter(drawWeaponParameter, AnimatorControllerParameterType.Bool))
-                animator.SetBool(drawWeaponParameter, combatMode);
-            else if (HasParameter(drawWeaponParameter, AnimatorControllerParameterType.Trigger))
-                animator.SetTrigger(drawWeaponParameter);
-            if (HasParameter("CombatMode", AnimatorControllerParameterType.Bool)) animator.SetBool("CombatMode", combatMode);
-            if (HasParameter("Attack", AnimatorControllerParameterType.Trigger)) animator.ResetTrigger("Attack");
-            if (!combatMode) ClearAim();
+            SetCombatMode(!combatMode);
         }
         if (layer >= 0) TrackAttack(layer);
         if (!combatMode || attack == null || !attack.WasPressedThisFrame()) return;
@@ -170,6 +165,28 @@ public class PlayerCombatInput : MonoBehaviour
         foreach (var parameter in animator.parameters)
             if (parameter.name == name && parameter.type == type) return true;
         return false;
+    }
+
+    public void SetCombatMode(bool enabled)
+    {
+        bool changed = combatMode != enabled;
+        combatMode = enabled;
+        if (!enabled) ClearAim();
+        if (animator == null || animator.runtimeAnimatorController == null) return;
+        if (HasParameter(drawWeaponParameter, AnimatorControllerParameterType.Bool))
+            animator.SetBool(drawWeaponParameter, enabled);
+        if (HasParameter("CombatMode", AnimatorControllerParameterType.Bool))
+            animator.SetBool("CombatMode", enabled);
+        if (HasParameter(drawWeaponParameter, AnimatorControllerParameterType.Trigger))
+            animator.ResetTrigger(drawWeaponParameter);
+        if (HasParameter(sheathWeaponParameter, AnimatorControllerParameterType.Trigger))
+            animator.ResetTrigger(sheathWeaponParameter);
+        if (changed)
+        {
+            string trigger = enabled ? drawWeaponParameter : sheathWeaponParameter;
+            if (HasParameter(trigger, AnimatorControllerParameterType.Trigger)) animator.SetTrigger(trigger);
+        }
+        if (HasParameter("Attack", AnimatorControllerParameterType.Trigger)) animator.ResetTrigger("Attack");
     }
 
     private bool IsAimValid(MushroomMonster monster) => monster != null &&
