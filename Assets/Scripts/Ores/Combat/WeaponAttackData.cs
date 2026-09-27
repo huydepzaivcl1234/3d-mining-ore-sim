@@ -4,7 +4,7 @@ namespace MiningSimulator.Ores
 {
     public enum WeaponHitMode { StraightSingleTarget, ForwardSweep }
 
-    [CreateAssetMenu(menuName = "Mining Simulator/Weapon Attack", fileName = "WeaponAttack")]
+    // Legacy Fists.asset serialization only; weapon equipment is no longer active.
     public sealed class WeaponAttackData : ScriptableObject
     {
         public WeaponHitMode hitMode = WeaponHitMode.StraightSingleTarget;

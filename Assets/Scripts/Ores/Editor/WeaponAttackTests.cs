@@ -10,7 +10,6 @@ public sealed class WeaponAttackTests
     private readonly List<GameObject> objects = new();
     private GameObject player;
     private PlayerCombatInput combat;
-    private WeaponAttackData weapon;
     [SetUp] public void SetUp()
     {
         player = new GameObject("Weapon test player");
@@ -19,16 +18,13 @@ public sealed class WeaponAttackTests
         combat = player.AddComponent<PlayerCombatInput>();
         typeof(PlayerCombatInput).GetField("targetLayers", BindingFlags.Instance | BindingFlags.NonPublic)
             .SetValue(combat, (LayerMask)(1 << 30));
-        weapon = ScriptableObject.CreateInstance<WeaponAttackData>();
-        weapon.range = 2.5f;
-        weapon.hitOriginOffset = Vector3.zero;
-        combat.TryEquipWeapon(weapon);
+        typeof(PlayerCombatInput).GetField("attackRange", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(combat, 2.5f);
+        typeof(PlayerCombatInput).GetField("hitOriginOffset", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(combat, Vector3.zero);
     }
     [TearDown] public void TearDown()
     {
         foreach (var obj in objects) Object.DestroyImmediate(obj);
         objects.Clear();
-        Object.DestroyImmediate(weapon);
     }
     private MiningCharacterHealth Target(Vector3 offset, bool secondCollider = false)
     {
@@ -46,58 +42,8 @@ public sealed class WeaponAttackTests
         Physics.SyncTransforms();
         typeof(PlayerCombatInput).GetMethod("ApplyHit", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(combat, null);
     }
-    [Test] public void LockRejectsNonMonsterAndClearsOnDeadTarget()
-    {
-        var target = Target(Vector3.forward);
-        Assert.That(combat.TryLockTarget(target), Is.False);
-        target.gameObject.AddComponent<MushroomMonster>().enabled = false;
-        Assert.That(combat.TryLockTarget(target), Is.True);
-        Assert.That(combat.LockedTarget, Is.EqualTo(target));
-        // Isolate selection from Mushroom's delayed PlayMode destruction.
-        Object.DestroyImmediate(target.GetComponent<MushroomMonster>());
-        target.ApplyDamage(target.MaxHealth);
-        target.gameObject.AddComponent<MushroomMonster>().enabled = false;
-        Assert.That(combat.LockedTarget, Is.Null);
-        Assert.That(combat.TryLockTarget(target), Is.False);
-        combat.ClearTargetLock();
-        Assert.That(combat.LockedTarget, Is.Null);
-    }
-    [Test] public void AimIgnoresPlayerCapsuleButCannotPickThroughWall()
-    {
-        player.AddComponent<SphereCollider>().radius = 0.2f;
-        var target = Target(Vector3.forward * 2);
-        target.gameObject.AddComponent<MushroomMonster>().enabled = false;
-        Physics.SyncTransforms();
-        var ray = new Ray(player.transform.position - Vector3.forward, Vector3.forward);
-        Assert.That(combat.TryAimRay(ray, 10), Is.True);
-        Assert.That(combat.LockedTarget, Is.EqualTo(target));
-        var wall = new GameObject("Aim test wall");
-        objects.Add(wall);
-        wall.transform.position = player.transform.position + Vector3.forward;
-        wall.AddComponent<BoxCollider>().size = Vector3.one * 0.3f;
-        Physics.SyncTransforms();
-        Assert.That(combat.TryAimRay(ray, 10), Is.False);
-        Assert.That(combat.LockedTarget, Is.Null);
-    }
-    [Test] public void FistsPreferLockedMonsterWithinTheActualSector()
-    {
-        weapon.hitMode = WeaponHitMode.StraightSingleTarget;
-        weapon.angle = 30;
-        var near = Target(Vector3.forward);
-        var selected = Target(Vector3.forward * 2);
-        selected.gameObject.AddComponent<MushroomMonster>().enabled = false;
-        Assert.That(combat.TryLockTarget(selected), Is.True);
-        Strike();
-        Assert.That(near.Health, Is.EqualTo(near.MaxHealth));
-        Assert.That(selected.Health, Is.EqualTo(selected.MaxHealth - combat.Damage));
-        combat.ClearTargetLock();
-        Strike();
-        Assert.That(near.Health, Is.EqualTo(near.MaxHealth - combat.Damage));
-    }
     [Test] public void FistsHitOnlyClosestForwardTarget()
     {
-        weapon.hitMode = WeaponHitMode.StraightSingleTarget;
-        weapon.angle = 30;
         var near = Target(Vector3.forward);
         var far = Target(Vector3.forward * 2);
         var behind = Target(Vector3.back);
@@ -108,31 +54,9 @@ public sealed class WeaponAttackTests
         Assert.That(behind.Health, Is.EqualTo(behind.MaxHealth));
         Assert.That(side.Health, Is.EqualTo(side.MaxHealth));
     }
-    [Test] public void SwordHitsForwardTargetsOncePerCharacter()
-    {
-        weapon.hitMode = WeaponHitMode.ForwardSweep;
-        weapon.angle = 110;
-        var center = Target(Vector3.forward, true);
-        var diagonal = Target(new Vector3(1, 0, 1.5f));
-        var behind = Target(Vector3.back);
-        var distant = Target(Vector3.forward * 4);
-        Strike();
-        Assert.That(center.Health, Is.EqualTo(center.MaxHealth - combat.Damage));
-        Assert.That(diagonal.Health, Is.EqualTo(diagonal.MaxHealth - combat.Damage));
-        Assert.That(behind.Health, Is.EqualTo(behind.MaxHealth));
-        Assert.That(distant.Health, Is.EqualTo(distant.MaxHealth));
-    }
-    [Test] public void UnequippingRestoresSingleTargetMode()
-    {
-        weapon.hitMode = WeaponHitMode.ForwardSweep;
-        Assert.That(combat.HitsMultipleTargets, Is.True);
-        Assert.That(combat.TryEquipWeapon(null), Is.True);
-        Assert.That(combat.HitsMultipleTargets, Is.False);
-    }
     [Test] public void ShortEnemyInFrontIsNotRejectedByVerticalAngle()
     {
-        weapon.hitOriginOffset = Vector3.up;
-        weapon.angle = 30;
+        typeof(PlayerCombatInput).GetField("hitOriginOffset", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(combat, Vector3.up);
         var low = Target(new Vector3(0, 0.35f, 1.1f));
         var overhead = Target(new Vector3(0, 3, 1));
         Strike();

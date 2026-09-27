@@ -48,7 +48,6 @@ namespace MiningSimulator.Ores
         public GameObject attackVfxPrefab;
         [Min(0.1f)] public float attackVfxLifetime = 2f;
         [Header("Combat stats")]
-        public WeaponAttackData defaultWeapon;
         [Min(0)] public float damage = 1;
         [Min(0.1f)] public float attackRange = 1.75f;
         [Range(1, 180)] public float attackAngle = 100;

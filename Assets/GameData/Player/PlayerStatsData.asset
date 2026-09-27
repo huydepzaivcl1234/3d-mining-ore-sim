@@ -45,7 +45,6 @@ MonoBehaviour:
   attackArcSeconds: 0.18
   attackVfxPrefab: {fileID: 0}
   attackVfxLifetime: 2
-  defaultWeapon: {fileID: 11400000, guid: 2222f631c3423924a86d676cfeb163ec, type: 2}
   damage: 1
   attackRange: 1.75
   attackAngle: 100

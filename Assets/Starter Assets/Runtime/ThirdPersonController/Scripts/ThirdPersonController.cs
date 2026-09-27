@@ -17,7 +17,6 @@ namespace StarterAssets
         // External gameplay systems may gate sprint without modifying held input.
         public bool SprintAllowed { get; set; } = true;
         // Combat owns facing while locked; movement remains camera-relative.
-        public bool ExternalFacing { get; set; }
         public event System.Action Jumped;
         [Header("Player")]
         [Tooltip("Move speed of the character in m/s")]
@@ -279,7 +278,7 @@ namespace StarterAssets
                     RotationSmoothTime);
 
                 // rotate to face input direction relative to camera position
-                if (!ExternalFacing) transform.rotation = Quaternion.Euler(0.0f, rotation, 0.0f);
+                transform.rotation = Quaternion.Euler(0.0f, rotation, 0.0f);
             }
 
 
