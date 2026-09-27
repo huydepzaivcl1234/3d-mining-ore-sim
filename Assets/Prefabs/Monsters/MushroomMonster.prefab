@@ -49,8 +49,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningCombatActor
   maxHealth: 10
-  regenAmount: 1
-  regenInterval: 10
+  regenAmount: 0
+  regenInterval: 1
   healthBar: {fileID: 7537627209130094998}
   microBar: {fileID: 4157127221799346138}
   healthLabel: {fileID: 8372004639002636109}
@@ -276,7 +276,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7923854003312105274, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
       propertyPath: simpleBar._damageAnimDelay
-      value: 1
+      value: 0.05
       objectReference: {fileID: 0}
     - target: {fileID: 7923854003312105274, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
       propertyPath: simpleBar._healAnimDuration

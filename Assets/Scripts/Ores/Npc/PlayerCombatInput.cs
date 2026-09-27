@@ -26,6 +26,14 @@ public class PlayerCombatInput : MonoBehaviour
     [SerializeField] private Vector3 hitOriginOffset = new Vector3(0f, 1f, 0f);
     [SerializeField] private LayerMask targetLayers = ~0;
     private bool wasAttacking;
+    private MiningPlayerStatsData Stats => MiningPlayerStats.For(this);
+    public float Damage => Mathf.Max(0, Stats != null ? Stats.damage : damage);
+    public float AttackRange => Mathf.Max(0.1f, Stats != null ? Stats.attackRange : attackRange);
+    public float AttackAngle => Mathf.Clamp(Stats != null ? Stats.attackAngle : attackAngle, 1, 180);
+    public float AttackSpeed => Mathf.Max(0.1f, Stats != null ? Stats.attackSpeed : attackSpeed);
+    private float BlendSeconds => Mathf.Max(0.01f, Stats != null ? Stats.combatBlendSeconds : combatBlendSeconds);
+    private float HitTime => Mathf.Clamp01(Stats != null ? Stats.hitTime : hitTime);
+    private Vector3 HitOriginOffset => Stats != null ? Stats.hitOriginOffset : hitOriginOffset;
     private bool hitApplied;
     private readonly HashSet<MiningCharacterHealth> hitTargets = new();
     private void OnEnable()
@@ -60,9 +68,15 @@ public class PlayerCombatInput : MonoBehaviour
         // Leave locomotion's torso and arms untouched while travelling. The masked
         // attack overlays it only during a strike; legs keep their running cycle.
         bool idleCombat = animator.GetBool("CombatMode") && animator.GetFloat("Speed") < 0.1f;
-        float target = attacking || idleCombat ? 1f : 0f;
+        int hitLayer = animator.GetLayerIndex("Hit Reaction");
+        bool reacting = hitLayer >= 0 &&
+            (animator.GetCurrentAnimatorStateInfo(hitLayer).IsName("HitReaction") ||
+             (animator.IsInTransition(hitLayer) && animator.GetNextAnimatorStateInfo(hitLayer).IsName("HitReaction")));
+        // CombatIdle must not hide the lower-priority hit reaction. Attack is
+        // still evaluated on its own layer and always has priority over Hit.
+        float target = attacking || (idleCombat && !reacting) ? 1f : 0f;
         animator.SetLayerWeight(layer, Mathf.MoveTowards(animator.GetLayerWeight(layer),
-            target, Time.deltaTime / Mathf.Max(0.01f, combatBlendSeconds)));
+            target, Time.deltaTime / BlendSeconds));
     }
     private void OnDestroy()
     {
@@ -78,7 +92,7 @@ public class PlayerCombatInput : MonoBehaviour
         if (animator == null || animator.runtimeAnimatorController == null) return;
         int layer = animator.GetLayerIndex("combat layer");
         if (layer < 0) return;
-        animator.SetFloat("AttackSpeed", Mathf.Max(0.1f, attackSpeed));
+        animator.SetFloat("AttackSpeed", AttackSpeed);
         if (toggleCombat != null && toggleCombat.WasPressedThisFrame())
         {
             combatMode = !combatMode;
@@ -102,7 +116,7 @@ public class PlayerCombatInput : MonoBehaviour
         }
         bool active = combatMode && state.IsName("Attack");
         if (active && !wasAttacking) hitApplied = false;
-        if (active && !hitApplied && state.normalizedTime >= hitTime)
+        if (active && !hitApplied && state.normalizedTime >= HitTime)
         {
             hitApplied = true;
             ApplyHit();
@@ -112,32 +126,32 @@ public class PlayerCombatInput : MonoBehaviour
 
     private void ApplyHit()
     {
-        Vector3 origin = transform.TransformPoint(hitOriginOffset);
+        Vector3 origin = transform.TransformPoint(HitOriginOffset);
         hitTargets.Clear();
-        foreach (var collider in Physics.OverlapSphere(origin, attackRange, targetLayers,
+        foreach (var collider in Physics.OverlapSphere(origin, AttackRange, targetLayers,
                      QueryTriggerInteraction.Ignore))
         {
             var target = collider.GetComponentInParent<MiningCharacterHealth>();
             if (target == null || target.transform.root == transform.root || hitTargets.Contains(target)) continue;
             Vector3 direction = collider.ClosestPoint(origin) - origin;
             if (direction.sqrMagnitude > 0.0001f &&
-                Vector3.Angle(transform.forward, direction) > attackAngle * 0.5f) continue;
+                Vector3.Angle(transform.forward, direction) > AttackAngle * 0.5f) continue;
             hitTargets.Add(target);
-            target.ApplyDamage(damage);
+            target.ApplyDamage(Damage);
         }
     }
 
     private void OnDrawGizmosSelected()
     {
-        Vector3 origin = transform.TransformPoint(hitOriginOffset);
+        Vector3 origin = transform.TransformPoint(HitOriginOffset);
         Gizmos.color = Application.isPlaying && wasAttacking && !hitApplied ? Color.red : Color.yellow;
-        Gizmos.DrawWireSphere(origin, attackRange);
-        Vector3 previous = origin + Quaternion.AngleAxis(-attackAngle * 0.5f, transform.up) * transform.forward * attackRange;
+        Gizmos.DrawWireSphere(origin, AttackRange);
+        Vector3 previous = origin + Quaternion.AngleAxis(-AttackAngle * 0.5f, transform.up) * transform.forward * AttackRange;
         Gizmos.DrawLine(origin, previous);
         for (int i = 1; i <= 32; i++)
         {
-            Vector3 point = origin + Quaternion.AngleAxis(-attackAngle * 0.5f + attackAngle * i / 32f,
-                transform.up) * transform.forward * attackRange;
+            Vector3 point = origin + Quaternion.AngleAxis(-AttackAngle * 0.5f + AttackAngle * i / 32f,
+                transform.up) * transform.forward * AttackRange;
             Gizmos.DrawLine(previous, point);
             previous = point;
         }

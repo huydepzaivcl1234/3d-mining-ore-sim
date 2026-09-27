@@ -21,12 +21,22 @@ namespace MiningSimulator.Ores
         private Camera healthCamera;
         private float health;
         public float Health => health;
-        public float MaxHealth => maxHealth;
+        private MiningPlayerStatsData Stats => MiningPlayerStats.For(this);
+        public float MaxHealth => Mathf.Max(1f, Stats != null ? Stats.maxHealth : maxHealth);
+        public float RegenAmount => Mathf.Max(0f, Stats != null ? Stats.regenAmount : regenAmount);
+        public float RegenInterval => Mathf.Max(0.1f, Stats != null ? Stats.regenInterval : regenInterval);
+        private float initializedMaxHealth;
+        public void Respawn()
+        {
+            health = MaxHealth;
+            regenTimer = 0f;
+            Refresh(true);
+        }
         public void ApplyDamage(float amount)
         {
             if (amount <= 0f || health <= 0f) return;
             health = Mathf.Max(0f, health - amount);
-            Refresh();
+            Refresh(false, UpdateAnim.Damage);
             Damaged?.Invoke();
             if (health <= 0f) Died?.Invoke();
         }
@@ -34,34 +44,42 @@ namespace MiningSimulator.Ores
         public void Heal(float amount)
         {
             if (amount <= 0f || health <= 0f) return;
-            health = Mathf.Min(maxHealth, health + amount);
-            Refresh();
+            health = Mathf.Min(MaxHealth, health + amount);
+            Refresh(false, UpdateAnim.Heal);
         }
 
         private void OnEnable() => regenTimer = 0f;
 
         private void Update()
         {
-            if (health <= 0f || health >= maxHealth || regenAmount <= 0f)
+            if (initializedMaxHealth != MaxHealth)
+            {
+                initializedMaxHealth = MaxHealth;
+                health = Mathf.Min(health, MaxHealth);
+                if (microBar != null) microBar.Initialize(MaxHealth);
+                Refresh(true);
+            }
+            if (health <= 0f || health >= MaxHealth || RegenAmount <= 0f)
             {
                 regenTimer = 0f;
                 return;
             }
             regenTimer += Time.deltaTime;
-            float interval = Mathf.Max(0.1f, regenInterval);
+            float interval = RegenInterval;
             if (regenTimer < interval) return;
             int ticks = Mathf.FloorToInt(regenTimer / interval);
             regenTimer -= ticks * interval;
-            Heal(regenAmount * ticks);
+            Heal(RegenAmount * ticks);
         }
 
         private void Awake()
         {
-            health = Mathf.Max(1f, maxHealth);
+            health = MaxHealth;
+            initializedMaxHealth = MaxHealth;
             if (microBar == null && healthBar != null)
                 microBar = healthBar.GetComponent<MicroBar>();
-            if (microBar != null) microBar.Initialize(maxHealth);
-            Refresh();
+            if (microBar != null) microBar.Initialize(MaxHealth);
+            Refresh(true);
         }
 
         private void LateUpdate()
@@ -74,11 +92,13 @@ namespace MiningSimulator.Ores
                     healthCamera.transform.up);
         }
 
-        private void Refresh()
+        private void Refresh(bool skipAnimation, UpdateAnim updateType = UpdateAnim.Damage)
         {
-            if (microBar != null) microBar.UpdateBar(health, true);
+            // Only initialization/respawn snaps. Damage and healing use the
+            // animation authored on the MicroBar (Flash, Fill, etc.).
+            if (microBar != null) microBar.UpdateBar(health, skipAnimation, updateType);
             if (healthLabel != null)
-                healthLabel.text = $"{Mathf.CeilToInt(health)} / {Mathf.CeilToInt(maxHealth)}";
+                healthLabel.text = $"{Mathf.CeilToInt(health)} / {Mathf.CeilToInt(MaxHealth)}";
         }
 
         private void OnValidate() => maxHealth = Mathf.Max(1f, maxHealth);

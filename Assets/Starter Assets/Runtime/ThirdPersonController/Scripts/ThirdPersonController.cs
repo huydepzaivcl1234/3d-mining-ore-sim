@@ -152,6 +152,16 @@ namespace StarterAssets
             _fallTimeoutDelta = FallTimeout;
         }
 
+        // Respawn must not reuse pre-death jump velocity or the running blend.
+        public void ResetMotionAfterRespawn()
+        {
+            _speed = _animationBlend = _rotationVelocity = 0f;
+            _verticalVelocity = -2f;
+            _targetRotation = transform.eulerAngles.y;
+            _jumpTimeoutDelta = JumpTimeout;
+            _fallTimeoutDelta = FallTimeout;
+        }
+
         private void Update()
         {
             _hasAnimator = TryGetComponent(out _animator);

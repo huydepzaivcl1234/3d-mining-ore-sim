@@ -13,7 +13,7 @@ namespace MiningSimulator.Editor
     {
         private const string MenuPath = "Mining Simulator/Setup/Health Bar (Selected Character)";
         private const string MicroBarPrefabPath =
-            "Assets/Microlight/MicroBar/Prefabs/SimpleBars/Sprite_SimpleMicroBarSRP.prefab";
+            "Assets/Plugins/Microlight/MicroBar/Prefabs/SimpleBars/Sprite_SimpleMicroBarSRP.prefab";
 
         [MenuItem(MenuPath)]
         private static void Setup()
