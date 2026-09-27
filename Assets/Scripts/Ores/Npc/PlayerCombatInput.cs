@@ -518,16 +518,24 @@ public class PlayerCombatInput : MonoBehaviour
             stanceElapsed = 0;
             animator.ResetTrigger("Attack");
             animator.SetBool("CombatMode", false);
-            animator.CrossFadeInFixedTime(state, StanceBlendSeconds, layer, 0f);
+            SetEquipParameters(drawingSword, !drawingSword);
             int stanceLayer = animator.GetLayerIndex("Sword Stance");
-            if (stanceLayer >= 0) animator.CrossFadeInFixedTime(state, StanceBlendSeconds, stanceLayer, 0f);
             int armsLayer = animator.GetLayerIndex("Sword Arms");
-            if (armsLayer >= 0) animator.CrossFadeInFixedTime(state, StanceBlendSeconds, armsLayer, 0f);
+            // New equip layers transition through the editable graph. Only legacy
+            // controllers need direct playback; do not start both paths at once.
+            if (!HasEquipParameters())
+            {
+                animator.CrossFadeInFixedTime(state, StanceBlendSeconds, layer, 0f);
+                if (stanceLayer >= 0) animator.CrossFadeInFixedTime(state, StanceBlendSeconds, stanceLayer, 0f);
+                if (armsLayer >= 0) animator.CrossFadeInFixedTime(state, StanceBlendSeconds, armsLayer, 0f);
+            }
         }
         if (!changingStance) return;
         stanceElapsed += Time.deltaTime;
-        var stateInfo = animator.GetCurrentAnimatorStateInfo(layer);
-        if (animator.IsInTransition(layer)) stateInfo = animator.GetNextAnimatorStateInfo(layer);
+        int timingLayer = animator.GetLayerIndex("Sword Arms");
+        if (timingLayer < 0) timingLayer = layer;
+        var stateInfo = animator.GetCurrentAnimatorStateInfo(timingLayer);
+        if (animator.IsInTransition(timingLayer)) stateInfo = animator.GetNextAnimatorStateInfo(timingLayer);
         string expected = drawingSword ? "DrawSword" : "SheathSword";
         var clip = drawingSword ? Weapon.drawClip : Weapon.sheathClip;
         float progress = stateInfo.IsName(expected) ? stateInfo.normalizedTime : 0f;
@@ -539,6 +547,7 @@ public class PlayerCombatInput : MonoBehaviour
         if (!finished) return;
         changingStance = false;
         combatMode = drawingSword;
+        SetEquipParameters(false, false);
         animator.SetBool("CombatMode", combatMode);
         animator.CrossFadeInFixedTime(combatMode ? "CombatIdle" : "WeaponEmpty", StanceBlendSeconds, layer);
     }
@@ -547,12 +556,36 @@ public class PlayerCombatInput : MonoBehaviour
     {
         desiredCombat = combatMode = changingStance = wasAttacking = false;
         pendingAttachment = false;
+        SetEquipParameters(false, false);
         AttachWeapon(false);
         if (animator != null && animator.runtimeAnimatorController != null)
         { animator.SetBool("CombatMode", false); animator.ResetTrigger("Attack"); }
     }
 
     // Presentation events only. Duplicate events from the two pose layers are harmless.
+    private void SetEquipParameters(bool draw, bool sheath)
+    {
+        if (animator == null || animator.runtimeAnimatorController == null) return;
+        foreach (var parameter in animator.parameters)
+        {
+            if (parameter.type != AnimatorControllerParameterType.Bool) continue;
+            if (parameter.name == "DrawingSword") animator.SetBool(parameter.nameHash, draw);
+            if (parameter.name == "SheathingSword") animator.SetBool(parameter.nameHash, sheath);
+        }
+    }
+
+    private bool HasEquipParameters()
+    {
+        bool draw = false, sheath = false;
+        foreach (var parameter in animator.parameters)
+        {
+            if (parameter.type != AnimatorControllerParameterType.Bool) continue;
+            draw |= parameter.name == "DrawingSword";
+            sheath |= parameter.name == "SheathingSword";
+        }
+        return draw && sheath;
+    }
+
     public void OnDrawSword()
     {
         if (!changingStance || !drawingSword || attachmentChanged) return;

@@ -30,6 +30,7 @@ MonoBehaviour:
   unarmedController: {fileID: 0}
   drawClip: {fileID: 0}
   sheathClip: {fileID: 0}
+  stanceBlendSeconds: 0.25
   drawAttachTime: 0.45
   sheathAttachTime: 0.65
   sheathBone: 0

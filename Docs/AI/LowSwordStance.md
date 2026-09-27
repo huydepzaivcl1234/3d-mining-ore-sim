@@ -59,3 +59,28 @@ Moving draw preview transferred the sword to the hand and moved the player.
 Moving sheath preview was triggered, but night lighting prevented confirmation
 of final alignment. Physical E input, sheath continuity and the
 equipment-swap preview have not been verified end-to-end. No NUnit run claimed.
+
+## 2026-09-27 investigation
+
+Confirmed the SwordPose=1 child was the Slash clip instead of a Speed blend
+tree. Repaired only that branch with sword idle and sword run; retained normal
+locomotion. Sword Arms and Sword Stance now have visible, editable transitions
+controlled by DrawingSword / SheathingSword. The runtime uses these transitions
+instead of starting a second hidden equip clip in the combat layer. Existing
+hand/hip offsets remain authored values; a concurrent Sword.asset position edit
+was not overwritten.
+
+Live Editor compilation passed and the equip graph was visible after reload.
+Graphs.Edge.WakeUp nevertheless recurred at 21:38:33. All local controller
+references across the project resolve; this is not sufficient to declare the
+Editor graph fixed. Reopening its tab alone did not resolve the exception.
+No full visual acceptance of draw/sheath contact, sword running, or grip is
+claimed. The scene remains unsaved as found; no scene was saved or packaged.
+
+Follow-up: with explicit user permission, saved the existing dirty SampleScene
+and restarted Unity through Hub. The reopened Animator rendered its transitions;
+Play Mode entry, the draw/sheath preview request, and Play Mode exit showed zero
+Console errors. One existing Missing Script warning remains. The restart is an
+observed recovery, not proof of a permanent Graphs.Edge.WakeUp fix. Physical E
+and exact grip/contact alignment are still unverified. The scene is excluded
+from the patch ZIP; the save preserves the user's existing scene work.

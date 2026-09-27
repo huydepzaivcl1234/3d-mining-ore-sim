@@ -18,7 +18,10 @@ public static class LowSwordStanceSetup
         bool configured = false;
         if (controller != null) foreach (var parameter in controller.parameters)
             if (parameter.name == "SwordPose") configured = true;
-        if (data != null && !configured) Setup();
+        if (data != null && !configured)
+        {
+            Setup();
+        }
     }
     [MenuItem("Mining Simulator/Setup/Setup Low Sword Draw And Sheath %#&k")]
     public static void Setup()
@@ -105,6 +108,8 @@ public static class LowSwordStanceSetup
         data.drawClip = draw;
         data.sheathClip = sheath;
         ConfigureArms(controller, draw, sheath);
+        RepairSwordLocomotion(controller, idle, run);
+        ConfigureVisibleEquipGraph(controller);
         ConfigureContactEvent(draw, "OnDrawSword", data.drawAttachTime);
         ConfigureContactEvent(sheath, "OnSheathSword", data.sheathAttachTime);
         EditorUtility.SetDirty(controller);
@@ -113,6 +118,67 @@ public static class LowSwordStanceSetup
         AssetDatabase.SaveAssetIfDirty(controller);
         AssetDatabase.SaveAssetIfDirty(data);
         Debug.Log("LOW SWORD READY: E draws/sheathes; editable DrawSword/SheathSword/CombatIdle/Attack states in " + Output);
+    }
+    static void RepairSwordLocomotion(AnimatorController controller, AnimationClip idle, AnimationClip run)
+    {
+        var locomotion = FindState(controller.layers[0].stateMachine, "Idle Walk Run Blend");
+        if (locomotion == null || !(locomotion.motion is BlendTree stances) || stances.blendParameter != "SwordPose")
+            throw new System.InvalidOperationException("SwordPose locomotion tree must be present; no authored locomotion was replaced.");
+        var children = stances.children;
+        if (children.Length != 2) throw new System.InvalidOperationException("Expected normal/sword locomotion branches.");
+        if (!(children[1].motion is BlendTree sword) || sword.blendParameter != "Speed")
+        {
+            sword = new BlendTree { name = "Sword Idle Walk Run", blendType = BlendTreeType.Simple1D,
+                blendParameter = "Speed", useAutomaticThresholds = false };
+            AssetDatabase.AddObjectToAsset(sword, controller);
+            sword.AddChild(idle, 0); sword.AddChild(run, 2); sword.AddChild(run, 6);
+            var speeds = sword.children; speeds[1].timeScale = 0.45f; sword.children = speeds;
+            children[1].motion = sword; stances.children = children;
+            EditorUtility.SetDirty(stances);
+            EditorUtility.SetDirty(sword);
+        }
+        ConfigureClip(idle, true, null);
+        ConfigureClip(run, true, null);
+    }
+    static void ConfigureVisibleEquipGraph(AnimatorController controller)
+    {
+        foreach (string name in new[] { "DrawingSword", "SheathingSword" })
+        {
+            bool exists = false;
+            foreach (var parameter in controller.parameters) if (parameter.name == name) exists = true;
+            if (!exists) controller.AddParameter(name, AnimatorControllerParameterType.Bool);
+        }
+        foreach (var layer in controller.layers)
+        {
+            if (layer.name != "Sword Arms" && layer.name != "Sword Stance") continue;
+            var machine = layer.stateMachine;
+            var empty = FindState(machine, "WeaponEmpty");
+            var draw = FindState(machine, "DrawSword");
+            var sheath = FindState(machine, "SheathSword");
+            if (empty == null || draw == null || sheath == null) throw new System.InvalidOperationException("Incomplete sword equip graph.");
+            machine.entryPosition = new Vector3(60, 40);
+            machine.anyStatePosition = new Vector3(60, 280);
+            var states = machine.states;
+            for (int i = 0; i < states.Length; i++)
+                states[i].position = states[i].state == empty ? new Vector3(280, 40) :
+                    states[i].state == draw ? new Vector3(80, 160) : new Vector3(480, 160);
+            machine.states = states;
+            EquipTransition(empty, draw, "DrawingSword", true);
+            EquipTransition(empty, sheath, "SheathingSword", true);
+            EquipTransition(draw, empty, "DrawingSword", false);
+            EquipTransition(sheath, empty, "SheathingSword", false);
+            EditorUtility.SetDirty(machine);
+        }
+    }
+    static void EquipTransition(AnimatorState source, AnimatorState destination, string parameter, bool enabled)
+    {
+        foreach (var existing in source.transitions) if (existing != null && existing.destinationState == destination) return;
+        var transition = source.AddTransition(destination);
+        transition.hasExitTime = false;
+        transition.hasFixedDuration = true;
+        transition.duration = 0.15f;
+        transition.AddCondition(enabled ? AnimatorConditionMode.If : AnimatorConditionMode.IfNot, 0, parameter);
+        EditorUtility.SetDirty(source);
     }
     static void ConfigureUnarmed(WeaponAttackData sword)
     {
