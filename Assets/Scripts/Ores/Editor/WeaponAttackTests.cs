@@ -46,6 +46,54 @@ public sealed class WeaponAttackTests
         Physics.SyncTransforms();
         typeof(PlayerCombatInput).GetMethod("ApplyHit", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(combat, null);
     }
+    [Test] public void LockRejectsNonMonsterAndClearsOnDeadTarget()
+    {
+        var target = Target(Vector3.forward);
+        Assert.That(combat.TryLockTarget(target), Is.False);
+        target.gameObject.AddComponent<MushroomMonster>().enabled = false;
+        Assert.That(combat.TryLockTarget(target), Is.True);
+        Assert.That(combat.LockedTarget, Is.EqualTo(target));
+        // Isolate selection from Mushroom's delayed PlayMode destruction.
+        Object.DestroyImmediate(target.GetComponent<MushroomMonster>());
+        target.ApplyDamage(target.MaxHealth);
+        target.gameObject.AddComponent<MushroomMonster>().enabled = false;
+        Assert.That(combat.LockedTarget, Is.Null);
+        Assert.That(combat.TryLockTarget(target), Is.False);
+        combat.ClearTargetLock();
+        Assert.That(combat.LockedTarget, Is.Null);
+    }
+    [Test] public void AimIgnoresPlayerCapsuleButCannotPickThroughWall()
+    {
+        player.AddComponent<SphereCollider>().radius = 0.2f;
+        var target = Target(Vector3.forward * 2);
+        target.gameObject.AddComponent<MushroomMonster>().enabled = false;
+        Physics.SyncTransforms();
+        var ray = new Ray(player.transform.position - Vector3.forward, Vector3.forward);
+        Assert.That(combat.TryAimRay(ray, 10), Is.True);
+        Assert.That(combat.LockedTarget, Is.EqualTo(target));
+        var wall = new GameObject("Aim test wall");
+        objects.Add(wall);
+        wall.transform.position = player.transform.position + Vector3.forward;
+        wall.AddComponent<BoxCollider>().size = Vector3.one * 0.3f;
+        Physics.SyncTransforms();
+        Assert.That(combat.TryAimRay(ray, 10), Is.False);
+        Assert.That(combat.LockedTarget, Is.Null);
+    }
+    [Test] public void FistsPreferLockedMonsterWithinTheActualSector()
+    {
+        weapon.hitMode = WeaponHitMode.StraightSingleTarget;
+        weapon.angle = 30;
+        var near = Target(Vector3.forward);
+        var selected = Target(Vector3.forward * 2);
+        selected.gameObject.AddComponent<MushroomMonster>().enabled = false;
+        Assert.That(combat.TryLockTarget(selected), Is.True);
+        Strike();
+        Assert.That(near.Health, Is.EqualTo(near.MaxHealth));
+        Assert.That(selected.Health, Is.EqualTo(selected.MaxHealth - combat.Damage));
+        combat.ClearTargetLock();
+        Strike();
+        Assert.That(near.Health, Is.EqualTo(near.MaxHealth - combat.Damage));
+    }
     [Test] public void FistsHitOnlyClosestForwardTarget()
     {
         weapon.hitMode = WeaponHitMode.StraightSingleTarget;

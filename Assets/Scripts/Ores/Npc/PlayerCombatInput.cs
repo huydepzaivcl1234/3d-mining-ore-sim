@@ -2,6 +2,8 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using MiningSimulator.Ores;
 using System.Collections.Generic;
+using UnityEngine.EventSystems;
+using StarterAssets;
 
 [DisallowMultipleComponent]
 public class PlayerCombatInput : MonoBehaviour
@@ -11,7 +13,23 @@ public class PlayerCombatInput : MonoBehaviour
     [SerializeField] private InputAction toggleCombat = new InputAction(
         "Toggle Combat", InputActionType.Button, "<Keyboard>/e");
     [SerializeField] private InputAction attack = new InputAction(
-        "Attack", InputActionType.Button, "<Mouse>/rightButton");
+        "Attack", InputActionType.Button, "<Mouse>/leftButton");
+    [SerializeField] private InputAction aim = new InputAction(
+        "Lock Target", InputActionType.Button, "<Mouse>/rightButton");
+    [Header("Target lock")]
+    [SerializeField] private Camera aimCamera;
+    [Min(1f), SerializeField] private float lockDistance = 30f;
+    [Min(1f), SerializeField] private float aimTurnSpeed = 720f;
+    [SerializeField] private LayerMask aimRayLayers = ~0;
+    [Header("Weapon model (optional hand override)")]
+    [SerializeField] private Transform weaponHand;
+    private MiningCharacterHealth lockedTarget;
+    private MiningCharacterHealth ownHealth;
+    private ThirdPersonController movement;
+    private MiningUiPanelCoordinator panels;
+    private WeaponAttackData visualWeapon;
+    private GameObject heldModel;
+    public MiningCharacterHealth LockedTarget => IsLockValid(lockedTarget) ? lockedTarget : null;
     private bool combatMode;
     [Header("Attack")]
     [Min(0f), SerializeField] private float damage = 10f;
@@ -51,13 +69,24 @@ public class PlayerCombatInput : MonoBehaviour
     private readonly HashSet<MiningCharacterHealth> hitTargets = new();
     private void OnEnable()
     {
+        // Reserve right mouse for lock; migrate only the old built-in binding.
+        if (attack != null && aim != null)
+            for (int i = 0; i < attack.bindings.Count; i++)
+                if (attack.bindings[i].effectivePath == "<Mouse>/rightButton" &&
+                    aim.bindings.Count > 0 && aim.bindings[0].effectivePath == "<Mouse>/rightButton")
+                    attack.ApplyBindingOverride(i, "<Mouse>/leftButton");
         toggleCombat?.Enable();
         attack?.Enable();
+        aim?.Enable();
+        if (heldModel != null) heldModel.SetActive(true);
     }
     private void OnDisable()
     {
         toggleCombat?.Disable();
         attack?.Disable();
+        aim?.Disable();
+        ClearTargetLock();
+        if (heldModel != null) heldModel.SetActive(false);
         wasAttacking = false;
         hitApplied = false;
         combatMode = false;
@@ -72,6 +101,7 @@ public class PlayerCombatInput : MonoBehaviour
 
     private void LateUpdate()
     {
+        FaceLockedTarget(false);
         if (attackArc != null && attackArc.enabled)
         {
             arcRemaining -= Time.deltaTime;
@@ -105,6 +135,8 @@ public class PlayerCombatInput : MonoBehaviour
     {
         toggleCombat?.Dispose();
         attack?.Dispose();
+        aim?.Dispose();
+        if (heldModel != null) Destroy(heldModel);
         if (attackArcMaterial != null) Destroy(attackArcMaterial);
     }
     private void Awake()
@@ -112,11 +144,15 @@ public class PlayerCombatInput : MonoBehaviour
         if (animator == null) animator = GetComponentInChildren<Animator>(true);
         originalController = animator != null ? animator.runtimeAnimatorController : null;
         feedbackAudio = FindFirstObjectByType<MiningAudioManager>();
+        ownHealth = GetComponent<MiningCharacterHealth>();
+        movement = GetComponent<ThirdPersonController>();
+        panels = FindFirstObjectByType<MiningUiPanelCoordinator>();
     }
     private void Start()
     {
         if (Weapon != null && Weapon.animationOverrides != null && animator != null)
             animator.runtimeAnimatorController = Weapon.animationOverrides;
+        RefreshHeldModel();
     }
 
     // Future weapon inventory calls this; do not change equipment mid-animation.
@@ -135,10 +171,21 @@ public class PlayerCombatInput : MonoBehaviour
             animator.runtimeAnimatorController = weapon != null && weapon.animationOverrides != null ? weapon.animationOverrides : originalController;
             if (animator.runtimeAnimatorController != null) animator.SetBool("CombatMode", combatMode);
         }
+        RefreshHeldModel();
         return true;
     }
     private void Update()
     {
+        if (visualWeapon != Weapon) RefreshHeldModel();
+        if (!CanUseGameplay())
+        {
+            ClearTargetLock();
+            return;
+        }
+        ValidateTargetLock();
+        bool aimPressed = aim != null && aim.WasPressedThisFrame();
+        if (aimPressed && (EventSystem.current == null || !EventSystem.current.IsPointerOverGameObject()))
+            AimFromPointer();
         if (animator == null || animator.runtimeAnimatorController == null) return;
         int layer = animator.GetLayerIndex("combat layer");
         if (layer < 0) return;
@@ -148,9 +195,12 @@ public class PlayerCombatInput : MonoBehaviour
             combatMode = !combatMode;
             animator.SetBool("CombatMode", combatMode);
             animator.ResetTrigger("Attack");
+            if (!combatMode) ClearTargetLock();
         }
         TrackAttack(layer);
-        if (!combatMode || attack == null || !attack.WasPressedThisFrame()) return;
+        // A legacy right-click Attack binding must not also attack on lock/cancel.
+        if (aimPressed || !combatMode || attack == null || !attack.WasPressedThisFrame()) return;
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
         if (layer >= 0 && !animator.IsInTransition(layer) &&
             animator.GetCurrentAnimatorStateInfo(layer).IsName("CombatIdle"))
             animator.SetTrigger("Attack");
@@ -175,6 +225,7 @@ public class PlayerCombatInput : MonoBehaviour
         if (active && !hitApplied && state.normalizedTime >= HitTime)
         {
             hitApplied = true;
+            FaceLockedTarget(true);
             ShowAttackEffect();
             ApplyHit();
         }
@@ -254,7 +305,8 @@ public class PlayerCombatInput : MonoBehaviour
             {
                 if (hitTargets.Add(target)) DamageTarget(target, point);
             }
-            else if (direction.sqrMagnitude < closestDistance)
+            else if ((LockedTarget != null && target == LockedTarget) ||
+                     ((LockedTarget == null || closest != LockedTarget) && direction.sqrMagnitude < closestDistance))
             {
                 closest = target;
                 closestDistance = direction.sqrMagnitude;
@@ -262,6 +314,106 @@ public class PlayerCombatInput : MonoBehaviour
             }
         }
         if (!HitsMultipleTargets && closest != null) DamageTarget(closest, closestPoint);
+    }
+
+    private bool CanUseGameplay() => Time.timeScale > 0f &&
+        (ownHealth == null || ownHealth.Health > 0f) &&
+        (panels == null || !panels.BlocksGameplay);
+
+    private bool IsLockValid(MiningCharacterHealth target) => target != null &&
+        target != ownHealth && target.transform != transform && !target.transform.IsChildOf(transform) &&
+        target.isActiveAndEnabled && target.Health > 0f &&
+        target.GetComponentInParent<MushroomMonster>() != null &&
+        (target.transform.position - transform.position).sqrMagnitude <= lockDistance * lockDistance;
+
+    public bool TryLockTarget(MiningCharacterHealth target)
+    {
+        if (!isActiveAndEnabled || !CanUseGameplay() || !IsLockValid(target))
+        {
+            ClearTargetLock();
+            return false;
+        }
+        lockedTarget = target;
+        combatMode = true;
+        if (animator != null && animator.runtimeAnimatorController != null)
+            animator.SetBool("CombatMode", true);
+        if (movement != null) movement.ExternalFacing = true;
+        return true;
+    }
+
+    public void ClearTargetLock()
+    {
+        lockedTarget = null;
+        if (movement != null) movement.ExternalFacing = false;
+    }
+
+    private void ValidateTargetLock()
+    {
+        if (lockedTarget != null && !IsLockValid(lockedTarget)) ClearTargetLock();
+        // Unity's destroyed-object null also needs to release movement ownership.
+        if (movement != null) movement.ExternalFacing = LockedTarget != null;
+    }
+
+    private void AimFromPointer()
+    {
+        if (Mouse.current == null) return;
+        if (aimCamera == null) aimCamera = Camera.main;
+        if (aimCamera == null) { ClearTargetLock(); return; }
+        Vector2 pointer = Cursor.lockState == CursorLockMode.Locked
+            ? aimCamera.pixelRect.center : Mouse.current.position.ReadValue();
+        Ray ray = aimCamera.ScreenPointToRay(pointer);
+        TryAimRay(ray, aimCamera.farClipPlane);
+    }
+
+    public bool TryAimRay(Ray ray, float maxDistance)
+    {
+        Collider nearest = null;
+        float distance = float.PositiveInfinity;
+        // Click-only allocation. Ignore our own capsule/blade, never other walls.
+        foreach (var hit in Physics.RaycastAll(ray, Mathf.Max(0f, maxDistance), aimRayLayers, QueryTriggerInteraction.Ignore))
+        {
+            if (hit.collider.transform == transform || hit.collider.transform.IsChildOf(transform)) continue;
+            if (hit.distance < distance) { nearest = hit.collider; distance = hit.distance; }
+        }
+        return TryLockTarget(nearest != null ? nearest.GetComponentInParent<MiningCharacterHealth>() : null);
+    }
+
+    private void FaceLockedTarget(bool contact)
+    {
+        if (!CanUseGameplay()) { ClearTargetLock(); return; }
+        ValidateTargetLock();
+        var target = LockedTarget;
+        if (target == null) return;
+        Vector3 direction = Vector3.ProjectOnPlane(target.transform.position - transform.position, Vector3.up);
+        if (direction.sqrMagnitude < 0.0001f) return;
+        Quaternion rotation = Quaternion.LookRotation(direction, Vector3.up);
+        transform.rotation = contact ? rotation : Quaternion.RotateTowards(transform.rotation,
+            rotation, aimTurnSpeed * Time.deltaTime);
+    }
+
+    private void RefreshHeldModel()
+    {
+        if (heldModel != null) { heldModel.SetActive(false); Destroy(heldModel); }
+        visualWeapon = Weapon;
+        if (visualWeapon == null || visualWeapon.modelPrefab == null) return;
+        Transform hand = weaponHand;
+        if (hand == null && animator != null && animator.isHuman && animator.avatar != null)
+            hand = animator.GetBoneTransform(visualWeapon.handBone);
+        if (hand == null)
+        {
+            Debug.LogWarning("Weapon needs a Humanoid hand bone or Weapon Hand override.", this);
+            return;
+        }
+        heldModel = Instantiate(visualWeapon.modelPrefab, hand, false);
+        heldModel.name = "Equipped " + visualWeapon.name;
+        heldModel.transform.localPosition = visualWeapon.modelLocalPosition;
+        heldModel.transform.localRotation = Quaternion.Euler(visualWeapon.modelLocalEulerAngles);
+        heldModel.transform.localScale = visualWeapon.modelLocalScale;
+        // Hit queries remain authoritative; the decorative blade cannot push Player.
+        foreach (var collider in heldModel.GetComponentsInChildren<Collider>(true)) collider.enabled = false;
+        foreach (var body in heldModel.GetComponentsInChildren<Rigidbody>(true))
+        { body.isKinematic = true; body.useGravity = false; }
+        heldModel.SetActive(isActiveAndEnabled);
     }
 
     private void DamageTarget(MiningCharacterHealth target, Vector3 point)

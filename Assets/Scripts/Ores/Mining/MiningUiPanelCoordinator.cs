@@ -55,6 +55,7 @@ namespace MiningSimulator.Ores
         }
 
         public MiningUiData UiData => uiData;
+        public bool BlocksGameplay => mainMenuOpen || activeModal != null;
 
         public void RegisterInventoryUi(RectTransform menuButton, RectTransform panel)
         {

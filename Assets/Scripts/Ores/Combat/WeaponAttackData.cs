@@ -18,6 +18,12 @@ namespace MiningSimulator.Ores
         [Min(0.1f)] public float hitHalfHeight = 0.9f;
         [Tooltip("Optional override controller. Keep the existing combat layer, Attack, CombatMode, Speed and AttackSpeed parameters.")]
         public AnimatorOverrideController animationOverrides;
+        [Header("Held model")]
+        public GameObject modelPrefab;
+        public HumanBodyBones handBone = HumanBodyBones.RightHand;
+        public Vector3 modelLocalPosition;
+        public Vector3 modelLocalEulerAngles;
+        public Vector3 modelLocalScale = Vector3.one;
         public AudioClip swingSfx;
         [Range(0, 1)] public float swingVolume = 0.7f;
         public GameObject strikeVfxPrefab;
