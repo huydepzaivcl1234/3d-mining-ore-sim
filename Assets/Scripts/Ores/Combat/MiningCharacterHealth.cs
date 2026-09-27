@@ -22,7 +22,16 @@ namespace MiningSimulator.Ores
         private float health;
         public float Health => health;
         private MiningPlayerStatsData Stats => MiningPlayerStats.For(this);
-        public float MaxHealth => Mathf.Max(1f, Stats != null ? Stats.maxHealth : maxHealth);
+        private float spawnedMaxHealth;
+        public float MaxHealth => Mathf.Max(1f, Stats != null ? GetComponent<MiningPlayerStats>().MaxHealth : spawnedMaxHealth > 0 ? spawnedMaxHealth : maxHealth);
+        public void ConfigureSpawnHealth(float value)
+        {
+            spawnedMaxHealth = Mathf.Max(1, value);
+            initializedMaxHealth = MaxHealth;
+            health = MaxHealth;
+            if (microBar != null) microBar.Initialize(MaxHealth);
+            Refresh(true);
+        }
         public float RegenAmount => Mathf.Max(0f, Stats != null ? Stats.regenAmount : regenAmount);
         public float RegenInterval => Mathf.Max(0.1f, Stats != null ? Stats.regenInterval : regenInterval);
         private float initializedMaxHealth;
@@ -54,8 +63,8 @@ namespace MiningSimulator.Ores
         {
             if (initializedMaxHealth != MaxHealth)
             {
+                if (health > 0) health = Mathf.Clamp(health + MaxHealth - initializedMaxHealth, 0, MaxHealth);
                 initializedMaxHealth = MaxHealth;
-                health = Mathf.Min(health, MaxHealth);
                 if (microBar != null) microBar.Initialize(MaxHealth);
                 Refresh(true);
             }
@@ -78,6 +87,7 @@ namespace MiningSimulator.Ores
             initializedMaxHealth = MaxHealth;
             if (microBar == null && healthBar != null)
                 microBar = healthBar.GetComponent<MicroBar>();
+            if (healthLabel == null && healthBar != null) healthLabel = healthBar.GetComponentInChildren<TMP_Text>(true);
             if (microBar != null) microBar.Initialize(MaxHealth);
             Refresh(true);
         }
@@ -98,7 +108,12 @@ namespace MiningSimulator.Ores
             // animation authored on the MicroBar (Flash, Fill, etc.).
             if (microBar != null) microBar.UpdateBar(health, skipAnimation, updateType);
             if (healthLabel != null)
-                healthLabel.text = $"{Mathf.CeilToInt(health)} / {Mathf.CeilToInt(MaxHealth)}";
+            {
+                var player = GetComponent<MiningPlayerStats>();
+                var monster = GetComponent<MushroomMonster>();
+                int level = player != null ? player.Level : monster != null ? monster.Level : 1;
+                healthLabel.text = $"Lv. {level} | {Mathf.Ceil(health):0} / {Mathf.Ceil(MaxHealth):0}";
+            }
         }
 
         private void OnValidate() => maxHealth = Mathf.Max(1f, maxHealth);

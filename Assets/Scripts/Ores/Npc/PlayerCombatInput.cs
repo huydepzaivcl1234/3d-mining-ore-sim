@@ -27,7 +27,7 @@ public class PlayerCombatInput : MonoBehaviour
     [SerializeField] private LayerMask targetLayers = ~0;
     private bool wasAttacking;
     private MiningPlayerStatsData Stats => MiningPlayerStats.For(this);
-    public float Damage => Mathf.Max(0, Stats != null ? Stats.damage : damage);
+    public float Damage => Stats != null ? GetComponent<MiningPlayerStats>().Damage : Mathf.Max(0, damage);
     public float AttackRange => Mathf.Max(0.1f, Stats != null ? Stats.attackRange : attackRange);
     public float AttackAngle => Mathf.Clamp(Stats != null ? Stats.attackAngle : attackAngle, 1, 180);
     public float AttackSpeed => Mathf.Max(0.1f, Stats != null ? Stats.attackSpeed : attackSpeed);

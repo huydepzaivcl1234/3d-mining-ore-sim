@@ -11,9 +11,16 @@ namespace MiningSimulator.Ores
         [SerializeField] private RectTransform panel;
         [SerializeField] private Button openButton, closeButton;
         [SerializeField] private TMP_Text title, body, openLabel, closeLabel;
+        [SerializeField] private TMP_Text levelLabel, experienceLabel;
+        [SerializeField] private UnityEngine.UI.Slider experienceBar;
         [SerializeField] private MiningUiPanelCoordinator coordinator;
+        private PlayerCombatInput combat;
         private float nextRefresh;
-        private void Awake() { if (panel != null) panel.gameObject.SetActive(false); }
+        private void Awake()
+        {
+            if (player != null) combat = player.GetComponent<PlayerCombatInput>();
+            if (panel != null) panel.gameObject.SetActive(false);
+        }
         private void OnEnable()
         {
             if (openButton != null) openButton.onClick.AddListener(Open);
@@ -53,26 +60,19 @@ namespace MiningSimulator.Ores
             if (closeLabel != null) closeLabel.text = L("PLAYER_STATS_CLOSE", "CLOSE");
             if (player == null || player.Data == null || body == null) return;
             var d = player.Data;
-            var health = player.GetComponent<MiningCharacterHealth>();
-            var combat = player.GetComponent<PlayerCombatInput>();
+            if (levelLabel != null) levelLabel.text = $"{L("PLAYER_STATS_LEVEL", "Lv.")} {player.Level}";
+            if (experienceLabel != null) experienceLabel.text = $"{player.Experience:0.##} / {player.ExperienceRequired:0.##} XP";
+            if (experienceBar != null) experienceBar.SetValueWithoutNotify(player.ExperienceProgress);
             var text = new StringBuilder();
-            Row(text, "HEALTH", "Health", health != null ? $"{health.Health:0.##} / {health.MaxHealth:0.##}" : d.maxHealth.ToString("0.##"));
-            Row(text, "REGEN", "HP regeneration", $"{d.regenAmount:0.##} / {d.regenInterval:0.##}s");
-            Row(text, "DAMAGE", "Damage", (combat != null ? combat.Damage : d.damage).ToString("0.##"));
+            // Existing scenes can still show level/XP before running the layout update.
+            if (levelLabel == null) Row(text, "LEVEL", "Lv.", player.Level.ToString());
+            if (experienceLabel == null) text.Append($"{player.Experience:0.##} / {player.ExperienceRequired:0.##} XP\n\n");
+            Row(text, "DAMAGE", "Damage", player.Damage.ToString("0.##"));
+            Row(text, "ATTACK_SPEED", "Attack speed", $"x{(combat != null ? combat.AttackSpeed : d.attackSpeed):0.##}");
+            Row(text, "MOVEMENT_SPEED", "Movement speed", $"{d.MoveSpeed:0.##}m/s");
             Row(text, "RANGE", "Attack range", $"{(combat != null ? combat.AttackRange : d.attackRange):0.##}m");
-            Row(text, "ANGLE", "Attack angle", $"{d.attackAngle:0.##}");
-            Row(text, "ATTACK_SPEED", "Attack animation speed", $"x{d.attackSpeed:0.##}");
-            Row(text, "HIT_TIME", "Attack contact", $"{d.hitTime * 100:0.##}%");
-            Row(text, "BLEND", "Combat blend", $"{d.combatBlendSeconds:0.##}s");
-            Row(text, "WALK", "Walk speed", $"{d.MoveSpeed:0.##}m/s");
-            Row(text, "SPRINT", "Sprint speed", $"{d.SprintSpeed:0.##}m/s");
-            Row(text, "ACCELERATION", "Speed change rate", d.SpeedChangeRate.ToString("0.##"));
-            Row(text, "TURN", "Turn smoothing", $"{d.RotationSmoothTime:0.###}s");
-            Row(text, "JUMP", "Jump height", $"{d.JumpHeight:0.##}m");
-            Row(text, "GRAVITY", "Gravity", d.Gravity.ToString("0.##"));
-            Row(text, "JUMP_DELAY", "Jump cooldown", $"{d.JumpTimeout:0.##}s");
-            Row(text, "FALL_DELAY", "Fall delay", $"{d.FallTimeout:0.##}s");
-            Row(text, "RESPAWN", "Respawn delay", $"{d.respawnSeconds:0.##}s");
+            var stamina = player.GetComponent<MiningPlayerStamina>();
+            Row(text, "STAMINA", "Stamina", $"{(stamina != null ? stamina.Current : d.maxStamina):0} / {d.maxStamina:0}");
             body.text = text.ToString();
         }
         private static string L(string key, string fallback) => MiningLocalization.TextKey(key, fallback);

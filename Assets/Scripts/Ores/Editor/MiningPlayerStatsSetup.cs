@@ -36,6 +36,10 @@ public static class MiningPlayerStatsSetup
         }
         if (stats == null) stats = Undo.AddComponent<MiningPlayerStats>(movement.gameObject);
         Set(stats, "data", data);
+        var stamina = movement.GetComponent<MiningPlayerStamina>();
+        if (stamina == null) stamina = Undo.AddComponent<MiningPlayerStamina>(movement.gameObject);
+        EnsureStaminaHud(canvas.transform, stamina);
+        EnsureHealthLabel(movement.GetComponent<MiningCharacterHealth>());
         var controllerTransform = canvas.transform.Find("Player Stats UI");
         GameObject controllerObject = controllerTransform != null ? controllerTransform.gameObject : Create("Player Stats UI", canvas.transform);
         var presenter = controllerObject.GetComponent<MiningPlayerStatsPanel>();
@@ -58,19 +62,20 @@ public static class MiningPlayerStatsSetup
         if (panelTransform == null)
         {
             panel = (RectTransform)Create("Player Stats Panel", canvas.transform).transform;
-            panel.sizeDelta = new Vector2(650, 850);
+            panel.sizeDelta = new Vector2(650, 550);
             var background = Undo.AddComponent<Image>(panel.gameObject);
             background.color = new Color(0.07f, 0.09f, 0.13f, 0.98f);
             Undo.AddComponent<CanvasGroup>(panel.gameObject);
             var outline = Undo.AddComponent<Outline>(panel.gameObject);
             outline.effectColor = new Color(0.85f, 0.57f, 0.13f);
             outline.effectDistance = new Vector2(3, -3);
-            Text("Title", panel, "PLAYER STATS", new Vector2(590, 60), new Vector2(0, 370), 32, TextAlignmentOptions.Center);
+            Text("Title", panel, "PLAYER STATS", new Vector2(590, 60), new Vector2(0, 220), 32, TextAlignmentOptions.Center);
             Text("Values", panel, "Player stats", new Vector2(570, 640), new Vector2(0, 10), 25, TextAlignmentOptions.TopLeft);
             var close = Button("Close", panel, "CLOSE", new Vector2(240, 60));
-            ((RectTransform)close.transform).anchoredPosition = new Vector2(0, -365);
+            ((RectTransform)close.transform).anchoredPosition = new Vector2(0, -220);
         }
         else panel = (RectTransform)panelTransform;
+        EnsureProgressLayout(panel, presenter);
         var closeButton = panel.Find("Close")?.GetComponent<Button>();
         Set(presenter, "player", stats);
         Set(presenter, "panel", panel);
@@ -85,6 +90,110 @@ public static class MiningPlayerStatsSetup
         AssetDatabase.SaveAssets();
         Selection.activeObject = data;
         Debug.Log("Stats migrated without changing existing values. Edit Assets/GameData/Player/PlayerStatsData.asset. Stats button and Player Stats Panel are under the HUD Canvas. Save the scene.");
+    }
+    private static void EnsureHealthLabel(MiningCharacterHealth health)
+    {
+        if (health == null) return;
+        var serialized = new SerializedObject(health);
+        var bar = serialized.FindProperty("healthBar").objectReferenceValue as Transform;
+        if (bar == null) bar = health.transform.Find("Combat Health Bar");
+        if (bar == null) return;
+        var label = serialized.FindProperty("healthLabel").objectReferenceValue as TMP_Text;
+        if (label == null) label = bar.GetComponentInChildren<TMP_Text>(true);
+        if (label == null)
+        {
+            var obj = new GameObject("Health Value", typeof(RectTransform));
+            Undo.RegisterCreatedObjectUndo(obj, "Create health value text");
+            obj.transform.SetParent(bar, false);
+            label = Undo.AddComponent<TextMeshPro>(obj);
+            label.fontSize = 2; label.alignment = TextAlignmentOptions.Center;
+            label.color = Color.white; label.raycastTarget = false;
+            label.rectTransform.sizeDelta = new Vector2(3, 0.35f);
+            label.transform.localPosition = new Vector3(0, 0, -0.02f);
+            label.text = "Lv. 1 | 100 / 100";
+        }
+        Set(health, "healthBar", bar); Set(health, "healthLabel", label);
+    }
+    private static void EnsureStaminaHud(Transform canvas, MiningPlayerStamina stamina)
+    {
+        var existing = canvas.Find("Player Stamina Bar");
+        var track = existing != null ? existing.gameObject : Create("Player Stamina Bar", canvas);
+        var rect = (RectTransform)track.transform;
+        var bar = track.GetComponent<Slider>();
+        if (bar == null)
+        {
+            Undo.RecordObject(rect, "Position stamina bar");
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0);
+            rect.pivot = new Vector2(0.5f, 0);
+            rect.anchoredPosition = new Vector2(0, 40);
+            rect.sizeDelta = new Vector2(360, 34);
+            var background = Undo.AddComponent<Image>(track);
+            background.color = new Color(0.025f, 0.035f, 0.05f, 0.95f); background.raycastTarget = false;
+            var fill = Create("Fill", track.transform);
+            var fillRect = (RectTransform)fill.transform;
+            fillRect.anchorMin = Vector2.zero; fillRect.anchorMax = Vector2.one;
+            fillRect.offsetMin = fillRect.offsetMax = Vector2.zero;
+            var image = Undo.AddComponent<Image>(fill);
+            image.color = new Color(0.1f, 0.65f, 0.95f); image.raycastTarget = false;
+            bar = Undo.AddComponent<Slider>(track);
+            bar.fillRect = fillRect; bar.minValue = 0; bar.maxValue = 1;
+            bar.interactable = false; bar.navigation = new Navigation { mode = Navigation.Mode.None };
+            Text("Value", track.transform, "Stamina 100 / 100", new Vector2(350, 32), Vector2.zero, 21, TextAlignmentOptions.Center);
+        }
+        var hud = track.GetComponent<MiningPlayerStaminaHud>();
+        if (hud == null) hud = Undo.AddComponent<MiningPlayerStaminaHud>(track);
+        Set(hud, "player", stamina); Set(hud, "bar", bar);
+        Set(hud, "label", track.transform.Find("Value")?.GetComponent<TMP_Text>());
+    }
+    private static void EnsureProgressLayout(RectTransform panel, MiningPlayerStatsPanel presenter)
+    {
+        var level = panel.Find("Level")?.GetComponent<TMP_Text>();
+        if (level == null)
+        {
+            level = Text("Level", panel, "Lv. 1", new Vector2(570, 48), Vector2.zero, 30, TextAlignmentOptions.Left);
+            PlaceFromTop((RectTransform)level.transform, 105);
+        }
+        var trackTransform = panel.Find("Experience Progress");
+        UnityEngine.UI.Slider bar;
+        if (trackTransform == null)
+        {
+            var track = Create("Experience Progress", panel);
+            var rect = (RectTransform)track.transform;
+            rect.sizeDelta = new Vector2(570, 35);
+            PlaceFromTop(rect, 163);
+            var background = Undo.AddComponent<UnityEngine.UI.Image>(track);
+            background.color = new Color(0.025f, 0.03f, 0.04f);
+            background.raycastTarget = false;
+            var fill = Create("Fill", track.transform);
+            var fillRect = (RectTransform)fill.transform;
+            fillRect.anchorMin = Vector2.zero; fillRect.anchorMax = Vector2.one;
+            fillRect.offsetMin = fillRect.offsetMax = Vector2.zero;
+            var image = Undo.AddComponent<UnityEngine.UI.Image>(fill);
+            image.color = new Color(0.1f, 0.7f, 0.35f); image.raycastTarget = false;
+            bar = Undo.AddComponent<UnityEngine.UI.Slider>(track);
+            bar.fillRect = fillRect; bar.minValue = 0; bar.maxValue = 1;
+            bar.interactable = false;
+            bar.navigation = new Navigation { mode = Navigation.Mode.None };
+            Text("Experience", track.transform, "0 / 100 XP", new Vector2(560, 32), Vector2.zero, 21, TextAlignmentOptions.Center);
+            var body = panel.Find("Values") as RectTransform;
+            if (body != null)
+            {
+                Undo.RecordObject(body, "Update compact stats layout");
+                body.sizeDelta = new Vector2(570, 220);
+                PlaceFromTop(body, 228);
+                body.pivot = new Vector2(0.5f, 1);
+            }
+        }
+        else bar = trackTransform.GetComponent<UnityEngine.UI.Slider>();
+        Set(presenter, "levelLabel", level);
+        Set(presenter, "experienceBar", bar);
+        Set(presenter, "experienceLabel", panel.Find("Experience Progress/Experience")?.GetComponent<TMP_Text>());
+    }
+    private static void PlaceFromTop(RectTransform rect, float offset)
+    {
+        rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 1);
+        rect.pivot = new Vector2(0.5f, 0.5f);
+        rect.anchoredPosition = new Vector2(0, -offset);
     }
     private static void Copy(Component source, MiningPlayerStatsData destination, params string[] names)
     {

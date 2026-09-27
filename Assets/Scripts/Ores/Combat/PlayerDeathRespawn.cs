@@ -40,10 +40,14 @@ namespace MiningSimulator.Ores
         private CursorLockMode cursorLock;
         private bool cursorVisible, rootMotion;
         private readonly Collider[] overlaps = new Collider[64];
+        private MiningAudioManager audioManager;
+        private AudioSource deathSource;
+        private AudioClip fallbackDeathSfx;
 
         private void Awake()
         {
             health = GetComponent<MiningCharacterHealth>();
+            audioManager = FindAnyObjectByType<MiningAudioManager>();
             movement = GetComponent<ThirdPersonController>();
             combat = GetComponent<PlayerCombatInput>();
             playerInput = GetComponent<PlayerInput>();
@@ -69,6 +73,7 @@ namespace MiningSimulator.Ores
             if (dead) return;
             dead = true;
             var stats = MiningPlayerStats.For(this);
+            PlayDeathSound(stats);
             remaining = Mathf.Max(1f, stats != null ? stats.respawnSeconds : respawnSeconds);
             movementEnabled = movement != null && movement.enabled;
             combatEnabled = combat != null && combat.enabled;
@@ -100,6 +105,44 @@ namespace MiningSimulator.Ores
             UpdateCountdown();
         }
 
+        private void PlayDeathSound(MiningPlayerStatsData stats)
+        {
+            AudioClip clip = stats != null ? stats.deathSfx : null;
+            if (clip == null)
+            {
+                if (fallbackDeathSfx == null)
+                {
+                    const int rate = 22050;
+                    var samples = new float[rate];
+                    double phase = 0;
+                    for (int i = 0; i < samples.Length; i++)
+                    {
+                        float t = i / (float)rate;
+                        phase += 2 * System.Math.PI * Mathf.Lerp(180, 45, t) / rate;
+                        samples[i] = (float)System.Math.Sin(phase) * Mathf.Sin(Mathf.PI * t) * (1 - t) * 0.5f;
+                    }
+                    fallbackDeathSfx = AudioClip.Create("Player death fallback", samples.Length, 1, rate, false);
+                    fallbackDeathSfx.SetData(samples, 0);
+                }
+                clip = fallbackDeathSfx;
+            }
+            float volume = stats != null ? Mathf.Clamp01(stats.deathSfxVolume) : 0.7f;
+            if (audioManager != null) audioManager.PlaySfx(clip, volume);
+            else
+            {
+                if (deathSource == null)
+                {
+                    deathSource = gameObject.AddComponent<AudioSource>();
+                    deathSource.playOnAwake = false; deathSource.spatialBlend = 0;
+                }
+                deathSource.PlayOneShot(clip, volume);
+            }
+        }
+        private void OnDestroy()
+        {
+            if (fallbackDeathSfx != null) Destroy(fallbackDeathSfx);
+            if (deathSource != null) Destroy(deathSource);
+        }
         private void BeginCamera()
         {
             cursorLock = Cursor.lockState;

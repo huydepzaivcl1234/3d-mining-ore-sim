@@ -20,6 +20,9 @@ namespace MiningSimulator.Ores
         [Min(0.1f), SerializeField] private float minimumSpacing = 2f;
         [SerializeField] private LayerMask groundLayers = ~0;
         [SerializeField] private MiningCharacterHealth player;
+        [SerializeField] private PlayerWallet wallet;
+        [SerializeField] private MiningItemSystem inventory;
+        private MiningPlayerStats playerStats;
         private readonly List<MushroomMonster> alive = new();
         private float timer;
         public int AliveCount => alive.Count;
@@ -33,7 +36,31 @@ namespace MiningSimulator.Ores
         }
         private void Start()
         {
+            if (player == null)
+            {
+                var stats = FindAnyObjectByType<MiningPlayerStats>();
+                if (stats != null) player = stats.GetComponent<MiningCharacterHealth>();
+            }
+            if (player != null) playerStats = player.GetComponent<MiningPlayerStats>();
+            if (wallet == null) wallet = FindAnyObjectByType<PlayerWallet>();
+            if (inventory == null) inventory = FindAnyObjectByType<MiningItemSystem>();
             for (int i = 0; i < Mathf.Min(initialCount, maximumAlive); i++) SpawnOne();
+        }
+        public void GrantRewards(MonsterRewardData data, Vector3 origin, float goldMultiplier = 1)
+        {
+            if (data == null) return;
+            if (playerStats != null) playerStats.AddExperience(Mathf.Max(0, data.experience));
+            if (wallet != null) wallet.AddMoney(Mathf.Max(0, data.gold) * Mathf.Max(0, goldMultiplier));
+            if (data.drops == null) return;
+            foreach (var drop in data.drops)
+            {
+                if (drop == null || drop.item == null || drop.chancePercent <= 0) continue;
+                if (drop.chancePercent < 100 && UnityEngine.Random.value >= drop.chancePercent / 100) continue;
+                int min = Mathf.Clamp(drop.minimumAmount, 1, 10000);
+                int max = Mathf.Clamp(drop.maximumAmount, min, 10000);
+                int count = UnityEngine.Random.Range(min, max + 1);
+                MonsterItemPickup.Spawn(data, drop, count, origin, player, inventory, groundLayers);
+            }
         }
         private void Update()
         {
@@ -65,18 +92,22 @@ namespace MiningSimulator.Ores
                 if (ground.normal.y < 0.7f || ground.collider.GetComponentInParent<MushroomMonster>() != null ||
                     ground.collider.GetComponentInParent<MiningCharacterHealth>() != null) continue;
                 var capsule = prefab.GetComponent<CharacterController>();
-                float radius = capsule.radius * 0.9f;
+                if (capsule == null) continue;
+                Vector3 scale = Vector3.Scale(prefab.transform.lossyScale, transform.lossyScale);
+                float radius = capsule.radius * Mathf.Max(Mathf.Abs(scale.x), Mathf.Abs(scale.z)) * 0.9f;
+                float height = Mathf.Max(radius * 2, capsule.height * Mathf.Abs(scale.y));
                 Vector3 bottom = ground.point + Vector3.up * (radius + 0.1f);
-                Vector3 top = ground.point + Vector3.up * Mathf.Max(radius + 0.1f, capsule.height - radius);
+                Vector3 top = ground.point + Vector3.up * Mathf.Max(radius + 0.1f, height - radius);
                 if (Physics.CheckCapsule(bottom, top, radius, ~0, QueryTriggerInteraction.Ignore)) continue;
                 bool blocked = false;
                 foreach (var other in alive)
                     if (other != null && (other.transform.position - ground.point).sqrMagnitude < minimumSpacing * minimumSpacing)
                         blocked = true;
                 if (blocked) continue;
-                var instance = Instantiate(prefab, ground.point + Vector3.up * 0.05f,
+                var instance = Instantiate(prefab, ground.point,
                     Quaternion.Euler(0, UnityEngine.Random.Range(0f, 360f), 0), transform);
                 instance.Initialize(this, player);
+                instance.AlignToGround(ground.point);
                 alive.Add(instance);
                 return;
             }

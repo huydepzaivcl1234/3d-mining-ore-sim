@@ -12,7 +12,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1cde8d4cbab3402c965fabb1217349c2, type: 3}
   m_Name: PlayerStatsData
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningPlayerStatsData
-  maxHealth: 100
+  startingLevel: 1
+  startingExperience: 0
+  experienceRequired: 100
+  experienceRequirementGrowth: 1.25
+  healthPerLevel: 10
+  damagePerLevel: 1
+  maxStamina: 100
+  sprintStaminaPerSecond: 10
+  staminaRegenAmount: 1
+  staminaRegenInterval: 1
+  staminaResumeThreshold: 20
+  exhaustedBreathing: {fileID: 8300000, guid: b79a45d6fbc4ec2469186d9b780501cf, type: 3}
+  breathingVolume: 0.658
+  breathingInterval: 3
+  lowStaminaFraction: 0.2
+  lowStaminaTextColor: {r: 1, g: 0, b: 0, a: 1}
+  lowStaminaBlinkSeconds: 0.7
+  deathSfx: {fileID: 8300000, guid: 0362f56cab11ef541a59c49359bd75dd, type: 3}
+  deathSfxVolume: 0.7
+  maxHealth: 1
   regenAmount: 1
   regenInterval: 10
   respawnSeconds: 10

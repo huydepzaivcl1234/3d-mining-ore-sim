@@ -951,6 +951,7 @@ GameObject:
   - component: {fileID: 1331464130980013636}
   - component: {fileID: 6169348863917549568}
   - component: {fileID: 2991846341118976471}
+  - component: {fileID: 2293612503191928490}
   m_Layer: 8
   m_Name: Player
   m_TagString: Player
@@ -1331,6 +1332,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningPlayerStats
   data: {fileID: 11400000, guid: 787e78c7ad962f54b8a0bc4cc38c8ab8, type: 2}
+--- !u!114 &2293612503191928490
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3331318347067795800}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8770b11e6a2545ac991d397ff1171ade, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningPlayerStamina
 --- !u!1 &3494889794133755700
 GameObject:
   m_ObjectHideFlags: 0

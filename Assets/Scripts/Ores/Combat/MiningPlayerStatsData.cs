@@ -5,6 +5,29 @@ namespace MiningSimulator.Ores
     [CreateAssetMenu(menuName = "Mining Simulator/Player Stats", fileName = "PlayerStatsData")]
     public sealed class MiningPlayerStatsData : ScriptableObject
     {
+        [Header("Player progression - separate from mining NPC level")]
+        [Min(1)] public int startingLevel = 1;
+        [Min(0)] public float startingExperience;
+        [Min(1)] public float experienceRequired = 100;
+        [Min(1)] public float experienceRequirementGrowth = 1.25f;
+        [Min(0)] public float healthPerLevel = 10;
+        [Min(0)] public float damagePerLevel = 1;
+        [Header("Stamina")]
+        [Min(1)] public float maxStamina = 100;
+        [Min(0)] public float sprintStaminaPerSecond = 15;
+        [Min(0)] public float staminaRegenAmount = 10;
+        [Min(0.1f)] public float staminaRegenInterval = 1;
+        [Tooltip("Stamina required to resume sprinting after exhaustion.")]
+        [Min(0)] public float staminaResumeThreshold = 20;
+        public AudioClip exhaustedBreathing;
+        [Range(0, 1)] public float breathingVolume = 0.5f;
+        [Min(1)] public float breathingInterval = 3;
+        [Range(0, 1)] public float lowStaminaFraction = 0.2f;
+        public Color lowStaminaTextColor = Color.red;
+        [Min(0.1f)] public float lowStaminaBlinkSeconds = 0.7f;
+        [Header("Player death sound")]
+        public AudioClip deathSfx;
+        [Range(0, 1)] public float deathSfxVolume = 0.7f;
         [Header("Health")]
         [Min(1)] public float maxHealth = 100;
         [Min(0)] public float regenAmount = 1;
@@ -30,6 +53,10 @@ namespace MiningSimulator.Ores
         [Min(0)] public float FallTimeout = 0.15f;
         private void OnValidate()
         {
+            startingLevel = Mathf.Max(1, startingLevel);
+            experienceRequired = Mathf.Max(1, experienceRequired);
+            experienceRequirementGrowth = Mathf.Max(1, experienceRequirementGrowth);
+            startingExperience = Mathf.Clamp(startingExperience, 0, experienceRequired);
             maxHealth = Mathf.Max(1, maxHealth);
             regenAmount = Mathf.Max(0, regenAmount);
             regenInterval = Mathf.Max(0.1f, regenInterval);
