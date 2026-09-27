@@ -102050,6 +102050,10 @@ PrefabInstance:
       propertyPath: weaponHand
       value: 
       objectReference: {fileID: 1420552858}
+    - target: {fileID: 5071529718831924823, guid: 1a1ad67d1da8d7e468ede1bca198146d, type: 3}
+      propertyPath: aim.m_SingletonActionBindings.Array.data[0].m_Path
+      value: <Keyboard>/#(F)
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

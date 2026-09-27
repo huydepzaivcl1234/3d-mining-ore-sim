@@ -29,6 +29,16 @@ public class PlayerCombatInput : MonoBehaviour
     private MiningUiPanelCoordinator panels;
     private WeaponAttackData visualWeapon;
     private GameObject heldModel;
+    private bool desiredCombat;
+    private bool changingStance;
+    private bool drawingSword;
+    private bool modelInHand;
+    private bool attachmentChanged;
+    private float stanceElapsed;
+    private bool pendingAttachment;
+    private bool HasSwordStance => Weapon != null && Weapon.drawClip != null && Weapon.sheathClip != null;
+    private float StanceBlendSeconds => HasSwordStance ? Mathf.Max(0.01f, Weapon.stanceBlendSeconds) : BlendSeconds;
+    public bool IsChangingStance => changingStance;
     public MiningCharacterHealth LockedTarget => IsLockValid(lockedTarget) ? lockedTarget : null;
     private bool combatMode;
     [Header("Attack")]
@@ -90,17 +100,28 @@ public class PlayerCombatInput : MonoBehaviour
         wasAttacking = false;
         hitApplied = false;
         combatMode = false;
+        desiredCombat = false;
+        changingStance = false;
+        modelInHand = false;
+        pendingAttachment = false;
+        AttachWeapon(false);
         arcRemaining = 0f;
         if (attackArc != null) attackArc.enabled = false;
         if (animator != null && animator.runtimeAnimatorController != null)
         {
             int layer = animator.GetLayerIndex("combat layer");
             if (layer >= 0) animator.SetLayerWeight(layer, 0f);
+            int stanceLayer = animator.GetLayerIndex("Sword Stance");
+            if (stanceLayer >= 0) animator.SetLayerWeight(stanceLayer, 0f);
+            int armsLayer = animator.GetLayerIndex("Sword Arms");
+            if (armsLayer >= 0) animator.SetLayerWeight(armsLayer, 0f);
         }
     }
 
     private void LateUpdate()
     {
+        // Reparent after Animator evaluates the contact pose, not the previous frame.
+        if (pendingAttachment) { AttachWeapon(drawingSword); pendingAttachment = false; }
         FaceLockedTarget(false);
         if (attackArc != null && attackArc.enabled)
         {
@@ -127,9 +148,19 @@ public class PlayerCombatInput : MonoBehaviour
              (animator.IsInTransition(hitLayer) && animator.GetNextAnimatorStateInfo(hitLayer).IsName("HitReaction")));
         // CombatIdle must not hide the lower-priority hit reaction. Attack is
         // still evaluated on its own layer and always has priority over Hit.
-        float target = attacking || (idleCombat && !reacting) ? 1f : 0f;
+        int armsLayer = animator.GetLayerIndex("Sword Arms");
+        float target = (changingStance && armsLayer < 0) || attacking || (idleCombat && !reacting && !changingStance) ? 1f : 0f;
         animator.SetLayerWeight(layer, Mathf.MoveTowards(animator.GetLayerWeight(layer),
-            target, Time.deltaTime / BlendSeconds));
+            target, Time.deltaTime / (changingStance ? StanceBlendSeconds : BlendSeconds)));
+        int stanceLayer = animator.GetLayerIndex("Sword Stance");
+        if (stanceLayer >= 0)
+            animator.SetLayerWeight(stanceLayer, Mathf.MoveTowards(animator.GetLayerWeight(stanceLayer),
+                changingStance && animator.GetFloat("Speed") < 0.1f ? 1f : 0f, Time.deltaTime / StanceBlendSeconds));
+        if (armsLayer >= 0)
+            animator.SetLayerWeight(armsLayer, Mathf.MoveTowards(animator.GetLayerWeight(armsLayer),
+                changingStance ? 1f : 0f, Time.deltaTime / StanceBlendSeconds));
+        if (HasSwordStance)
+            animator.SetFloat("SwordPose", combatMode ? 1f : 0f, StanceBlendSeconds, Time.deltaTime);
     }
     private void OnDestroy()
     {
@@ -150,29 +181,57 @@ public class PlayerCombatInput : MonoBehaviour
     }
     private void Start()
     {
-        if (Weapon != null && Weapon.animationOverrides != null && animator != null)
-            animator.runtimeAnimatorController = Weapon.animationOverrides;
+        if (Weapon != null && Weapon.unarmedController != null) originalController = Weapon.unarmedController;
+        if (Weapon != null && animator != null)
+            animator.runtimeAnimatorController = Weapon.weaponController != null ? Weapon.weaponController :
+                Weapon.animationOverrides != null ? Weapon.animationOverrides : originalController;
         RefreshHeldModel();
     }
 
     // Future weapon inventory calls this; do not change equipment mid-animation.
     public bool TryEquipWeapon(WeaponAttackData weapon)
     {
-        if (wasAttacking) return false;
+        if (wasAttacking || changingStance) return false;
         if (animator != null && animator.runtimeAnimatorController != null)
         {
             int layer = animator.GetLayerIndex("combat layer");
             if (layer >= 0 && (animator.IsInTransition(layer) || animator.GetCurrentAnimatorStateInfo(layer).IsName("Attack"))) return false;
         }
+        ResetWeaponStance();
         equippedWeapon = weapon;
         hasEquipmentOverride = true;
         if (animator != null)
         {
-            animator.runtimeAnimatorController = weapon != null && weapon.animationOverrides != null ? weapon.animationOverrides : originalController;
+            SetController(weapon != null && weapon.weaponController != null ? weapon.weaponController :
+                weapon != null && weapon.animationOverrides != null ? weapon.animationOverrides : originalController);
             if (animator.runtimeAnimatorController != null) animator.SetBool("CombatMode", combatMode);
         }
         RefreshHeldModel();
         return true;
+    }
+    private void SetController(RuntimeAnimatorController controller)
+    {
+        if (animator.runtimeAnimatorController == controller) return;
+        var parameters = animator.parameters;
+        var values = new float[parameters.Length];
+        var state = animator.runtimeAnimatorController != null ? animator.GetCurrentAnimatorStateInfo(0) : default;
+        for (int i = 0; i < parameters.Length; i++)
+            values[i] = parameters[i].type == AnimatorControllerParameterType.Float ? animator.GetFloat(parameters[i].nameHash) :
+                parameters[i].type == AnimatorControllerParameterType.Int ? animator.GetInteger(parameters[i].nameHash) :
+                parameters[i].type == AnimatorControllerParameterType.Bool && animator.GetBool(parameters[i].nameHash) ? 1 : 0;
+        animator.runtimeAnimatorController = controller;
+        if (controller == null) return;
+        var next = animator.parameters;
+        for (int i = 0; i < parameters.Length; i++)
+            foreach (var parameter in next)
+                if (parameter.nameHash == parameters[i].nameHash && parameter.type == parameters[i].type)
+                {
+                    if (parameter.type == AnimatorControllerParameterType.Float) animator.SetFloat(parameter.nameHash, values[i]);
+                    if (parameter.type == AnimatorControllerParameterType.Int) animator.SetInteger(parameter.nameHash, (int)values[i]);
+                    if (parameter.type == AnimatorControllerParameterType.Bool) animator.SetBool(parameter.nameHash, values[i] != 0);
+                    break;
+                }
+        if (animator.HasState(0, state.fullPathHash)) animator.Play(state.fullPathHash, 0, state.normalizedTime % 1f);
     }
     private void Update()
     {
@@ -180,6 +239,7 @@ public class PlayerCombatInput : MonoBehaviour
         if (!CanUseGameplay())
         {
             ClearTargetLock();
+            if (ownHealth != null && ownHealth.Health <= 0) ResetWeaponStance();
             return;
         }
         ValidateTargetLock();
@@ -192,12 +252,12 @@ public class PlayerCombatInput : MonoBehaviour
         animator.SetFloat("AttackSpeed", AttackSpeed);
         if (toggleCombat != null && toggleCombat.WasPressedThisFrame())
         {
-            combatMode = !combatMode;
-            animator.SetBool("CombatMode", combatMode);
-            animator.ResetTrigger("Attack");
-            if (!combatMode) ClearTargetLock();
+            RequestCombat(!desiredCombat);
         }
-        TrackAttack(layer);
+        // Finish tracking the current strike before a queued sheath can start.
+        if (!changingStance) TrackAttack(layer);
+        UpdateWeaponStance(layer);
+        if (changingStance || desiredCombat != combatMode) return;
         // A legacy right-click Attack binding must not also attack on lock/cancel.
         if (aimPressed || !combatMode || attack == null || !attack.WasPressedThisFrame()) return;
         if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
@@ -334,9 +394,7 @@ public class PlayerCombatInput : MonoBehaviour
             return false;
         }
         lockedTarget = target;
-        combatMode = true;
-        if (animator != null && animator.runtimeAnimatorController != null)
-            animator.SetBool("CombatMode", true);
+        RequestCombat(true);
         if (movement != null) movement.ExternalFacing = true;
         return true;
     }
@@ -406,14 +464,105 @@ public class PlayerCombatInput : MonoBehaviour
         }
         heldModel = Instantiate(visualWeapon.modelPrefab, hand, false);
         heldModel.name = "Equipped " + visualWeapon.name;
-        heldModel.transform.localPosition = visualWeapon.modelLocalPosition;
-        heldModel.transform.localRotation = Quaternion.Euler(visualWeapon.modelLocalEulerAngles);
-        heldModel.transform.localScale = visualWeapon.modelLocalScale;
+        AttachWeapon(modelInHand || combatMode);
         // Hit queries remain authoritative; the decorative blade cannot push Player.
         foreach (var collider in heldModel.GetComponentsInChildren<Collider>(true)) collider.enabled = false;
         foreach (var body in heldModel.GetComponentsInChildren<Rigidbody>(true))
         { body.isKinematic = true; body.useGravity = false; }
         heldModel.SetActive(isActiveAndEnabled);
+    }
+
+    private void AttachWeapon(bool inHand)
+    {
+        modelInHand = inHand;
+        if (heldModel == null || visualWeapon == null || animator == null) return;
+        Transform bone = inHand ? weaponHand : null;
+        if (bone == null && animator.isHuman && animator.avatar != null)
+            bone = animator.GetBoneTransform(inHand ? visualWeapon.handBone : visualWeapon.sheathBone);
+        if (bone == null) return;
+        heldModel.transform.SetParent(bone, false);
+        heldModel.transform.localPosition = inHand ? visualWeapon.modelLocalPosition : visualWeapon.sheathLocalPosition;
+        heldModel.transform.localRotation = Quaternion.Euler(inHand ? visualWeapon.modelLocalEulerAngles : visualWeapon.sheathLocalEulerAngles);
+        heldModel.transform.localScale = visualWeapon.modelLocalScale;
+    }
+
+    public void RequestCombat(bool enabled)
+    {
+        desiredCombat = enabled;
+        if (!enabled) ClearTargetLock();
+        // Fists and old controllers keep their immediate toggle behavior.
+        if (!HasSwordStance)
+        {
+            combatMode = enabled;
+            AttachWeapon(enabled);
+            if (animator != null && animator.runtimeAnimatorController != null)
+            { animator.SetBool("CombatMode", enabled); animator.ResetTrigger("Attack"); }
+        }
+    }
+
+    private void UpdateWeaponStance(int layer)
+    {
+        if (!changingStance && desiredCombat != combatMode)
+        {
+            if (wasAttacking || animator.IsInTransition(layer) || animator.GetCurrentAnimatorStateInfo(layer).IsName("Attack")) return;
+            string state = desiredCombat ? "DrawSword" : "SheathSword";
+            if (!animator.HasState(layer, Animator.StringToHash("combat layer." + state)))
+            {
+                Debug.LogWarning("Weapon controller is missing " + state + ". Run Setup Low Sword Draw And Sheath.", this);
+                desiredCombat = combatMode;
+                return;
+            }
+            drawingSword = desiredCombat;
+            changingStance = true;
+            attachmentChanged = false;
+            stanceElapsed = 0;
+            animator.ResetTrigger("Attack");
+            animator.SetBool("CombatMode", false);
+            animator.CrossFadeInFixedTime(state, StanceBlendSeconds, layer, 0f);
+            int stanceLayer = animator.GetLayerIndex("Sword Stance");
+            if (stanceLayer >= 0) animator.CrossFadeInFixedTime(state, StanceBlendSeconds, stanceLayer, 0f);
+            int armsLayer = animator.GetLayerIndex("Sword Arms");
+            if (armsLayer >= 0) animator.CrossFadeInFixedTime(state, StanceBlendSeconds, armsLayer, 0f);
+        }
+        if (!changingStance) return;
+        stanceElapsed += Time.deltaTime;
+        var stateInfo = animator.GetCurrentAnimatorStateInfo(layer);
+        if (animator.IsInTransition(layer)) stateInfo = animator.GetNextAnimatorStateInfo(layer);
+        string expected = drawingSword ? "DrawSword" : "SheathSword";
+        var clip = drawingSword ? Weapon.drawClip : Weapon.sheathClip;
+        float progress = stateInfo.IsName(expected) ? stateInfo.normalizedTime : 0f;
+        // A bounded fallback prevents a broken/missing state from locking combat forever.
+        bool finished = progress >= 0.96f || stanceElapsed >= (clip != null ? clip.length : 1f) + BlendSeconds + 0.5f;
+        float attachAt = drawingSword ? Weapon.drawAttachTime : Weapon.sheathAttachTime;
+        if (!attachmentChanged && ((animator.GetLayerIndex("Sword Arms") < 0 && progress >= attachAt) || finished))
+        { pendingAttachment = true; attachmentChanged = true; }
+        if (!finished) return;
+        changingStance = false;
+        combatMode = drawingSword;
+        animator.SetBool("CombatMode", combatMode);
+        animator.CrossFadeInFixedTime(combatMode ? "CombatIdle" : "WeaponEmpty", StanceBlendSeconds, layer);
+    }
+
+    private void ResetWeaponStance()
+    {
+        desiredCombat = combatMode = changingStance = wasAttacking = false;
+        pendingAttachment = false;
+        AttachWeapon(false);
+        if (animator != null && animator.runtimeAnimatorController != null)
+        { animator.SetBool("CombatMode", false); animator.ResetTrigger("Attack"); }
+    }
+
+    // Presentation events only. Duplicate events from the two pose layers are harmless.
+    public void OnDrawSword()
+    {
+        if (!changingStance || !drawingSword || attachmentChanged) return;
+        pendingAttachment = attachmentChanged = true;
+    }
+
+    public void OnSheathSword()
+    {
+        if (!changingStance || drawingSword || attachmentChanged) return;
+        pendingAttachment = attachmentChanged = true;
     }
 
     private void DamageTarget(MiningCharacterHealth target, Vector3 point)

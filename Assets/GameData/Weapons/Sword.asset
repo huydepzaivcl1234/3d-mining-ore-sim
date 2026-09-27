@@ -26,6 +26,16 @@ MonoBehaviour:
   modelLocalPosition: {x: 0, y: 0, z: 0}
   modelLocalEulerAngles: {x: 0, y: 0, z: 0}
   modelLocalScale: {x: 0.1, y: 0.1, z: 0.1}
+  weaponController: {fileID: 9100000, guid: 1acb7eaf71a3d514c957f9323b844f2d, type: 2}
+  unarmedController: {fileID: 9100000, guid: 1d6785918bf51d647975b714a411e719, type: 2}
+  drawClip: {fileID: -203655887218126122, guid: b2a0f74779c775140a90bccb922f7946, type: 3}
+  sheathClip: {fileID: -203655887218126122, guid: e82f0f21d18edae4ab3d0498ea5e72cd, type: 3}
+  stanceBlendSeconds: 0.25
+  drawAttachTime: 0.45
+  sheathAttachTime: 0.65
+  sheathBone: 0
+  sheathLocalPosition: {x: -0.22, y: 0, z: 0}
+  sheathLocalEulerAngles: {x: 0, y: 0, z: 90}
   swingSfx: {fileID: 8300000, guid: 75ecae3a5c183ef4e9a32742313386ad, type: 3}
   swingVolume: 0.7
   strikeVfxPrefab: {fileID: 5676028574470708571, guid: 98e7c90c357559045900caa0a71473f6, type: 3}

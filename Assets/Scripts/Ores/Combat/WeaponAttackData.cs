@@ -24,6 +24,17 @@ namespace MiningSimulator.Ores
         public Vector3 modelLocalPosition;
         public Vector3 modelLocalEulerAngles;
         public Vector3 modelLocalScale = Vector3.one;
+        [Header("Draw / sheath")]
+        public RuntimeAnimatorController weaponController;
+        public RuntimeAnimatorController unarmedController;
+        public AnimationClip drawClip;
+        public AnimationClip sheathClip;
+        [Min(0.01f)] public float stanceBlendSeconds = 0.25f;
+        [Range(0, 1)] public float drawAttachTime = 0.45f;
+        [Range(0, 1)] public float sheathAttachTime = 0.65f;
+        public HumanBodyBones sheathBone = HumanBodyBones.Hips;
+        public Vector3 sheathLocalPosition = new Vector3(-0.22f, 0, 0);
+        public Vector3 sheathLocalEulerAngles = new Vector3(0, 0, 90);
         public AudioClip swingSfx;
         [Range(0, 1)] public float swingVolume = 0.7f;
         public GameObject strikeVfxPrefab;
