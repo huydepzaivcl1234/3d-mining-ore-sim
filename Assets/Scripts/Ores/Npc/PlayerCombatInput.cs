@@ -11,7 +11,15 @@ public class PlayerCombatInput : MonoBehaviour
     [SerializeField] private InputAction toggleCombat = new InputAction(
         "Toggle Combat", InputActionType.Button, "<Keyboard>/e");
     [SerializeField] private InputAction attack = new InputAction(
-        "Attack", InputActionType.Button, "<Mouse>/rightButton");
+        "Attack", InputActionType.Button, "<Mouse>/leftButton");
+    [SerializeField] private InputAction autoAim = new InputAction(
+        "Auto Aim", InputActionType.Button, "<Keyboard>/f");
+    [SerializeField] private string drawWeaponParameter = "DrawWeapon";
+    [Min(0.1f), SerializeField] private float aimRange = 15f;
+    [Min(0f), SerializeField] private float aimTurnSpeed = 720f;
+    private MushroomMonster aimedMonster;
+    private StarterAssets.ThirdPersonController movement;
+    public MushroomMonster AimedMonster => aimedMonster;
     private MiningCharacterHealth ownHealth;
     private MiningUiPanelCoordinator panels;
     private bool combatMode;
@@ -49,11 +57,14 @@ public class PlayerCombatInput : MonoBehaviour
     {
         toggleCombat?.Enable();
         attack?.Enable();
+        autoAim?.Enable();
     }
     private void OnDisable()
     {
         toggleCombat?.Disable();
         attack?.Disable();
+        autoAim?.Disable();
+        ClearAim();
         wasAttacking = false;
         hitApplied = false;
         combatMode = false;
@@ -68,6 +79,16 @@ public class PlayerCombatInput : MonoBehaviour
 
     private void LateUpdate()
     {
+        if (CanUseGameplay() && IsAimValid(aimedMonster))
+        {
+            Vector3 direction = aimedMonster.transform.position - transform.position;
+            direction.y = 0f;
+            if (movement != null) movement.ExternalFacing = true;
+            if (direction.sqrMagnitude > 0.0001f)
+                transform.rotation = Quaternion.RotateTowards(transform.rotation,
+                    Quaternion.LookRotation(direction), aimTurnSpeed * Time.deltaTime);
+        }
+        else ClearAim();
         if (attackArc != null && attackArc.enabled)
         {
             arcRemaining -= Time.deltaTime;
@@ -101,6 +122,7 @@ public class PlayerCombatInput : MonoBehaviour
     {
         toggleCombat?.Dispose();
         attack?.Dispose();
+        autoAim?.Dispose();
         if (attackArcMaterial != null) Destroy(attackArcMaterial);
     }
     private void Awake()
@@ -108,27 +130,71 @@ public class PlayerCombatInput : MonoBehaviour
         if (animator == null) animator = GetComponentInChildren<Animator>(true);
         feedbackAudio = FindFirstObjectByType<MiningAudioManager>();
         ownHealth = GetComponent<MiningCharacterHealth>();
+        movement = GetComponent<StarterAssets.ThirdPersonController>();
         panels = FindFirstObjectByType<MiningUiPanelCoordinator>();
     }
     private void Update()
     {
-        if (!CanUseGameplay()) return;
+        if (!CanUseGameplay()) { ClearAim(); return; }
+        if (autoAim != null && autoAim.WasPressedThisFrame())
+        {
+            if (IsAimValid(aimedMonster)) ClearAim();
+            else aimedMonster = FindNearestMonster();
+            if (movement != null) movement.ExternalFacing = IsAimValid(aimedMonster);
+        }
         if (animator == null || animator.runtimeAnimatorController == null) return;
         int layer = animator.GetLayerIndex("combat layer");
-        if (layer < 0) return;
-        animator.SetFloat("AttackSpeed", AttackSpeed);
+        if (HasParameter("AttackSpeed", AnimatorControllerParameterType.Float)) animator.SetFloat("AttackSpeed", AttackSpeed);
         if (toggleCombat != null && toggleCombat.WasPressedThisFrame())
         {
             combatMode = !combatMode;
-            animator.SetBool("CombatMode", combatMode);
-            animator.ResetTrigger("Attack");
+            if (HasParameter(drawWeaponParameter, AnimatorControllerParameterType.Bool))
+                animator.SetBool(drawWeaponParameter, combatMode);
+            else if (HasParameter(drawWeaponParameter, AnimatorControllerParameterType.Trigger))
+                animator.SetTrigger(drawWeaponParameter);
+            if (HasParameter("CombatMode", AnimatorControllerParameterType.Bool)) animator.SetBool("CombatMode", combatMode);
+            if (HasParameter("Attack", AnimatorControllerParameterType.Trigger)) animator.ResetTrigger("Attack");
+            if (!combatMode) ClearAim();
         }
-        TrackAttack(layer);
+        if (layer >= 0) TrackAttack(layer);
         if (!combatMode || attack == null || !attack.WasPressedThisFrame()) return;
         if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
-        if (layer >= 0 && !animator.IsInTransition(layer) &&
-            animator.GetCurrentAnimatorStateInfo(layer).IsName("CombatIdle"))
+        if (HasParameter("Attack", AnimatorControllerParameterType.Trigger) &&
+            (layer < 0 || (!animator.IsInTransition(layer) &&
+            animator.GetCurrentAnimatorStateInfo(layer).IsName("CombatIdle"))))
             animator.SetTrigger("Attack");
+    }
+
+    private bool HasParameter(string name, AnimatorControllerParameterType type)
+    {
+        foreach (var parameter in animator.parameters)
+            if (parameter.name == name && parameter.type == type) return true;
+        return false;
+    }
+
+    private bool IsAimValid(MushroomMonster monster) => monster != null &&
+        monster.isActiveAndEnabled && monster.Health != null && monster.Health.Health > 0f &&
+        (monster.transform.position - transform.position).sqrMagnitude <= aimRange * aimRange;
+
+    private MushroomMonster FindNearestMonster()
+    {
+        MushroomMonster nearest = null;
+        float distance = float.PositiveInfinity;
+        foreach (var collider in Physics.OverlapSphere(transform.position, aimRange, targetLayers,
+                     QueryTriggerInteraction.Ignore))
+        {
+            var monster = collider.GetComponentInParent<MushroomMonster>();
+            if (!IsAimValid(monster)) continue;
+            float candidate = (monster.transform.position - transform.position).sqrMagnitude;
+            if (candidate < distance) { distance = candidate; nearest = monster; }
+        }
+        return nearest;
+    }
+
+    private void ClearAim()
+    {
+        aimedMonster = null;
+        if (movement != null) movement.ExternalFacing = false;
     }
 
     private void TrackAttack(int layer)

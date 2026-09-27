@@ -86,6 +86,7 @@ namespace StarterAssets
         // player
         private float _speed;
         private float _animationBlend;
+        public bool ExternalFacing { get; set; }
         private float _targetRotation = 0.0f;
         private float _rotationVelocity;
         private float _verticalVelocity;
@@ -278,7 +279,7 @@ namespace StarterAssets
                     RotationSmoothTime);
 
                 // rotate to face input direction relative to camera position
-                transform.rotation = Quaternion.Euler(0.0f, rotation, 0.0f);
+                if (!ExternalFacing) transform.rotation = Quaternion.Euler(0.0f, rotation, 0.0f);
             }
 
 

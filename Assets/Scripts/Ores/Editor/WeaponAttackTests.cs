@@ -42,6 +42,35 @@ public sealed class WeaponAttackTests
         Physics.SyncTransforms();
         typeof(PlayerCombatInput).GetMethod("ApplyHit", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(combat, null);
     }
+    [Test] public void CombatBindingsMatchRequestedControls()
+    {
+        var flags = BindingFlags.Instance | BindingFlags.NonPublic;
+        foreach (var binding in new[] {
+            ("toggleCombat", "<Keyboard>/e"),
+            ("attack", "<Mouse>/leftButton"),
+            ("autoAim", "<Keyboard>/f") })
+        {
+            var action = (UnityEngine.InputSystem.InputAction)typeof(PlayerCombatInput)
+                .GetField(binding.Item1, flags).GetValue(combat);
+            Assert.That(action.bindings[0].path, Is.EqualTo(binding.Item2));
+        }
+    }
+
+    [Test] public void AutoAimSelectsNearestLivingMonsterNotOrdinaryHealthTarget()
+    {
+        Target(Vector3.forward * 0.5f);
+        var far = Target(Vector3.forward * 4f);
+        far.gameObject.AddComponent<MushroomMonster>();
+        var near = Target(Vector3.forward * 2f);
+        var expected = near.gameObject.AddComponent<MushroomMonster>();
+        var dead = Target(Vector3.back);
+        dead.gameObject.AddComponent<MushroomMonster>();
+        dead.ApplyDamage(dead.MaxHealth);
+        Physics.SyncTransforms();
+        var result = typeof(PlayerCombatInput).GetMethod("FindNearestMonster",
+            BindingFlags.Instance | BindingFlags.NonPublic).Invoke(combat, null);
+        Assert.That(result, Is.SameAs(expected));
+    }
     [Test] public void FistsHitOnlyClosestForwardTarget()
     {
         var near = Target(Vector3.forward);
