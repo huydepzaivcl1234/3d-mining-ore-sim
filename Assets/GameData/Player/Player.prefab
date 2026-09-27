@@ -1261,6 +1261,30 @@ MonoBehaviour:
       m_Action: Attack
       m_Flags: 0
     m_Flags: 0
+  aim:
+    m_Name: Lock Target
+    m_Type: 1
+    m_ExpectedControlType: 
+    m_Id: 0397fc3e-de48-4e2a-892e-fea79563b206
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: 8322345b-3fb5-4b2e-afcf-a1db7f73ac3e
+      m_Path: <Mouse>/rightButton
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Lock Target
+      m_Flags: 0
+    m_Flags: 0
+  aimCamera: {fileID: 0}
+  lockDistance: 30
+  aimTurnSpeed: 720
+  aimRayLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  weaponHand: {fileID: 0}
   damage: 1
   attackRange: 1.75
   attackAngle: 100
