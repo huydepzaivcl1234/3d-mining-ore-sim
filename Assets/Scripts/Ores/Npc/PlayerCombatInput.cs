@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -14,7 +13,9 @@ public class PlayerCombatInput : MonoBehaviour
     private static readonly int FirstAttackState = Animator.StringToHash("Sword Attack 1");
     private static readonly int SecondAttackState = Animator.StringToHash("Sword Attack 2");
     private static readonly int ThirdAttackState = Animator.StringToHash("Sword Attack 3");
-    private static readonly string[] AttackStates = { "Sword Attack 1", "Sword Attack 2", "Sword Attack 3" };
+    // This controller currently authors two sword attacks. Start every combo
+    // with 1, then alternate to 2 only when the player queues another click.
+    private static readonly string[] AttackStates = { "Sword Attack 1", "Sword Attack 2" };
     private static readonly int ArmedState = Animator.StringToHash("Combat");
     [SerializeField] private Animator animator;
     [Header("Input bindings - keyboard or mouse")]
@@ -53,19 +54,9 @@ public class PlayerCombatInput : MonoBehaviour
     private bool wasAttacking;
     private bool queuedAttack;
     private int queuedAttackStateHash;
-    private float queuedAttackUntil;
-    private const float ComboBufferSeconds = 0.25f;
     private int lastAttackStateHash;
-    private int lastAttackIndex = -1;
     private bool returningFromAttack;
     private MiningAudioManager feedbackAudio;
-    private LineRenderer attackArc;
-    private Material attackArcMaterial;
-    private float arcRemaining;
-    private Color arcColor;
-    private float arcDuration;
-    private readonly GameObject[] slashVisuals = new GameObject[3];
-    private readonly Coroutine[] slashResetRoutines = new Coroutine[3];
     private MiningPlayerStatsData Stats => MiningPlayerStats.For(this);
     public float Damage => Stats != null ? GetComponent<MiningPlayerStats>().Damage : Mathf.Max(0, damage);
     public float AttackRange => Mathf.Max(0.1f, Stats != null ? Stats.attackRange : attackRange);
@@ -95,9 +86,6 @@ public class PlayerCombatInput : MonoBehaviour
         returningFromAttack = false;
         lastAttackStateHash = 0;
         SetCombatMode(false);
-        arcRemaining = 0f;
-        if (attackArc != null) attackArc.enabled = false;
-        for (int i = 0; i < slashVisuals.Length; i++) ResetSlashVisual(i);
     }
 
     private void LateUpdate()
@@ -112,23 +100,12 @@ public class PlayerCombatInput : MonoBehaviour
                     Quaternion.LookRotation(direction), aimTurnSpeed * Time.deltaTime);
         }
         else ClearAim();
-        if (attackArc != null && attackArc.enabled)
-        {
-            arcRemaining -= Time.deltaTime;
-            Color color = arcColor;
-            color.a *= Mathf.Clamp01(arcRemaining / arcDuration);
-            attackArc.startColor = attackArc.endColor = color;
-            attackArc.enabled = arcRemaining > 0f;
-        }
     }
     private void OnDestroy()
     {
         toggleCombat?.Dispose();
         attack?.Dispose();
         autoAim?.Dispose();
-        if (attackArcMaterial != null) Destroy(attackArcMaterial);
-        for (int i = 0; i < slashVisuals.Length; i++)
-            if (slashVisuals[i] != null) Destroy(slashVisuals[i]);
     }
     private void Awake()
     {
@@ -168,16 +145,14 @@ public class PlayerCombatInput : MonoBehaviour
         {
             queuedAttack = true;
             queuedAttackStateHash = state.shortNameHash;
-            queuedAttackUntil = Time.time + ComboBufferSeconds;
         }
         if (swinging && !animator.IsInTransition(layer))
         {
-            if (queuedAttack && (queuedAttackStateHash != state.shortNameHash ||
-                Time.time > queuedAttackUntil)) queuedAttack = false;
+            if (queuedAttack && queuedAttackStateHash != state.shortNameHash) queuedAttack = false;
             if (combatMode && queuedAttack && state.normalizedTime >= 0.7f)
             {
                 queuedAttack = false;
-                PlayRandomAttack(layer);
+                PlayAttack(layer, state.shortNameHash == FirstAttackState ? 1 : 0);
             }
             else if (state.shortNameHash == FirstAttackState && !queuedAttack &&
                      !returningFromAttack && state.normalizedTime >= 0.85f)
@@ -197,21 +172,17 @@ public class PlayerCombatInput : MonoBehaviour
         if (!combatMode || !swordReady || swinging || animator.IsInTransition(layer) ||
             state.shortNameHash != CombatMoveState || !pressed) return;
         queuedAttack = false;
-        PlayRandomAttack(layer);
+        PlayAttack(layer, 0);
     }
 
-    private void PlayRandomAttack(int layer)
+    private void PlayAttack(int layer, int index)
     {
         queuedAttack = false;
         queuedAttackStateHash = 0;
-        int choice = Random.Range(0, AttackStates.Length);
-        if (choice == lastAttackIndex)
-            choice = (choice + Random.Range(1, AttackStates.Length)) % AttackStates.Length;
-        lastAttackIndex = choice;
         hitApplied = false;
         returningFromAttack = false;
         animator.ResetTrigger("attack");
-        animator.CrossFadeInFixedTime(AttackStates[choice], 0.08f, layer, 0f);
+        animator.CrossFadeInFixedTime(AttackStates[index], 0.08f, layer, 0f);
     }
 
     private bool HasParameter(string name, AnimatorControllerParameterType type)
@@ -322,110 +293,8 @@ public class PlayerCombatInput : MonoBehaviour
             animator.GetNextAnimatorStateInfo(layer).shortNameHash == expectedState;
         if (!current && !next) return;
         hitApplied = true;
-        ShowAttackEffect(expectedState, sweep);
         if (sweep) ApplySweepHit();
         else ApplyHit();
-    }
-
-    private void ShowAttackEffect(int attackState, bool sweep)
-    {
-        var data = Stats;
-        if (data == null) return;
-        Vector3 origin = transform.TransformPoint(HitOriginOffset);
-        if (data.attackVfxPrefab != null)
-        {
-            int index = attackState == FirstAttackState ? 0 :
-                attackState == SecondAttackState ? 1 : 2;
-            PlayAuthoredSlash(index, data);
-            return;
-        }
-        if (!data.showAttackArc) return;
-        if (attackArc == null)
-        {
-            var shader = Shader.Find("Sprites/Default");
-            if (shader == null) { Debug.LogWarning("Attack arc shader unavailable. Assign Attack Vfx Prefab in PlayerStatsData.", this); return; }
-            var visual = new GameObject("Attack Arc (visual only)");
-            visual.transform.SetParent(transform, false);
-            attackArc = visual.AddComponent<LineRenderer>();
-            attackArcMaterial = new Material(shader);
-            attackArc.sharedMaterial = attackArcMaterial;
-            attackArc.useWorldSpace = true;
-            attackArc.positionCount = 25;
-            attackArc.numCapVertices = 3;
-            attackArc.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            attackArc.receiveShadows = false;
-        }
-        arcColor = data.attackArcColor;
-        arcDuration = Mathf.Max(0.03f, data.attackArcSeconds / AttackSpeed);
-        arcRemaining = arcDuration;
-        attackArc.widthMultiplier = Mathf.Max(0.01f, data.attackArcWidth);
-        attackArc.startColor = attackArc.endColor = arcColor;
-        // The upswing shows the same sector that can damage multiple targets.
-        for (int i = 0; i < attackArc.positionCount; i++)
-        {
-            float progress = i / (float)(attackArc.positionCount - 1);
-            Vector3 direction = sweep
-                ? Quaternion.AngleAxis(Mathf.Lerp(-AttackAngle * 0.5f, AttackAngle * 0.5f, progress), Vector3.up) * StrikeForward
-                : StrikeForward;
-            attackArc.SetPosition(i, origin + direction * (sweep ? AttackRange : Mathf.Lerp(AttackRange * 0.3f, AttackRange, progress)));
-        }
-        attackArc.enabled = true;
-    }
-
-    private void PlayAuthoredSlash(int index, MiningPlayerStatsData data)
-    {
-        if (slashResetRoutines[index] != null) StopCoroutine(slashResetRoutines[index]);
-        GameObject slash = slashVisuals[index];
-        if (slash == null)
-        {
-            slash = Instantiate(data.attackVfxPrefab, transform);
-            slash.name = $"Sword Slash {index + 1} (visual only)";
-            // The vendor prefab also contains an Impact. Only DamageTarget may
-            // show an impact, after a real hit.
-            Transform embeddedImpact = slash.transform.Find("Impact");
-            if (embeddedImpact != null) embeddedImpact.gameObject.SetActive(false);
-            slashVisuals[index] = slash;
-        }
-
-        // The tutorial positions each slash against the posed animation, then
-        // unparents it. Keep those authored local poses rather than deriving an
-        // unstable angle from a single frame of sword-tip velocity.
-        SwordSlashPose pose = data.swordSlashPoses != null &&
-            index < data.swordSlashPoses.Length ? data.swordSlashPoses[index] : null;
-        slash.SetActive(false);
-        slash.transform.SetParent(transform, false);
-        slash.transform.localPosition = pose != null ? pose.localPosition : data.slashVfxLocalPosition;
-        slash.transform.localRotation = Quaternion.Euler(
-            pose != null ? pose.localEuler : data.slashVfxLocalEuler);
-        slash.transform.localScale = pose != null ? pose.localScale : Vector3.one;
-        slash.transform.SetParent(null, true);
-        foreach (ParticleSystem particles in slash.GetComponentsInChildren<ParticleSystem>(true))
-            particles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-        slash.SetActive(true);
-        ParticleSystem rootParticles = slash.GetComponent<ParticleSystem>();
-        if (rootParticles != null) rootParticles.Play(true);
-        slashResetRoutines[index] = StartCoroutine(ResetSlashAfter(index,
-            Mathf.Max(0.1f, data.attackVfxLifetime)));
-    }
-
-    private IEnumerator ResetSlashAfter(int index, float seconds)
-    {
-        yield return new WaitForSeconds(seconds);
-        slashResetRoutines[index] = null;
-        ResetSlashVisual(index);
-    }
-
-    private void ResetSlashVisual(int index)
-    {
-        if (slashResetRoutines[index] != null)
-        {
-            StopCoroutine(slashResetRoutines[index]);
-            slashResetRoutines[index] = null;
-        }
-        GameObject slash = slashVisuals[index];
-        if (slash == null) return;
-        slash.SetActive(false);
-        slash.transform.SetParent(transform, false);
     }
 
     private void ApplyHit()
@@ -511,7 +380,7 @@ public class PlayerCombatInput : MonoBehaviour
         // particle systems; explicitly start it at the animation contact event.
         var particles = effect.GetComponent<ParticleSystem>();
         if (particles != null) particles.Play(true);
-        float lifetime = Stats != null ? Stats.attackVfxLifetime : 2f;
+        float lifetime = Stats != null ? Stats.impactVfxLifetime : 2f;
         Destroy(effect, Mathf.Max(0.1f, lifetime));
     }
 

@@ -10,6 +10,7 @@ public class EquipmentSystem : MonoBehaviour
 
     private GameObject currentWeapon;
     private MiningCharacterHealth health;
+    private MiningAudioManager audioManager;
     private Vector3 bladeBaseLocal;
     private Vector3 bladeTipLocal;
     private Vector3 previousTip;
@@ -19,21 +20,39 @@ public class EquipmentSystem : MonoBehaviour
     private void Awake()
     {
         health = GetComponent<MiningCharacterHealth>();
+        audioManager = FindFirstObjectByType<MiningAudioManager>();
         ResetToSheath();
     }
 
     public void DrawWeapon()
     {
         if (health != null && health.Health <= 0f) return;
+        bool wasDrawn = IsDrawn;
         MoveWeapon(weaponHolder);
+        if (!wasDrawn && IsDrawn) PlayEquipSfx(true);
     }
-    public void SheathWeapon() => MoveWeapon(weaponSheath);
+    public void SheathWeapon()
+    {
+        bool wasDrawn = IsDrawn;
+        MoveWeapon(weaponSheath);
+        if (wasDrawn && !IsDrawn) PlayEquipSfx(false);
+    }
     // Preserve event spellings used by older imported animation clips.
     public void ShealthWeapon() => SheathWeapon();
     public void OnDrawWeapon() => DrawWeapon();
     public void OnSheathWeapon() => SheathWeapon();
 
     public void ResetToSheath() => MoveWeapon(weaponSheath);
+
+    private void PlayEquipSfx(bool drawing)
+    {
+        var data = MiningPlayerStats.For(this);
+        if (data == null) return;
+        var clip = drawing ? data.drawWeaponSfx : data.sheathWeaponSfx;
+        var volume = drawing ? data.drawWeaponSfxVolume : data.sheathWeaponSfxVolume;
+        if (audioManager == null) audioManager = FindFirstObjectByType<MiningAudioManager>();
+        if (audioManager != null) audioManager.PlaySfx(clip, volume);
+    }
 
     private void MoveWeapon(GameObject holder)
     {
