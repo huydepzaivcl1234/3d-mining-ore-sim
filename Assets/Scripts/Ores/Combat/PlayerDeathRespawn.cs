@@ -26,6 +26,7 @@ namespace MiningSimulator.Ores
         private MiningCharacterHealth health;
         private ThirdPersonController movement;
         private PlayerCombatInput combat;
+        private EquipmentSystem equipment;
         private PlayerInput playerInput;
         private StarterAssetsInputs inputs;
         private CharacterController playerBody;
@@ -50,6 +51,7 @@ namespace MiningSimulator.Ores
             audioManager = FindAnyObjectByType<MiningAudioManager>();
             movement = GetComponent<ThirdPersonController>();
             combat = GetComponent<PlayerCombatInput>();
+            equipment = GetComponent<EquipmentSystem>();
             playerInput = GetComponent<PlayerInput>();
             inputs = GetComponent<StarterAssetsInputs>();
             playerBody = GetComponent<CharacterController>();
@@ -81,6 +83,9 @@ namespace MiningSimulator.Ores
             bodyEnabled = playerBody != null && playerBody.enabled;
             if (movement != null) movement.enabled = false;
             if (combat != null) combat.enabled = false;
+            // Disabling combat cannot rely on a sheath animation event: the
+            // death pose interrupts that clip. Restore the one sword now.
+            if (equipment != null) equipment.ResetToSheath();
             if (playerInput != null) playerInput.DeactivateInput();
             ClearInput();
             if (playerBody != null) playerBody.enabled = false;
@@ -300,6 +305,7 @@ namespace MiningSimulator.Ores
                     for (int i = 0; i < layerWeights.Length; i++) animator.SetLayerWeight(i, layerWeights[i]);
                 animator.Update(0f);
             }
+            if (equipment != null) equipment.ResetToSheath();
             ClearInput();
             if (playerBody != null) playerBody.enabled = bodyEnabled;
             if (movement != null) movement.enabled = movementEnabled;

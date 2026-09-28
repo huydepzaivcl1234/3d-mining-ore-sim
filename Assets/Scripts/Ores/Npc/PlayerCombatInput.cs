@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -63,6 +64,8 @@ public class PlayerCombatInput : MonoBehaviour
     private float arcRemaining;
     private Color arcColor;
     private float arcDuration;
+    private readonly GameObject[] slashVisuals = new GameObject[3];
+    private readonly Coroutine[] slashResetRoutines = new Coroutine[3];
     private MiningPlayerStatsData Stats => MiningPlayerStats.For(this);
     public float Damage => Stats != null ? GetComponent<MiningPlayerStats>().Damage : Mathf.Max(0, damage);
     public float AttackRange => Mathf.Max(0.1f, Stats != null ? Stats.attackRange : attackRange);
@@ -94,6 +97,7 @@ public class PlayerCombatInput : MonoBehaviour
         SetCombatMode(false);
         arcRemaining = 0f;
         if (attackArc != null) attackArc.enabled = false;
+        for (int i = 0; i < slashVisuals.Length; i++) ResetSlashVisual(i);
     }
 
     private void LateUpdate()
@@ -123,6 +127,8 @@ public class PlayerCombatInput : MonoBehaviour
         attack?.Dispose();
         autoAim?.Dispose();
         if (attackArcMaterial != null) Destroy(attackArcMaterial);
+        for (int i = 0; i < slashVisuals.Length; i++)
+            if (slashVisuals[i] != null) Destroy(slashVisuals[i]);
     }
     private void Awake()
     {
@@ -316,29 +322,21 @@ public class PlayerCombatInput : MonoBehaviour
             animator.GetNextAnimatorStateInfo(layer).shortNameHash == expectedState;
         if (!current && !next) return;
         hitApplied = true;
-        ShowAttackEffect(sweep);
+        ShowAttackEffect(expectedState, sweep);
         if (sweep) ApplySweepHit();
         else ApplyHit();
     }
 
-    private void ShowAttackEffect(bool sweep)
+    private void ShowAttackEffect(int attackState, bool sweep)
     {
         var data = Stats;
         if (data == null) return;
         Vector3 origin = transform.TransformPoint(HitOriginOffset);
-        GameObject prefab = data.attackVfxPrefab;
-        if (prefab != null)
+        if (data.attackVfxPrefab != null)
         {
-            // The pack's slash is authored relative to the character root, not
-            // as a forward-facing effect at the end of the damage range.
-            var slash = Instantiate(prefab, transform);
-            slash.transform.localPosition = data.slashVfxLocalPosition;
-            slash.transform.localRotation = Quaternion.Euler(data.slashVfxLocalEuler);
-            // The vendor slash prefab embeds an Impact child. A miss must not
-            // play that particle; real impacts are spawned by DamageTarget.
-            var embeddedImpact = slash.transform.Find("Impact");
-            if (embeddedImpact != null) embeddedImpact.gameObject.SetActive(false);
-            PlayAndDestroyEffect(slash);
+            int index = attackState == FirstAttackState ? 0 :
+                attackState == SecondAttackState ? 1 : 2;
+            PlayAuthoredSlash(index, data);
             return;
         }
         if (!data.showAttackArc) return;
@@ -372,6 +370,62 @@ public class PlayerCombatInput : MonoBehaviour
             attackArc.SetPosition(i, origin + direction * (sweep ? AttackRange : Mathf.Lerp(AttackRange * 0.3f, AttackRange, progress)));
         }
         attackArc.enabled = true;
+    }
+
+    private void PlayAuthoredSlash(int index, MiningPlayerStatsData data)
+    {
+        if (slashResetRoutines[index] != null) StopCoroutine(slashResetRoutines[index]);
+        GameObject slash = slashVisuals[index];
+        if (slash == null)
+        {
+            slash = Instantiate(data.attackVfxPrefab, transform);
+            slash.name = $"Sword Slash {index + 1} (visual only)";
+            // The vendor prefab also contains an Impact. Only DamageTarget may
+            // show an impact, after a real hit.
+            Transform embeddedImpact = slash.transform.Find("Impact");
+            if (embeddedImpact != null) embeddedImpact.gameObject.SetActive(false);
+            slashVisuals[index] = slash;
+        }
+
+        // The tutorial positions each slash against the posed animation, then
+        // unparents it. Keep those authored local poses rather than deriving an
+        // unstable angle from a single frame of sword-tip velocity.
+        SwordSlashPose pose = data.swordSlashPoses != null &&
+            index < data.swordSlashPoses.Length ? data.swordSlashPoses[index] : null;
+        slash.SetActive(false);
+        slash.transform.SetParent(transform, false);
+        slash.transform.localPosition = pose != null ? pose.localPosition : data.slashVfxLocalPosition;
+        slash.transform.localRotation = Quaternion.Euler(
+            pose != null ? pose.localEuler : data.slashVfxLocalEuler);
+        slash.transform.localScale = pose != null ? pose.localScale : Vector3.one;
+        slash.transform.SetParent(null, true);
+        foreach (ParticleSystem particles in slash.GetComponentsInChildren<ParticleSystem>(true))
+            particles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        slash.SetActive(true);
+        ParticleSystem rootParticles = slash.GetComponent<ParticleSystem>();
+        if (rootParticles != null) rootParticles.Play(true);
+        slashResetRoutines[index] = StartCoroutine(ResetSlashAfter(index,
+            Mathf.Max(0.1f, data.attackVfxLifetime)));
+    }
+
+    private IEnumerator ResetSlashAfter(int index, float seconds)
+    {
+        yield return new WaitForSeconds(seconds);
+        slashResetRoutines[index] = null;
+        ResetSlashVisual(index);
+    }
+
+    private void ResetSlashVisual(int index)
+    {
+        if (slashResetRoutines[index] != null)
+        {
+            StopCoroutine(slashResetRoutines[index]);
+            slashResetRoutines[index] = null;
+        }
+        GameObject slash = slashVisuals[index];
+        if (slash == null) return;
+        slash.SetActive(false);
+        slash.transform.SetParent(transform, false);
     }
 
     private void ApplyHit()

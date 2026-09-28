@@ -47,6 +47,17 @@ MonoBehaviour:
   attackImpactVfxPrefab: {fileID: 1035977224672214417, guid: 057aa477789506a44bd206e9c5acad19, type: 3}
   slashVfxLocalPosition: {x: 0.09, y: 1.172, z: 0.626}
   slashVfxLocalEuler: {x: -40.458, y: -113.622, z: -144.679}
+  slashBladeEulerOffset: {x: 0, y: 0, z: 0}
+  swordSlashPoses:
+  - localPosition: {x: 0.09, y: 1.172, z: 0.626}
+    localEuler: {x: -40.458, y: -113.622, z: -144.679}
+    localScale: {x: 1, y: 1, z: 1}
+  - localPosition: {x: 0.09, y: 1.172, z: 0.626}
+    localEuler: {x: -40.458, y: -113.622, z: -144.679}
+    localScale: {x: 1, y: 1, z: 1}
+  - localPosition: {x: 0.09, y: 1.172, z: 0.626}
+    localEuler: {x: -40.458, y: -113.622, z: -144.679}
+    localScale: {x: 1, y: 1, z: 1}
   attackVfxLifetime: 2
   damage: 1
   attackRange: 1.75

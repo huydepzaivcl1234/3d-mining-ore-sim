@@ -119,5 +119,35 @@ public sealed class WeaponAttackTests
         Assert.That(right.Health, Is.EqualTo(right.MaxHealth - combat.Damage));
         Assert.That(behind.Health, Is.EqualTo(behind.MaxHealth));
     }
+
+    [Test] public void SwordDrawSheathAndRespawnResetKeepExactlyOneSword()
+    {
+        var hand = new GameObject("Hand Holder");
+        var sheath = new GameObject("Sheath Holder");
+        var swordPrefab = new GameObject("Test Sword");
+        objects.Add(swordPrefab);
+        hand.transform.SetParent(player.transform);
+        sheath.transform.SetParent(player.transform);
+        var equipment = player.AddComponent<EquipmentSystem>();
+        var fields = BindingFlags.Instance | BindingFlags.NonPublic;
+        typeof(EquipmentSystem).GetField("weaponHolder", fields).SetValue(equipment, hand);
+        typeof(EquipmentSystem).GetField("weaponSheath", fields).SetValue(equipment, sheath);
+        typeof(EquipmentSystem).GetField("weapon", fields).SetValue(equipment, swordPrefab);
+
+        equipment.ResetToSheath();
+        equipment.DrawWeapon();
+        equipment.DrawWeapon(); // repeated animation event
+        Assert.That(equipment.IsDrawn, Is.True);
+        Assert.That(hand.transform.childCount, Is.EqualTo(1));
+        equipment.SheathWeapon();
+        equipment.SheathWeapon(); // repeated animation event
+        Assert.That(equipment.IsDrawn, Is.False);
+        Assert.That(sheath.transform.childCount, Is.EqualTo(1));
+        equipment.DrawWeapon();
+        equipment.ResetToSheath(); // death and respawn both call this
+        equipment.ResetToSheath();
+        Assert.That(hand.transform.childCount, Is.Zero);
+        Assert.That(sheath.transform.childCount, Is.EqualTo(1));
+    }
 }
 #endif

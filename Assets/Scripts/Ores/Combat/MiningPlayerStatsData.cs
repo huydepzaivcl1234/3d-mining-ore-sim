@@ -2,6 +2,14 @@ using UnityEngine;
 
 namespace MiningSimulator.Ores
 {
+    [System.Serializable]
+    public sealed class SwordSlashPose
+    {
+        public Vector3 localPosition = new Vector3(0.09f, 1.172f, 0.626f);
+        public Vector3 localEuler = new Vector3(-40.458f, -113.622f, -144.679f);
+        public Vector3 localScale = Vector3.one;
+    }
+
     [CreateAssetMenu(menuName = "Mining Simulator/Player Stats", fileName = "PlayerStatsData")]
     public sealed class MiningPlayerStatsData : ScriptableObject
     {
@@ -51,6 +59,10 @@ namespace MiningSimulator.Ores
         [Tooltip("Slash VFX anchor relative to the player, matching the source pack's demo pose.")]
         public Vector3 slashVfxLocalPosition = new Vector3(0.09f, 1.172f, 0.626f);
         public Vector3 slashVfxLocalEuler = new Vector3(-40.458f, -113.622f, -144.679f);
+        [Tooltip("Extra rotation around the animated blade direction when a sword is drawn.")]
+        public Vector3 slashBladeEulerOffset;
+        [Tooltip("One pre-positioned slash per Sword Attack 1/2/3. These are Player-local poses captured from each attack animation. The visual is detached at the animation event, as in the sword-slash tutorial.")]
+        public SwordSlashPose[] swordSlashPoses;
         [Min(0.1f)] public float attackVfxLifetime = 2f;
         [Header("Combat stats")]
         [Min(0)] public float damage = 1;
