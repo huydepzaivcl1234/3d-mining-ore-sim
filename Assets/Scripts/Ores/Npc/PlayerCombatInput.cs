@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using MiningSimulator.Ores;
@@ -37,8 +38,7 @@ public class PlayerCombatInput : MonoBehaviour
     [Min(0.1f), SerializeField] private float attackSpeed = 1f;
     [Tooltip("Seconds to blend between full-body locomotion and the combat upper body.")]
     [Min(0.01f), SerializeField] private float combatBlendSeconds = 0.15f;
-    [Tooltip("Normalized animation time of contact. 0.45 = 45% through the attack.")]
-    [Range(0f, 1f), SerializeField] private float hitTime = 0.45f;
+    [HideInInspector, Range(0f, 1f), SerializeField] private float hitTime = 0.45f; // Legacy serialized value; contact is set by Animation Events.
     [SerializeField] private Vector3 hitOriginOffset = new Vector3(0f, 1f, 0f);
     [SerializeField] private LayerMask targetLayers = ~0;
     private bool wasAttacking;
@@ -54,10 +54,9 @@ public class PlayerCombatInput : MonoBehaviour
     private MiningPlayerStatsData Stats => MiningPlayerStats.For(this);
     public float Damage => Stats != null ? GetComponent<MiningPlayerStats>().Damage : Mathf.Max(0, damage);
     public float AttackRange => Mathf.Max(0.1f, Stats != null ? Stats.attackRange : attackRange);
-    public float AttackAngle => Mathf.Clamp(Mathf.Min(30f, Stats != null ? Stats.attackAngle : attackAngle), 1, 180);
+    public float AttackAngle => Mathf.Clamp(Stats != null ? Stats.attackAngle : attackAngle, 1, 180);
     public float AttackSpeed => Mathf.Max(0.1f, Stats != null ? Stats.attackSpeed : attackSpeed);
     private float BlendSeconds => Mathf.Max(0.01f, Stats != null ? Stats.combatBlendSeconds : combatBlendSeconds);
-    private float HitTime => Mathf.Clamp01(Stats != null ? Stats.hitTime : hitTime);
     private Vector3 HitOriginOffset => Stats != null ? Stats.hitOriginOffset : hitOriginOffset;
     private float HitHalfHeight => 0.9f;
     private Vector3 StrikeForward => Vector3.ProjectOnPlane(transform.forward, Vector3.up).normalized;
@@ -246,12 +245,6 @@ public class PlayerCombatInput : MonoBehaviour
                 feedbackAudio.PlaySfx(Stats != null ? Stats.attackSfx : null,
                     Stats != null ? Stats.attackSfxVolume : 1f);
         }
-        if (active && !hitApplied && state.normalizedTime >= HitTime)
-        {
-            hitApplied = true;
-            ShowAttackEffect();
-            ApplyHit();
-        }
         wasAttacking = active;
         lastAttackStateHash = active ? state.shortNameHash : 0;
         if (!active) returningFromAttack = false;
@@ -260,7 +253,26 @@ public class PlayerCombatInput : MonoBehaviour
     private static bool IsAttackState(AnimatorStateInfo state) =>
         state.shortNameHash == FirstAttackState || state.shortNameHash == SecondAttackState;
 
-    private void ShowAttackEffect()
+    // Called by events on the imported sword clips, exactly when the blade reaches the target.
+    public void OnSwordStrikeDown() => ApplyAnimationHit(FirstAttackState, false);
+    public void OnSwordSweepUp() => ApplyAnimationHit(SecondAttackState, true);
+
+    private void ApplyAnimationHit(int expectedState, bool sweep)
+    {
+        if (!combatMode || hitApplied || !CanUseGameplay() || animator == null) return;
+        int layer = animator.GetLayerIndex("Combat Layer");
+        if (layer < 0) return;
+        bool current = animator.GetCurrentAnimatorStateInfo(layer).shortNameHash == expectedState;
+        bool next = animator.IsInTransition(layer) &&
+            animator.GetNextAnimatorStateInfo(layer).shortNameHash == expectedState;
+        if (!current && !next) return;
+        hitApplied = true;
+        ShowAttackEffect(sweep);
+        if (sweep) ApplySweepHit();
+        else ApplyHit();
+    }
+
+    private void ShowAttackEffect(bool sweep)
     {
         var data = Stats;
         if (data == null) return;
@@ -293,10 +305,14 @@ public class PlayerCombatInput : MonoBehaviour
         arcRemaining = arcDuration;
         attackArc.widthMultiplier = Mathf.Max(0.01f, data.attackArcWidth);
         attackArc.startColor = attackArc.endColor = arcColor;
-        // Draw the strike's actual forward sector, not a full circle around Player.
+        // The upswing shows the same sector that can damage multiple targets.
         for (int i = 0; i < attackArc.positionCount; i++)
         {
-            attackArc.SetPosition(i, origin + StrikeForward * Mathf.Lerp(AttackRange * 0.3f, AttackRange, i / 24f));
+            float progress = i / (float)(attackArc.positionCount - 1);
+            Vector3 direction = sweep
+                ? Quaternion.AngleAxis(Mathf.Lerp(-AttackAngle * 0.5f, AttackAngle * 0.5f, progress), Vector3.up) * StrikeForward
+                : StrikeForward;
+            attackArc.SetPosition(i, origin + direction * (sweep ? AttackRange : Mathf.Lerp(AttackRange * 0.3f, AttackRange, progress)));
         }
         attackArc.enabled = true;
     }
@@ -321,7 +337,7 @@ public class PlayerCombatInput : MonoBehaviour
             direction.y = 0f;
             if (direction.sqrMagnitude > AttackRange * AttackRange) continue;
             if (direction.sqrMagnitude > 0.0001f &&
-                Vector3.Angle(StrikeForward, direction) > AttackAngle * 0.5f) continue;
+                Vector3.Angle(StrikeForward, direction) > Mathf.Min(30f, AttackAngle) * 0.5f) continue;
             if (direction.sqrMagnitude < closestDistance)
             {
                 closest = target;
@@ -330,6 +346,29 @@ public class PlayerCombatInput : MonoBehaviour
             }
         }
         if (closest != null) DamageTarget(closest, closestPoint);
+    }
+
+    private void ApplySweepHit()
+    {
+        Vector3 origin = transform.TransformPoint(HitOriginOffset);
+        var hitTargets = new HashSet<MiningCharacterHealth>();
+        foreach (var collider in Physics.OverlapCapsule(origin - Vector3.up * HitHalfHeight,
+                     origin + Vector3.up * HitHalfHeight, AttackRange, targetLayers,
+                     QueryTriggerInteraction.Ignore))
+        {
+            var target = collider.GetComponentInParent<MiningCharacterHealth>();
+            if (target == null || target.Health <= 0 || target.transform == transform ||
+                target.transform.IsChildOf(transform) || hitTargets.Contains(target)) continue;
+            Vector3 point = collider.ClosestPoint(origin);
+            Vector3 direction = point - origin;
+            if (Mathf.Abs(direction.y) > HitHalfHeight) continue;
+            direction.y = 0f;
+            if (direction.sqrMagnitude > AttackRange * AttackRange) continue;
+            if (direction.sqrMagnitude > 0.0001f &&
+                Vector3.Angle(StrikeForward, direction) > AttackAngle * 0.5f) continue;
+            hitTargets.Add(target);
+            DamageTarget(target, point);
+        }
     }
 
     private bool CanUseGameplay() => Time.timeScale > 0f &&

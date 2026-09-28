@@ -42,6 +42,11 @@ public sealed class WeaponAttackTests
         Physics.SyncTransforms();
         typeof(PlayerCombatInput).GetMethod("ApplyHit", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(combat, null);
     }
+    private void Sweep()
+    {
+        Physics.SyncTransforms();
+        typeof(PlayerCombatInput).GetMethod("ApplySweepHit", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(combat, null);
+    }
     [Test] public void CombatBindingsMatchRequestedControls()
     {
         var flags = BindingFlags.Instance | BindingFlags.NonPublic;
@@ -102,6 +107,17 @@ public sealed class WeaponAttackTests
         Strike();
         Assert.That(low.Health, Is.EqualTo(low.MaxHealth - combat.Damage));
         Assert.That(overhead.Health, Is.EqualTo(overhead.MaxHealth));
+    }
+
+    [Test] public void UpswingHitsMultipleTargetsInFrontOnlyOnceEach()
+    {
+        var left = Target(new Vector3(-0.7f, 0, 1.2f), true);
+        var right = Target(new Vector3(0.7f, 0, 1.2f));
+        var behind = Target(Vector3.back);
+        Sweep();
+        Assert.That(left.Health, Is.EqualTo(left.MaxHealth - combat.Damage));
+        Assert.That(right.Health, Is.EqualTo(right.MaxHealth - combat.Damage));
+        Assert.That(behind.Health, Is.EqualTo(behind.MaxHealth));
     }
 }
 #endif

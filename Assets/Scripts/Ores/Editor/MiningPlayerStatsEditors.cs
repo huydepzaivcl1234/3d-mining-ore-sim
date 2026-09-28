@@ -37,7 +37,7 @@ public sealed class MiningPlayerHealthStatsEditor : MiningPlayerStatsBoundEditor
 { protected override string[] StatFields => new[] { "maxHealth", "regenAmount", "regenInterval" }; }
 [CustomEditor(typeof(PlayerCombatInput)), CanEditMultipleObjects]
 public sealed class MiningPlayerCombatStatsEditor : MiningPlayerStatsBoundEditor
-{ protected override string[] StatFields => new[] { "damage", "attackRange", "attackAngle", "attackSpeed", "combatBlendSeconds", "hitTime", "hitOriginOffset" }; }
+{ protected override string[] StatFields => new[] { "damage", "attackRange", "attackAngle", "attackSpeed", "combatBlendSeconds", "hitOriginOffset" }; }
 [CustomEditor(typeof(ThirdPersonController)), CanEditMultipleObjects]
 public sealed class MiningPlayerMovementStatsEditor : MiningPlayerStatsBoundEditor
 { protected override string[] StatFields => new[] { "MoveSpeed", "SprintSpeed", "RotationSmoothTime", "SpeedChangeRate", "JumpHeight", "Gravity", "JumpTimeout", "FallTimeout" }; }
