@@ -12,7 +12,7 @@ public class EquipmentSystem : MonoBehaviour
     GameObject currentWeaponInHand;
     GameObject currentWeaponInSheath;
 
-    void start()
+    void Start()
     {
         currentWeaponInSheath = Instantiate(weapon, weaponSheath.transform);
     }
