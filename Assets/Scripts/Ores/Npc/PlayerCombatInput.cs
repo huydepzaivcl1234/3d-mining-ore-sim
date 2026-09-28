@@ -7,9 +7,13 @@ using UnityEngine.EventSystems;
 [DisallowMultipleComponent]
 public class PlayerCombatInput : MonoBehaviour
 {
-    private static readonly int CombatMoveState = Animator.StringToHash("Combat move");
-    private static readonly int FirstAttackState = Animator.StringToHash("combat_attack");
-    private static readonly int SecondAttackState = Animator.StringToHash("combat_attack2");
+    // Names match the player's authored Player controller.controller on main.
+    private const string CombatLayerName = "combat layer";
+    private static readonly int CombatMoveState = Animator.StringToHash("Combat");
+    private static readonly int FirstAttackState = Animator.StringToHash("Sword Attack 1");
+    private static readonly int SecondAttackState = Animator.StringToHash("Sword Attack 2");
+    private static readonly int ThirdAttackState = Animator.StringToHash("Sword Attack 3");
+    private static readonly string[] AttackStates = { "Sword Attack 1", "Sword Attack 2", "Sword Attack 3" };
     private static readonly int ArmedState = Animator.StringToHash("Combat");
     [SerializeField] private Animator animator;
     [Header("Input bindings - keyboard or mouse")]
@@ -41,9 +45,14 @@ public class PlayerCombatInput : MonoBehaviour
     [HideInInspector, Range(0f, 1f), SerializeField] private float hitTime = 0.45f; // Legacy serialized value; contact is set by Animation Events.
     [SerializeField] private Vector3 hitOriginOffset = new Vector3(0f, 1f, 0f);
     [SerializeField] private LayerMask targetLayers = ~0;
+    [Header("Slash SFX per attack (empty = PlayerStatsData.attackSfx)")]
+    [SerializeField] private AudioClip slash1;
+    [SerializeField] private AudioClip slash2;
+    [SerializeField] private AudioClip slash3;
     private bool wasAttacking;
     private bool queuedAttack;
     private int lastAttackStateHash;
+    private int lastAttackIndex = -1;
     private bool returningFromAttack;
     private MiningAudioManager feedbackAudio;
     private LineRenderer attackArc;
@@ -129,14 +138,14 @@ public class PlayerCombatInput : MonoBehaviour
             if (movement != null) movement.ExternalFacing = IsAimValid(aimedMonster);
         }
         if (animator == null || animator.runtimeAnimatorController == null) return;
-        int layer = animator.GetLayerIndex("Combat Layer");
+        int layer = animator.GetLayerIndex(CombatLayerName);
         if (HasParameter("AttackSpeed", AnimatorControllerParameterType.Float)) animator.SetFloat("AttackSpeed", AttackSpeed);
         if (toggleCombat != null && toggleCombat.WasPressedThisFrame())
         {
             SetCombatMode(!combatMode);
         }
         if (layer >= 0) TrackAttack(layer);
-        if (layer < 0 || !HasParameter("attack", AnimatorControllerParameterType.Trigger)) return;
+        if (layer < 0) return;
         bool pressed = attack != null && attack.WasPressedThisFrame() &&
             (EventSystem.current == null || !EventSystem.current.IsPointerOverGameObject());
         var state = animator.GetCurrentAnimatorStateInfo(layer);
@@ -149,7 +158,7 @@ public class PlayerCombatInput : MonoBehaviour
             if (combatMode && queuedAttack && state.normalizedTime >= 0.7f)
             {
                 queuedAttack = false;
-                animator.SetTrigger("attack");
+                PlayRandomAttack(layer);
             }
             else if (state.shortNameHash == FirstAttackState && !queuedAttack &&
                      !returningFromAttack && state.normalizedTime >= 0.85f)
@@ -157,6 +166,11 @@ public class PlayerCombatInput : MonoBehaviour
                 returningFromAttack = true;
                 if (HasParameter("Move", AnimatorControllerParameterType.Trigger)) animator.SetTrigger("Move");
             }
+            // The third imported clip has no authored contact event. Use its
+            // normalized strike frame once; existing clips retain their events.
+            if (state.shortNameHash == ThirdAttackState &&
+                state.normalizedTime >= 0.45f && !hitApplied)
+                ApplyAnimationHit(ThirdAttackState, true);
         }
         int armsLayer = animator.GetLayerIndex("Arms Layer");
         bool swordReady = armsLayer < 0 || (!animator.IsInTransition(armsLayer) &&
@@ -164,7 +178,19 @@ public class PlayerCombatInput : MonoBehaviour
         if (!combatMode || !swordReady || swinging || animator.IsInTransition(layer) ||
             state.shortNameHash != CombatMoveState || (!pressed && !queuedAttack)) return;
         queuedAttack = false;
-        animator.SetTrigger("attack");
+        PlayRandomAttack(layer);
+    }
+
+    private void PlayRandomAttack(int layer)
+    {
+        int choice = Random.Range(0, AttackStates.Length);
+        if (choice == lastAttackIndex)
+            choice = (choice + Random.Range(1, AttackStates.Length)) % AttackStates.Length;
+        lastAttackIndex = choice;
+        hitApplied = false;
+        returningFromAttack = false;
+        animator.ResetTrigger("attack");
+        animator.CrossFadeInFixedTime(AttackStates[choice], 0.08f, layer, 0f);
     }
 
     private bool HasParameter(string name, AnimatorControllerParameterType type)
@@ -196,9 +222,9 @@ public class PlayerCombatInput : MonoBehaviour
             if (HasParameter(trigger, AnimatorControllerParameterType.Trigger)) animator.SetTrigger(trigger);
         }
         if (HasParameter("attack", AnimatorControllerParameterType.Trigger)) animator.ResetTrigger("attack");
-        int combatLayer = animator.GetLayerIndex("Combat Layer");
+        int combatLayer = animator.GetLayerIndex(CombatLayerName);
         if (!enabled && combatLayer >= 0 &&
-            animator.GetCurrentAnimatorStateInfo(combatLayer).shortNameHash == FirstAttackState &&
+            IsAttackState(animator.GetCurrentAnimatorStateInfo(combatLayer)) &&
             HasParameter("Move", AnimatorControllerParameterType.Trigger))
             animator.SetTrigger("Move");
     }
@@ -241,8 +267,10 @@ public class PlayerCombatInput : MonoBehaviour
         {
             hitApplied = false;
             returningFromAttack = false;
+            AudioClip slash = state.shortNameHash == FirstAttackState ? slash1 :
+                state.shortNameHash == SecondAttackState ? slash2 : slash3;
             if (feedbackAudio != null)
-                feedbackAudio.PlaySfx(Stats != null ? Stats.attackSfx : null,
+                feedbackAudio.PlaySfx(slash != null ? slash : Stats != null ? Stats.attackSfx : null,
                     Stats != null ? Stats.attackSfxVolume : 1f);
         }
         wasAttacking = active;
@@ -251,7 +279,8 @@ public class PlayerCombatInput : MonoBehaviour
     }
 
     private static bool IsAttackState(AnimatorStateInfo state) =>
-        state.shortNameHash == FirstAttackState || state.shortNameHash == SecondAttackState;
+        state.shortNameHash == FirstAttackState || state.shortNameHash == SecondAttackState ||
+        state.shortNameHash == ThirdAttackState;
 
     // Called by events on the imported sword clips, exactly when the blade reaches the target.
     public void OnSwordStrikeDown() => ApplyAnimationHit(FirstAttackState, false);
@@ -260,7 +289,7 @@ public class PlayerCombatInput : MonoBehaviour
     private void ApplyAnimationHit(int expectedState, bool sweep)
     {
         if (!combatMode || hitApplied || !CanUseGameplay() || animator == null) return;
-        int layer = animator.GetLayerIndex("Combat Layer");
+        int layer = animator.GetLayerIndex(CombatLayerName);
         if (layer < 0) return;
         bool current = animator.GetCurrentAnimatorStateInfo(layer).shortNameHash == expectedState;
         bool next = animator.IsInTransition(layer) &&
