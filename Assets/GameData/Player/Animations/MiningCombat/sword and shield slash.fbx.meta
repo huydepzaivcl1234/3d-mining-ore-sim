@@ -58,7 +58,14 @@ ModelImporter:
       events:
       - time: 0.46
         functionName: OnSwordStrikeDown
-        data:
+        data: 
+        objectReferenceParameter: {instanceID: 0}
+        floatParameter: 0
+        intParameter: 0
+        messageOptions: 0
+      - time: 0.23844706
+        functionName: OnSlashDownStart
+        data: 
         objectReferenceParameter: {instanceID: 0}
         floatParameter: 0
         intParameter: 0

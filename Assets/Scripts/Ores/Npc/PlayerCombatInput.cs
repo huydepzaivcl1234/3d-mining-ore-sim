@@ -51,6 +51,22 @@ public class PlayerCombatInput : MonoBehaviour
     [SerializeField] private AudioClip slash1;
     [SerializeField] private AudioClip slash2;
     [SerializeField] private AudioClip slash3;
+
+    [SerializeField] private ParticleSystem slashDownVfx;
+    [SerializeField] private ParticleSystem slashUpVfx;
+
+    [System.Serializable]
+    private struct SlashVfxCue
+    {
+        public ParticleSystem effect;
+        [Min(0f)] public float delay;
+    }
+
+    [Header("Additional slash VFX (add as many scene effects as needed)")]
+    [SerializeField] private List<SlashVfxCue> slashDownEffects = new List<SlashVfxCue>();
+    [SerializeField] private List<SlashVfxCue> slashUpEffects = new List<SlashVfxCue>();
+
+
     private bool wasAttacking;
     private bool queuedAttack;
     private int queuedAttackStateHash;
@@ -75,6 +91,7 @@ public class PlayerCombatInput : MonoBehaviour
     }
     private void OnDisable()
     {
+        StopAllCoroutines();
         toggleCombat?.Disable();
         attack?.Disable();
         autoAim?.Disable();
@@ -383,6 +400,52 @@ public class PlayerCombatInput : MonoBehaviour
         float lifetime = Stats != null ? Stats.impactVfxLifetime : 2f;
         Destroy(effect, Mathf.Max(0.1f, lifetime));
     }
+
+    public void OnSlashDownStart()
+    {
+        PlaySlashEffects(slashDownVfx, slashDownEffects);
+    }
+
+    public void OnSlashUpStart()
+    {
+        PlaySlashEffects(slashUpVfx, slashUpEffects);
+    }
+
+    private void PlaySlashEffects(ParticleSystem first, List<SlashVfxCue> additional)
+    {
+        if (!combatMode || !CanUseGameplay()) return;
+        if (first != null) PlaySlashEffect(first);
+        if (additional == null) return;
+        foreach (var cue in additional)
+        {
+            if (cue.effect == null) continue;
+            if (cue.delay <= 0f) PlaySlashEffect(cue.effect);
+            else StartCoroutine(PlaySlashEffectAfterDelay(cue.effect, cue.delay / AttackSpeed));
+        }
+    }
+
+    private System.Collections.IEnumerator PlaySlashEffectAfterDelay(ParticleSystem effect, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        if (combatMode && CanUseGameplay() && effect != null) PlaySlashEffect(effect);
+    }
+
+    private static void PlaySlashEffect(ParticleSystem effect)
+    {
+        // World-space particles keep the emitted slash in place even when the
+        // scene emitter is parented to the moving hand or player.
+        foreach (var system in effect.GetComponentsInChildren<ParticleSystem>(true))
+        {
+            var main = system.main;
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+        }
+        if (!effect.gameObject.activeSelf) effect.gameObject.SetActive(true);
+        effect.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        effect.Play(true);
+    }
+
+
+
 
     private void OnDrawGizmosSelected()
     {
