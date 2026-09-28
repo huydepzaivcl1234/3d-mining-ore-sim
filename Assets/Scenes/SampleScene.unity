@@ -112368,6 +112368,9 @@ MonoBehaviour:
   targetLayers:
     serializedVersion: 2
     m_Bits: 4294967295
+  slash1: {fileID: 0}
+  slash2: {fileID: 0}
+  slash3: {fileID: 0}
 --- !u!1 &8018340325426387316
 GameObject:
   m_ObjectHideFlags: 0
