@@ -35,15 +35,15 @@ MonoBehaviour:
   regenAmount: 1
   regenInterval: 10
   respawnSeconds: 10
-  jumpSfx: {fileID: 8300000, guid: 0f062bf8909197443b0ae295c32acbd0, type: 3}
-  jumpSfxVolume: 0.6
+  jumpSfx: {fileID: 8300000, guid: a6f741ac730dd6a4fb595ec6080c1551, type: 3}
+  jumpSfxVolume: 1
   attackSfx: {fileID: 8300000, guid: 0be390704418597499f913e81cfb2f72, type: 3}
   attackSfxVolume: 0.7
   showAttackArc: 1
   attackArcColor: {r: 0.3, g: 0.85, b: 1, a: 1}
   attackArcWidth: 0.08
   attackArcSeconds: 0.18
-  attackVfxPrefab: {fileID: 0}
+  attackVfxPrefab: {fileID: 5545173171955001552, guid: 7ac879c2caac1ca41b6c438e77d8b25d, type: 3}
   attackVfxLifetime: 2
   damage: 1
   attackRange: 1.75
