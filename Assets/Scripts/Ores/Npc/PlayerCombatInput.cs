@@ -179,11 +179,13 @@ public class PlayerCombatInput : MonoBehaviour
             animator.SetBool("CombatMode", enabled);
         if (HasParameter(drawWeaponParameter, AnimatorControllerParameterType.Trigger))
             animator.ResetTrigger(drawWeaponParameter);
-        if (HasParameter(sheathWeaponParameter, AnimatorControllerParameterType.Trigger))
-            animator.ResetTrigger(sheathWeaponParameter);
+        string sheathTrigger = HasParameter(sheathWeaponParameter, AnimatorControllerParameterType.Trigger)
+            ? sheathWeaponParameter : "ShealthWeapon";
+        if (HasParameter(sheathTrigger, AnimatorControllerParameterType.Trigger))
+            animator.ResetTrigger(sheathTrigger);
         if (changed)
         {
-            string trigger = enabled ? drawWeaponParameter : sheathWeaponParameter;
+            string trigger = enabled ? drawWeaponParameter : sheathTrigger;
             if (HasParameter(trigger, AnimatorControllerParameterType.Trigger)) animator.SetTrigger(trigger);
         }
         if (HasParameter("Attack", AnimatorControllerParameterType.Trigger)) animator.ResetTrigger("Attack");
