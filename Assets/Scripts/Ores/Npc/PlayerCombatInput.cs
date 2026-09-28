@@ -6,6 +6,10 @@ using UnityEngine.EventSystems;
 [DisallowMultipleComponent]
 public class PlayerCombatInput : MonoBehaviour
 {
+    private static readonly int CombatMoveState = Animator.StringToHash("Combat move");
+    private static readonly int FirstAttackState = Animator.StringToHash("combat_attack");
+    private static readonly int SecondAttackState = Animator.StringToHash("combat_attack2");
+    private static readonly int ArmedState = Animator.StringToHash("Combat");
     [SerializeField] private Animator animator;
     [Header("Input bindings - keyboard or mouse")]
     [SerializeField] private InputAction toggleCombat = new InputAction(
@@ -38,6 +42,9 @@ public class PlayerCombatInput : MonoBehaviour
     [SerializeField] private Vector3 hitOriginOffset = new Vector3(0f, 1f, 0f);
     [SerializeField] private LayerMask targetLayers = ~0;
     private bool wasAttacking;
+    private bool queuedAttack;
+    private int lastAttackStateHash;
+    private bool returningFromAttack;
     private MiningAudioManager feedbackAudio;
     private LineRenderer attackArc;
     private Material attackArcMaterial;
@@ -69,14 +76,12 @@ public class PlayerCombatInput : MonoBehaviour
         ClearAim();
         wasAttacking = false;
         hitApplied = false;
+        queuedAttack = false;
+        returningFromAttack = false;
+        lastAttackStateHash = 0;
         SetCombatMode(false);
         arcRemaining = 0f;
         if (attackArc != null) attackArc.enabled = false;
-        if (animator != null && animator.runtimeAnimatorController != null)
-        {
-            int layer = animator.GetLayerIndex("combat layer");
-            if (layer >= 0) animator.SetLayerWeight(layer, 0f);
-        }
     }
 
     private void LateUpdate()
@@ -99,26 +104,6 @@ public class PlayerCombatInput : MonoBehaviour
             attackArc.startColor = attackArc.endColor = color;
             attackArc.enabled = arcRemaining > 0f;
         }
-        if (animator == null || animator.runtimeAnimatorController == null) return;
-        int layer = animator.GetLayerIndex("combat layer");
-        if (layer < 0) return;
-        var current = animator.GetCurrentAnimatorStateInfo(layer);
-        bool attacking = current.IsName("Attack");
-        if (animator.IsInTransition(layer))
-            attacking |= animator.GetNextAnimatorStateInfo(layer).IsName("Attack");
-
-        // Leave locomotion's torso and arms untouched while travelling. The masked
-        // attack overlays it only during a strike; legs keep their running cycle.
-        bool idleCombat = animator.GetBool("CombatMode") && animator.GetFloat("Speed") < 0.1f;
-        int hitLayer = animator.GetLayerIndex("Hit Reaction");
-        bool reacting = hitLayer >= 0 &&
-            (animator.GetCurrentAnimatorStateInfo(hitLayer).IsName("HitReaction") ||
-             (animator.IsInTransition(hitLayer) && animator.GetNextAnimatorStateInfo(hitLayer).IsName("HitReaction")));
-        // CombatIdle must not hide the lower-priority hit reaction. Attack is
-        // still evaluated on its own layer and always has priority over Hit.
-        float target = attacking || (idleCombat && !reacting) ? 1f : 0f;
-        animator.SetLayerWeight(layer, Mathf.MoveTowards(animator.GetLayerWeight(layer),
-            target, Time.deltaTime / BlendSeconds));
     }
     private void OnDestroy()
     {
@@ -145,19 +130,42 @@ public class PlayerCombatInput : MonoBehaviour
             if (movement != null) movement.ExternalFacing = IsAimValid(aimedMonster);
         }
         if (animator == null || animator.runtimeAnimatorController == null) return;
-        int layer = animator.GetLayerIndex("combat layer");
+        int layer = animator.GetLayerIndex("Combat Layer");
         if (HasParameter("AttackSpeed", AnimatorControllerParameterType.Float)) animator.SetFloat("AttackSpeed", AttackSpeed);
         if (toggleCombat != null && toggleCombat.WasPressedThisFrame())
         {
             SetCombatMode(!combatMode);
         }
         if (layer >= 0) TrackAttack(layer);
-        if (!combatMode || attack == null || !attack.WasPressedThisFrame()) return;
-        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
-        if (HasParameter("Attack", AnimatorControllerParameterType.Trigger) &&
-            (layer < 0 || (!animator.IsInTransition(layer) &&
-            animator.GetCurrentAnimatorStateInfo(layer).IsName("CombatIdle"))))
-            animator.SetTrigger("Attack");
+        if (layer < 0 || !HasParameter("attack", AnimatorControllerParameterType.Trigger)) return;
+        bool pressed = attack != null && attack.WasPressedThisFrame() &&
+            (EventSystem.current == null || !EventSystem.current.IsPointerOverGameObject());
+        var state = animator.GetCurrentAnimatorStateInfo(layer);
+        bool swinging = IsAttackState(state);
+        if (combatMode && pressed && (swinging ||
+            (animator.IsInTransition(layer) && IsAttackState(animator.GetNextAnimatorStateInfo(layer)))))
+            queuedAttack = true;
+        if (swinging && !animator.IsInTransition(layer))
+        {
+            if (combatMode && queuedAttack && state.normalizedTime >= 0.7f)
+            {
+                queuedAttack = false;
+                animator.SetTrigger("attack");
+            }
+            else if (state.shortNameHash == FirstAttackState && !queuedAttack &&
+                     !returningFromAttack && state.normalizedTime >= 0.85f)
+            {
+                returningFromAttack = true;
+                if (HasParameter("Move", AnimatorControllerParameterType.Trigger)) animator.SetTrigger("Move");
+            }
+        }
+        int armsLayer = animator.GetLayerIndex("Arms Layer");
+        bool swordReady = armsLayer < 0 || (!animator.IsInTransition(armsLayer) &&
+            animator.GetCurrentAnimatorStateInfo(armsLayer).shortNameHash == ArmedState);
+        if (!combatMode || !swordReady || swinging || animator.IsInTransition(layer) ||
+            state.shortNameHash != CombatMoveState || (!pressed && !queuedAttack)) return;
+        queuedAttack = false;
+        animator.SetTrigger("attack");
     }
 
     private bool HasParameter(string name, AnimatorControllerParameterType type)
@@ -171,7 +179,7 @@ public class PlayerCombatInput : MonoBehaviour
     {
         bool changed = combatMode != enabled;
         combatMode = enabled;
-        if (!enabled) ClearAim();
+        if (!enabled) { ClearAim(); queuedAttack = false; }
         if (animator == null || animator.runtimeAnimatorController == null) return;
         if (HasParameter(drawWeaponParameter, AnimatorControllerParameterType.Bool))
             animator.SetBool(drawWeaponParameter, enabled);
@@ -188,7 +196,12 @@ public class PlayerCombatInput : MonoBehaviour
             string trigger = enabled ? drawWeaponParameter : sheathTrigger;
             if (HasParameter(trigger, AnimatorControllerParameterType.Trigger)) animator.SetTrigger(trigger);
         }
-        if (HasParameter("Attack", AnimatorControllerParameterType.Trigger)) animator.ResetTrigger("Attack");
+        if (HasParameter("attack", AnimatorControllerParameterType.Trigger)) animator.ResetTrigger("attack");
+        int combatLayer = animator.GetLayerIndex("Combat Layer");
+        if (!enabled && combatLayer >= 0 &&
+            animator.GetCurrentAnimatorStateInfo(combatLayer).shortNameHash == FirstAttackState &&
+            HasParameter("Move", AnimatorControllerParameterType.Trigger))
+            animator.SetTrigger("Move");
     }
 
     private bool IsAimValid(MushroomMonster monster) => monster != null &&
@@ -222,12 +235,13 @@ public class PlayerCombatInput : MonoBehaviour
         if (animator.IsInTransition(layer))
         {
             var next = animator.GetNextAnimatorStateInfo(layer);
-            if (next.IsName("Attack")) state = next;
+            if (IsAttackState(next)) state = next;
         }
-        bool active = combatMode && state.IsName("Attack");
-        if (active && !wasAttacking)
+        bool active = combatMode && IsAttackState(state);
+        if (active && (!wasAttacking || lastAttackStateHash != state.shortNameHash))
         {
             hitApplied = false;
+            returningFromAttack = false;
             if (feedbackAudio != null)
                 feedbackAudio.PlaySfx(Stats != null ? Stats.attackSfx : null,
                     Stats != null ? Stats.attackSfxVolume : 1f);
@@ -239,7 +253,12 @@ public class PlayerCombatInput : MonoBehaviour
             ApplyHit();
         }
         wasAttacking = active;
+        lastAttackStateHash = active ? state.shortNameHash : 0;
+        if (!active) returningFromAttack = false;
     }
+
+    private static bool IsAttackState(AnimatorStateInfo state) =>
+        state.shortNameHash == FirstAttackState || state.shortNameHash == SecondAttackState;
 
     private void ShowAttackEffect()
     {
