@@ -51,6 +51,9 @@ public class PlayerCombatInput : MonoBehaviour
     [SerializeField] private AudioClip slash3;
     private bool wasAttacking;
     private bool queuedAttack;
+    private int queuedAttackStateHash;
+    private float queuedAttackUntil;
+    private const float ComboBufferSeconds = 0.25f;
     private int lastAttackStateHash;
     private int lastAttackIndex = -1;
     private bool returningFromAttack;
@@ -85,6 +88,7 @@ public class PlayerCombatInput : MonoBehaviour
         wasAttacking = false;
         hitApplied = false;
         queuedAttack = false;
+        queuedAttackStateHash = 0;
         returningFromAttack = false;
         lastAttackStateHash = 0;
         SetCombatMode(false);
@@ -150,11 +154,20 @@ public class PlayerCombatInput : MonoBehaviour
             (EventSystem.current == null || !EventSystem.current.IsPointerOverGameObject());
         var state = animator.GetCurrentAnimatorStateInfo(layer);
         bool swinging = IsAttackState(state);
-        if (combatMode && pressed && (swinging ||
-            (animator.IsInTransition(layer) && IsAttackState(animator.GetNextAnimatorStateInfo(layer)))))
+        // Only a fresh click near the end of this swing may queue one follow-up.
+        // A click during a transition or long before the combo window must not
+        // become an extra attack after the player has released the button.
+        if (combatMode && pressed && swinging && !animator.IsInTransition(layer) &&
+            state.normalizedTime >= 0.55f && state.normalizedTime < 0.9f)
+        {
             queuedAttack = true;
+            queuedAttackStateHash = state.shortNameHash;
+            queuedAttackUntil = Time.time + ComboBufferSeconds;
+        }
         if (swinging && !animator.IsInTransition(layer))
         {
+            if (queuedAttack && (queuedAttackStateHash != state.shortNameHash ||
+                Time.time > queuedAttackUntil)) queuedAttack = false;
             if (combatMode && queuedAttack && state.normalizedTime >= 0.7f)
             {
                 queuedAttack = false;
@@ -176,13 +189,15 @@ public class PlayerCombatInput : MonoBehaviour
         bool swordReady = armsLayer < 0 || (!animator.IsInTransition(armsLayer) &&
             animator.GetCurrentAnimatorStateInfo(armsLayer).shortNameHash == ArmedState);
         if (!combatMode || !swordReady || swinging || animator.IsInTransition(layer) ||
-            state.shortNameHash != CombatMoveState || (!pressed && !queuedAttack)) return;
+            state.shortNameHash != CombatMoveState || !pressed) return;
         queuedAttack = false;
         PlayRandomAttack(layer);
     }
 
     private void PlayRandomAttack(int layer)
     {
+        queuedAttack = false;
+        queuedAttackStateHash = 0;
         int choice = Random.Range(0, AttackStates.Length);
         if (choice == lastAttackIndex)
             choice = (choice + Random.Range(1, AttackStates.Length)) % AttackStates.Length;
@@ -204,7 +219,7 @@ public class PlayerCombatInput : MonoBehaviour
     {
         bool changed = combatMode != enabled;
         combatMode = enabled;
-        if (!enabled) { ClearAim(); queuedAttack = false; }
+        if (!enabled) { ClearAim(); queuedAttack = false; queuedAttackStateHash = 0; }
         if (animator == null || animator.runtimeAnimatorController == null) return;
         if (HasParameter(drawWeaponParameter, AnimatorControllerParameterType.Bool))
             animator.SetBool(drawWeaponParameter, enabled);
@@ -275,7 +290,12 @@ public class PlayerCombatInput : MonoBehaviour
         }
         wasAttacking = active;
         lastAttackStateHash = active ? state.shortNameHash : 0;
-        if (!active) returningFromAttack = false;
+        if (!active)
+        {
+            returningFromAttack = false;
+            queuedAttack = false;
+            queuedAttackStateHash = 0;
+        }
     }
 
     private static bool IsAttackState(AnimatorStateInfo state) =>
@@ -283,7 +303,7 @@ public class PlayerCombatInput : MonoBehaviour
         state.shortNameHash == ThirdAttackState;
 
     // Called by events on the imported sword clips, exactly when the blade reaches the target.
-    public void OnSwordStrikeDown() => ApplyAnimationHit(FirstAttackState, false);
+    public void OnSwordStrikeDown() => ApplyAnimationHit(FirstAttackState, true);
     public void OnSwordSweepUp() => ApplyAnimationHit(SecondAttackState, true);
 
     private void ApplyAnimationHit(int expectedState, bool sweep)
@@ -309,8 +329,16 @@ public class PlayerCombatInput : MonoBehaviour
         GameObject prefab = data.attackVfxPrefab;
         if (prefab != null)
         {
-            SpawnEffect(prefab, origin + StrikeForward * AttackRange * 0.6f,
-                Quaternion.LookRotation(StrikeForward, Vector3.up));
+            // The pack's slash is authored relative to the character root, not
+            // as a forward-facing effect at the end of the damage range.
+            var slash = Instantiate(prefab, transform);
+            slash.transform.localPosition = data.slashVfxLocalPosition;
+            slash.transform.localRotation = Quaternion.Euler(data.slashVfxLocalEuler);
+            // The vendor slash prefab embeds an Impact child. A miss must not
+            // play that particle; real impacts are spawned by DamageTarget.
+            var embeddedImpact = slash.transform.Find("Impact");
+            if (embeddedImpact != null) embeddedImpact.gameObject.SetActive(false);
+            PlayAndDestroyEffect(slash);
             return;
         }
         if (!data.showAttackArc) return;
@@ -406,16 +434,31 @@ public class PlayerCombatInput : MonoBehaviour
 
     private void DamageTarget(MiningCharacterHealth target, Vector3 point)
     {
-        if (Damage <= 0) return;
+        if (Damage <= 0 || target == null || target.Health <= 0f) return;
         target.ApplyDamage(Damage);
+        var impactPrefab = Stats != null ? Stats.attackImpactVfxPrefab : null;
+        if (impactPrefab == null) return;
+        Vector3 towardPlayer = transform.position - point;
+        towardPlayer.y = 0f;
+        if (towardPlayer.sqrMagnitude < 0.0001f) towardPlayer = -StrikeForward;
+        SpawnEffect(impactPrefab, point, Quaternion.LookRotation(towardPlayer, Vector3.up));
     }
 
     private GameObject SpawnEffect(GameObject prefab, Vector3 position, Quaternion rotation)
     {
         var effect = Instantiate(prefab, position, rotation);
+        PlayAndDestroyEffect(effect);
+        return effect;
+    }
+
+    private void PlayAndDestroyEffect(GameObject effect)
+    {
+        // The imported Free Slash VFX prefab disables Play On Awake on its
+        // particle systems; explicitly start it at the animation contact event.
+        var particles = effect.GetComponent<ParticleSystem>();
+        if (particles != null) particles.Play(true);
         float lifetime = Stats != null ? Stats.attackVfxLifetime : 2f;
         Destroy(effect, Mathf.Max(0.1f, lifetime));
-        return effect;
     }
 
     private void OnDrawGizmosSelected()

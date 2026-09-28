@@ -46,6 +46,11 @@ namespace MiningSimulator.Ores
         [Min(0.03f)] public float attackArcSeconds = 0.18f;
         [Tooltip("Optional authored effect, spawned at the attack contact time. Leave empty to use the built-in arc.")]
         public GameObject attackVfxPrefab;
+        [Tooltip("Spawned only on an enemy actually damaged by the sword.")]
+        public GameObject attackImpactVfxPrefab;
+        [Tooltip("Slash VFX anchor relative to the player, matching the source pack's demo pose.")]
+        public Vector3 slashVfxLocalPosition = new Vector3(0.09f, 1.172f, 0.626f);
+        public Vector3 slashVfxLocalEuler = new Vector3(-40.458f, -113.622f, -144.679f);
         [Min(0.1f)] public float attackVfxLifetime = 2f;
         [Header("Combat stats")]
         [Min(0)] public float damage = 1;
