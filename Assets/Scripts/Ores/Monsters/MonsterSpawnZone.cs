@@ -24,6 +24,10 @@ namespace MiningSimulator.Ores
         [SerializeField] private MiningItemSystem inventory;
         private MiningPlayerStats playerStats;
         private OreSpawner oreSpawner;
+        private MiningAudioManager audioManager;
+        private AudioSource zoneAmbience;
+        private bool playerInside;
+        private float zoneVolumeVelocity;
         private readonly List<MushroomMonster> alive = new();
         private float timer;
         public int AliveCount => alive.Count;
@@ -46,6 +50,18 @@ namespace MiningSimulator.Ores
             if (wallet == null) wallet = FindAnyObjectByType<PlayerWallet>();
             if (inventory == null) inventory = FindAnyObjectByType<MiningItemSystem>();
             oreSpawner = FindAnyObjectByType<OreSpawner>();
+            audioManager = FindAnyObjectByType<MiningAudioManager>();
+            if (audioManager != null && audioManager.AudioData != null &&
+                audioManager.AudioData.MonsterZoneLoop != null)
+            {
+                zoneAmbience = gameObject.AddComponent<AudioSource>();
+                zoneAmbience.playOnAwake = false;
+                zoneAmbience.loop = true;
+                zoneAmbience.spatialBlend = 0f;
+                zoneAmbience.volume = 0f;
+                zoneAmbience.clip = audioManager.AudioData.MonsterZoneLoop;
+                zoneAmbience.outputAudioMixerGroup = audioManager.AudioData.SfxMixerGroup;
+            }
             for (int i = 0; i < Mathf.Min(initialCount, maximumAlive); i++) SpawnOne();
         }
         public void GrantRewards(MonsterRewardData data, Vector3 origin, float goldMultiplier = 1)
@@ -68,16 +84,41 @@ namespace MiningSimulator.Ores
                 int min = Mathf.Clamp(drop.minimumAmount, 1, 10000);
                 int max = Mathf.Clamp(drop.maximumAmount, min, 10000);
                 int count = UnityEngine.Random.Range(min, max + 1);
-                MonsterItemPickup.Spawn(data, drop, count, origin, player, inventory, groundLayers);
+                MonsterItemPickup.Spawn(data, drop, count, origin, player, inventory,
+                    groundLayers, audioManager);
             }
         }
         private void Update()
         {
+            UpdateZoneAudio();
             alive.RemoveAll(m => m == null || m.Health.Health <= 0f);
             timer += Time.deltaTime;
             if (timer < Mathf.Max(0.1f, secondsPerSpawn)) return;
             timer = 0f;
             if (alive.Count < maximumAlive) SpawnOne();
+        }
+        private void UpdateZoneAudio()
+        {
+            bool inside = player != null && player.Health > 0f && Contains(player.transform.position);
+            if (inside && !playerInside && audioManager != null && audioManager.AudioData != null)
+                audioManager.PlaySfx(audioManager.AudioData.MonsterZoneEnterSfx);
+            playerInside = inside;
+            if (zoneAmbience == null || audioManager == null || audioManager.AudioData == null) return;
+            float targetVolume = inside && !audioManager.SfxMuted
+                ? audioManager.AudioData.SfxVolume * audioManager.MasterVolume * audioManager.SfxVolume
+                : 0f;
+            if (targetVolume > 0f && !zoneAmbience.isPlaying) zoneAmbience.Play();
+            zoneAmbience.volume = Mathf.SmoothDamp(zoneAmbience.volume, targetVolume,
+                ref zoneVolumeVelocity, audioManager.AudioData.MonsterZoneFadeSeconds,
+                Mathf.Infinity, Time.deltaTime);
+            if (targetVolume <= 0f && zoneAmbience.volume < 0.005f && zoneAmbience.isPlaying)
+                zoneAmbience.Stop();
+        }
+        private void OnDisable()
+        {
+            if (zoneAmbience != null) zoneAmbience.Stop();
+            playerInside = false;
+            zoneVolumeVelocity = 0f;
         }
         private void SpawnOne()
         {

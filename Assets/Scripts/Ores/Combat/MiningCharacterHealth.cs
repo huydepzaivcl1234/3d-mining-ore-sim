@@ -22,6 +22,11 @@ namespace MiningSimulator.Ores
         private PlayerCombatInput combatInput;
         private bool displayedCombatMode;
         private float health;
+        private float healingBonusPercent;
+        private float burnDamagePerTick;
+        private float burnTickSeconds;
+        private float burnRemaining;
+        private float burnTimer;
         public float Health => health;
         public Transform HealthBar => healthBar;
         private MiningPlayerStatsData Stats => MiningPlayerStats.For(this);
@@ -42,21 +47,55 @@ namespace MiningSimulator.Ores
         {
             health = MaxHealth;
             regenTimer = 0f;
+            ClearBurn();
             Refresh(true);
         }
         public void ApplyDamage(float amount)
         {
-            if (amount <= 0f || health <= 0f) return;
+            DealDamage(amount);
+        }
+
+        // The actual health removed drives life steal; overkill never heals the attacker.
+        public float DealDamage(float amount)
+        {
+            if (amount <= 0f || health <= 0f) return 0f;
+            float dealt = Mathf.Min(health, amount);
             health = Mathf.Max(0f, health - amount);
             Refresh(false, UpdateAnim.Damage);
             Damaged?.Invoke();
-            if (health <= 0f) Died?.Invoke();
+            if (health <= 0f)
+            {
+                ClearBurn();
+                Died?.Invoke();
+            }
+            return dealt;
+        }
+
+        public void ConfigureHealingBonus(float percent) => healingBonusPercent = Mathf.Max(0f, percent);
+
+        // Repeated hits refresh the duration; only the strongest DPS remains active.
+        public void ApplyBurn(float damagePerTick, float tickSeconds, float duration)
+        {
+            if (health <= 0f || damagePerTick <= 0f || tickSeconds <= 0f || duration <= 0f) return;
+            if (burnRemaining <= 0f || damagePerTick / tickSeconds >= burnDamagePerTick / burnTickSeconds)
+            {
+                burnDamagePerTick = damagePerTick;
+                burnTickSeconds = tickSeconds;
+                burnTimer = 0f;
+            }
+            burnRemaining = Mathf.Max(burnRemaining, duration);
+        }
+
+        private void ClearBurn()
+        {
+            burnDamagePerTick = burnTickSeconds = burnRemaining = burnTimer = 0f;
         }
 
         public void Heal(float amount)
         {
             if (amount <= 0f || health <= 0f) return;
-            health = Mathf.Min(MaxHealth, health + amount);
+            float bonus = Stats != null ? Stats.healingBonusPercent : healingBonusPercent;
+            health = Mathf.Min(MaxHealth, health + amount * (1f + Mathf.Max(0f, bonus) * 0.01f));
             Refresh(false, UpdateAnim.Heal);
         }
 
@@ -70,6 +109,18 @@ namespace MiningSimulator.Ores
 
         private void Update()
         {
+            if (burnRemaining > 0f && health > 0f)
+            {
+                float activeTime = Mathf.Min(Time.deltaTime, burnRemaining);
+                burnRemaining -= activeTime;
+                burnTimer += activeTime;
+                while (burnTickSeconds > 0f && burnTimer >= burnTickSeconds && health > 0f)
+                {
+                    burnTimer -= burnTickSeconds;
+                    DealDamage(burnDamagePerTick);
+                }
+                if (burnRemaining <= 0f) ClearBurn();
+            }
             if (initializedMaxHealth != MaxHealth)
             {
                 if (health > 0) health = Mathf.Clamp(health + MaxHealth - initializedMaxHealth, 0, MaxHealth);

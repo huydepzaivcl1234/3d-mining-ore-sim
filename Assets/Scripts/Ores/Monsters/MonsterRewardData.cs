@@ -34,6 +34,12 @@ namespace MiningSimulator.Ores
         public float GoldMultiplier(int level) => 1 + Mathf.Max(0, goldGrowthPerLevel) * (Mathf.Max(1, level) - 1);
         [Min(0)] public float experience = 25;
         [Min(0)] public float gold = 50;
+        [Header("Monster attack / healing effects (0 disables an effect)")]
+        [Min(0)] public float burnDamagePerTick;
+        [Min(0.1f)] public float burnTickSeconds = 1f;
+        [Min(0)] public float burnDurationSeconds;
+        [Range(0f, 100f)] public float lifeStealPercent;
+        [Min(0)] public float healingBonusPercent;
         public List<MonsterItemDrop> drops = new();
         [Header("Icon drop motion")]
         [Min(0.01f)] public float iconSize = 0.45f;

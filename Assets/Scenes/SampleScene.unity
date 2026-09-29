@@ -14350,6 +14350,18 @@ MonoBehaviour:
   followDistance: 4.5
   followPitch: 18
   rotateOnlyWhileRightMouseHeld: 1
+  adaptiveCombatFraming: 1
+  reduceMotion: 1
+  explorationDistance: 4
+  combatDistance: 7
+  explorationFov: 60
+  combatFov: 70
+  combatPitchOffset: 6
+  framingSmoothTime: 0.35
+  nearbyEnemyRadius: 9
+  enemyLayers:
+    serializedVersion: 2
+    m_Bits: 64
   collisionLayers:
     serializedVersion: 2
     m_Bits: 4294967295
@@ -54744,6 +54756,18 @@ MonoBehaviour:
   followDistance: 4.5
   followPitch: 18
   rotateOnlyWhileRightMouseHeld: 1
+  adaptiveCombatFraming: 1
+  reduceMotion: 1
+  explorationDistance: 4
+  combatDistance: 7
+  explorationFov: 60
+  combatFov: 70
+  combatPitchOffset: 6
+  framingSmoothTime: 0.35
+  nearbyEnemyRadius: 9
+  enemyLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
   collisionLayers:
     serializedVersion: 2
     m_Bits: 4294967295
@@ -98811,7 +98835,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 101
   m_MaskInteraction: 1
-  m_Sprite: {fileID: 21300000, guid: c5c71ce0da0fdfe47b0fb9d64f31c43e, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 6d3123e5deabf6a4e84af188f2756eb6, type: 3}
   m_Color: {r: 1, g: 0.2, b: 0.20784314, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -99909,12 +99933,12 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 100
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 21300000, guid: 34ba8c01ac70d1c418c6a92d71972fc9, type: 3}
+  m_Sprite: {fileID: 1254826870, guid: 0969375c3239c4249a6e5a59042a5f20, type: 3}
   m_Color: {r: 0.30980393, g: 0.29803923, b: 0.29803923, a: 0.5019608}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 0.95, y: 1}
+  m_Size: {x: 4, y: 0.4}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -106183,12 +106207,12 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 102
   m_MaskInteraction: 1
-  m_Sprite: {fileID: 21300000, guid: c5c71ce0da0fdfe47b0fb9d64f31c43e, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 6d3123e5deabf6a4e84af188f2756eb6, type: 3}
   m_Color: {r: 1, g: 0.2, b: 0.20784314, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 0.95, y: 1}
+  m_Size: {x: 4, y: 0.4}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -112600,6 +112624,8 @@ MonoBehaviour:
   sheathWeaponParameter: SheathWeapon
   aimRange: 15
   aimTurnSpeed: 720
+  softAimRadius: 8
+  softAimDuration: 0.15
   damage: 1
   attackRange: 1.75
   attackAngle: 100

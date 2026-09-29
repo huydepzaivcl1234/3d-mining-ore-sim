@@ -10,18 +10,22 @@ namespace MiningSimulator.Ores
         private int amount;
         private MiningItemSystem inventory;
         private MiningCharacterHealth player;
+        private MiningAudioManager audio;
         private Vector3 velocity;
         private float groundY, landedTime, pullSpeed;
         private bool landed;
         private Camera view;
         public static void Spawn(MonsterRewardData settings, MonsterItemDrop drop, int count,
-            Vector3 origin, MiningCharacterHealth player, MiningItemSystem inventory, LayerMask groundLayers)
+            Vector3 origin, MiningCharacterHealth player, MiningItemSystem inventory,
+            LayerMask groundLayers, MiningAudioManager audio)
         {
             var obj = new GameObject("Monster Drop " + drop.item.name);
             obj.transform.position = origin;
             var pickup = obj.AddComponent<MonsterItemPickup>();
             pickup.settings = settings; pickup.item = drop.item; pickup.amount = count;
-            pickup.player = player; pickup.inventory = inventory;
+            pickup.player = player; pickup.inventory = inventory; pickup.audio = audio;
+            if (audio != null && audio.AudioData != null)
+                audio.PlaySfx(audio.AudioData.MonsterDropSfx);
             Vector2 direction = Random.insideUnitCircle.normalized;
             pickup.velocity = new Vector3(direction.x * settings.launchOutSpeed, settings.launchUpSpeed, direction.y * settings.launchOutSpeed);
             pickup.groundY = origin.y - 0.6f;
@@ -83,7 +87,12 @@ namespace MiningSimulator.Ores
             if ((target - transform.position).sqrMagnitude > settings.attractionRadius * settings.attractionRadius) return;
             pullSpeed += Mathf.Max(0, settings.attractionAcceleration) * Time.deltaTime;
             transform.position = Vector3.MoveTowards(transform.position, target, pullSpeed * Time.deltaTime);
-            if ((target - transform.position).sqrMagnitude < 0.15f * 0.15f && inventory.TryAddItem(item, amount)) Destroy(gameObject);
+            if ((target - transform.position).sqrMagnitude < 0.15f * 0.15f && inventory.TryAddItem(item, amount))
+            {
+                if (audio != null && audio.AudioData != null)
+                    audio.PlaySfx(audio.AudioData.MonsterLootSfx);
+                Destroy(gameObject);
+            }
         }
         private void Land()
         {

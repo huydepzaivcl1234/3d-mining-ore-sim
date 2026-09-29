@@ -50,6 +50,12 @@ namespace MiningSimulator.Ores
         [Min(0.1f)] public float impactVfxLifetime = 2f;
         [Header("Combat stats")]
         [Min(0)] public float damage = 1;
+        [Header("Weapon effects (0 disables an effect)")]
+        [Min(0)] public float burnDamagePerTick;
+        [Min(0.1f)] public float burnTickSeconds = 1f;
+        [Min(0)] public float burnDurationSeconds;
+        [Range(0f, 100f)] public float lifeStealPercent;
+        [Min(0)] public float healingBonusPercent;
         [Min(0.1f)] public float attackRange = 1.75f;
         [Range(1, 180)] public float attackAngle = 100;
         [Tooltip("Animation playback multiplier, not attacks per second.")]
@@ -77,6 +83,11 @@ namespace MiningSimulator.Ores
             regenInterval = Mathf.Max(0.1f, regenInterval);
             respawnSeconds = Mathf.Max(1, respawnSeconds);
             damage = Mathf.Max(0, damage);
+            burnDamagePerTick = Mathf.Max(0, burnDamagePerTick);
+            burnTickSeconds = Mathf.Max(0.1f, burnTickSeconds);
+            burnDurationSeconds = Mathf.Max(0, burnDurationSeconds);
+            lifeStealPercent = Mathf.Clamp(lifeStealPercent, 0, 100);
+            healingBonusPercent = Mathf.Max(0, healingBonusPercent);
             attackRange = Mathf.Max(0.1f, attackRange);
             attackAngle = Mathf.Clamp(attackAngle, 1, 180);
             attackSpeed = Mathf.Max(0.1f, attackSpeed);

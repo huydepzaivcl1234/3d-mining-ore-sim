@@ -30,6 +30,13 @@ public class PlayerCombatInput : MonoBehaviour
     public bool IsCombatMode => combatMode;
     [Min(0.1f), SerializeField] private float aimRange = 15f;
     [Min(0f), SerializeField] private float aimTurnSpeed = 720f;
+    [Header("Soft aim on attack (does not control the camera)")]
+    [Min(0.1f), SerializeField] private float softAimRadius = 8f;
+    [Min(0.01f), SerializeField] private float softAimDuration = 0.15f;
+    private readonly Collider[] softAimHits = new Collider[64];
+    private bool softAimActive;
+    private float softAimElapsed;
+    private Quaternion softAimStart, softAimEnd;
     private MushroomMonster aimedMonster;
     private StarterAssets.ThirdPersonController movement;
     public MushroomMonster AimedMonster => aimedMonster;
@@ -107,16 +114,21 @@ public class PlayerCombatInput : MonoBehaviour
 
     private void LateUpdate()
     {
-        if (CanUseGameplay() && IsAimValid(aimedMonster))
+        if (!CanUseGameplay())
         {
-            Vector3 direction = aimedMonster.transform.position - transform.position;
-            direction.y = 0f;
-            if (movement != null) movement.ExternalFacing = true;
-            if (direction.sqrMagnitude > 0.0001f)
-                transform.rotation = Quaternion.RotateTowards(transform.rotation,
-                    Quaternion.LookRotation(direction), aimTurnSpeed * Time.deltaTime);
+            ClearAim();
+            return;
         }
-        else ClearAim();
+        if (aimedMonster != null && !IsAimValid(aimedMonster)) aimedMonster = null;
+        if (!softAimActive) return;
+        softAimElapsed += Time.deltaTime;
+        float angle = Quaternion.Angle(softAimStart, softAimEnd);
+        float progress = Mathf.Clamp01(softAimElapsed / Mathf.Max(0.01f, softAimDuration));
+        if (angle > 0.01f)
+            progress = Mathf.Min(progress, Mathf.Clamp01(aimTurnSpeed * softAimElapsed / angle));
+        transform.rotation = Quaternion.Slerp(softAimStart, softAimEnd, progress);
+        if (progress < 1f) return;
+        softAimActive = false;
     }
     private void OnDestroy()
     {
@@ -139,7 +151,6 @@ public class PlayerCombatInput : MonoBehaviour
         {
             if (IsAimValid(aimedMonster)) ClearAim();
             else aimedMonster = FindNearestMonster();
-            if (movement != null) movement.ExternalFacing = IsAimValid(aimedMonster);
         }
         if (animator == null || animator.runtimeAnimatorController == null) return;
         int layer = animator.GetLayerIndex(CombatLayerName);
@@ -198,6 +209,7 @@ public class PlayerCombatInput : MonoBehaviour
         queuedAttackStateHash = 0;
         hitApplied = false;
         returningFromAttack = false;
+        BeginSoftAim();
         animator.ResetTrigger("attack");
         animator.CrossFadeInFixedTime(AttackStates[index], 0.08f, layer, 0f);
     }
@@ -257,9 +269,52 @@ public class PlayerCombatInput : MonoBehaviour
         return nearest;
     }
 
+    private void BeginSoftAim()
+    {
+        MushroomMonster best = IsAimValid(aimedMonster) ? aimedMonster : FindBestSoftAimTarget();
+        if (best == null) return;
+        Vector3 direction = best.transform.position - transform.position;
+        direction.y = 0f;
+        if (direction.sqrMagnitude < 0.0001f) return;
+        softAimStart = transform.rotation;
+        softAimEnd = Quaternion.LookRotation(direction);
+        softAimElapsed = 0f;
+        softAimActive = true;
+        if (movement != null) movement.ExternalFacing = true;
+    }
+
+    private MushroomMonster FindBestSoftAimTarget()
+    {
+        Camera view = Camera.main;
+        if (view == null) return null;
+        int count = Physics.OverlapSphereNonAlloc(transform.position, softAimRadius,
+            softAimHits, targetLayers, QueryTriggerInteraction.Ignore);
+        MushroomMonster best = null;
+        float bestScore = float.NegativeInfinity;
+        for (int i = 0; i < count; i++)
+        {
+            var monster = softAimHits[i] != null
+                ? softAimHits[i].GetComponentInParent<MushroomMonster>() : null;
+            if (!IsAimValid(monster)) continue;
+            Vector3 direction = monster.transform.position - transform.position;
+            direction.y = 0f;
+            if (direction.sqrMagnitude < 0.0001f) continue;
+            Vector3 viewport = view.WorldToViewportPoint(monster.transform.position + Vector3.up);
+            if (viewport.z <= 0f) continue;
+            float screenDistance = (new Vector2(viewport.x - 0.5f, viewport.y - 0.5f)).sqrMagnitude;
+            float facing = Vector3.Dot(transform.forward, direction.normalized);
+            float score = -screenDistance * 2f + facing * 0.3f;
+            if (score <= bestScore) continue;
+            bestScore = score;
+            best = monster;
+        }
+        return best;
+    }
+
     private void ClearAim()
     {
         aimedMonster = null;
+        softAimActive = false;
         if (movement != null) movement.ExternalFacing = false;
     }
 
@@ -286,6 +341,7 @@ public class PlayerCombatInput : MonoBehaviour
         lastAttackStateHash = active ? state.shortNameHash : 0;
         if (!active)
         {
+            if (movement != null && !softAimActive) movement.ExternalFacing = false;
             returningFromAttack = false;
             queuedAttack = false;
             queuedAttackStateHash = 0;
@@ -375,7 +431,14 @@ public class PlayerCombatInput : MonoBehaviour
     private void DamageTarget(MiningCharacterHealth target, Vector3 point)
     {
         if (Damage <= 0 || target == null || target.Health <= 0f) return;
-        target.ApplyDamage(Damage);
+        float dealt = target.DealDamage(Damage);
+        if (dealt <= 0f) return;
+        if (Stats != null)
+        {
+            if (ownHealth != null && ownHealth.Health > 0f)
+                ownHealth.Heal(dealt * Mathf.Clamp(Stats.lifeStealPercent, 0f, 100f) * 0.01f);
+            target.ApplyBurn(Stats.burnDamagePerTick, Stats.burnTickSeconds, Stats.burnDurationSeconds);
+        }
         var impactPrefab = Stats != null ? Stats.attackImpactVfxPrefab : null;
         if (impactPrefab == null) return;
         Vector3 towardPlayer = transform.position - point;

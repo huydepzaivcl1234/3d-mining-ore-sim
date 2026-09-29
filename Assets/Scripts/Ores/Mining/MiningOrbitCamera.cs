@@ -19,6 +19,20 @@ namespace MiningSimulator.Ores
         [Range(-70f, 80f), SerializeField] private float followPitch = 18f;
         [SerializeField] private bool rotateOnlyWhileRightMouseHeld = true;
 
+        [Header("Adaptive combat framing")]
+        [SerializeField] private bool adaptiveCombatFraming = true;
+        [Tooltip("Disable reward camera shake for players sensitive to camera motion.")]
+        [SerializeField] private bool reduceMotion = true;
+        [Min(0.5f), SerializeField] private float explorationDistance = 4f;
+        [Min(0.5f), SerializeField] private float combatDistance = 7f;
+        [Range(1f, 179f), SerializeField] private float explorationFov = 60f;
+        [Range(1f, 179f), SerializeField] private float combatFov = 70f;
+        [Range(0f, 30f), SerializeField] private float combatPitchOffset = 6f;
+        [Min(0.01f), SerializeField] private float framingSmoothTime = 0.35f;
+        [Min(0.1f), SerializeField] private float nearbyEnemyRadius = 9f;
+        [Tooltip("Set this to the Enemy layer when your monsters use it. Only MushroomMonster colliders count.")]
+        [SerializeField] private LayerMask enemyLayers = ~0;
+
         [Header("Collision")]
         [Tooltip("Static world layers that stop the camera body. The focus point is not a collider.")]
         [SerializeField] private LayerMask collisionLayers = ~0;
@@ -34,6 +48,17 @@ namespace MiningSimulator.Ores
         private float distance;
         private float yaw;
         private float pitch;
+        private float zoomOffset;
+        private float distanceVelocity;
+        private float fovVelocity;
+        private float pitchOffsetVelocity;
+        private float currentPitchOffset;
+        private float unobstructedDistance;
+        private float obstructionReturnVelocity;
+        private float enemyScanAt;
+        private bool enemyNearby;
+        private readonly Collider[] nearbyEnemies = new Collider[64];
+        private PlayerCombatInput combatInput;
         private bool inputLocked;
         private bool cinematicOverride;
         private Vector3 resolvedCameraPosition;
@@ -65,6 +90,7 @@ namespace MiningSimulator.Ores
                 pitch = followPitch;
                 distance = followDistance;
                 playerInput = followTarget.GetComponentInChildren<PlayerInput>(true);
+                combatInput = followTarget.GetComponent<PlayerCombatInput>();
             }
         }
 
@@ -122,7 +148,9 @@ namespace MiningSimulator.Ores
             if (followTarget != null)
                 focusPoint = followTarget.position + followOffset;
 
-            Quaternion rotation = Quaternion.Euler(pitch, yaw, 0f);
+            UpdateCombatFraming();
+
+            Quaternion rotation = Quaternion.Euler(EffectivePitch, yaw, 0f);
             Vector3 desiredPosition = focusPoint - rotation * Vector3.forward * distance;
             if (shakeEnvelope > 0f)
             {
@@ -138,6 +166,15 @@ namespace MiningSimulator.Ores
             if (followTarget != null)
             {
                 position = ResolveFollowLineOfSight(position);
+                Vector3 fromFocus = position - focusPoint;
+                float safeDistance = fromFocus.magnitude;
+                if (unobstructedDistance <= 0f || safeDistance < unobstructedDistance)
+                    unobstructedDistance = safeDistance;
+                else
+                    unobstructedDistance = Mathf.SmoothDamp(unobstructedDistance, safeDistance,
+                        ref obstructionReturnVelocity, 0.25f, Mathf.Infinity, Time.deltaTime);
+                if (safeDistance > 0.001f)
+                    position = focusPoint + fromFocus * (unobstructedDistance / safeDistance);
                 resolvedCameraPosition = position;
             }
             controlledCamera.transform.SetPositionAndRotation(position, rotation);
@@ -145,7 +182,7 @@ namespace MiningSimulator.Ores
 
         public void PlayRewardShake(float strength, float duration, float frequency)
         {
-            if (strength <= 0f || duration <= 0f)
+            if (reduceMotion || strength <= 0f || duration <= 0f)
             {
                 return;
             }
@@ -174,6 +211,7 @@ namespace MiningSimulator.Ores
             shakeEnvelope = 0f;
             cinematicOverride = false;
             hasResolvedCameraPosition = false;
+            unobstructedDistance = 0f;
         }
 
         private void OnDestroy()
@@ -187,6 +225,7 @@ namespace MiningSimulator.Ores
         }
 
         public Camera ControlledCamera => controlledCamera;
+        private float EffectivePitch => Mathf.Clamp(pitch + currentPitchOffset, -85f, 85f);
         public Transform FollowTarget => followTarget;
         public Vector3 FocusPoint => focusPoint;
         public Vector3 DefaultFocusPoint => gameData != null
@@ -198,6 +237,7 @@ namespace MiningSimulator.Ores
         {
             cinematicOverride = true;
             hasResolvedCameraPosition = false;
+            unobstructedDistance = 0f;
         }
 
         public void SetCinematicPose(Vector3 position, Quaternion rotation, float fieldOfView)
@@ -220,8 +260,43 @@ namespace MiningSimulator.Ores
         public void GetGameplayPose(Vector3 targetFocus, out Vector3 position,
             out Quaternion rotation)
         {
-            rotation = Quaternion.Euler(pitch, yaw, 0f);
+            rotation = Quaternion.Euler(EffectivePitch, yaw, 0f);
             position = targetFocus - rotation * Vector3.forward * distance;
+        }
+
+        private void UpdateCombatFraming()
+        {
+            if (!adaptiveCombatFraming || followTarget == null) return;
+            if (Time.time >= enemyScanAt)
+            {
+                enemyScanAt = Time.time + 0.15f;
+                enemyNearby = false;
+                int count = Physics.OverlapSphereNonAlloc(followTarget.position,
+                    nearbyEnemyRadius, nearbyEnemies, enemyLayers,
+                    QueryTriggerInteraction.Ignore);
+                for (int i = 0; i < count; i++)
+                {
+                    var monster = nearbyEnemies[i] != null
+                        ? nearbyEnemies[i].GetComponentInParent<MushroomMonster>() : null;
+                    if (monster == null || monster.Health == null || monster.Health.Health <= 0f) continue;
+                    enemyNearby = true;
+                    break;
+                }
+            }
+
+            bool combat = enemyNearby || (combatInput != null && combatInput.IsCombatMode);
+            float smooth = Mathf.Max(0.01f, framingSmoothTime);
+            float baseDistance = combat ? combatDistance : explorationDistance;
+            float targetDistance = Mathf.Clamp(baseDistance + zoomOffset,
+                gameData.CameraMinimumDistance, gameData.CameraMaximumDistance);
+            distance = Mathf.SmoothDamp(distance, targetDistance, ref distanceVelocity,
+                smooth, Mathf.Infinity, Time.deltaTime);
+            currentPitchOffset = Mathf.SmoothDamp(currentPitchOffset,
+                combat ? combatPitchOffset : 0f, ref pitchOffsetVelocity,
+                smooth, Mathf.Infinity, Time.deltaTime);
+            controlledCamera.fieldOfView = Mathf.SmoothDamp(controlledCamera.fieldOfView,
+                combat ? combatFov : explorationFov, ref fovVelocity,
+                smooth, Mathf.Infinity, Time.deltaTime);
         }
 
         public void EndCinematicOverride(Vector3 targetFocus)
@@ -229,6 +304,7 @@ namespace MiningSimulator.Ores
             focusPoint = targetFocus;
             cinematicOverride = false;
             hasResolvedCameraPosition = false;
+            unobstructedDistance = 0f;
         }
 
         private static float SampleShake(float time, float seed)
@@ -291,8 +367,13 @@ namespace MiningSimulator.Ores
             }
 
             float scroll = mouse.scroll.ReadValue().y;
-            distance = Mathf.Clamp(distance - scroll * gameData.CameraZoomSpeed,
-                gameData.CameraMinimumDistance, gameData.CameraMaximumDistance);
+            if (adaptiveCombatFraming && followTarget != null)
+                zoomOffset = Mathf.Clamp(zoomOffset - scroll * gameData.CameraZoomSpeed,
+                    gameData.CameraMinimumDistance - combatDistance,
+                    gameData.CameraMaximumDistance - explorationDistance);
+            else
+                distance = Mathf.Clamp(distance - scroll * gameData.CameraZoomSpeed,
+                    gameData.CameraMinimumDistance, gameData.CameraMaximumDistance);
         }
 
         private static float ReadAxis(KeyControl negative, KeyControl positive)
@@ -522,6 +603,10 @@ namespace MiningSimulator.Ores
             collisionRadius = Mathf.Max(0.01f, collisionRadius);
             collisionPadding = Mathf.Max(0f, collisionPadding);
             followDistance = Mathf.Max(0.5f, followDistance);
+            explorationDistance = Mathf.Max(0.5f, explorationDistance);
+            combatDistance = Mathf.Max(0.5f, combatDistance);
+            nearbyEnemyRadius = Mathf.Max(0.1f, nearbyEnemyRadius);
+            framingSmoothTime = Mathf.Max(0.01f, framingSmoothTime);
             if (ownsRuntimeCollider && collisionEye != null)
             {
                 collisionEye.radius = collisionRadius;

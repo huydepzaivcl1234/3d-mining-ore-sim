@@ -120,6 +120,42 @@ public sealed class WeaponAttackTests
         Assert.That(behind.Health, Is.EqualTo(behind.MaxHealth));
     }
 
+    [Test] public void MonsterDamageDoesNotCancelCommittedHeadbutt()
+    {
+        var monster = new GameObject("Monster attack test");
+        objects.Add(monster);
+        monster.AddComponent<Animator>();
+        var health = monster.AddComponent<MiningCharacterHealth>();
+        var brain = monster.AddComponent<MushroomMonster>();
+        var state = typeof(MushroomMonster).GetField("animationState",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        int headbutt = Animator.StringToHash("Headbutt");
+        state.SetValue(brain, headbutt);
+
+        health.ApplyDamage(1f);
+
+        Assert.That(state.GetValue(brain), Is.EqualTo(headbutt));
+    }
+
+    [Test] public void MonsterStrikeUsesColliderAndRejectsTargetsBehindIt()
+    {
+        var monster = new GameObject("Monster range test");
+        objects.Add(monster);
+        var brain = monster.AddComponent<MushroomMonster>();
+        var playerHealth = player.AddComponent<MiningCharacterHealth>();
+        var playerCollider = player.AddComponent<CapsuleCollider>();
+        var flags = BindingFlags.Instance | BindingFlags.NonPublic;
+        typeof(MushroomMonster).GetField("target", flags).SetValue(brain, playerHealth);
+        typeof(MushroomMonster).GetField("targetCollider", flags).SetValue(brain, playerCollider);
+        monster.transform.position = player.transform.position - Vector3.forward * 1.8f;
+        Physics.SyncTransforms();
+        var canHit = typeof(MushroomMonster).GetMethod("CanHitTarget", flags);
+        Assert.That(canHit.Invoke(brain, null), Is.EqualTo(true));
+
+        monster.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
+        Assert.That(canHit.Invoke(brain, null), Is.EqualTo(false));
+    }
+
     [Test] public void SwordDrawSheathAndRespawnResetKeepExactlyOneSword()
     {
         var hand = new GameObject("Hand Holder");
