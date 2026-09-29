@@ -30,13 +30,13 @@ public class PlayerCombatInput : MonoBehaviour
     public bool IsCombatMode => combatMode;
     [Min(0.1f), SerializeField] private float aimRange = 15f;
     [Min(0f), SerializeField] private float aimTurnSpeed = 720f;
-    [Header("Soft aim on attack (does not control the camera)")]
+    [Header("Soft aim while attacking (does not control the camera)")]
     [Min(0.1f), SerializeField] private float softAimRadius = 8f;
+    [Tooltip("Maximum time to turn toward the target at the start of each strike.")]
     [Min(0.01f), SerializeField] private float softAimDuration = 0.15f;
     private readonly Collider[] softAimHits = new Collider[64];
     private bool softAimActive;
-    private float softAimElapsed;
-    private Quaternion softAimStart, softAimEnd;
+    private MushroomMonster attackAimTarget;
     private MushroomMonster aimedMonster;
     private StarterAssets.ThirdPersonController movement;
     public MushroomMonster AimedMonster => aimedMonster;
@@ -121,14 +121,26 @@ public class PlayerCombatInput : MonoBehaviour
         }
         if (aimedMonster != null && !IsAimValid(aimedMonster)) aimedMonster = null;
         if (!softAimActive) return;
-        softAimElapsed += Time.deltaTime;
-        float angle = Quaternion.Angle(softAimStart, softAimEnd);
-        float progress = Mathf.Clamp01(softAimElapsed / Mathf.Max(0.01f, softAimDuration));
-        if (angle > 0.01f)
-            progress = Mathf.Min(progress, Mathf.Clamp01(aimTurnSpeed * softAimElapsed / angle));
-        transform.rotation = Quaternion.Slerp(softAimStart, softAimEnd, progress);
-        if (progress < 1f) return;
-        softAimActive = false;
+        int layer = animator != null ? animator.GetLayerIndex(CombatLayerName) : -1;
+        bool swinging = layer >= 0 && (IsAttackState(animator.GetCurrentAnimatorStateInfo(layer)) ||
+            animator.IsInTransition(layer) && IsAttackState(animator.GetNextAnimatorStateInfo(layer)));
+        if (!combatMode || !swinging)
+        {
+            StopSoftAim();
+            return;
+        }
+
+        if (IsAimValid(aimedMonster)) attackAimTarget = aimedMonster;
+        if (!IsAimValid(attackAimTarget)) attackAimTarget = FindBestSoftAimTarget();
+        if (attackAimTarget == null) { StopSoftAim(); return; }
+        Vector3 direction = attackAimTarget.transform.position - transform.position;
+        direction.y = 0f;
+        if (direction.sqrMagnitude < 0.0001f) return;
+        Quaternion targetRotation = Quaternion.LookRotation(direction);
+        float angle = Quaternion.Angle(transform.rotation, targetRotation);
+        float turnSpeed = Mathf.Max(aimTurnSpeed, angle / Mathf.Max(0.01f, softAimDuration));
+        transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation,
+            turnSpeed * Time.deltaTime);
     }
     private void OnDestroy()
     {
@@ -271,16 +283,12 @@ public class PlayerCombatInput : MonoBehaviour
 
     private void BeginSoftAim()
     {
-        MushroomMonster best = IsAimValid(aimedMonster) ? aimedMonster : FindBestSoftAimTarget();
-        if (best == null) return;
-        Vector3 direction = best.transform.position - transform.position;
-        direction.y = 0f;
-        if (direction.sqrMagnitude < 0.0001f) return;
-        softAimStart = transform.rotation;
-        softAimEnd = Quaternion.LookRotation(direction);
-        softAimElapsed = 0f;
-        softAimActive = true;
-        if (movement != null) movement.ExternalFacing = true;
+        // Keep the current target across the follow-up attack. Reacquire only
+        // when it dies or leaves the aim range, unless F selected another target.
+        attackAimTarget = IsAimValid(aimedMonster) ? aimedMonster :
+            IsAimValid(attackAimTarget) ? attackAimTarget : FindBestSoftAimTarget();
+        softAimActive = attackAimTarget != null;
+        if (movement != null) movement.ExternalFacing = softAimActive;
     }
 
     private MushroomMonster FindBestSoftAimTarget()
@@ -314,6 +322,12 @@ public class PlayerCombatInput : MonoBehaviour
     private void ClearAim()
     {
         aimedMonster = null;
+        StopSoftAim();
+    }
+
+    private void StopSoftAim()
+    {
+        attackAimTarget = null;
         softAimActive = false;
         if (movement != null) movement.ExternalFacing = false;
     }

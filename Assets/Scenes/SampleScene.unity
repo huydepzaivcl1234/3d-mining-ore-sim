@@ -151,7 +151,7 @@ MonoBehaviour:
   monsters:
   - prefab: {fileID: 2814797438900439487, guid: 3fc8239ff0fe7fd469ff0e115b0c552f, type: 3}
     chance: 100
-  areaSize: {x: 16, y: 4, z: 16}
+  areaSize: {x: 16, y: 0, z: 16}
   initialCount: 3
   maximumAlive: 6
   secondsPerSpawn: 5
@@ -171,7 +171,7 @@ Transform:
   m_GameObject: {fileID: 6420751}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.9, y: 0.04, z: 46.7}
+  m_LocalPosition: {x: 1.9, y: 0, z: 46.7}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -14358,10 +14358,6 @@ MonoBehaviour:
   combatFov: 70
   combatPitchOffset: 6
   framingSmoothTime: 0.35
-  nearbyEnemyRadius: 9
-  enemyLayers:
-    serializedVersion: 2
-    m_Bits: 64
   collisionLayers:
     serializedVersion: 2
     m_Bits: 4294967295
@@ -54764,10 +54760,6 @@ MonoBehaviour:
   combatFov: 70
   combatPitchOffset: 6
   framingSmoothTime: 0.35
-  nearbyEnemyRadius: 9
-  enemyLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
   collisionLayers:
     serializedVersion: 2
     m_Bits: 4294967295
@@ -60250,7 +60242,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6740146339672226398, guid: 3fc8239ff0fe7fd469ff0e115b0c552f, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.132
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6740146339672226398, guid: 3fc8239ff0fe7fd469ff0e115b0c552f, type: 3}
       propertyPath: m_LocalPosition.z

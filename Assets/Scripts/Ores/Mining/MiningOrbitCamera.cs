@@ -19,7 +19,7 @@ namespace MiningSimulator.Ores
         [Range(-70f, 80f), SerializeField] private float followPitch = 18f;
         [SerializeField] private bool rotateOnlyWhileRightMouseHeld = true;
 
-        [Header("Adaptive combat framing")]
+        [Header("Combat framing (follows the player's Standing/Combat mode)")]
         [SerializeField] private bool adaptiveCombatFraming = true;
         [Tooltip("Disable reward camera shake for players sensitive to camera motion.")]
         [SerializeField] private bool reduceMotion = true;
@@ -29,10 +29,6 @@ namespace MiningSimulator.Ores
         [Range(1f, 179f), SerializeField] private float combatFov = 70f;
         [Range(0f, 30f), SerializeField] private float combatPitchOffset = 6f;
         [Min(0.01f), SerializeField] private float framingSmoothTime = 0.35f;
-        [Min(0.1f), SerializeField] private float nearbyEnemyRadius = 9f;
-        [Tooltip("Set this to the Enemy layer when your monsters use it. Only MushroomMonster colliders count.")]
-        [SerializeField] private LayerMask enemyLayers = ~0;
-
         [Header("Collision")]
         [Tooltip("Static world layers that stop the camera body. The focus point is not a collider.")]
         [SerializeField] private LayerMask collisionLayers = ~0;
@@ -55,9 +51,6 @@ namespace MiningSimulator.Ores
         private float currentPitchOffset;
         private float unobstructedDistance;
         private float obstructionReturnVelocity;
-        private float enemyScanAt;
-        private bool enemyNearby;
-        private readonly Collider[] nearbyEnemies = new Collider[64];
         private PlayerCombatInput combatInput;
         private bool inputLocked;
         private bool cinematicOverride;
@@ -267,24 +260,9 @@ namespace MiningSimulator.Ores
         private void UpdateCombatFraming()
         {
             if (!adaptiveCombatFraming || followTarget == null) return;
-            if (Time.time >= enemyScanAt)
-            {
-                enemyScanAt = Time.time + 0.15f;
-                enemyNearby = false;
-                int count = Physics.OverlapSphereNonAlloc(followTarget.position,
-                    nearbyEnemyRadius, nearbyEnemies, enemyLayers,
-                    QueryTriggerInteraction.Ignore);
-                for (int i = 0; i < count; i++)
-                {
-                    var monster = nearbyEnemies[i] != null
-                        ? nearbyEnemies[i].GetComponentInParent<MushroomMonster>() : null;
-                    if (monster == null || monster.Health == null || monster.Health.Health <= 0f) continue;
-                    enemyNearby = true;
-                    break;
-                }
-            }
-
-            bool combat = enemyNearby || (combatInput != null && combatInput.IsCombatMode);
+            // Nearby monsters must not change the camera while the player is Standing.
+            // The combat input is the single owner of the Standing/Combat transition.
+            bool combat = combatInput != null && combatInput.IsCombatMode;
             float smooth = Mathf.Max(0.01f, framingSmoothTime);
             float baseDistance = combat ? combatDistance : explorationDistance;
             float targetDistance = Mathf.Clamp(baseDistance + zoomOffset,
@@ -592,10 +570,14 @@ namespace MiningSimulator.Ores
             if (followTarget != null && (candidateTransform == followTarget ||
                 candidateTransform.IsChildOf(followTarget))) return false;
 
-            // Ores, NPCs, drops, and falling Lucky Blocks must not make the camera pulse in and
-            // out while they move. Static level geometry has no Rigidbody and remains blocking.
+            // Gameplay objects can have static colliders (CharacterController monsters and
+            // chest MeshColliders). They are not walls and must not cause zoom pulses.
             return candidate.attachedRigidbody == null &&
-                   candidate.GetComponentInParent<Ore>() == null;
+                   candidate.GetComponentInParent<Ore>() == null &&
+                   candidate.GetComponentInParent<MushroomMonster>() == null &&
+                   candidate.GetComponentInParent<MiningChest>() == null &&
+                   candidate.GetComponentInParent<MiningNpc>() == null &&
+                   candidate.GetComponentInParent<LuckyBlock>() == null;
         }
 
         private void OnValidate()
@@ -605,7 +587,6 @@ namespace MiningSimulator.Ores
             followDistance = Mathf.Max(0.5f, followDistance);
             explorationDistance = Mathf.Max(0.5f, explorationDistance);
             combatDistance = Mathf.Max(0.5f, combatDistance);
-            nearbyEnemyRadius = Mathf.Max(0.1f, nearbyEnemyRadius);
             framingSmoothTime = Mathf.Max(0.01f, framingSmoothTime);
             if (ownsRuntimeCollider && collisionEye != null)
             {
