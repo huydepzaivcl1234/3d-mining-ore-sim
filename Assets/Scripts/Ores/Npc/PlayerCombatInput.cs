@@ -154,11 +154,11 @@ public class PlayerCombatInput : MonoBehaviour
             (EventSystem.current == null || !EventSystem.current.IsPointerOverGameObject());
         var state = animator.GetCurrentAnimatorStateInfo(layer);
         bool swinging = IsAttackState(state);
-        // Only a fresh click near the end of this swing may queue one follow-up.
-        // A click during a transition or long before the combo window must not
-        // become an extra attack after the player has released the button.
+        // Accept one deliberate follow-up after the first strike begins. The
+        // previous 0.55-0.9 window was shorter than the player's click timing
+        // at higher attack speeds, so Sword Attack 2 was often skipped.
         if (combatMode && pressed && swinging && !animator.IsInTransition(layer) &&
-            state.normalizedTime >= 0.55f && state.normalizedTime < 0.9f)
+            state.normalizedTime >= 0.3f && state.normalizedTime < 0.97f)
         {
             queuedAttack = true;
             queuedAttackStateHash = state.shortNameHash;
@@ -172,7 +172,7 @@ public class PlayerCombatInput : MonoBehaviour
                 PlayAttack(layer, state.shortNameHash == FirstAttackState ? 1 : 0);
             }
             else if (state.shortNameHash == FirstAttackState && !queuedAttack &&
-                     !returningFromAttack && state.normalizedTime >= 0.85f)
+                     !returningFromAttack && state.normalizedTime >= 0.98f)
             {
                 returningFromAttack = true;
                 if (HasParameter("Move", AnimatorControllerParameterType.Trigger)) animator.SetTrigger("Move");

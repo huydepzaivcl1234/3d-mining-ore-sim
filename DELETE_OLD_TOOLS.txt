@@ -1,0 +1,8 @@
+Remove these retired Editor scripts and their .meta files from the Unity project after extracting the ZIP:
+
+Assets/Scripts/Ores/Editor/MiningObsoleteToolPruner.cs
+Assets/Scripts/Ores/Editor/MiningObsoleteToolPruner.cs.meta
+Assets/Scripts/Ores/Editor/MiningRestoreLocomotion.cs
+Assets/Scripts/Ores/Editor/MiningRestoreLocomotion.cs.meta
+
+They have already been removed from the local project at D:/3d mining sim.
