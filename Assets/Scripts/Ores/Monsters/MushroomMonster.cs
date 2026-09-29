@@ -30,33 +30,6 @@ namespace MiningSimulator.Ores
         public int Level { get; private set; } = 1;
         private float scaledDamage;
         private float scaledBurnDamage;
-        public void AlignToGround(Vector3 ground)
-        {
-            // A model's visual pivot need not match the CharacterController bottom.
-            motor.enabled = false;
-            float scaleY = Mathf.Abs(transform.lossyScale.y);
-            float bottomOffset = (motor.center.y - motor.height * 0.5f) * scaleY;
-            transform.position = new Vector3(transform.position.x, ground.y - bottomOffset, transform.position.z);
-            if (animator != null && animator.transform != transform)
-            {
-                animator.Update(0f);
-                float feetY = float.MaxValue;
-                var baked = new Mesh();
-                foreach (var renderer in animator.GetComponentsInChildren<SkinnedMeshRenderer>())
-                {
-                    if (renderer.sharedMesh == null) continue;
-                    renderer.BakeMesh(baked);
-                    foreach (var vertex in baked.vertices)
-                        feetY = Mathf.Min(feetY, renderer.transform.TransformPoint(vertex).y);
-                    baked.Clear();
-                }
-                Destroy(baked);
-                if (feetY != float.MaxValue)
-                    animator.transform.position += Vector3.up * (ground.y - feetY);
-            }
-            verticalSpeed = -2f;
-            motor.enabled = true;
-        }
         public void Initialize(MonsterSpawnZone owner, MiningCharacterHealth player)
         {
             zone = owner;

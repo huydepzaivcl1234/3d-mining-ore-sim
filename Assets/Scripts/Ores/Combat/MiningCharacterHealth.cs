@@ -167,10 +167,17 @@ namespace MiningSimulator.Ores
 
         private void Refresh(bool skipAnimation, UpdateAnim updateType = UpdateAnim.Damage)
         {
+            bool showBar = health < MaxHealth - 0.001f;
+            // Enable before updating MicroBar so the first hit after spawning
+            // animates correctly; hide the whole bar (including its text) at full HP.
+            if (showBar && healthBar != null && !healthBar.gameObject.activeSelf)
+                healthBar.gameObject.SetActive(true);
             // Only initialization/respawn snaps. Damage and healing use the
             // animation authored on the MicroBar (Flash, Fill, etc.).
             if (microBar != null) microBar.UpdateBar(health, skipAnimation, updateType);
             RefreshLabel();
+            if (!showBar && healthBar != null && healthBar.gameObject.activeSelf)
+                healthBar.gameObject.SetActive(false);
         }
 
         private void RefreshLabel()

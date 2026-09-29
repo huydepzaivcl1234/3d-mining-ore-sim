@@ -13,7 +13,7 @@ namespace MiningSimulator.Ores
     public sealed class MonsterSpawnZone : MonoBehaviour
     {
         [SerializeField] private List<MonsterSpawnEntry> monsters = new();
-        [SerializeField] private Vector3 areaSize = new(16f, 4f, 16f);
+        [SerializeField] private Vector3 areaSize = new(16f, 0f, 16f);
         [Min(0), SerializeField] private int initialCount = 3;
         [Min(0), SerializeField] private int maximumAlive = 6;
         [Min(0.1f), SerializeField] private float secondsPerSpawn = 5f;
@@ -29,6 +29,7 @@ namespace MiningSimulator.Ores
         private bool playerInside;
         private float zoneVolumeVelocity;
         private readonly List<MushroomMonster> alive = new();
+        private readonly RaycastHit[] groundHits = new RaycastHit[64];
         private float timer;
         public int AliveCount => alive.Count;
         public Vector3 RandomPoint() => transform.TransformPoint(new Vector3(
@@ -137,10 +138,7 @@ namespace MiningSimulator.Ores
             for (int attempt = 0; attempt < 24; attempt++)
             {
                 Vector3 position = RandomPoint();
-                if (!Physics.Raycast(position + Vector3.up * 30f, Vector3.down,
-                    out var ground, 60f, groundLayers, QueryTriggerInteraction.Ignore)) continue;
-                if (ground.normal.y < 0.7f || ground.collider.GetComponentInParent<MushroomMonster>() != null ||
-                    ground.collider.GetComponentInParent<MiningCharacterHealth>() != null) continue;
+                if (!TryFindGround(position, out RaycastHit ground)) continue;
                 var capsule = prefab.GetComponent<CharacterController>();
                 if (capsule == null) continue;
                 Vector3 scale = Vector3.Scale(prefab.transform.lossyScale, transform.lossyScale);
@@ -157,10 +155,42 @@ namespace MiningSimulator.Ores
                 var instance = Instantiate(prefab, ground.point,
                     Quaternion.Euler(0, UnityEngine.Random.Range(0f, 360f), 0), transform);
                 instance.Initialize(this, player);
-                instance.AlignToGround(ground.point);
                 alive.Add(instance);
                 return;
             }
+        }
+
+        private bool TryFindGround(Vector3 position, out RaycastHit ground)
+        {
+            // The zone may contain ores, chests, monsters and scenery above the terrain.
+            // A single Raycast would spawn a monster on top of the first such collider.
+            int count = Physics.RaycastNonAlloc(position + Vector3.up * 30f,
+                Vector3.down, groundHits, 60f, groundLayers,
+                QueryTriggerInteraction.Ignore);
+            int best = -1;
+            bool foundTerrain = false;
+            float closest = float.PositiveInfinity;
+            for (int i = 0; i < count; i++)
+            {
+                RaycastHit hit = groundHits[i];
+                Collider surface = hit.collider;
+                if (surface == null || hit.normal.y < 0.7f ||
+                    surface.GetComponentInParent<MiningCharacterHealth>() != null ||
+                    surface.GetComponentInParent<Ore>() != null ||
+                    surface.GetComponentInParent<MiningChest>() != null ||
+                    surface.GetComponentInParent<LuckyBlock>() != null ||
+                    surface.GetComponentInParent<MiningNpc>() != null ||
+                    surface is CharacterController) continue;
+
+                bool terrain = surface is TerrainCollider;
+                if (best >= 0 && (foundTerrain && !terrain ||
+                    foundTerrain == terrain && hit.distance >= closest)) continue;
+                best = i;
+                foundTerrain = terrain;
+                closest = hit.distance;
+            }
+            ground = best >= 0 ? groundHits[best] : default;
+            return best >= 0;
         }
         private void OnDrawGizmosSelected()
         {
