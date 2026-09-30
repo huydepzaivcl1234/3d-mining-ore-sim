@@ -225,3 +225,7 @@ PLAYER_SPECTATOR_HELP = WASD: di chuyển | Space/Ctrl: lên/xuống | Giữ chu
 {0}/{1} NPC = {0}/{1} NPC
 Standing = Standing
 Combat = Combat
+MONSTER_FORECAST_TITLE = NGÀY {0} - QUÁI
+MONSTER_FORECAST_REMAINING = Sẽ đến tiếp: {0}
+UPGRADE_STATION_NAME = Nâng cấp mỏ
+UPGRADE_STATION_INTERACT = BẤM ĐỂ TƯƠNG TÁC\nNâng cấp mỏ

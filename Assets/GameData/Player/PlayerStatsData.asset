@@ -46,6 +46,11 @@ MonoBehaviour:
   attackImpactVfxPrefab: {fileID: 1035977224672214417, guid: 057aa477789506a44bd206e9c5acad19, type: 3}
   impactVfxLifetime: 2
   damage: 1
+  burnDamagePerTick: 0
+  burnTickSeconds: 0.1
+  burnDurationSeconds: 0
+  lifeStealPercent: 0
+  healingBonusPercent: 0
   attackRange: 1.75
   attackAngle: 100
   attackSpeed: 1

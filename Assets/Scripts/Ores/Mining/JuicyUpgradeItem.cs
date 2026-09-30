@@ -16,8 +16,30 @@ namespace MiningSimulator.Ores
         [SerializeField] private TextMeshProUGUI priceText;
         [SerializeField] private TextMeshProUGUI buyCaptionText;
         [SerializeField] private UnityEngine.UI.Image priceCoinIcon;
+        [Tooltip("Optional SVG card icon override; otherwise reuse the authored icon child.")]
+        [SerializeField] private Sprite cardIcon;
 
         private UnityEngine.UI.Button purchaseButton;
+        [SerializeField, HideInInspector] private bool ownsPurchase;
+        public MiningUpgradeType UpgradeType => upgradeType;
+        public Sprite CardIcon => cardIcon;
+
+        public void BindCard(MiningUpgradeSystem system, PlayerWallet playerWallet)
+        {
+            upgradeSystem = system; wallet = playerWallet; ownsPurchase = true;
+        }
+
+        public void ConfigureCard(MiningUpgradeSystem system, PlayerWallet playerWallet,
+            TextMeshProUGUI title, TextMeshProUGUI detail, TextMeshProUGUI price)
+        {
+            // Called while the card is inactive, before subscribing to its new view.
+            upgradeSystem = system; wallet = playerWallet;
+            titleText = title; detailText = detail; priceText = price;
+            buyCaptionText = null; priceCoinIcon = null;
+            ownsPurchase = true;
+        }
+
+        private void Purchase() => upgradeSystem?.TryPurchase(upgradeType);
 
         private void Awake()
         {
@@ -26,6 +48,8 @@ namespace MiningSimulator.Ores
 
         private void OnEnable()
         {
+            purchaseButton ??= GetComponent<UnityEngine.UI.Button>();
+            if (ownsPurchase) { purchaseButton.onClick.RemoveListener(Purchase); purchaseButton.onClick.AddListener(Purchase); }
             MiningLocalization.LanguageChanged += Refresh;
             if (upgradeSystem != null) upgradeSystem.UpgradesChanged += Refresh;
             if (wallet != null) wallet.MoneyChanged += HandleMoneyChanged;
@@ -34,6 +58,7 @@ namespace MiningSimulator.Ores
 
         private void OnDisable()
         {
+            purchaseButton?.onClick.RemoveListener(Purchase);
             MiningLocalization.LanguageChanged -= Refresh;
             if (upgradeSystem != null) upgradeSystem.UpgradesChanged -= Refresh;
             if (wallet != null) wallet.MoneyChanged -= HandleMoneyChanged;

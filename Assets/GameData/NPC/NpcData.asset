@@ -17,6 +17,8 @@ MonoBehaviour:
   spawnSpread: 1.25
   spawnHeightOffset: 0.9
   spawnAttempts: 12
+  minerHealth: 20
+  knockoutSeconds: 10
   moveSpeed: 3
   turnSpeed: 720
   miningRange: 1

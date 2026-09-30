@@ -35,6 +35,7 @@ namespace MiningSimulator.Ores
         [Min(0)] public float experience = 25;
         [Min(0)] public float gold = 50;
         [Header("Monster attack / healing effects (0 disables an effect)")]
+        [Min(2f)] public float minerWarningSeconds = 2f;
         [Min(0)] public float burnDamagePerTick;
         [Min(0.1f)] public float burnTickSeconds = 1f;
         [Min(0)] public float burnDurationSeconds;

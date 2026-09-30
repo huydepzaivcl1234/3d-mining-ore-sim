@@ -1,0 +1,1 @@
+<svg width="36" height="36" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="knob" x1="0" y1="0" x2="0" y2="36" gradientUnits="userSpaceOnUse"><stop stop-color="#10A4BC"/><stop offset="1" stop-color="#00121A"/></linearGradient></defs><circle cx="18" cy="18" r="17" fill="url(#knob)"/></svg>

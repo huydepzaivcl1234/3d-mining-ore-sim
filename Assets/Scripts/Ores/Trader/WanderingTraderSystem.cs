@@ -60,6 +60,7 @@ namespace MiningSimulator.Ores
         private MiningItemSystem itemSystem;
         private PlayerWallet wallet;
         private WanderingTraderAgent trader;
+        private bool traderWasActive;
         [SerializeField] private WanderingTraderAgent sceneTrader;
         private WanderingTraderPanel panel;
         private readonly List<TraderOffer> currentOffers = new();
@@ -140,6 +141,18 @@ namespace MiningSimulator.Ores
         private void OnDisable()
         {
             panel?.Hide();
+            // A runtime trader is instantiated outside this system's hierarchy.
+            // Hide it with the Ground system so it cannot remain in Lava.
+            if (trader != null)
+            {
+                traderWasActive = trader.gameObject.activeSelf;
+                trader.gameObject.SetActive(false);
+            }
+        }
+
+        private void OnEnable()
+        {
+            if (trader != null) trader.gameObject.SetActive(traderWasActive);
         }
 
         public bool TryOpenTrade(WanderingTraderAgent requestingTrader)

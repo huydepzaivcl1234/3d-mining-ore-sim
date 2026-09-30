@@ -110,6 +110,8 @@ namespace StarterAssets
         private CharacterController _controller;
         private StarterAssetsInputs _input;
         private GameObject _mainCamera;
+        // Set by the project's active camera owner without coupling this package assembly to it.
+        public bool ExternalCameraControl { get; set; }
 
         private const float _threshold = 0.01f;
 
@@ -142,7 +144,8 @@ namespace StarterAssets
 
         private void Start()
         {
-            _cinemachineTargetYaw = CinemachineCameraTarget.transform.rotation.eulerAngles.y;
+            if (CinemachineCameraTarget != null)
+                _cinemachineTargetYaw = CinemachineCameraTarget.transform.rotation.eulerAngles.y;
             
             _hasAnimator = TryGetComponent(out _animator);
             _controller = GetComponent<CharacterController>();
@@ -181,6 +184,9 @@ namespace StarterAssets
 
         private void LateUpdate()
         {
+            // The active mining orbit owns all camera input; keep only locomotion here.
+            if (ExternalCameraControl) return;
+            if (CinemachineCameraTarget == null) return;
             CameraRotation();
         }
 

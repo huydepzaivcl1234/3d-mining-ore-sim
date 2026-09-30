@@ -718,8 +718,6 @@ namespace MiningSimulator.Ores
             EnsureClipLoaded(audioData.RebirthSfx);
             EnsureClipLoaded(audioData.MonsterDropSfx);
             EnsureClipLoaded(audioData.MonsterLootSfx);
-            EnsureClipLoaded(audioData.MonsterZoneEnterSfx);
-            EnsureClipLoaded(audioData.MonsterZoneLoop);
             EnsureClipLoaded(audioData.PanelOpenSfx);
             EnsureClipLoaded(audioData.PanelCloseSfx);
             EnsureClipLoaded(audioData.WheelSpinSfx);

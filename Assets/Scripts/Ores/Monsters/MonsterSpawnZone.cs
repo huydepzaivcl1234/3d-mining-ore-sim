@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
+using Unity.AI.Navigation;
 
 namespace MiningSimulator.Ores
 {
@@ -8,15 +10,35 @@ namespace MiningSimulator.Ores
     public sealed class MonsterSpawnEntry
     {
         public MushroomMonster prefab;
+        public Sprite icon;
         [Min(0f)] public float chance = 100f;
     }
+    public sealed class DailyMonsterForecast
+    {
+        public MonsterSpawnEntry Entry { get; internal set; }
+        public int Planned { get; internal set; }
+        public int Spawned { get; internal set; }
+        public int Skipped { get; internal set; }
+        public int Remaining => Mathf.Max(0, Planned - Spawned - Skipped);
+    }
+    // Retain the script identity/GUID so existing scenes keep their spawn table.
+    // This is a mining encounter spawner, not a bounded spawn zone anymore.
+    [AddComponentMenu("Mining Simulator/Mining Monster Spawner")]
     public sealed class MonsterSpawnZone : MonoBehaviour
     {
         [SerializeField] private List<MonsterSpawnEntry> monsters = new();
-        [SerializeField] private Vector3 areaSize = new(16f, 0f, 16f);
-        [Min(0), SerializeField] private int initialCount = 3;
+        [SerializeField] private NavMeshSurface miningSurface;
+        [Min(0.5f), SerializeField] private float minimumSpawnDistance = 4f;
+        [Min(0.5f), SerializeField] private float maximumSpawnDistance = 7f;
+        [Min(0f), SerializeField] private float minimumPlayerDistance = 3f;
+        [Header("Daily encounters")]
+        [SerializeField] private DayNightSystem dayNight;
+        [Min(0), SerializeField] private int minimumPerDay = 3;
+        [Min(0), SerializeField] private int maximumPerDay = 12;
+        [Range(1, 12), SerializeField] private int maximumPerWave = 3;
+        [Range(0.01f, 0.99f), SerializeField] private float largerWaveRelativeWeight = 0.35f;
+        [SerializeField] private bool showDailyForecast = true;
         [Min(0), SerializeField] private int maximumAlive = 6;
-        [Min(0.1f), SerializeField] private float secondsPerSpawn = 5f;
         [Min(0.1f), SerializeField] private float minimumSpacing = 2f;
         [SerializeField] private LayerMask groundLayers = ~0;
         [SerializeField] private MiningCharacterHealth player;
@@ -25,20 +47,104 @@ namespace MiningSimulator.Ores
         private MiningPlayerStats playerStats;
         private OreSpawner oreSpawner;
         private MiningAudioManager audioManager;
-        private AudioSource zoneAmbience;
-        private bool playerInside;
-        private float zoneVolumeVelocity;
         private readonly List<MushroomMonster> alive = new();
         private readonly RaycastHit[] groundHits = new RaycastHit[64];
-        private float timer;
-        public int AliveCount => alive.Count;
-        public Vector3 RandomPoint() => transform.TransformPoint(new Vector3(
-            UnityEngine.Random.Range(-areaSize.x / 2, areaSize.x / 2), 0f,
-            UnityEngine.Random.Range(-areaSize.z / 2, areaSize.z / 2)));
-        public bool Contains(Vector3 point)
+        private bool started;
+        private readonly List<DailyMonsterForecast> forecast = new();
+        private readonly List<SpawnWave> waves = new();
+        private int scheduledDay = -1, nextWave;
+        private float nextSpawnRetry;
+        private MonsterDailyForecastHud forecastHud;
+        private sealed class SpawnWave
         {
-            Vector3 p = transform.InverseTransformPoint(point);
-            return Mathf.Abs(p.x) <= areaSize.x / 2 && Mathf.Abs(p.z) <= areaSize.z / 2;
+            public float Progress;
+            public readonly List<DailyMonsterForecast> Members = new();
+            public int Completed;
+        }
+        public IReadOnlyList<DailyMonsterForecast> DailyForecast => forecast;
+        public int ForecastDay => scheduledDay;
+        public event Action ForecastChanged;
+        public int AliveCount => alive.Count;
+        private bool TryGetMineSurface(out NavMeshSurface surface)
+        {
+            if (miningSurface == null && MiningNavMeshBuilder.Instance != null)
+                miningSurface = MiningNavMeshBuilder.Instance.GetComponent<NavMeshSurface>();
+            surface = miningSurface;
+            // Use the authored mining bake, never a separate monster rectangle.
+            return surface != null && surface.isActiveAndEnabled && surface.navMeshData != null &&
+                surface.collectObjects == CollectObjects.Volume;
+        }
+
+        private static NavMeshQueryFilter MineFilter(NavMeshSurface surface) =>
+            new NavMeshQueryFilter { agentTypeID = surface.agentTypeID, areaMask = NavMesh.AllAreas };
+
+        public bool IsInsideMine(Vector3 point)
+        {
+            if (!TryGetMineSurface(out NavMeshSurface surface)) return false;
+            Vector3 local = surface.transform.InverseTransformPoint(point) - surface.center;
+            if (Mathf.Abs(local.x) > surface.size.x * 0.5f ||
+                Mathf.Abs(local.z) > surface.size.z * 0.5f) return false;
+            return NavMesh.SamplePosition(point, out _, 0.6f, MineFilter(surface));
+        }
+
+        public bool TryGetMineEntryPoint(Vector3 origin, out Vector3 point)
+        {
+            point = origin;
+            if (!TryGetMineSurface(out NavMeshSurface surface) ||
+                !NavMesh.SamplePosition(origin, out NavMeshHit nearest,
+                    Mathf.Max(minimumSpawnDistance, maximumSpawnDistance) + 4f, MineFilter(surface))) return false;
+            // Aim slightly inside the bake, not exactly at its unwalkable border.
+            Vector3 inward = Vector3.ProjectOnPlane(surface.transform.TransformPoint(surface.center) - nearest.position, Vector3.up).normalized;
+            if (!NavMesh.SamplePosition(nearest.position + inward, out NavMeshHit entry, 1.2f, MineFilter(surface))) return false;
+            point = entry.position;
+            return true;
+        }
+
+        private bool TryGetSpawnCandidate(out Vector3 position)
+        {
+            position = default;
+            if (!TryGetMineSurface(out NavMeshSurface surface)) return false;
+            Vector3 half = surface.size * 0.5f;
+            // Sample the perimeter of the existing bake volume by side length.
+            float side = UnityEngine.Random.Range(0f, 2f * (surface.size.x + surface.size.z));
+            Vector3 rim, outward;
+            if ((side -= surface.size.x) < 0f)
+            { rim = new Vector3(UnityEngine.Random.Range(-half.x, half.x), 0f, half.z); outward = Vector3.forward; }
+            else if ((side -= surface.size.x) < 0f)
+            { rim = new Vector3(UnityEngine.Random.Range(-half.x, half.x), 0f, -half.z); outward = Vector3.back; }
+            else if ((side -= surface.size.z) < 0f)
+            { rim = new Vector3(half.x, 0f, UnityEngine.Random.Range(-half.z, half.z)); outward = Vector3.right; }
+            else
+            { rim = new Vector3(-half.x, 0f, UnityEngine.Random.Range(-half.z, half.z)); outward = Vector3.left; }
+            float min = Mathf.Max(0.5f, minimumSpawnDistance);
+            float max = Mathf.Max(min, maximumSpawnDistance);
+            Vector3 boundary = surface.transform.TransformPoint(surface.center + rim);
+            // Ground queries start above the bake floor rather than its volume center.
+            boundary.y = surface.transform.position.y;
+            position = boundary + Vector3.ProjectOnPlane(surface.transform.TransformDirection(outward), Vector3.up).normalized * UnityEngine.Random.Range(min, max);
+            return true;
+        }
+
+        private bool IsValidSpawnDistance(Vector3 position)
+        {
+            if (!TryGetMineSurface(out NavMeshSurface surface) ||
+                !NavMesh.SamplePosition(position, out NavMeshHit nearest,
+                    Mathf.Max(minimumSpawnDistance, maximumSpawnDistance) + 2f, MineFilter(surface))) return false;
+            float distance = Vector3.ProjectOnPlane(position - nearest.position, Vector3.up).magnitude;
+            return distance >= Mathf.Max(0.5f, minimumSpawnDistance) &&
+                distance <= Mathf.Max(minimumSpawnDistance, maximumSpawnDistance);
+        }
+
+        public bool TryGetMiningApproachPoint(Vector3 origin, out Vector3 point)
+        {
+            point = origin;
+            if (oreSpawner == null || !oreSpawner.TryGetClosestActiveOre(origin, out Ore ore)) return false;
+            Vector3 surface = ore.GetClosestSurfacePoint(origin);
+            Vector3 away = Vector3.ProjectOnPlane(origin - ore.transform.position, Vector3.up);
+            if (away.sqrMagnitude < 0.01f) away = Vector3.forward;
+            // Approach the mine, never the center of its solid ore collider.
+            point = surface + away.normalized * 1.5f;
+            return true;
         }
         private void Start()
         {
@@ -52,18 +158,21 @@ namespace MiningSimulator.Ores
             if (inventory == null) inventory = FindAnyObjectByType<MiningItemSystem>();
             oreSpawner = FindAnyObjectByType<OreSpawner>();
             audioManager = FindAnyObjectByType<MiningAudioManager>();
-            if (audioManager != null && audioManager.AudioData != null &&
-                audioManager.AudioData.MonsterZoneLoop != null)
+            if (dayNight == null) dayNight = FindAnyObjectByType<DayNightSystem>();
+            BuildDailySchedule();
+            started = true;
+            if (showDailyForecast)
             {
-                zoneAmbience = gameObject.AddComponent<AudioSource>();
-                zoneAmbience.playOnAwake = false;
-                zoneAmbience.loop = true;
-                zoneAmbience.spatialBlend = 0f;
-                zoneAmbience.volume = 0f;
-                zoneAmbience.clip = audioManager.AudioData.MonsterZoneLoop;
-                zoneAmbience.outputAudioMixerGroup = audioManager.AudioData.SfxMixerGroup;
+                forecastHud = gameObject.AddComponent<MonsterDailyForecastHud>();
+                forecastHud.Configure(this);
             }
-            for (int i = 0; i < Mathf.Min(initialCount, maximumAlive); i++) SpawnOne();
+        }
+        private void OnEnable()
+        {
+            // Start runs only once. Recreate Ground monsters after a return from Lava.
+            if (!started) return;
+            if (dayNight != null && scheduledDay != dayNight.DayNumber) BuildDailySchedule();
+            if (forecastHud != null) forecastHud.SetVisible(true);
         }
         public void GrantRewards(MonsterRewardData data, Vector3 origin, float goldMultiplier = 1)
         {
@@ -91,54 +200,119 @@ namespace MiningSimulator.Ores
         }
         private void Update()
         {
-            UpdateZoneAudio();
             alive.RemoveAll(m => m == null || m.Health.Health <= 0f);
-            timer += Time.deltaTime;
-            if (timer < Mathf.Max(0.1f, secondsPerSpawn)) return;
-            timer = 0f;
-            if (alive.Count < maximumAlive) SpawnOne();
+            if (dayNight == null || !dayNight.isActiveAndEnabled) return;
+            if (scheduledDay != dayNight.DayNumber) BuildDailySchedule();
+            if (dayNight.CurrentPeriod != MiningTimePeriod.Day)
+            {
+                SkipWavesBefore(1f);
+                return;
+            }
+            float progress = dayNight.CurrentPeriodProgress;
+            // Expired slots are not merged into a huge catch-up wave after a world swap.
+            while (nextWave + 1 < waves.Count && progress >= waves[nextWave + 1].Progress)
+                SkipCurrentWave();
+            if (nextWave >= waves.Count || progress < waves[nextWave].Progress ||
+                Time.time < nextSpawnRetry) return;
+            nextSpawnRetry = Time.time + 1f;
+            SpawnWave wave = waves[nextWave];
+            while (wave.Completed < wave.Members.Count && alive.Count < maximumAlive)
+            {
+                DailyMonsterForecast entry = wave.Members[wave.Completed];
+                if (!SpawnOne(entry.Entry)) break;
+                entry.Spawned++;
+                wave.Completed++;
+                ForecastChanged?.Invoke();
+            }
+            if (wave.Completed == wave.Members.Count) nextWave++;
         }
-        private void UpdateZoneAudio()
+
+        private MonsterSpawnEntry RollMonsterEntry()
         {
-            bool inside = player != null && player.Health > 0f && Contains(player.transform.position);
-            if (inside && !playerInside && audioManager != null && audioManager.AudioData != null)
-                audioManager.PlaySfx(audioManager.AudioData.MonsterZoneEnterSfx);
-            playerInside = inside;
-            if (zoneAmbience == null || audioManager == null || audioManager.AudioData == null) return;
-            float targetVolume = inside && !audioManager.SfxMuted
-                ? audioManager.AudioData.SfxVolume * audioManager.MasterVolume * audioManager.SfxVolume
-                : 0f;
-            if (targetVolume > 0f && !zoneAmbience.isPlaying) zoneAmbience.Play();
-            zoneAmbience.volume = Mathf.SmoothDamp(zoneAmbience.volume, targetVolume,
-                ref zoneVolumeVelocity, audioManager.AudioData.MonsterZoneFadeSeconds,
-                Mathf.Infinity, Time.deltaTime);
-            if (targetVolume <= 0f && zoneAmbience.volume < 0.005f && zoneAmbience.isPlaying)
-                zoneAmbience.Stop();
+            float total = 0f;
+            foreach (MonsterSpawnEntry entry in monsters)
+                if (entry != null && entry.prefab != null) total += Mathf.Max(0f, entry.chance);
+            if (total <= 0f) return null;
+            float roll = UnityEngine.Random.value * total;
+            foreach (MonsterSpawnEntry entry in monsters)
+                if (entry != null && entry.prefab != null && entry.chance > 0f && (roll -= entry.chance) <= 0f)
+                    return entry;
+            return null;
+        }
+
+        private int RollWaveSize(int remaining)
+        {
+            int limit = Mathf.Min(Mathf.Clamp(maximumPerWave, 1, 12), Mathf.Max(1, maximumAlive), remaining);
+            float ratio = Mathf.Clamp(largerWaveRelativeWeight, 0.01f, 0.99f);
+            float total = 0f, weight = 1f;
+            for (int i = 1; i <= limit; i++) { total += weight; weight *= ratio; }
+            float roll = UnityEngine.Random.value * total;
+            weight = 1f;
+            for (int i = 1; i <= limit; i++)
+            { if ((roll -= weight) <= 0f) return i; weight *= ratio; }
+            return limit;
+        }
+
+        private void BuildDailySchedule()
+        {
+            forecast.Clear(); waves.Clear(); nextWave = 0; nextSpawnRetry = 0f;
+            scheduledDay = dayNight != null ? dayNight.DayNumber : 1;
+            if (dayNight == null || dayNight.CurrentPeriod != MiningTimePeriod.Day)
+            { ForecastChanged?.Invoke(); return; }
+            int min = Mathf.Clamp(minimumPerDay, 0, 256);
+            int remaining = UnityEngine.Random.Range(min, Mathf.Clamp(maximumPerDay, min, 256) + 1);
+            while (remaining > 0)
+            {
+                var wave = new SpawnWave();
+                int count = RollWaveSize(remaining);
+                for (int i = 0; i < count; i++)
+                {
+                    MonsterSpawnEntry entry = RollMonsterEntry();
+                    if (entry == null) { remaining = 0; break; }
+                    DailyMonsterForecast item = forecast.Find(f => f.Entry == entry);
+                    if (item == null) { item = new DailyMonsterForecast { Entry = entry }; forecast.Add(item); }
+                    item.Planned++;
+                    wave.Members.Add(item);
+                    remaining--;
+                }
+                if (wave.Members.Count > 0) waves.Add(wave);
+            }
+            float start = dayNight.CurrentPeriodProgress;
+            for (int i = 0; i < waves.Count; i++)
+                waves[i].Progress = Mathf.Lerp(start, 1f, (i + 1f) / (waves.Count + 1f));
+            ForecastChanged?.Invoke();
+        }
+
+        private void SkipCurrentWave()
+        {
+            SpawnWave wave = waves[nextWave++];
+            for (int i = wave.Completed; i < wave.Members.Count; i++) wave.Members[i].Skipped++;
+            ForecastChanged?.Invoke();
+        }
+        private void SkipWavesBefore(float progress)
+        {
+            while (nextWave < waves.Count && waves[nextWave].Progress <= progress) SkipCurrentWave();
         }
         private void OnDisable()
         {
-            if (zoneAmbience != null) zoneAmbience.Stop();
-            playerInside = false;
-            zoneVolumeVelocity = 0f;
+            if (forecastHud != null) forecastHud.SetVisible(false);
+            // The spawned monsters are owned by this spawner. Destroy without combat
+            // rewards so no invisible Ground enemies survive the world switch.
+            foreach (MushroomMonster monster in alive)
+                if (monster != null) Destroy(monster.gameObject);
+            alive.Clear();
         }
-        private void SpawnOne()
+        private bool SpawnOne(MonsterSpawnEntry entry)
         {
-            float total = 0f;
-            foreach (var e in monsters)
-                if (e != null && e.prefab != null) total += Mathf.Max(0f, e.chance);
-            if (total <= 0f) return;
-            float roll = UnityEngine.Random.value * total;
-            MushroomMonster prefab = null;
-            foreach (var e in monsters)
-            {
-                if (e == null || e.prefab == null || e.chance <= 0f) continue;
-                prefab = e.prefab;
-                if ((roll -= e.chance) <= 0f) break;
-            }
+            if (entry == null || entry.prefab == null) return false;
+            MushroomMonster prefab = entry.prefab;
             for (int attempt = 0; attempt < 24; attempt++)
             {
-                Vector3 position = RandomPoint();
+                if (!TryGetSpawnCandidate(out Vector3 position)) return false;
                 if (!TryFindGround(position, out RaycastHit ground)) continue;
+                if (!IsValidSpawnDistance(ground.point)) continue;
+                if (player != null && (player.transform.position - ground.point).sqrMagnitude <
+                    minimumPlayerDistance * minimumPlayerDistance) continue;
                 var capsule = prefab.GetComponent<CharacterController>();
                 if (capsule == null) continue;
                 Vector3 scale = Vector3.Scale(prefab.transform.lossyScale, transform.lossyScale);
@@ -156,13 +330,14 @@ namespace MiningSimulator.Ores
                     Quaternion.Euler(0, UnityEngine.Random.Range(0f, 360f), 0), transform);
                 instance.Initialize(this, player);
                 alive.Add(instance);
-                return;
+                return true;
             }
+            return false;
         }
 
         private bool TryFindGround(Vector3 position, out RaycastHit ground)
         {
-            // The zone may contain ores, chests, monsters and scenery above the terrain.
+            // Mining locations contain ores, chests, monsters and scenery above terrain.
             // A single Raycast would spawn a monster on top of the first such collider.
             int count = Physics.RaycastNonAlloc(position + Vector3.up * 30f,
                 Vector3.down, groundHits, 60f, groundLayers,
@@ -191,16 +366,6 @@ namespace MiningSimulator.Ores
             }
             ground = best >= 0 ? groundHits[best] : default;
             return best >= 0;
-        }
-        private void OnDrawGizmosSelected()
-        {
-            var old = Gizmos.matrix;
-            Gizmos.matrix = transform.localToWorldMatrix;
-            Gizmos.color = new Color(1f, 0.3f, 0.1f, 0.15f);
-            Gizmos.DrawCube(Vector3.zero, areaSize);
-            Gizmos.color = new Color(1f, 0.3f, 0.1f, 1f);
-            Gizmos.DrawWireCube(Vector3.zero, areaSize);
-            Gizmos.matrix = old;
         }
     }
 }

@@ -12,7 +12,7 @@ namespace MiningSimulator.Editor
     public static class MushroomSpawnSetup
     {
         private const string Folder = "Assets/Prefabs/Monsters";
-        [MenuItem("Mining Simulator/Setup/Create Mushroom Spawn Zone %&#6")]
+        [MenuItem("Mining Simulator/Setup/Create Mining Monster Spawner %&#6")]
         public static void Setup()
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode) return;
@@ -111,10 +111,9 @@ namespace MiningSimulator.Editor
             var zone = Object.FindFirstObjectByType<MonsterSpawnZone>(FindObjectsInactive.Include);
             if (zone == null)
             {
-                var go = new GameObject("Mushroom Spawn Zone");
-                Undo.RegisterCreatedObjectUndo(go, "Create Mushroom Spawn Zone");
+                var go = new GameObject("Mining Monster Spawner");
+                Undo.RegisterCreatedObjectUndo(go, "Create Mining Monster Spawner");
                 zone = Undo.AddComponent<MonsterSpawnZone>(go);
-                go.transform.position = player != null ? player.transform.position + Vector3.forward * 8f : Vector3.zero;
                 var settings = new SerializedObject(zone);
                 settings.FindProperty("player").objectReferenceValue = player;
                 var entries = settings.FindProperty("monsters");
@@ -130,7 +129,7 @@ namespace MiningSimulator.Editor
             }
             AssetDatabase.SaveAssets();
             Selection.activeGameObject = zone.gameObject;
-            Debug.Log("Mushroom zone ready: move its Transform, edit Area Size / spawn table / timing. HP regeneration: Mining Character Health on Player and MushroomMonster prefab.", zone);
+            Debug.Log("Mining monster spawner ready: spawn 4-7m outside the mining NavMesh bake, then enter before targeting miners. Edit Mining Surface, spawn distances, table and timing. Transform no longer defines a spawn area.", zone);
         }
     }
 }

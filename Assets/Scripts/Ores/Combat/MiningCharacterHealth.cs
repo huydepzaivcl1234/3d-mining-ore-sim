@@ -77,11 +77,15 @@ namespace MiningSimulator.Ores
         public void ApplyBurn(float damagePerTick, float tickSeconds, float duration)
         {
             if (health <= 0f || damagePerTick <= 0f || tickSeconds <= 0f || duration <= 0f) return;
+            tickSeconds = Mathf.Max(0.1f, tickSeconds);
+            bool active = burnRemaining > 0f;
             if (burnRemaining <= 0f || damagePerTick / tickSeconds >= burnDamagePerTick / burnTickSeconds)
             {
+                // Preserve tick progress on refresh so rapid attacks cannot postpone DOT.
+                float progress = active ? burnTimer / burnTickSeconds : 0f;
                 burnDamagePerTick = damagePerTick;
                 burnTickSeconds = tickSeconds;
-                burnTimer = 0f;
+                burnTimer = progress * tickSeconds;
             }
             burnRemaining = Mathf.Max(burnRemaining, duration);
         }
@@ -109,18 +113,7 @@ namespace MiningSimulator.Ores
 
         private void Update()
         {
-            if (burnRemaining > 0f && health > 0f)
-            {
-                float activeTime = Mathf.Min(Time.deltaTime, burnRemaining);
-                burnRemaining -= activeTime;
-                burnTimer += activeTime;
-                while (burnTickSeconds > 0f && burnTimer >= burnTickSeconds && health > 0f)
-                {
-                    burnTimer -= burnTickSeconds;
-                    DealDamage(burnDamagePerTick);
-                }
-                if (burnRemaining <= 0f) ClearBurn();
-            }
+            TickBurn(Time.deltaTime);
             if (initializedMaxHealth != MaxHealth)
             {
                 if (health > 0) health = Mathf.Clamp(health + MaxHealth - initializedMaxHealth, 0, MaxHealth);
@@ -139,6 +132,22 @@ namespace MiningSimulator.Ores
             int ticks = Mathf.FloorToInt(regenTimer / interval);
             regenTimer -= ticks * interval;
             Heal(RegenAmount * ticks);
+        }
+
+        private void TickBurn(float deltaTime)
+        {
+            if (burnRemaining > 0f && health > 0f)
+            {
+                float activeTime = Mathf.Min(Mathf.Max(0f, deltaTime), burnRemaining);
+                burnRemaining -= activeTime;
+                burnTimer += activeTime;
+                while (burnTickSeconds > 0f && burnTimer >= burnTickSeconds && health > 0f)
+                {
+                    burnTimer -= burnTickSeconds;
+                    DealDamage(burnDamagePerTick);
+                }
+                if (burnRemaining <= 0f) ClearBurn();
+            }
         }
 
         private void Awake()

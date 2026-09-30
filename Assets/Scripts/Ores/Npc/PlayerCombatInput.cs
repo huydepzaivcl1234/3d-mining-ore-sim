@@ -169,7 +169,7 @@ public class PlayerCombatInput : MonoBehaviour
         if (HasParameter("AttackSpeed", AnimatorControllerParameterType.Float)) animator.SetFloat("AttackSpeed", AttackSpeed);
         if (toggleCombat != null && toggleCombat.WasPressedThisFrame())
         {
-            SetCombatMode(!combatMode);
+            TryToggleCombat();
         }
         if (layer >= 0) TrackAttack(layer);
         if (layer < 0) return;
@@ -231,6 +231,25 @@ public class PlayerCombatInput : MonoBehaviour
         foreach (var parameter in animator.parameters)
             if (parameter.name == name && parameter.type == type) return true;
         return false;
+    }
+
+    // Draw/sheath triggers are shared by two independently evaluated layers.
+    // Do not replace them midway through an equip clip or an attack. Rapid
+    // presses are ignored rather than queued for a surprise later toggle.
+    public bool TryToggleCombat()
+    {
+        if (!CanUseGameplay() || animator == null || animator.runtimeAnimatorController == null)
+            return false;
+        int expected = combatMode ? ArmedState : Animator.StringToHash("Default");
+        foreach (string layerName in new[] { CombatLayerName, "Arms Layer" })
+        {
+            int layer = animator.GetLayerIndex(layerName);
+            if (layer >= 0 && (animator.IsInTransition(layer) ||
+                animator.GetCurrentAnimatorStateInfo(layer).shortNameHash != expected))
+                return false;
+        }
+        SetCombatMode(!combatMode);
+        return true;
     }
 
     public void SetCombatMode(bool enabled)

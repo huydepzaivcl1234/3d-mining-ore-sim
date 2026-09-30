@@ -40,6 +40,33 @@ namespace MiningSimulator.Ores
             lavaWorldActive && lavaSpawnData != null ? lavaSpawnData : spawnData;
 
         public int ActiveCount => activeOres.Count;
+        public bool TryGetRandomActiveOre(out Ore selected)
+        {
+            selected = null;
+            int count = 0;
+            foreach (Ore ore in activeOres)
+            {
+                if (ore == null || !ore.isActiveAndEnabled || ore.IsDepleted) continue;
+                // Reservoir sampling: no allocation or dependence on HashSet ordering.
+                if (Random.Range(0, ++count) == 0) selected = ore;
+            }
+            return selected != null;
+        }
+
+        public bool TryGetClosestActiveOre(Vector3 origin, out Ore selected)
+        {
+            selected = null;
+            float closest = float.PositiveInfinity;
+            foreach (Ore ore in activeOres)
+            {
+                if (ore == null || !ore.isActiveAndEnabled || ore.IsDepleted) continue;
+                float distance = (ore.transform.position - origin).sqrMagnitude;
+                if (distance >= closest) continue;
+                closest = distance;
+                selected = ore;
+            }
+            return selected != null;
+        }
         public int PooledCount => inactivePooledOres.Count;
         public OreSpawnData SpawnData => ActiveSpawnData;
         public bool LavaWorldActive => lavaWorldActive;

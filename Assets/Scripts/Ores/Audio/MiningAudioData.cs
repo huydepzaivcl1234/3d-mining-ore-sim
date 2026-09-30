@@ -55,13 +55,9 @@ namespace MiningSimulator.Ores
         [SerializeField] private AudioClip upgradePurchasedSfx;
         [SerializeField] private AudioClip levelUpSfx;
         [SerializeField] private AudioClip rebirthSfx;
-        [Header("Monster loot and zone")]
+        [Header("Monster loot")]
         [SerializeField] private AudioClip monsterDropSfx;
         [SerializeField] private AudioClip monsterLootSfx;
-        [SerializeField] private AudioClip monsterZoneEnterSfx;
-        [Tooltip("Optional ambience while the player is inside a monster zone.")]
-        [SerializeField] private AudioClip monsterZoneLoop;
-        [Min(0.01f), SerializeField] private float monsterZoneFadeSeconds = 0.6f;
 
         [Header("UI SFX")]
         [SerializeField] private AudioClip buttonClickSfx;
@@ -192,9 +188,6 @@ namespace MiningSimulator.Ores
         public AudioClip RebirthSfx => rebirthSfx;
         public AudioClip MonsterDropSfx => monsterDropSfx;
         public AudioClip MonsterLootSfx => monsterLootSfx;
-        public AudioClip MonsterZoneEnterSfx => monsterZoneEnterSfx;
-        public AudioClip MonsterZoneLoop => monsterZoneLoop;
-        public float MonsterZoneFadeSeconds => monsterZoneFadeSeconds;
         public AudioClip PanelOpenSfx => panelOpenSfx;
         public AudioClip ButtonClickSfx => buttonClickSfx;
         public AudioClip PanelCloseSfx => panelCloseSfx;
@@ -213,7 +206,6 @@ namespace MiningSimulator.Ores
             ambienceVolume = Mathf.Clamp01(ambienceVolume);
             lavaWorldAmbienceVolume = Mathf.Clamp01(lavaWorldAmbienceVolume);
             ambienceFadeDuration = Mathf.Max(0f, ambienceFadeDuration);
-            monsterZoneFadeSeconds = Mathf.Max(0.01f, monsterZoneFadeSeconds);
             morningAmbiencePauseRange.x = Mathf.Max(0f, morningAmbiencePauseRange.x);
             morningAmbiencePauseRange.y = Mathf.Max(morningAmbiencePauseRange.x,
                 morningAmbiencePauseRange.y);

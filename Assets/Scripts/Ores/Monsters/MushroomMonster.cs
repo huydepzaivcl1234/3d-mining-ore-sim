@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 namespace MiningSimulator.Ores
 {
@@ -20,6 +21,17 @@ namespace MiningSimulator.Ores
         private MiningCharacterHealth health;
         private MiningCharacterHealth target;
         private Collider targetCollider;
+        private MiningNpc targetMiner;
+        private Collider minerCollider;
+        private float warningUntil;
+        private float nextMinerSearch;
+        private bool committedMinerAttack;
+        private readonly List<Vector3> chasePath = new();
+        private readonly RaycastHit[] strikeObstructions = new RaycastHit[32];
+        private int chaseWaypoint;
+        private float nextRepath;
+        private Vector3 lastPathGoal;
+        public float WarningRemaining => Mathf.Max(0f, warningUntil - Time.time);
         private MonsterSpawnZone zone;
         private Vector3 destination;
         private float nextDecision, nextAttack, verticalSpeed;
@@ -30,6 +42,16 @@ namespace MiningSimulator.Ores
         public int Level { get; private set; } = 1;
         private float scaledDamage;
         private float scaledBurnDamage;
+        private static readonly List<MushroomMonster> ActiveMonsters = new();
+        public static IReadOnlyList<MushroomMonster> Monsters => ActiveMonsters;
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetMonsterRegistry() => ActiveMonsters.Clear();
+        private void OnEnable()
+        {
+            if (!ActiveMonsters.Contains(this)) ActiveMonsters.Add(this);
+            foreach (MiningNpc miner in MiningNpc.Miners)
+                if (miner != null) miner.IgnoreMonsterCollision(this);
+        }
         public void Initialize(MonsterSpawnZone owner, MiningCharacterHealth player)
         {
             zone = owner;
@@ -56,6 +78,7 @@ namespace MiningSimulator.Ores
         }
         private void OnDestroy()
         {
+            ClearMinerWarning();
             if (health == null) return;
             health.Damaged -= OnDamage;
             health.Died -= OnDeath;
@@ -63,12 +86,14 @@ namespace MiningSimulator.Ores
         private void OnDamage()
         {
             if (health.Health <= 0f) return;
+            ClearMinerWarning();
             // Preserve the committed contact frame, then allow the hit reaction.
             // Otherwise a player's strike can cancel every incoming headbutt.
             if (animationState != HeadbuttState || hitApplied) Play("Damage");
         }
         private void OnDeath()
         {
+            ClearMinerWarning();
             if (rewardsGranted) return;
             rewardsGranted = true;
             Play("Down");
@@ -95,44 +120,86 @@ namespace MiningSimulator.Ores
                 hitApplied = true;
                 if (CanHitTarget())
                 {
-                    float dealt = target.DealDamage(scaledDamage);
+                    float dealt = targetMiner != null
+                        ? targetMiner.ApplyMonsterDamage(scaledDamage)
+                        : target.DealDamage(scaledDamage);
                     if (dealt > 0f && rewards != null)
                     {
                         health.Heal(dealt * Mathf.Clamp(rewards.lifeStealPercent, 0f, 100f) * 0.01f);
-                        target.ApplyBurn(scaledBurnDamage, rewards.burnTickSeconds,
-                            rewards.burnDurationSeconds);
+                        if (targetMiner == null && target != null)
+                            target.ApplyBurn(scaledBurnDamage, rewards.burnTickSeconds,
+                                rewards.burnDurationSeconds);
                     }
                 }
             }
             Vector3 movement = Vector3.zero;
-            if (!animator.IsInTransition(0) && ((!attacking && !reacting) || state.normalizedTime >= 1f))
+            bool warning = warningUntil > 0f;
+            if (warning)
             {
-                bool chasing = target != null && target.Health > 0f &&
-                    (zone == null || zone.Contains(target.transform.position)) &&
+                if (!IsMinerTargetValid() || !CanHitTarget())
+                {
+                    ClearMinerWarning();
+                    nextAttack = Time.time + attackCooldown;
+                }
+                else
+                {
+                    Vector3 facing = Vector3.ProjectOnPlane(targetMiner.transform.position - transform.position, Vector3.up);
+                    if (facing.sqrMagnitude > 0.01f)
+                        transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(facing), 240f * Time.deltaTime);
+                    if (Time.time >= warningUntil)
+                    {
+                        ClearMinerWarning();
+                        nextAttack = Time.time + attackCooldown;
+                        hitApplied = false;
+                        committedMinerAttack = true;
+                        Play("Headbutt", true);
+                    }
+                }
+            }
+            if (!warning && !animator.IsInTransition(0) && ((!attacking && !reacting) || state.normalizedTime >= 1f))
+            {
+                SelectMinerTarget();
+                bool chasingPlayer = targetMiner == null && target != null && target.Health > 0f &&
+                    (zone == null || zone.IsInsideMine(transform.position)) &&
                     Vector3.Distance(transform.position, target.transform.position) <= detectionRange;
-                if (chasing) destination = target.transform.position;
+                bool chasing = IsMinerTargetValid() || chasingPlayer;
+                if (chasing) destination = targetMiner != null ? targetMiner.transform.position : target.transform.position;
                 else if (zone != null && Time.time >= nextDecision)
                 {
-                    destination = zone.RandomPoint();
+                    bool found = !zone.IsInsideMine(transform.position)
+                        ? zone.TryGetMineEntryPoint(transform.position, out destination)
+                        : zone.TryGetMiningApproachPoint(transform.position, out destination);
+                    if (!found)
+                        destination = transform.position;
                     nextDecision = Time.time + Random.Range(3f, 6f);
                 }
                 Vector3 delta = destination - transform.position;
                 delta.y = 0f;
                 if (chasing && delta.magnitude <= attackRange && Time.time >= nextAttack)
                 {
-                    nextAttack = Time.time + attackCooldown;
-                    hitApplied = false;
-                    Play("Headbutt", true);
+                    if (targetMiner != null)
+                    {
+                        warningUntil = Time.time + Mathf.Max(2f, rewards != null ? rewards.minerWarningSeconds : 2f);
+                        targetMiner.SetThreat(this, true);
+                        Play("Idle");
+                    }
+                    else
+                    {
+                        nextAttack = Time.time + attackCooldown;
+                        hitApplied = false;
+                        committedMinerAttack = false;
+                        Play("Headbutt", true);
+                    }
                 }
                 else if (delta.magnitude > (chasing ? attackRange : 0.3f))
                 {
-                    movement = delta.normalized * moveSpeed;
-                    if (zone != null && !zone.Contains(transform.position + movement * Time.deltaTime)) movement = Vector3.zero;
+                    movement = ChaseDirection(delta) * moveSpeed;
                     Play(movement.sqrMagnitude > 0f ? "Walk" : "Idle");
                 }
                 else Play("Idle");
                 if (delta.sqrMagnitude > 0.01f)
-                    transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(delta), 240f * Time.deltaTime);
+                    transform.rotation = Quaternion.RotateTowards(transform.rotation,
+                        Quaternion.LookRotation(movement.sqrMagnitude > 0.01f ? movement : delta), 240f * Time.deltaTime);
             }
             verticalSpeed = motor.isGrounded ? -2f : verticalSpeed + Physics.gravity.y * Time.deltaTime;
             motor.Move((movement + Vector3.up * verticalSpeed) * Time.deltaTime);
@@ -140,14 +207,99 @@ namespace MiningSimulator.Ores
 
         private bool CanHitTarget()
         {
-            if (target == null || target.Health <= 0f) return false;
+            // A destroyed/disabled miner must not redirect an already committed hit to the player.
+            if (committedMinerAttack && targetMiner == null) return false;
+            if (targetMiner != null ? !IsMinerTargetValid() : target == null || target.Health <= 0f) return false;
             Vector3 origin = transform.TransformPoint(motor.center);
-            Vector3 point = targetCollider != null && targetCollider.enabled
-                ? targetCollider.ClosestPoint(origin) : target.transform.position;
+            Collider victimCollider = targetMiner != null ? minerCollider : targetCollider;
+            Vector3 position = targetMiner != null ? targetMiner.transform.position : target.transform.position;
+            Vector3 point = victimCollider != null && victimCollider.enabled
+                ? victimCollider.ClosestPoint(origin) : position;
             Vector3 direction = Vector3.ProjectOnPlane(point - origin, Vector3.up);
             if (direction.sqrMagnitude > (attackRange + 0.3f) * (attackRange + 0.3f)) return false;
+            Vector3 ray = point - origin;
+            if (ray.sqrMagnitude > 0.0001f)
+            {
+                int count = Physics.RaycastNonAlloc(origin, ray.normalized, strikeObstructions,
+                    ray.magnitude, ~0, QueryTriggerInteraction.Ignore);
+                // A full buffer is ambiguous: fail closed rather than hit through a wall.
+                if (count == strikeObstructions.Length) return false;
+                Transform victim = targetMiner != null ? targetMiner.transform : target.transform;
+                for (int i = 0; i < count; i++)
+                {
+                    Transform obstacle = strikeObstructions[i].transform;
+                    if (obstacle != null && !obstacle.IsChildOf(transform) && !obstacle.IsChildOf(victim)) return false;
+                }
+            }
             return direction.sqrMagnitude < 0.0001f ||
                 Vector3.Angle(transform.forward, direction) <= attackArc * 0.5f;
+        }
+        private Vector3 ChaseDirection(Vector3 direct)
+        {
+            // Outside the bake no NavMesh path can start yet. Walk physically to
+            // the entry point; the CharacterController still collides with scenery.
+            if (zone != null && !zone.IsInsideMine(transform.position))
+            {
+                chasePath.Clear();
+                nextRepath = 0f;
+                return zone.TryGetMineEntryPoint(transform.position, out Vector3 entry)
+                    ? Vector3.ProjectOnPlane(entry - transform.position, Vector3.up).normalized : Vector3.zero;
+            }
+            if (Time.time >= nextRepath || (lastPathGoal - destination).sqrMagnitude > 1f)
+            {
+                nextRepath = Time.time + 0.5f;
+                lastPathGoal = destination;
+                chaseWaypoint = 0;
+                MiningNavigation.TryFindPath(transform.position, destination, chasePath);
+            }
+            while (chaseWaypoint < chasePath.Count)
+            {
+                Vector3 delta = Vector3.ProjectOnPlane(chasePath[chaseWaypoint] - transform.position, Vector3.up);
+                if (delta.sqrMagnitude > 0.3f * 0.3f) return delta.normalized;
+                chaseWaypoint++;
+            }
+            return MiningNavigation.PathfindingAvailable && chasePath.Count == 0 ? Vector3.zero : direct.normalized;
+        }
+        private bool IsMinerTargetValid() => targetMiner != null && targetMiner.isActiveAndEnabled &&
+            !targetMiner.IsStunned &&
+            (zone == null || zone.IsInsideMine(transform.position)) &&
+            (targetMiner.transform.position - transform.position).sqrMagnitude <= detectionRange * detectionRange;
+
+        private void SelectMinerTarget()
+        {
+            if (zone != null && !zone.IsInsideMine(transform.position))
+            {
+                ClearMinerWarning();
+                targetMiner = null;
+                minerCollider = null;
+                return;
+            }
+            if (IsMinerTargetValid()) return;
+            targetMiner = null;
+            minerCollider = null;
+            if (Time.time < nextMinerSearch) return;
+            nextMinerSearch = Time.time + 0.3f;
+            float best = detectionRange * detectionRange;
+            foreach (var miner in MiningNpc.Miners)
+            {
+                if (miner == null || !miner.IsActivelyMining) continue;
+                float distance = (miner.transform.position - transform.position).sqrMagnitude;
+                if (distance > best) continue;
+                best = distance;
+                targetMiner = miner;
+            }
+            if (targetMiner != null) minerCollider = targetMiner.GetComponent<Collider>();
+        }
+
+        private void ClearMinerWarning()
+        {
+            if (targetMiner != null) targetMiner.SetThreat(this, false);
+            warningUntil = 0f;
+        }
+        private void OnDisable()
+        {
+            ClearMinerWarning();
+            ActiveMonsters.Remove(this);
         }
         private void OnDrawGizmosSelected()
         {

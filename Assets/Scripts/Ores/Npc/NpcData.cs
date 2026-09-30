@@ -14,6 +14,12 @@ namespace MiningSimulator.Ores
         [SerializeField] private float spawnHeightOffset = 0.9f;
         [Min(1), SerializeField] private int spawnAttempts = 12;
 
+        [Header("Monster attacks")]
+        [Min(1f), SerializeField] private float minerHealth = 20f;
+        [Min(0.1f), SerializeField] private float knockoutSeconds = 10f;
+        public float MinerHealth => Mathf.Max(1f, minerHealth);
+        public float KnockoutSeconds => Mathf.Max(0.1f, knockoutSeconds);
+
         [Header("Movement And Mining")]
         [Min(0.1f), SerializeField] private float moveSpeed = 3.5f;
         [Min(0f), SerializeField] private float turnSpeed = 720f;

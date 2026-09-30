@@ -38,6 +38,40 @@ namespace MiningSimulator.Ores
         [SerializeField] private TextMeshProUGUI npcExperienceLabel;
         [SerializeField] private TextMeshProUGUI itemDropChanceLabel;
         [SerializeField] private bool openOnPlay;
+        private MiningUpgradeStation worldStation;
+        private bool usesCardPurchases;
+
+        private void Start()
+        {
+            // Recover the authored view when scene references were cleared, without making a second panel.
+            if (upgradePanel == null)
+            {
+                var item = FindFirstObjectByType<JuicyUpgradeItem>(FindObjectsInactive.Include);
+                if (item != null) upgradePanel = item.transform.parent.gameObject;
+            }
+            worldStation = FindFirstObjectByType<MiningUpgradeStation>(FindObjectsInactive.Include);
+            if (worldStation == null)
+            {
+                var prefab = Resources.Load<MiningUpgradeStation>("MiningUpgradeStation");
+                if (prefab != null) worldStation = Instantiate(prefab);
+            }
+            if (worldStation == null || upgradePanel == null) return;
+            RemoveListeners();
+            usesCardPurchases = true;
+            var carousel = upgradePanel.GetComponent<MiningUpgradeCarousel>();
+            if (carousel == null) carousel = upgradePanel.AddComponent<MiningUpgradeCarousel>();
+            carousel.Initialize(upgradeSystem, wallet, worldStation.UpgradeOrder, worldStation.Close);
+            panelCoordinator?.RegisterWorldUpgradePanel(upgradePanel.GetComponent<RectTransform>());
+            worldStation.Initialize(this, upgradePanel.GetComponent<RectTransform>(), panelCoordinator);
+            // Preserve the authored reference/listeners, but retire the flat HUD button.
+            if (openButton != null) openButton.gameObject.SetActive(false);
+        }
+
+        internal void NotifyWorldPanelState(bool opened)
+        {
+            if (opened) { Refresh(); PanelOpened?.Invoke(); }
+            else PanelClosed?.Invoke();
+        }
 
         [Header("Editable Text")]
         [SerializeField] private string upgradeFormat = "{0}\n+{1:0.##}%  [{2}/{3}]  -  {4} tiền";
@@ -50,6 +84,25 @@ namespace MiningSimulator.Ores
 
         private void Awake()
         {
+            if (upgradePanel == null)
+            {
+                var item = FindFirstObjectByType<JuicyUpgradeItem>(FindObjectsInactive.Include);
+                if (item != null) upgradePanel = item.transform.parent.gameObject;
+            }
+            // Unity's destroyed-object placeholders are not CLR null: normalize cleared scene bindings.
+            if (openButton == null) openButton = null;
+            if (backButton == null) backButton = null;
+            if (closeButton == null) closeButton = null;
+            if (moneyRewardButton == null) moneyRewardButton = null;
+            if (rareOreSpawnButton == null) rareOreSpawnButton = null;
+            if (oreDamageButton == null) oreDamageButton = null;
+            if (oreSpawnSpeedButton == null) oreSpawnSpeedButton = null;
+            if (npcMoveSpeedButton == null) npcMoveSpeedButton = null;
+            if (npcCapacityButton == null) npcCapacityButton = null;
+            if (luckyBlockRewardButton == null) luckyBlockRewardButton = null;
+            if (luckyBlockDropChanceButton == null) luckyBlockDropChanceButton = null;
+            if (npcExperienceButton == null) npcExperienceButton = null;
+            if (itemDropChanceButton == null) itemDropChanceButton = null;
             // The 10 purchase buttons get their own distinct feedback (UpgradePurchasedSfx,
             // fired once per successful buy via upgradeSystem.UpgradePurchased — see
             // MiningAudioManager.HandleUpgradePurchased). Strip the generic per-click SFX
@@ -123,6 +176,7 @@ namespace MiningSimulator.Ores
 
         private void AddListeners()
         {
+            if (usesCardPurchases) return;
             openButton?.onClick.AddListener(OpenPanel);
             backButton?.onClick.AddListener(ClosePanel);
             closeButton?.onClick.AddListener(ClosePanel);
@@ -157,6 +211,7 @@ namespace MiningSimulator.Ores
 
         private void OpenPanel()
         {
+            if (worldStation != null) { worldStation.Open(); return; }
             if (panelCoordinator != null)
             {
                 panelCoordinator.OpenPanel(upgradePanel != null
@@ -174,6 +229,7 @@ namespace MiningSimulator.Ores
 
         private void ClosePanel()
         {
+            if (worldStation != null) { worldStation.Close(); return; }
             if (panelCoordinator != null)
             {
                 panelCoordinator.ClosePanel(upgradePanel != null
@@ -209,6 +265,7 @@ namespace MiningSimulator.Ores
 
         private void Refresh()
         {
+            if (worldStation != null) return; // Each extensible SVG card refreshes from the same system events.
             RefreshUpgrade(MiningUpgradeType.MoneyReward, moneyRewardButton, moneyRewardLabel);
             RefreshUpgrade(MiningUpgradeType.RareOreSpawn, rareOreSpawnButton, rareOreSpawnLabel);
             RefreshUpgrade(MiningUpgradeType.OreDamage, oreDamageButton, oreDamageLabel);

@@ -42,6 +42,8 @@ MonoBehaviour:
   upgradePurchasedSfx: {fileID: 8300000, guid: c062f16ffb3abca46b7717172158c05e, type: 3}
   levelUpSfx: {fileID: 8300000, guid: 2bb7fc75a2a230749bf1420d3a056191, type: 3}
   rebirthSfx: {fileID: 0}
+  monsterDropSfx: {fileID: 8300000, guid: d3d65f11176076946863f253030c757f, type: 3}
+  monsterLootSfx: {fileID: 8300000, guid: c69a862dde12f444da21e16558b7dd07, type: 3}
   buttonClickSfx: {fileID: 8300000, guid: c827175ac1520f24193f96c9f3a3f753, type: 3}
   panelOpenSfx: {fileID: 0}
   panelCloseSfx: {fileID: 0}

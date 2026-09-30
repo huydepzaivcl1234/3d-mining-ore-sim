@@ -57,6 +57,20 @@ namespace MiningSimulator.Ores
         public MiningUiData UiData => uiData;
         public bool BlocksGameplay => mainMenuOpen || activeModal != null;
 
+        /// <summary>The anvil view is a world interaction, not a movement-blocking modal.</summary>
+        public void RegisterWorldUpgradePanel(RectTransform panel)
+        {
+            if (upgradePanel == panel) upgradePanel = null;
+            if (activeModal == panel)
+            {
+                activeModal = null;
+                orbitCamera?.SetInputLocked(false);
+                HideBackdrop();
+                AnimateBasePanels(!mainMenuOpen);
+            }
+            additionalPanelHomes.Remove(panel);
+        }
+
         public void RegisterInventoryUi(RectTransform menuButton, RectTransform panel)
         {
             inventoryMenuButton = menuButton;

@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace MiningSimulator.Ores
 {
-    /// <summary>One-scene world swap. Ground, managers, NPCs and their save data stay intact.</summary>
+    /// <summary>One-scene world swap; the shared surface, managers and progression stay intact.</summary>
     [DisallowMultipleComponent]
     public sealed class MiningLavaWorldController : MonoBehaviour
     {
@@ -16,6 +16,11 @@ namespace MiningSimulator.Ores
         [SerializeField] private List<Terrain> groundTerrains = new();
         [Tooltip("Optional scene-authored Lava decoration roots. Disable them in the scene until travelling.")]
         [SerializeField] private List<GameObject> lavaDecorations = new();
+        [Header("World-specific scene content")]
+        [Tooltip("Optional extra Ground-only roots (props, enemies, shops). Restored to their original state on return. Ground surface, player, Ore System, UI and portal must stay shared.")]
+        [SerializeField] private List<GameObject> groundOnlyRoots = new();
+        [Tooltip("Optional Lava-only roots. Keep these inactive in the authored Ground scene.")]
+        [SerializeField] private List<GameObject> lavaOnlyRoots = new();
         [Header("Existing ground surface")]
         [Tooltip("Assign the existing Ground mesh renderer; no new floor is created.")]
         [SerializeField] private Renderer groundRenderer;
@@ -38,6 +43,8 @@ namespace MiningSimulator.Ores
         private readonly Dictionary<GameObject, bool> groundTreeStates = new();
         private readonly Dictionary<Terrain, bool> terrainTreeStates = new();
         private readonly Dictionary<GameObject, bool> initialLavaStates = new();
+        private readonly Dictionary<GameObject, bool> groundContentStates = new();
+        private readonly Dictionary<GameObject, bool> lavaContentStates = new();
         private Material[] originalGroundMaterials;
         private Material originalTerrainMaterial;
         private Material runtimeTerrainLavaMaterial;
@@ -67,12 +74,64 @@ namespace MiningSimulator.Ores
             foreach (GameObject root in surroundingTrees)
                 if (root != null && !groundTreeStates.ContainsKey(root))
                     groundTreeStates.Add(root, root.activeSelf);
+            // Older portal scenes have an empty tree list. Discover only clearly
+            // named forest roots, using the same rule as the editor setup menu.
+            if (surroundingTrees.Count == 0)
+            {
+                foreach (Transform candidate in FindObjectsByType<Transform>(
+                    FindObjectsInactive.Include, FindObjectsSortMode.None))
+                {
+                    if (candidate.gameObject.scene != gameObject.scene ||
+                        !IsTreeName(candidate.name)) continue;
+                    bool hasTreeAncestor = false;
+                    for (Transform parent = candidate.parent; parent != null; parent = parent.parent)
+                        if (IsTreeName(parent.name)) { hasTreeAncestor = true; break; }
+                    if (!hasTreeAncestor && !transform.IsChildOf(candidate) &&
+                        !groundTreeStates.ContainsKey(candidate.gameObject))
+                        groundTreeStates.Add(candidate.gameObject, candidate.gameObject.activeSelf);
+                }
+            }
             foreach (GameObject root in lavaDecorations)
                 if (root != null && !initialLavaStates.ContainsKey(root))
                     initialLavaStates.Add(root, root.activeSelf);
             foreach (Terrain terrain in groundTerrains)
                 if (terrain != null && !terrainTreeStates.ContainsKey(terrain))
                     terrainTreeStates.Add(terrain, terrain.drawTreesAndFoliage);
+            foreach (GameObject root in groundOnlyRoots) RememberGroundRoot(root);
+            // Existing scene systems are Ground content even when the portal's new lists
+            // have not yet been filled in the Inspector. Their own OnDisable cleans up drops.
+            foreach (MiningChestSpawner system in FindObjectsByType<MiningChestSpawner>(
+                FindObjectsInactive.Include, FindObjectsSortMode.None))
+                RememberGroundRoot(system.gameObject);
+            foreach (LuckyBlockDropSystem system in FindObjectsByType<LuckyBlockDropSystem>(
+                FindObjectsInactive.Include, FindObjectsSortMode.None))
+                RememberGroundRoot(system.gameObject);
+            foreach (MonsterSpawnZone system in FindObjectsByType<MonsterSpawnZone>(
+                FindObjectsInactive.Include, FindObjectsSortMode.None))
+                RememberGroundRoot(system.gameObject);
+            foreach (WanderingTraderSystem system in FindObjectsByType<WanderingTraderSystem>(
+                FindObjectsInactive.Include, FindObjectsSortMode.None))
+                RememberGroundRoot(system.gameObject);
+            foreach (GameObject root in lavaOnlyRoots)
+                if (root != null && root.scene == gameObject.scene &&
+                    !lavaContentStates.ContainsKey(root))
+                    lavaContentStates.Add(root, root.activeSelf);
+        }
+
+        private void RememberGroundRoot(GameObject root)
+        {
+            if (root == null || root.scene != gameObject.scene || root == gameObject ||
+                transform.IsChildOf(root.transform) ||
+                (oreSpawner != null && oreSpawner.transform.IsChildOf(root.transform)) ||
+                groundContentStates.ContainsKey(root)) return;
+            groundContentStates.Add(root, root.activeSelf);
+        }
+
+        private static bool IsTreeName(string value)
+        {
+            string name = value.ToLowerInvariant();
+            return name.StartsWith("tree") || name.StartsWith("pine") ||
+                   name.Contains(" trees") || name.Contains("forest");
         }
 
         public bool CanTravel(out string englishReason, out string vietnameseReason)
@@ -133,15 +192,29 @@ namespace MiningSimulator.Ores
         private void SwapCovered()
         {
             bool entering = !IsInLavaWorld;
-            if (!oreSpawner.SetLavaWorld(entering)) return;
+            if (entering) SetGroundContent(false);
+            if (!oreSpawner.SetLavaWorld(entering))
+            {
+                if (entering) SetGroundContent(true);
+                return;
+            }
+            if (!entering) SetGroundContent(true);
             foreach (var pair in groundTreeStates)
                 if (pair.Key != null) pair.Key.SetActive(entering ? false : pair.Value);
             foreach (var pair in terrainTreeStates)
                 if (pair.Key != null) pair.Key.drawTreesAndFoliage = entering ? false : pair.Value;
             foreach (var pair in initialLavaStates)
                 if (pair.Key != null) pair.Key.SetActive(entering || pair.Value);
+            foreach (var pair in lavaContentStates)
+                if (pair.Key != null) pair.Key.SetActive(entering || pair.Value);
             ApplyGroundMaterial(entering);
             if (audioManager != null) audioManager.SetLavaWorldAmbience(entering);
+        }
+
+        private void SetGroundContent(bool ground)
+        {
+            foreach (var pair in groundContentStates)
+                if (pair.Key != null) pair.Key.SetActive(ground && pair.Value);
         }
 
         private void ApplyGroundMaterial(bool lava)

@@ -225,3 +225,7 @@ PLAYER_SPECTATOR_HELP = WASD: move | Space/Ctrl: up/down | Hold RMB: look
 {0}/{1} NPC = {0}/{1} NPC
 Standing = Standing
 Combat = Combat
+MONSTER_FORECAST_TITLE = DAY {0} - MONSTERS
+MONSTER_FORECAST_REMAINING = Still arriving: {0}
+UPGRADE_STATION_NAME = Mining upgrades
+UPGRADE_STATION_INTERACT = CLICK TO INTERACT\nMining upgrades

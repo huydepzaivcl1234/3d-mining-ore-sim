@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Rendering;
 #if UNITY_EDITOR
@@ -13,6 +14,76 @@ namespace MiningSimulator.Ores
     public sealed class MiningNpc : MonoBehaviour
     {
         private static readonly List<MiningNpc> ActiveNpcs = new();
+        public static IReadOnlyList<MiningNpc> Miners => ActiveNpcs;
+        public bool IsStunned => Time.time < stunnedUntil;
+        public bool IsActivelyMining => isActiveAndEnabled && isMining && !IsStunned;
+        public float Health => minerHealth;
+        public float MaxHealth => npcData != null ? npcData.MinerHealth : 20f;
+        // Miner HP is a fixed NpcData value, independent of combat/player levels.
+        public void IgnoreMonsterCollision(MushroomMonster monster)
+        {
+            capsule ??= GetComponent<CapsuleCollider>();
+            if (capsule == null || monster == null) return;
+            foreach (Collider monsterCollider in monster.GetComponentsInChildren<Collider>(true))
+                if (monsterCollider != null) Physics.IgnoreCollision(capsule, monsterCollider, true);
+        }
+        private float minerHealth = 20f;
+        private float stunnedUntil;
+        private readonly HashSet<MushroomMonster> threats = new();
+        private TextMeshPro threatLabel;
+        private Camera threatCamera;
+
+        public void SetThreat(MushroomMonster monster, bool visible)
+        {
+            if (visible) threats.Add(monster);
+            else threats.Remove(monster);
+        }
+
+        public float ApplyMonsterDamage(float amount)
+        {
+            if (!isActiveAndEnabled || IsStunned || amount <= 0f) return 0f;
+            float dealt = Mathf.Min(minerHealth, amount);
+            minerHealth = Mathf.Max(0f, minerHealth - amount);
+            if (minerHealth <= 0f)
+            {
+                stunnedUntil = Time.time + (npcData != null ? npcData.KnockoutSeconds : 10f);
+                ReleaseTarget();
+                SetMovingAnimationState(false);
+                StopHorizontalMovement();
+                threats.Clear();
+            }
+            return dealt;
+        }
+
+        private void UpdateThreatLabel()
+        {
+            float remaining = IsStunned ? stunnedUntil - Time.time : float.PositiveInfinity;
+            if (!IsStunned)
+                foreach (var threat in threats)
+                    if (threat != null && threat.isActiveAndEnabled && threat.WarningRemaining > 0f)
+                        remaining = Mathf.Min(remaining, threat.WarningRemaining);
+            bool visible = !float.IsPositiveInfinity(remaining);
+            if (!visible) { if (threatLabel != null) threatLabel.gameObject.SetActive(false); return; }
+            if (threatLabel == null)
+            {
+                var labelObject = new GameObject("Miner danger / recovery countdown", typeof(TextMeshPro));
+                labelObject.transform.SetParent(transform, false);
+                threatLabel = labelObject.GetComponent<TextMeshPro>();
+                threatLabel.fontSize = 4f;
+                threatLabel.alignment = TextAlignmentOptions.Center;
+                threatLabel.rectTransform.sizeDelta = new Vector2(3f, 1f);
+                threatLabel.outlineWidth = 0.2f;
+                threatLabel.outlineColor = Color.black;
+            }
+            threatLabel.gameObject.SetActive(true);
+            threatLabel.transform.position = transform.position + Vector3.up *
+                ((npcData != null ? npcData.ColliderHeight : 1.8f) + 0.5f);
+            threatLabel.text = IsStunned ? $"{Mathf.CeilToInt(remaining)}" : $"! {remaining:0.0}";
+            threatLabel.color = IsStunned ? Color.yellow : Color.Lerp(Color.red, Color.white,
+                0.5f + 0.5f * Mathf.Sin(Time.time * 15f));
+            if (threatCamera == null) threatCamera = Camera.main;
+            if (threatCamera != null) threatLabel.transform.rotation = threatCamera.transform.rotation;
+        }
 
         [Header("References")]
         [SerializeField] private OreSpawner oreSpawner;
@@ -143,6 +214,7 @@ namespace MiningSimulator.Ores
         /// </summary>
         public bool CommandMine(Ore ore)
         {
+            if (IsStunned) return false;
             if (oreSpawner == null || !CanMine(ore) ||
                 !oreSpawner.TryReserveOre(this, ore, CurrentMiningPower, out int slotIndex))
             {
@@ -160,6 +232,7 @@ namespace MiningSimulator.Ores
         /// <summary>Immediately replaces the current AI-selected target with a Lucky Block.</summary>
         public bool CommandMine(LuckyBlock block)
         {
+            if (IsStunned) return false;
             if (luckyBlockSystem == null || !CanMine(block) ||
                 !luckyBlockSystem.TryReserveBlock(this, block, CurrentMiningPower,
                     out int slotIndex))
@@ -177,6 +250,7 @@ namespace MiningSimulator.Ores
 
         public bool CommandMine(MiningChest chest)
         {
+            if (IsStunned) return false;
             if (!CanMine(chest) || !chest.TryReserveMiner(this, CurrentMiningPower)) return false;
             ignoredChest = null;
             ignoredChestUntil = 0f;
@@ -202,6 +276,8 @@ namespace MiningSimulator.Ores
             ReleaseTarget();
             oreSpawner = targetSpawner;
             npcData = targetNpcData;
+            minerHealth = npcData != null ? npcData.MinerHealth : 20f;
+            stunnedUntil = 0f;
             luckyBlockSystem = targetLuckyBlockSystem;
             progressionSystem = targetProgressionSystem != null
                 ? targetProgressionSystem
@@ -220,6 +296,7 @@ namespace MiningSimulator.Ores
 
         private void Awake()
         {
+            minerHealth = npcData != null ? npcData.MinerHealth : 20f;
             body = GetComponent<Rigidbody>();
             capsule = GetComponent<CapsuleCollider>();
             if (animator == null)
@@ -294,6 +371,8 @@ namespace MiningSimulator.Ores
 
         private void OnDisable()
         {
+            threats.Clear();
+            if (threatLabel != null) threatLabel.gameObject.SetActive(false);
             ActiveNpcs.Remove(this);
             ReleaseTarget();
             hasMoveTarget = false;
@@ -309,6 +388,13 @@ namespace MiningSimulator.Ores
         {
             hasMoveTarget = false;
             desiredFacingDirection = Vector3.zero;
+            if (IsStunned) return;
+            if (stunnedUntil > 0f)
+            {
+                stunnedUntil = 0f;
+                minerHealth = npcData != null ? npcData.MinerHealth : 20f;
+                nextTargetRefreshTime = 0f;
+            }
             if (oreSpawner == null || npcData == null)
             {
                 ReleaseTarget();
@@ -377,6 +463,7 @@ namespace MiningSimulator.Ores
 
         public void OnMiningImpact()
         {
+            if (IsStunned) return;
             if (!isMining || !IsTargetValid())
             {
                 return;
@@ -393,6 +480,7 @@ namespace MiningSimulator.Ores
 
         private void FixedUpdate()
         {
+            if (IsStunned) { StopHorizontalMovement(); return; }
             if (npcData == null || body == null)
             {
                 SetMovingAnimationState(false);
@@ -496,6 +584,7 @@ namespace MiningSimulator.Ores
 
         private void LateUpdate()
         {
+            UpdateThreatLabel();
             if (animator != null && hasMiningBoolParameter)
             {
                 if (isMining && npcData != null)
@@ -1700,7 +1789,7 @@ namespace MiningSimulator.Ores
 
         private void StopHorizontalMovement()
         {
-            if (body == null)
+            if (body == null || body.isKinematic)
             {
                 return;
             }
@@ -1774,6 +1863,8 @@ namespace MiningSimulator.Ores
         private void RegisterNpcCollisionPairing()
         {
             capsule ??= GetComponent<CapsuleCollider>();
+            foreach (MushroomMonster monster in MushroomMonster.Monsters)
+                if (monster != null) IgnoreMonsterCollision(monster);
             for (int index = ActiveNpcs.Count - 1; index >= 0; index--)
             {
                 MiningNpc other = ActiveNpcs[index];

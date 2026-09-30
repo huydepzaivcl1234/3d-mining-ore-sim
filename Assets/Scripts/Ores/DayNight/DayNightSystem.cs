@@ -51,6 +51,7 @@ namespace MiningSimulator.Ores
         private Tonemapping tonemapping;
 
         public MiningTimePeriod CurrentPeriod => currentPeriod;
+        public int DayNumber { get; private set; } = 1;
 
         public int GetMaximumActiveSpecialOres(OreKind kind)
         {
@@ -165,6 +166,7 @@ namespace MiningSimulator.Ores
                     currentPeriod = currentPeriod == MiningTimePeriod.Day
                         ? MiningTimePeriod.Night
                         : MiningTimePeriod.Day;
+                    if (currentPeriod == MiningTimePeriod.Day) DayNumber++;
                     BeginLightingTransition();
                     PeriodChanged?.Invoke(currentPeriod);
                 }
@@ -235,6 +237,7 @@ namespace MiningSimulator.Ores
             }
 
             currentPeriod = period;
+            if (currentPeriod == MiningTimePeriod.Day) DayNumber++;
             periodElapsed = 0f;
             BeginLightingTransition();
             PeriodChanged?.Invoke(currentPeriod);

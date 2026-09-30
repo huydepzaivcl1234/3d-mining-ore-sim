@@ -58,6 +58,7 @@ namespace MiningSimulator.Ores
         private bool hasResolvedCameraPosition;
         private SphereCollider collisionEye;
         private PlayerInput playerInput;
+        private StarterAssets.ThirdPersonController playerMovement;
         private bool ownsRuntimeCollider;
         private Tween shakeTween;
         private float shakeEnvelope;
@@ -84,6 +85,8 @@ namespace MiningSimulator.Ores
                 distance = followDistance;
                 playerInput = followTarget.GetComponentInChildren<PlayerInput>(true);
                 combatInput = followTarget.GetComponent<PlayerCombatInput>();
+                playerMovement = followTarget.GetComponent<StarterAssets.ThirdPersonController>();
+                if (playerMovement != null) playerMovement.ExternalCameraControl = true;
             }
         }
 
@@ -96,6 +99,11 @@ namespace MiningSimulator.Ores
 
             ReadKeyboard();
             ReadMouse();
+        }
+
+        private void OnEnable()
+        {
+            if (playerMovement != null) playerMovement.ExternalCameraControl = true;
         }
 
         /// <summary>Called by MiningUiPanelCoordinator while a modal (Shop, Upgrade,
@@ -197,6 +205,7 @@ namespace MiningSimulator.Ores
 
         private void OnDisable()
         {
+            if (playerMovement != null) playerMovement.ExternalCameraControl = false;
             if (shakeTween.isAlive)
             {
                 shakeTween.Stop();
