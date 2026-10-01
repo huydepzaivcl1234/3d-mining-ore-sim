@@ -9,6 +9,8 @@ namespace MiningSimulator.Ores
     {
         [Header("Purchase And Spawn")]
         [Min(0), SerializeField] private int purchaseCost = 25;
+        [Tooltip("Percentage added to the next miner price after each successful purchase. 0 keeps a fixed price.")]
+        [Min(0f), SerializeField] private float purchaseCostIncreasePercent = 10f;
         [Min(0), SerializeField] private int startingMaximumMiners = 3;
         [Min(0f), SerializeField] private float spawnSpread = 1.25f;
         [SerializeField] private float spawnHeightOffset = 0.9f;
@@ -79,6 +81,16 @@ namespace MiningSimulator.Ores
         [Min(0.1f), SerializeField] private float ignoredTargetDuration = 1.5f;
                              
         public int PurchaseCost => purchaseCost;
+        public float PurchaseCostIncreasePercent => Mathf.Max(0f, purchaseCostIncreasePercent);
+
+        public int GetPurchaseCost(int previousPurchases)
+        {
+            if (purchaseCost <= 0) return 0;
+            double cost = purchaseCost * Math.Pow(1d + PurchaseCostIncreasePercent / 100d,
+                Mathf.Max(0, previousPurchases));
+            // Round only the final price, and saturate before converting to int.
+            return (int)Math.Min(int.MaxValue, Math.Ceiling(cost));
+        }
         public int StartingMaximumMiners => startingMaximumMiners;
         public float SpawnSpread => spawnSpread;
         public float SpawnHeightOffset => spawnHeightOffset;
@@ -137,6 +149,7 @@ namespace MiningSimulator.Ores
         private void OnValidate()
         {
             purchaseCost = Mathf.Max(0, purchaseCost);
+            purchaseCostIncreasePercent = Mathf.Max(0f, purchaseCostIncreasePercent);
             startingMaximumMiners = Mathf.Max(0, startingMaximumMiners);
             spawnSpread = Mathf.Max(0f, spawnSpread);
             spawnAttempts = Mathf.Max(1, spawnAttempts);

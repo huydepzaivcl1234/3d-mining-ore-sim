@@ -18,6 +18,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private TextMeshProUGUI statusText;
         [SerializeField] private Button buyButton;
         [SerializeField] private TextMeshProUGUI buyButtonLabel;
+        [SerializeField] private TextMeshProUGUI buyButtonCostText;
 
         [Header("Editable Text")]
         [SerializeField] private string moneyFormat = "Tiền: {0}";
@@ -153,10 +154,15 @@ namespace MiningSimulator.Ores
             if (buyButtonLabel != null)
             {
                 int cost = npcShop != null ? npcShop.NpcCost : 0;
-                buyButtonLabel.text = string.Format(MiningLocalization.Text(
+                buyButtonLabel.text = buyButtonCostText != null
+                    ? MiningLocalization.Text("BUY NPC", "Mua npc")
+                    : string.Format(MiningLocalization.Text(
                         "Buy miner ({0})", buyButtonFormat),
                     MiningMoneyFormatter.Format(cost));
             }
+
+            if (buyButtonCostText != null)
+                buyButtonCostText.text = MiningMoneyFormatter.Format(npcShop != null ? npcShop.NpcCost : 0);
 
             if (buyButton != null)
             {

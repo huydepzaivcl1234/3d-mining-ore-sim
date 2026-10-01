@@ -11,6 +11,7 @@ namespace MiningSimulator.Ores
     {
         public MushroomMonster prefab;
         public Sprite icon;
+        [Tooltip("Relative spawn weight. With entries 75 and 25 the probabilities are 75% and 25%. 0 disables this species.")]
         [Min(0f)] public float chance = 100f;
     }
     public sealed class DailyMonsterForecast
@@ -174,10 +175,10 @@ namespace MiningSimulator.Ores
             if (dayNight != null && scheduledDay != dayNight.DayNumber) BuildDailySchedule();
             if (forecastHud != null) forecastHud.SetVisible(true);
         }
-        public void GrantRewards(MonsterRewardData data, Vector3 origin, float goldMultiplier = 1)
+        public void GrantRewards(MonsterRewardData data, Vector3 origin, float goldMultiplier = 1, float experienceMultiplier = 1)
         {
             if (data == null) return;
-            if (playerStats != null) playerStats.AddExperience(Mathf.Max(0, data.experience));
+            if (playerStats != null) playerStats.AddExperience(Mathf.Max(0, data.experience) * Mathf.Max(0f, experienceMultiplier));
             if (wallet != null)
             {
                 float previousMoney = wallet.CurrentMoney;
@@ -200,7 +201,7 @@ namespace MiningSimulator.Ores
         }
         private void Update()
         {
-            alive.RemoveAll(m => m == null || m.Health.Health <= 0f);
+            alive.RemoveAll(m => m == null || m.IsDespawning || m.Health == null || m.Health.Health <= 0f);
             if (dayNight == null || !dayNight.isActiveAndEnabled) return;
             if (scheduledDay != dayNight.DayNumber) BuildDailySchedule();
             if (dayNight.CurrentPeriod != MiningTimePeriod.Day)
@@ -306,6 +307,9 @@ namespace MiningSimulator.Ores
         {
             if (entry == null || entry.prefab == null) return false;
             MushroomMonster prefab = entry.prefab;
+            var bossSettings = prefab.RewardData != null ? prefab.RewardData.boss : null;
+            bool boss = bossSettings != null && bossSettings.Roll(playerStats != null ? playerStats.Level : 1, UnityEngine.Random.value);
+            float bossScale = boss ? bossSettings.ScaleMultiplier : 1f;
             for (int attempt = 0; attempt < 24; attempt++)
             {
                 if (!TryGetSpawnCandidate(out Vector3 position)) return false;
@@ -316,6 +320,7 @@ namespace MiningSimulator.Ores
                 var capsule = prefab.GetComponent<CharacterController>();
                 if (capsule == null) continue;
                 Vector3 scale = Vector3.Scale(prefab.transform.lossyScale, transform.lossyScale);
+                scale *= bossScale;
                 float radius = capsule.radius * Mathf.Max(Mathf.Abs(scale.x), Mathf.Abs(scale.z)) * 0.9f;
                 float height = Mathf.Max(radius * 2, capsule.height * Mathf.Abs(scale.y));
                 Vector3 bottom = ground.point + Vector3.up * (radius + 0.1f);
@@ -328,7 +333,7 @@ namespace MiningSimulator.Ores
                 if (blocked) continue;
                 var instance = Instantiate(prefab, ground.point,
                     Quaternion.Euler(0, UnityEngine.Random.Range(0f, 360f), 0), transform);
-                instance.Initialize(this, player);
+                instance.Initialize(this, player, boss);
                 alive.Add(instance);
                 return true;
             }

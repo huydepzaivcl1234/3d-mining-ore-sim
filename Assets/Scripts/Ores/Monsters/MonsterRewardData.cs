@@ -5,6 +5,26 @@ using UnityEngine;
 namespace MiningSimulator.Ores
 {
     [Serializable]
+    public sealed class MonsterBossSettings
+    {
+        public bool enabled = true;
+        [Range(0, 100)] public float chancePercent = 5f;
+        [Min(5)] public int minimumPlayerLevel = 5;
+        [Min(0)] public float sizeIncreasePercent = 35f;
+        [Min(1)] public float healthMultiplier = 3f;
+        [Min(0)] public float damageMultiplier = 1.5f;
+        [Min(0)] public float goldMultiplier = 5f;
+        [Min(0)] public float experienceMultiplier = 3f;
+        [Tooltip("Optional separate loot, level and status-effect settings for this species' boss.")]
+        public MonsterRewardData rewardOverride;
+        public Color effectColor = new Color(1f, .2f, .06f, 1f);
+        [Min(1)] public float combatSeconds = 120f;
+        public bool CanSpawn(int playerLevel) => enabled && playerLevel >= Mathf.Max(5, minimumPlayerLevel);
+        public bool Roll(int playerLevel, float sample) => CanSpawn(playerLevel) &&
+            (chancePercent >= 100f || Mathf.Clamp01(sample) < Mathf.Clamp(chancePercent, 0f, 100f) * .01f);
+        public float ScaleMultiplier => 1f + Mathf.Max(0f, sizeIncreasePercent) * .01f;
+    }
+    [Serializable]
     public sealed class MonsterItemDrop
     {
         public MiningItemData item;
@@ -17,6 +37,14 @@ namespace MiningSimulator.Ores
     [CreateAssetMenu(menuName = "Mining Simulator/Game Data/Monster Rewards")]
     public sealed class MonsterRewardData : ScriptableObject
     {
+        [Header("Boss variant (same species)")]
+        public MonsterBossSettings boss = new();
+        [Header("Encounter expiry")]
+        [Tooltip("Normal monster lifetime after spawning. 0 means unlimited. Bosses use Boss Combat Seconds.")]
+        [Min(0)] public float combatSeconds;
+        [Min(.1f)] public float dissolveSeconds = 2f;
+        public Color dissolveColor = new Color(1f, .6f, .1f, 1f);
+        public Shader dissolveShader;
         [Header("Random level - geometric rarity, no gameplay level cap")]
         [Min(1)] public int minimumLevel = 1;
         [Range(0, 0.99f)] public float higherLevelChance = 0.35f;

@@ -22,6 +22,9 @@ namespace MiningSimulator.Ores
         private PlayerCombatInput combatInput;
         private bool displayedCombatMode;
         private float health;
+        private bool damageEnabled = true;
+        public void SetDamageEnabled(bool value) => damageEnabled = value;
+        private int displayedBossSeconds = -1;
         private float healingBonusPercent;
         private float burnDamagePerTick;
         private float burnTickSeconds;
@@ -58,7 +61,7 @@ namespace MiningSimulator.Ores
         // The actual health removed drives life steal; overkill never heals the attacker.
         public float DealDamage(float amount)
         {
-            if (amount <= 0f || health <= 0f) return 0f;
+            if (!damageEnabled || amount <= 0f || health <= 0f) return 0f;
             float dealt = Mathf.Min(health, amount);
             health = Mathf.Max(0f, health - amount);
             Refresh(false, UpdateAnim.Damage);
@@ -164,6 +167,12 @@ namespace MiningSimulator.Ores
 
         private void LateUpdate()
         {
+            var monster = GetComponent<MushroomMonster>();
+            if (monster != null && monster.IsBoss)
+            {
+                int seconds = Mathf.CeilToInt(monster.CombatTimeRemaining);
+                if (displayedBossSeconds != seconds) { displayedBossSeconds = seconds; RefreshLabel(); }
+            }
             bool mode = combatInput != null && combatInput.IsCombatMode;
             if (mode != displayedCombatMode) RefreshLabel();
             if (healthBar == null) return;
@@ -176,7 +185,8 @@ namespace MiningSimulator.Ores
 
         private void Refresh(bool skipAnimation, UpdateAnim updateType = UpdateAnim.Damage)
         {
-            bool showBar = health < MaxHealth - 0.001f;
+            var monster = GetComponent<MushroomMonster>();
+            bool showBar = monster != null && monster.IsBoss || health < MaxHealth - 0.001f;
             // Enable before updating MicroBar so the first hit after spawning
             // animates correctly; hide the whole bar (including its text) at full HP.
             if (showBar && healthBar != null && !healthBar.gameObject.activeSelf)
@@ -200,6 +210,11 @@ namespace MiningSimulator.Ores
                 string status = combatInput != null
                     ? MiningLocalization.Text(displayedCombatMode ? "Combat" : "Standing") + "\n"
                     : string.Empty;
+                if (monster != null && monster.IsBoss)
+                {
+                    int seconds = Mathf.CeilToInt(monster.CombatTimeRemaining);
+                    status = $"{MiningLocalization.TextKey("MONSTER_BOSS", "BOSS")} {seconds / 60:00}:{seconds % 60:00}\n";
+                }
                 healthLabel.text = $"{status}Lv. {level} | {Mathf.Ceil(health):0} / {Mathf.Ceil(MaxHealth):0}";
             }
         }

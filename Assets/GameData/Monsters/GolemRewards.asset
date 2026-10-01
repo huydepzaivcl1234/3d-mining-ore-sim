@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5ce228d6dde5489e959cc89554e9ce6d, type: 3}
-  m_Name: MushroomRewards
+  m_Name: GolemRewards
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MonsterRewardData
   boss:
     enabled: 1
@@ -33,8 +33,8 @@ MonoBehaviour:
   statGrowthPerLevel: 0.75
   goldGrowthPerLevel: 0.75
   randomStatMultiplier: {x: 0.9, y: 1.1}
-  experience: 5
-  gold: 5
+  experience: 35
+  gold: 75
   minerWarningSeconds: 2
   burnDamagePerTick: 0
   burnTickSeconds: 0.1

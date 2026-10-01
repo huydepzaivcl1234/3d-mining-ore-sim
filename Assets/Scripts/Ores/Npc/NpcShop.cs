@@ -8,6 +8,7 @@ namespace MiningSimulator.Ores
     public sealed class NpcShop : MonoBehaviour
     {
         private const string PurchasedCountSaveKey = "MiningSimulator.NpcCount.v1";
+        private const string TotalPurchasesSaveKey = "MiningSimulator.NpcPurchases.v1";
 
         [SerializeField] private PlayerWallet wallet;
         [SerializeField] private OreSpawner oreSpawner;
@@ -25,8 +26,10 @@ namespace MiningSimulator.Ores
         [SerializeField] private RuntimeAnimatorController wanderingTraderAnimatorController;
 
         private int purchasedCount;
+        private int totalPurchases;
 
-        public int NpcCost => npcData != null ? npcData.PurchaseCost : 0;
+        public int NpcCost => npcData != null ? npcData.GetPurchaseCost(totalPurchases) : 0;
+        public int TotalPurchases => totalPurchases;
         public int PurchasedCount => purchasedCount;
         public NpcData NpcData => npcData;
         /// <summary>Humanoid source reused by the runtime-only wandering trader.</summary>
@@ -63,6 +66,9 @@ namespace MiningSimulator.Ores
 
         private void Awake()
         {
+            // Old saves have only the living miner count. Preserve it as the initial price tier.
+            totalPurchases = Mathf.Max(0, PlayerPrefs.GetInt(TotalPurchasesSaveKey,
+                PlayerPrefs.GetInt(PurchasedCountSaveKey, 0)));
             FindLuckyBlockSystemIfMissing();
             FindProgressionSystemIfMissing();
             WanderingTraderSystem.EnsureRuntime(this);
@@ -98,17 +104,19 @@ namespace MiningSimulator.Ores
                 return false;
             }
 
-            if (!wallet.TrySpend(NpcCost))
+            int chargedCost = NpcCost;
+            if (!wallet.TrySpend(chargedCost))
             {
                 return false;
             }
 
             if (!TrySpawnNpc(out MiningNpc npc))
             {
-                wallet.AddMoney(NpcCost);
+                wallet.AddMoney(chargedCost);
                 return false;
             }
 
+            if (totalPurchases < int.MaxValue) totalPurchases++;
             SavePurchasedCount();
             NpcCountChanged?.Invoke(purchasedCount);
             NpcPurchased?.Invoke(npc);
@@ -133,7 +141,9 @@ namespace MiningSimulator.Ores
             }
 
             purchasedCount = 0;
+            totalPurchases = 0;
             PlayerPrefs.DeleteKey(PurchasedCountSaveKey);
+            PlayerPrefs.DeleteKey(TotalPurchasesSaveKey);
             PlayerPrefs.Save();
             NpcCountChanged?.Invoke(purchasedCount);
         }
@@ -210,6 +220,7 @@ namespace MiningSimulator.Ores
         private void SavePurchasedCount()
         {
             PlayerPrefs.SetInt(PurchasedCountSaveKey, Mathf.Max(0, purchasedCount));
+            PlayerPrefs.SetInt(TotalPurchasesSaveKey, totalPurchases);
             PlayerPrefs.Save();
         }
 
