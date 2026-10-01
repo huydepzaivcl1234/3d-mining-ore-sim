@@ -202,6 +202,7 @@ namespace MiningSimulator.Ores
             FindLuckyBlockSystemIfMissing();
             FindProgressionSystemIfMissing();
             npc.Initialize(oreSpawner, npcData, luckyBlockSystem, progressionSystem);
+            npc.SetOwningShop(this);
             purchasedCount++;
             return true;
         }

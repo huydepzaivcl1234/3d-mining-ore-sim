@@ -28,10 +28,10 @@ public class PlayerCombatInput : MonoBehaviour
     [SerializeField] private string drawWeaponParameter = "DrawWeapon";
     [SerializeField] private string sheathWeaponParameter = "SheathWeapon";
     public bool IsCombatMode => combatMode;
-    [Min(0.1f), SerializeField] private float aimRange = 15f;
+    [HideInInspector, Min(0.1f), SerializeField] private float aimRange = 15f; // Legacy; targeting now uses AttackRange.
     [Min(0f), SerializeField] private float aimTurnSpeed = 720f;
     [Header("Soft aim while attacking (does not control the camera)")]
-    [Min(0.1f), SerializeField] private float softAimRadius = 8f;
+    [HideInInspector, Min(0.1f), SerializeField] private float softAimRadius = 8f; // Retained for scene compatibility only.
     [Tooltip("Maximum time to turn toward the target at the start of each strike.")]
     [Min(0.01f), SerializeField] private float softAimDuration = 0.15f;
     private readonly Collider[] softAimHits = new Collider[64];
@@ -120,7 +120,6 @@ public class PlayerCombatInput : MonoBehaviour
             return;
         }
         if (aimedMonster != null && !IsAimValid(aimedMonster)) aimedMonster = null;
-        if (!softAimActive) return;
         int layer = animator != null ? animator.GetLayerIndex(CombatLayerName) : -1;
         bool swinging = layer >= 0 && (IsAttackState(animator.GetCurrentAnimatorStateInfo(layer)) ||
             animator.IsInTransition(layer) && IsAttackState(animator.GetNextAnimatorStateInfo(layer)));
@@ -130,9 +129,11 @@ public class PlayerCombatInput : MonoBehaviour
             return;
         }
 
-        if (IsAimValid(aimedMonster)) attackAimTarget = aimedMonster;
-        if (!IsAimValid(attackAimTarget)) attackAimTarget = FindBestSoftAimTarget();
+        // Re-evaluate the nearest reachable enemy, not a sticky distant lock.
+        attackAimTarget = FindBestSoftAimTarget();
         if (attackAimTarget == null) { StopSoftAim(); return; }
+        softAimActive = true;
+        if (movement != null) movement.ExternalFacing = true;
         Vector3 direction = attackAimTarget.transform.position - transform.position;
         direction.y = 0f;
         if (direction.sqrMagnitude < 0.0001f) return;
@@ -159,11 +160,9 @@ public class PlayerCombatInput : MonoBehaviour
     private void Update()
     {
         if (!CanUseGameplay()) { ClearAim(); return; }
-        if (autoAim != null && autoAim.WasPressedThisFrame())
-        {
-            if (IsAimValid(aimedMonster)) ClearAim();
-            else aimedMonster = FindNearestMonster();
-        }
+        aimedMonster = combatMode ? FindNearestMonster() : null;
+        if (combatMode && autoAim != null && autoAim.WasPressedThisFrame())
+            aimedMonster = FindNearestMonster();
         if (animator == null || animator.runtimeAnimatorController == null) return;
         int layer = animator.GetLayerIndex(CombatLayerName);
         if (HasParameter("AttackSpeed", AnimatorControllerParameterType.Float)) animator.SetFloat("AttackSpeed", AttackSpeed);
@@ -281,61 +280,65 @@ public class PlayerCombatInput : MonoBehaviour
             animator.SetTrigger("Move");
     }
 
-    private bool IsAimValid(MushroomMonster monster) => monster != null &&
-        monster.isActiveAndEnabled && monster.Health != null && monster.Health.Health > 0f &&
-        (monster.transform.position - transform.position).sqrMagnitude <= aimRange * aimRange;
+    private bool IsAimValid(MushroomMonster monster)
+    {
+        if (monster == null || !monster.isActiveAndEnabled || monster.Health == null ||
+            monster.Health.Health <= 0f) return false;
+        return IsAimColliderInRange(monster.GetComponent<Collider>(), out _);
+    }
+
+    private bool IsAimColliderInRange(Collider collider, out float distanceSquared)
+    {
+        distanceSquared = float.PositiveInfinity;
+        if (collider == null || !collider.enabled || collider.isTrigger ||
+            (targetLayers.value & (1 << collider.gameObject.layer)) == 0) return false;
+        Vector3 direction = collider.ClosestPoint(transform.TransformPoint(HitOriginOffset)) -
+            transform.TransformPoint(HitOriginOffset);
+        if (Mathf.Abs(direction.y) > HitHalfHeight) return false;
+        direction.y = 0f;
+        distanceSquared = direction.sqrMagnitude;
+        return distanceSquared <= AttackRange * AttackRange;
+    }
 
     private MushroomMonster FindNearestMonster()
     {
         MushroomMonster nearest = null;
         float distance = float.PositiveInfinity;
-        foreach (var collider in Physics.OverlapSphere(transform.position, aimRange, targetLayers,
-                     QueryTriggerInteraction.Ignore))
+        Vector3 origin = transform.TransformPoint(HitOriginOffset);
+        int count = Physics.OverlapCapsuleNonAlloc(origin - Vector3.up * HitHalfHeight,
+            origin + Vector3.up * HitHalfHeight, AttackRange, softAimHits, targetLayers,
+            QueryTriggerInteraction.Ignore);
+        for (int i = 0; i < count; i++)
         {
+            var collider = softAimHits[i];
             var monster = collider.GetComponentInParent<MushroomMonster>();
-            if (!IsAimValid(monster)) continue;
-            float candidate = (monster.transform.position - transform.position).sqrMagnitude;
+            if (monster == null || !monster.isActiveAndEnabled || monster.Health == null ||
+                monster.Health.Health <= 0f || !IsAimColliderInRange(collider, out float candidate)) continue;
             if (candidate < distance) { distance = candidate; nearest = monster; }
         }
+        // A full NonAlloc buffer is not guaranteed to contain the nearest collider.
+        // The existing monster registry provides a non-allocating overflow fallback.
+        if (count == softAimHits.Length)
+            foreach (var monster in MushroomMonster.Monsters)
+            {
+                if (!IsAimValid(monster) || !IsAimColliderInRange(monster.GetComponent<Collider>(),
+                        out float candidate) || candidate >= distance) continue;
+                distance = candidate;
+                nearest = monster;
+            }
         return nearest;
     }
 
     private void BeginSoftAim()
     {
-        // Keep the current target across the follow-up attack. Reacquire only
-        // when it dies or leaves the aim range, unless F selected another target.
-        attackAimTarget = IsAimValid(aimedMonster) ? aimedMonster :
-            IsAimValid(attackAimTarget) ? attackAimTarget : FindBestSoftAimTarget();
+        attackAimTarget = FindBestSoftAimTarget();
         softAimActive = attackAimTarget != null;
         if (movement != null) movement.ExternalFacing = softAimActive;
     }
 
     private MushroomMonster FindBestSoftAimTarget()
     {
-        Camera view = Camera.main;
-        if (view == null) return null;
-        int count = Physics.OverlapSphereNonAlloc(transform.position, softAimRadius,
-            softAimHits, targetLayers, QueryTriggerInteraction.Ignore);
-        MushroomMonster best = null;
-        float bestScore = float.NegativeInfinity;
-        for (int i = 0; i < count; i++)
-        {
-            var monster = softAimHits[i] != null
-                ? softAimHits[i].GetComponentInParent<MushroomMonster>() : null;
-            if (!IsAimValid(monster)) continue;
-            Vector3 direction = monster.transform.position - transform.position;
-            direction.y = 0f;
-            if (direction.sqrMagnitude < 0.0001f) continue;
-            Vector3 viewport = view.WorldToViewportPoint(monster.transform.position + Vector3.up);
-            if (viewport.z <= 0f) continue;
-            float screenDistance = (new Vector2(viewport.x - 0.5f, viewport.y - 0.5f)).sqrMagnitude;
-            float facing = Vector3.Dot(transform.forward, direction.normalized);
-            float score = -screenDistance * 2f + facing * 0.3f;
-            if (score <= bestScore) continue;
-            bestScore = score;
-            best = monster;
-        }
-        return best;
+        return FindNearestMonster();
     }
 
     private void ClearAim()

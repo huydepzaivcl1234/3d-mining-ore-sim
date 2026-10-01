@@ -2,6 +2,8 @@ using PrimeTween;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 
 namespace MiningSimulator.Ores
 {
@@ -18,6 +20,10 @@ namespace MiningSimulator.Ores
         [Min(0.5f), SerializeField] private float followDistance = 4.5f;
         [Range(-70f, 80f), SerializeField] private float followPitch = 18f;
         [SerializeField] private bool rotateOnlyWhileRightMouseHeld = true;
+        [Tooltip("Smoothly return behind the player after manual orbit. Attacking/aiming cannot steer the camera.")]
+        [SerializeField] private bool followPlayerHeading = true;
+        [Min(0.01f), SerializeField] private float headingSmoothTime = 0.3f;
+        [Min(0f), SerializeField] private float manualOrbitResumeDelay = 1f;
 
         [Header("Combat framing (follows the player's Standing/Combat mode)")]
         [SerializeField] private bool adaptiveCombatFraming = true;
@@ -43,6 +49,8 @@ namespace MiningSimulator.Ores
         private Vector3 focusPoint;
         private float distance;
         private float yaw;
+        private float headingVelocity;
+        private float lastManualOrbitTime = float.NegativeInfinity;
         private float pitch;
         private float zoomOffset;
         private float distanceVelocity;
@@ -65,6 +73,11 @@ namespace MiningSimulator.Ores
         private float shakeStrength;
         private float shakeFrequency;
         private float shakeSeed;
+        private Volume rotationBlurVolume;
+        private VolumeProfile rotationBlurProfile;
+        private MotionBlur rotationBlur;
+        private UniversalAdditionalCameraData postCamera;
+        private bool enabledPostProcessing;
 
         private void Awake()
         {
@@ -104,6 +117,7 @@ namespace MiningSimulator.Ores
         private void OnEnable()
         {
             if (playerMovement != null) playerMovement.ExternalCameraControl = true;
+            EnsureRotationBlur();
         }
 
         /// <summary>Called by MiningUiPanelCoordinator while a modal (Shop, Upgrade,
@@ -141,6 +155,7 @@ namespace MiningSimulator.Ores
 
             if (controlledCamera == null || gameData == null || cinematicOverride)
             {
+                if (rotationBlur != null) rotationBlur.intensity.value = 0f;
                 return;
             }
 
@@ -149,9 +164,10 @@ namespace MiningSimulator.Ores
             if (followTarget != null)
                 focusPoint = followTarget.position + followOffset;
 
+            UpdateFollowHeading();
             UpdateCombatFraming();
 
-            Quaternion rotation = Quaternion.Euler(EffectivePitch, yaw, 0f);
+            Quaternion rotation = ResolveComfortRotation(Quaternion.Euler(EffectivePitch, yaw, 0f));
             Vector3 desiredPosition = focusPoint - rotation * Vector3.forward * distance;
             if (shakeEnvelope > 0f)
             {
@@ -205,6 +221,7 @@ namespace MiningSimulator.Ores
 
         private void OnDisable()
         {
+            ReleaseRotationBlur();
             if (playerMovement != null) playerMovement.ExternalCameraControl = false;
             if (shakeTween.isAlive)
             {
@@ -218,6 +235,7 @@ namespace MiningSimulator.Ores
 
         private void OnDestroy()
         {
+            ReleaseRotationBlur();
             if (ownsRuntimeCollider && collisionEye != null)
             {
                 // The sphere now lives ON the camera. Never destroy the camera GameObject.
@@ -286,6 +304,89 @@ namespace MiningSimulator.Ores
                 smooth, Mathf.Infinity, Time.deltaTime);
         }
 
+        private void UpdateFollowHeading()
+        {
+            if (!followPlayerHeading || followTarget == null || inputLocked ||
+                Time.unscaledTime - lastManualOrbitTime < manualOrbitResumeDelay ||
+                (playerMovement != null && playerMovement.ExternalFacing)) return;
+            // The character's ordinary movement sets its heading. Soft aim owns ExternalFacing
+            // during attacks, so acquiring a monster never hijacks the view.
+            yaw = Mathf.SmoothDampAngle(yaw, followTarget.eulerAngles.y, ref headingVelocity,
+                headingSmoothTime, Mathf.Infinity, Time.deltaTime);
+        }
+
+        private Quaternion ResolveComfortRotation(Quaternion desired)
+        {
+            Quaternion previous = controlledCamera.transform.rotation;
+            float dt = Time.deltaTime;
+            if (dt <= 0f || inputLocked)
+            {
+                if (rotationBlur != null) rotationBlur.intensity.value = 0f;
+                return previous;
+            }
+            // Limit real rendered angular speed as well as mouse input. Follow/recentre
+            // rotations use the same comfort path; position uses this exact rotation.
+            Quaternion smooth = Quaternion.Slerp(previous, desired,
+                1f - Mathf.Exp(-dt / gameData.CameraRotationSmoothSeconds));
+            Quaternion result = Quaternion.RotateTowards(previous, smooth,
+                gameData.CameraMaximumRotationSpeed * dt);
+            EnsureRotationBlur();
+            if (rotationBlur != null)
+            {
+                float angularSpeed = Quaternion.Angle(previous, result) / dt;
+                float strength = gameData.CameraRotationBlurStrength *
+                    Mathf.InverseLerp(40f, gameData.CameraMaximumRotationSpeed, angularSpeed);
+                rotationBlur.intensity.value = Mathf.Lerp(rotationBlur.intensity.value,
+                    strength, 1f - Mathf.Exp(-dt / 0.08f));
+                rotationBlur.clamp.value = gameData.CameraRotationBlurClamp;
+            }
+            return result;
+        }
+
+        private void EnsureRotationBlur()
+        {
+            if (!Application.isPlaying || controlledCamera == null || gameData == null ||
+                rotationBlurVolume != null || UniversalRenderPipeline.asset == null) return;
+            postCamera = controlledCamera.GetComponent<UniversalAdditionalCameraData>();
+            if (postCamera == null || postCamera.volumeLayerMask.value == 0) return;
+            int layer = 0;
+            while ((postCamera.volumeLayerMask.value & (1 << layer)) == 0 && layer < 31) layer++;
+            var host = new GameObject("Camera Rotation Blur (runtime)");
+            host.hideFlags = HideFlags.DontSave;
+            host.layer = layer;
+            host.transform.SetParent(controlledCamera.transform, false);
+            rotationBlurProfile = ScriptableObject.CreateInstance<VolumeProfile>();
+            rotationBlurProfile.hideFlags = HideFlags.DontSave;
+            rotationBlur = rotationBlurProfile.Add<MotionBlur>(true);
+            rotationBlur.mode.value = MotionBlurMode.CameraOnly;
+            rotationBlur.quality.value = MotionBlurQuality.Low;
+            rotationBlur.intensity.value = 0f;
+            rotationBlur.clamp.value = gameData.CameraRotationBlurClamp;
+            rotationBlurVolume = host.AddComponent<Volume>();
+            rotationBlurVolume.isGlobal = true;
+            rotationBlurVolume.priority = 100f;
+            rotationBlurVolume.sharedProfile = rotationBlurProfile;
+            enabledPostProcessing = !postCamera.renderPostProcessing;
+            if (enabledPostProcessing) postCamera.renderPostProcessing = true;
+        }
+
+        private void ReleaseRotationBlur()
+        {
+            if (rotationBlurVolume != null) Destroy(rotationBlurVolume.gameObject);
+            if (rotationBlurProfile != null)
+            {
+                // Runtime-owned components must be released with their profile.
+                foreach (var component in rotationBlurProfile.components)
+                    if (component != null) Destroy(component);
+                Destroy(rotationBlurProfile);
+            }
+            if (enabledPostProcessing && postCamera != null) postCamera.renderPostProcessing = false;
+            enabledPostProcessing = false;
+            rotationBlur = null;
+            rotationBlurVolume = null;
+            rotationBlurProfile = null;
+        }
+
         public void EndCinematicOverride(Vector3 targetFocus)
         {
             focusPoint = targetFocus;
@@ -348,8 +449,15 @@ namespace MiningSimulator.Ores
             Vector2 delta = mouse.delta.ReadValue();
             if (!rotateOnlyWhileRightMouseHeld || mouse.rightButton.isPressed)
             {
-                yaw += delta.x * gameData.CameraRotationDegreesPerPixel;
-                pitch = Mathf.Clamp(pitch - delta.y * gameData.CameraRotationDegreesPerPixel,
+                if (mouse.rightButton.isPressed || delta.sqrMagnitude > 0f)
+                {
+                    lastManualOrbitTime = Time.unscaledTime;
+                    headingVelocity = 0f;
+                }
+                Vector2 degrees = Vector2.ClampMagnitude(delta * gameData.CameraRotationDegreesPerPixel,
+                    gameData.CameraMaximumRotationSpeed * Time.deltaTime);
+                yaw += degrees.x;
+                pitch = Mathf.Clamp(pitch - degrees.y,
                     gameData.CameraMinimumPitch, gameData.CameraMaximumPitch);
             }
 

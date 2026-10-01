@@ -41,6 +41,13 @@ namespace MiningSimulator.Ores
         [Min(0.1f), SerializeField] private float cameraMinimumDistance = 4f;
         [Min(0.1f), SerializeField] private float cameraMaximumDistance = 45f;
 
+        [Header("Camera rotation comfort")]
+        [Min(1f), SerializeField] private float cameraMaximumRotationSpeed = 180f;
+        [Min(0.01f), SerializeField] private float cameraRotationSmoothSeconds = 0.06f;
+        [Tooltip("Optional subtle blur while rotating. Set strength to zero to disable.")]
+        [Range(0f, 0.2f), SerializeField] private float cameraRotationBlurStrength = 0.06f;
+        [Range(0f, 0.05f), SerializeField] private float cameraRotationBlurClamp = 0.012f;
+
         public LayerMask ClickableLayers => clickableLayers;
         public float ClickMaximumDistance => clickMaximumDistance;
         public float CurrencyCountUnitsPerSecond => currencyCountUnitsPerSecond;
@@ -63,6 +70,10 @@ namespace MiningSimulator.Ores
         public float CameraZoomSpeed => cameraZoomSpeed;
         public float CameraMinimumDistance => cameraMinimumDistance;
         public float CameraMaximumDistance => cameraMaximumDistance;
+        public float CameraMaximumRotationSpeed => Mathf.Max(1f, cameraMaximumRotationSpeed);
+        public float CameraRotationSmoothSeconds => Mathf.Max(0.01f, cameraRotationSmoothSeconds);
+        public float CameraRotationBlurStrength => Mathf.Clamp(cameraRotationBlurStrength, 0f, 0.2f);
+        public float CameraRotationBlurClamp => Mathf.Clamp(cameraRotationBlurClamp, 0f, 0.05f);
 
         private void OnValidate()
         {

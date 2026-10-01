@@ -15,7 +15,9 @@ namespace MiningSimulator.Ores
     {
         private static readonly List<MiningNpc> ActiveNpcs = new();
         public static IReadOnlyList<MiningNpc> Miners => ActiveNpcs;
-        public bool IsStunned => Time.time < stunnedUntil;
+        public bool IsDead => minerHealth <= 0f;
+        // Compatibility for existing targeting/navigation callers: dead miners cannot act.
+        public bool IsStunned => IsDead;
         public bool IsActivelyMining => isActiveAndEnabled && isMining && !IsStunned;
         public float Health => minerHealth;
         public float MaxHealth => npcData != null ? npcData.MinerHealth : 20f;
@@ -28,7 +30,8 @@ namespace MiningSimulator.Ores
                 if (monsterCollider != null) Physics.IgnoreCollision(capsule, monsterCollider, true);
         }
         private float minerHealth = 20f;
-        private float stunnedUntil;
+        private NpcShop owningShop;
+        public void SetOwningShop(NpcShop shop) => owningShop = shop;
         private readonly HashSet<MushroomMonster> threats = new();
         private TextMeshPro threatLabel;
         private Camera threatCamera;
@@ -46,22 +49,27 @@ namespace MiningSimulator.Ores
             minerHealth = Mathf.Max(0f, minerHealth - amount);
             if (minerHealth <= 0f)
             {
-                stunnedUntil = Time.time + (npcData != null ? npcData.KnockoutSeconds : 10f);
                 ReleaseTarget();
                 SetMovingAnimationState(false);
                 StopHorizontalMovement();
                 threats.Clear();
+                // Only the purchasing shop changes its saved population; authored miners
+                // without a shop owner are removed without touching purchased counts.
+                if (owningShop == null || !owningShop.TryRemoveNpc(this))
+                {
+                    gameObject.SetActive(false);
+                    Destroy(gameObject);
+                }
             }
             return dealt;
         }
 
         private void UpdateThreatLabel()
         {
-            float remaining = IsStunned ? stunnedUntil - Time.time : float.PositiveInfinity;
-            if (!IsStunned)
-                foreach (var threat in threats)
-                    if (threat != null && threat.isActiveAndEnabled && threat.WarningRemaining > 0f)
-                        remaining = Mathf.Min(remaining, threat.WarningRemaining);
+            float remaining = float.PositiveInfinity;
+            foreach (var threat in threats)
+                if (threat != null && threat.isActiveAndEnabled && threat.WarningRemaining > 0f)
+                    remaining = Mathf.Min(remaining, threat.WarningRemaining);
             bool visible = !float.IsPositiveInfinity(remaining);
             if (!visible) { if (threatLabel != null) threatLabel.gameObject.SetActive(false); return; }
             if (threatLabel == null)
@@ -78,8 +86,8 @@ namespace MiningSimulator.Ores
             threatLabel.gameObject.SetActive(true);
             threatLabel.transform.position = transform.position + Vector3.up *
                 ((npcData != null ? npcData.ColliderHeight : 1.8f) + 0.5f);
-            threatLabel.text = IsStunned ? $"{Mathf.CeilToInt(remaining)}" : $"! {remaining:0.0}";
-            threatLabel.color = IsStunned ? Color.yellow : Color.Lerp(Color.red, Color.white,
+            threatLabel.text = $"! {remaining:0.0}";
+            threatLabel.color = Color.Lerp(Color.red, Color.white,
                 0.5f + 0.5f * Mathf.Sin(Time.time * 15f));
             if (threatCamera == null) threatCamera = Camera.main;
             if (threatCamera != null) threatLabel.transform.rotation = threatCamera.transform.rotation;
@@ -277,7 +285,6 @@ namespace MiningSimulator.Ores
             oreSpawner = targetSpawner;
             npcData = targetNpcData;
             minerHealth = npcData != null ? npcData.MinerHealth : 20f;
-            stunnedUntil = 0f;
             luckyBlockSystem = targetLuckyBlockSystem;
             progressionSystem = targetProgressionSystem != null
                 ? targetProgressionSystem
@@ -389,12 +396,6 @@ namespace MiningSimulator.Ores
             hasMoveTarget = false;
             desiredFacingDirection = Vector3.zero;
             if (IsStunned) return;
-            if (stunnedUntil > 0f)
-            {
-                stunnedUntil = 0f;
-                minerHealth = npcData != null ? npcData.MinerHealth : 20f;
-                nextTargetRefreshTime = 0f;
-            }
             if (oreSpawner == null || npcData == null)
             {
                 ReleaseTarget();

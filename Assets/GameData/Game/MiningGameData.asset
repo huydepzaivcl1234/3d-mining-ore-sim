@@ -34,3 +34,7 @@ MonoBehaviour:
   cameraZoomSpeed: 0.5
   cameraMinimumDistance: 4
   cameraMaximumDistance: 45
+  cameraMaximumRotationSpeed: 180
+  cameraRotationSmoothSeconds: 0.06
+  cameraRotationBlurStrength: 0.06
+  cameraRotationBlurClamp: 0.015

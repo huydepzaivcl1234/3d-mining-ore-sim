@@ -39,6 +39,42 @@ namespace MiningSimulator.Ores
         private int animationState;
         private static readonly int HeadbuttState = Animator.StringToHash("Headbutt");
         public MiningCharacterHealth Health => health;
+        /// <summary>Clear a newly placed ore sideways using the existing collision-aware motor.</summary>
+        public bool TryClearSpawnedOre(Collider[] oreColliders)
+        {
+            if (motor == null || !motor.enabled || health == null || health.Health <= 0f) return true;
+            for (int pass = 0; pass < 6; pass++)
+            {
+                bool overlapping = false;
+                foreach (var oreCollider in oreColliders)
+                {
+                    if (oreCollider == null || !oreCollider.enabled || oreCollider.isTrigger) continue;
+                    if (!Physics.ComputePenetration(motor, transform.position, transform.rotation,
+                        oreCollider, oreCollider.transform.position, oreCollider.transform.rotation,
+                        out Vector3 direction, out float depth)) continue;
+                    overlapping = true;
+                    Vector3 away = Vector3.ProjectOnPlane(direction, Vector3.up);
+                    var bounds = oreCollider.bounds;
+                    Vector3 delta = Vector3.ProjectOnPlane(transform.position - bounds.center, Vector3.up);
+                    if (away.sqrMagnitude < 0.001f) away = delta.sqrMagnitude > 0.001f ? delta : transform.forward;
+                    away.Normalize();
+                    float radius = motor.radius * Mathf.Max(transform.lossyScale.x, transform.lossyScale.z) + motor.skinWidth + 0.08f;
+                    // Exit the inflated horizontal footprint, not the top of the rock.
+                    float exitX = Mathf.Abs(away.x) > 0.001f
+                        ? (bounds.extents.x + radius - Mathf.Sign(away.x) * delta.x) / Mathf.Abs(away.x) : float.PositiveInfinity;
+                    float exitZ = Mathf.Abs(away.z) > 0.001f
+                        ? (bounds.extents.z + radius - Mathf.Sign(away.z) * delta.z) / Mathf.Abs(away.z) : float.PositiveInfinity;
+                    motor.Move(away * Mathf.Max(depth + 0.08f, Mathf.Min(exitX, exitZ)));
+                }
+                if (!overlapping) { nextRepath = 0f; chasePath.Clear(); return true; }
+            }
+            foreach (var oreCollider in oreColliders)
+                if (oreCollider != null && oreCollider.enabled && !oreCollider.isTrigger &&
+                    Physics.ComputePenetration(motor, transform.position, transform.rotation,
+                        oreCollider, oreCollider.transform.position, oreCollider.transform.rotation, out _, out _)) return false;
+            nextRepath = 0f; chasePath.Clear();
+            return true;
+        }
         public int Level { get; private set; } = 1;
         private float scaledDamage;
         private float scaledBurnDamage;

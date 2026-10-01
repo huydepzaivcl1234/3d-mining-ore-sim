@@ -11,12 +11,40 @@ namespace MiningSimulator.Ores
         [SerializeField] private TMP_Text label;
         private Color normalColor;
         private MiningPlayerStats stats;
+        private MiningUiPanelCoordinator coordinator;
+        private MiningMainMenu mainMenu;
+        private Graphic[] graphics;
+        private bool[] authoredEnabled;
+        private bool visualsHidden;
         private void Awake()
         {
             normalColor = label != null ? label.color : Color.white;
             if (player != null) stats = player.GetComponent<MiningPlayerStats>();
+            coordinator = FindFirstObjectByType<MiningUiPanelCoordinator>(FindObjectsInactive.Include);
+            mainMenu = FindFirstObjectByType<MiningMainMenu>(FindObjectsInactive.Include);
+            graphics = GetComponentsInChildren<Graphic>(true);
+            authoredEnabled = new bool[graphics.Length];
+            for (int i = 0; i < graphics.Length; i++) authoredEnabled[i] = graphics[i].enabled;
         }
-        private void OnDisable() { if (label != null) label.color = normalColor; }
+        private void OnDisable()
+        {
+            if (label != null) label.color = normalColor;
+            SetVisualsHidden(false);
+        }
+        private void LateUpdate()
+        {
+            // Independent of when this HUD was created or which Canvas owns it.
+            // Do not write the coordinator's CanvasGroup alpha or stop this component's updates.
+            SetVisualsHidden((coordinator != null && coordinator.BlocksGameplay) ||
+                (mainMenu != null && mainMenu.IsOpen));
+        }
+        private void SetVisualsHidden(bool hidden)
+        {
+            if (graphics == null || visualsHidden == hidden) return;
+            visualsHidden = hidden;
+            for (int i = 0; i < graphics.Length; i++)
+                if (graphics[i] != null) graphics[i].enabled = !hidden && authoredEnabled[i];
+        }
         private void Update()
         {
             if (player == null) return;

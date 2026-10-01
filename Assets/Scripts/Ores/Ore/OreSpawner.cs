@@ -384,6 +384,18 @@ namespace MiningSimulator.Ores
             instance.SetActive(true);
             KeepAboveSurface(instance, position.y);
             instance.transform.position += Vector3.up * data.SpawnHeightOffset;
+            Physics.SyncTransforms();
+            var spawnColliders = instance.GetComponentsInChildren<Collider>();
+            foreach (var monster in MushroomMonster.Monsters)
+            {
+                if (monster == null || !monster.isActiveAndEnabled) continue;
+                if (monster.TryClearSpawnedOre(spawnColliders)) continue;
+                // Walls can prevent a safe sideways move. Defer this ore instead of
+                // putting it on the monster's head or forcing the monster through scenery.
+                instance.SetActive(false);
+                ReturnOreToPool(ore);
+                return false;
+            }
             // Initialize configures hit feedback before final surface placement. Capture the
             // completed position so a hit cannot restore the ore to that earlier Y value.
             ore.FinalizeSpawnPlacement();
@@ -670,6 +682,8 @@ namespace MiningSimulator.Ores
         private static bool IsDynamicSpawnBlocker(Collider targetCollider)
         {
             return targetCollider.GetComponentInParent<MiningNpc>() != null ||
+                   targetCollider.GetComponentInParent<MushroomMonster>() != null ||
+                   targetCollider.GetComponentInParent<MiningCharacterHealth>() != null ||
                    targetCollider.GetComponentInParent<Ore>() != null ||
                    targetCollider.GetComponentInParent<LuckyBlock>() != null;
         }
