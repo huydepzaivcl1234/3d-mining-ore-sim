@@ -20,7 +20,10 @@ namespace MiningSimulator.Ores
         NpcMoveSpeed = 2,
         MiningSpeed = 3,
         OreLuckyCritical = 4,
-        EventChance = 5
+        EventChance = 5,
+        PlayerAttackSpeed = 6,
+        PlayerExperience = 7,
+        PlayerDamage = 8
     }
 
     public enum MiningItemUseType

@@ -401,9 +401,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c08874384dfc41f3ab5cfe48a0372797, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningCharacterHealth
-  maxHealth: 80
-  regenAmount: 0
-  regenInterval: 0.1
+  maxHealth: 100
+  regenAmount: 1
+  regenInterval: 5
   healthBar: {fileID: 5587691360387498288}
   microBar: {fileID: 4807180599171495706}
   healthLabel: {fileID: 1771801055955424562}
@@ -458,7 +458,7 @@ MonoBehaviour:
   detectionRange: 6
   attackRange: 2.1
   attackArc: 120
-  damage: 10
+  damage: 20
   attackCooldown: 2
   hitMoment: 0.5
   hitShape: 1

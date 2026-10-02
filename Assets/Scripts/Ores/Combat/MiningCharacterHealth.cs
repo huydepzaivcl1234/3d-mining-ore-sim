@@ -48,11 +48,13 @@ namespace MiningSimulator.Ores
         public float RegenInterval => Mathf.Max(0.1f,
             (Stats != null ? Stats.regenInterval : regenInterval) *
             (Stats != null && playerUpgrades != null
-                ? playerUpgrades.GetMultiplier(MiningUpgradeType.RegenIntervalReduction) : 1f));
+                ? playerUpgrades.GetMultiplier(MiningUpgradeType.RegenIntervalReduction) : 1f) *
+            (Stats != null ? GetComponent<MiningPlayerStats>().CardRegenIntervalMultiplier : 1f));
         public float HealingMultiplier => 1f + (Mathf.Max(0f,
             Stats != null ? Stats.healingBonusPercent : healingBonusPercent) +
             (Stats != null && playerUpgrades != null
-                ? playerUpgrades.GetAddedPercent(MiningUpgradeType.HealingEffectiveness) : 0f)) * 0.01f;
+                ? playerUpgrades.GetAddedPercent(MiningUpgradeType.HealingEffectiveness) : 0f) +
+            (Stats != null ? GetComponent<MiningPlayerStats>().CardHealingPercent : 0f)) * 0.01f;
         public float EffectiveRegenAmount => RegenAmount * HealingMultiplier;
         private float initializedMaxHealth;
         public void Respawn()

@@ -91,6 +91,9 @@ namespace MiningSimulator.Ores
         public float MoneyRewardMultiplier => GetEffectMultiplier(MiningItemEffectType.MoneyReward);
         public float NpcMoveSpeedMultiplier => GetEffectMultiplier(MiningItemEffectType.NpcMoveSpeed);
         public float MiningSpeedMultiplier => GetEffectMultiplier(MiningItemEffectType.MiningSpeed);
+        public float PlayerAttackSpeedMultiplier => GetEffectMultiplier(MiningItemEffectType.PlayerAttackSpeed);
+        public float PlayerExperienceMultiplier => GetEffectMultiplier(MiningItemEffectType.PlayerExperience);
+        public float PlayerDamageMultiplier => GetEffectMultiplier(MiningItemEffectType.PlayerDamage);
         public float EventChanceBonusPercent => GetActiveEffectPercent(MiningItemEffectType.EventChance);
 
         public float RollOreLuckyDamage(float baseDamage)

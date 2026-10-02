@@ -10,6 +10,9 @@ namespace MiningSimulator.Ores
         private MonsterSpawnZone source;
         private RectTransform root;
         private TMP_Text heading, remaining;
+        private RectTransform eventRow;
+        private UnityEngine.UI.Image eventIcon;
+        private TMP_Text eventLabel;
         private readonly List<TMP_Text> counts = new();
         private readonly List<UnityEngine.UI.Image> icons = new();
         private readonly List<GameObject> rows = new();
@@ -68,6 +71,20 @@ namespace MiningSimulator.Ores
             layout.childForceExpandHeight = false;
             heading = CreateText("Title", root, 29f, 18f);
             heading.color = new Color(1f, 0.75f, 0.3f);
+            eventRow = CreateRect("Daily Event", root);
+            eventRow.gameObject.AddComponent<UnityEngine.UI.LayoutElement>().preferredHeight = 68f;
+            var eventLayout = eventRow.gameObject.AddComponent<UnityEngine.UI.HorizontalLayoutGroup>();
+            eventLayout.spacing = 8f;
+            eventLayout.childControlWidth = eventLayout.childControlHeight = true;
+            eventLayout.childForceExpandWidth = eventLayout.childForceExpandHeight = false;
+            eventLayout.childAlignment = TextAnchor.MiddleLeft;
+            var eventImage = CreateRect("Event Icon", eventRow);
+            eventIcon = eventImage.gameObject.AddComponent<UnityEngine.UI.Image>();
+            eventIcon.preserveAspect = true; eventIcon.raycastTarget = false;
+            var eventSize = eventImage.gameObject.AddComponent<UnityEngine.UI.LayoutElement>();
+            eventSize.preferredWidth = eventSize.preferredHeight = eventSize.minWidth = 64f;
+            eventLabel = CreateText("Event Name", eventRow, 64f, 17f);
+            eventLabel.GetComponent<UnityEngine.UI.LayoutElement>().flexibleWidth = 1f;
             remaining = CreateText("Remaining", root, 23f, 15f);
         }
 
@@ -118,9 +135,14 @@ namespace MiningSimulator.Ores
                 counts[i].text = $"x {entry.Planned}";
             }
             heading.text = string.Format(MiningLocalization.TextKey("MONSTER_FORECAST_TITLE", "DAY {0} - MONSTERS"), source.ForecastDay);
+            bool hasEvent = source.CurrentDailyEvent != DailyEncounterEvent.Normal;
+            eventRow.gameObject.SetActive(hasEvent);
+            eventIcon.sprite = source.DailyEventIcon;
+            eventIcon.enabled = eventIcon.sprite != null;
+            eventLabel.text = hasEvent ? source.DailyEventLabel : "";
             remaining.text = string.Format(MiningLocalization.TextKey("MONSTER_FORECAST_REMAINING", "Still arriving: {0}"), pending);
             remaining.transform.SetAsLastSibling();
-            root.sizeDelta = new Vector2(260f, 76f + forecast.Count * 48f);
+            root.sizeDelta = new Vector2(260f, 76f + forecast.Count * 48f + (hasEvent ? 72f : 0f));
         }
 
         private static RectTransform CreateRect(string name, Transform parent)

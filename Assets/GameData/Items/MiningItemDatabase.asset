@@ -22,6 +22,9 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 7f72ecaefe764446ab8c1c7a1449a2dc, type: 2}
   - {fileID: 11400000, guid: 220ddadd20ec4e0cad3b5309aa9ce575, type: 2}
   - {fileID: 11400000, guid: 5b9bf846fe04437294a6e85553ab11da, type: 2}
+  - {fileID: 11400000, guid: 2ba3c0f2adb16544f9664067ad047e16, type: 2}
+  - {fileID: 11400000, guid: be8d607eba08e6d4998b603efa0bff67, type: 2}
+  - {fileID: 11400000, guid: 8d0f6ce9ccf821c499bd13eb4c75fb8f, type: 2}
   rarityRules:
   - rarity: 0
     dropChanceMultiplier: 1

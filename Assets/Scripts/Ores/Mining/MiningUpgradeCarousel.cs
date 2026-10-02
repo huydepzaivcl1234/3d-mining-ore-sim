@@ -41,10 +41,11 @@ namespace MiningSimulator.Ores
             closeAction = close;
             if (content != null)
             {
-                EnsureRegenerationCards(content);
+                HideRegenerationCards(content);
                 // Reuse the authored view. Never regenerate its graphics, text sizes or icon offsets.
                 foreach (var item in content.GetComponentsInChildren<JuicyUpgradeItem>(true))
                 {
+                    if (IsCardUpgrade(item.UpgradeType)) continue;
                     item.BindCard(system, wallet);
                     cards.Add(new Card { Item = item, Rect = (RectTransform)item.transform,
                         Group = item.GetComponent<CanvasGroup>(), Hover = item.GetComponent<MiningUpgradeCardHover>() });
@@ -65,13 +66,13 @@ namespace MiningSimulator.Ores
             var vectorSource = Resources.Load<GameObject>("UpgradeCard");
             if (vectorSource != null) vectorMaterial = vectorSource.GetComponent<SVGImage>().material;
             var items = GetComponentsInChildren<JuicyUpgradeItem>(true);
-            EnsureRegenerationCards(transform);
+            HideRegenerationCards(transform);
             items = GetComponentsInChildren<JuicyUpgradeItem>(true);
             // An ordered list is optional: newly added buttons are appended in their authored hierarchy order.
             var sorted = new List<JuicyUpgradeItem>();
             if (order != null) foreach (var type in order)
-                foreach (var item in items) if (item.UpgradeType == type && !sorted.Contains(item)) sorted.Add(item);
-            foreach (var item in items) if (!sorted.Contains(item)) sorted.Add(item);
+                foreach (var item in items) if (!IsCardUpgrade(type) && item.UpgradeType == type && !sorted.Contains(item)) sorted.Add(item);
+            foreach (var item in items) if (!IsCardUpgrade(item.UpgradeType) && !sorted.Contains(item)) sorted.Add(item);
             foreach (Transform child in transform) child.gameObject.SetActive(false);
             foreach (var behaviour in GetComponents<Behaviour>())
                 if (behaviour != null && behaviour != this && behaviour is not CanvasGroup) behaviour.enabled = false;
@@ -165,25 +166,13 @@ namespace MiningSimulator.Ores
             item.gameObject.SetActive(true);
         }
 
-        private static void EnsureRegenerationCards(Transform parent)
+        private static bool IsCardUpgrade(MiningUpgradeType type) =>
+            type == MiningUpgradeType.RegenIntervalReduction || type == MiningUpgradeType.HealingEffectiveness;
+
+        private static void HideRegenerationCards(Transform parent)
         {
-            var items = parent.GetComponentsInChildren<JuicyUpgradeItem>(true);
-            if (items.Length == 0) return;
-            // Clone only missing rows; retain every authored row, order, SVG and purchase behavior.
-            foreach (var type in new[] { MiningUpgradeType.RegenIntervalReduction, MiningUpgradeType.HealingEffectiveness })
-            {
-                bool exists = false;
-                foreach (var item in items) if (item.UpgradeType == type) { exists = true; break; }
-                if (exists) continue;
-                var source = items[items.Length - 1];
-                var clone = Instantiate(source, source.transform.parent);
-                clone.name = type + " Upgrade";
-                clone.SetUpgradeType(type);
-                // Never copy an old persistent onClick that purchases the template's upgrade.
-                clone.GetComponent<UnityEngine.UI.Button>().onClick = new UnityEngine.UI.Button.ButtonClickedEvent();
-                var rect = (RectTransform)clone.transform;
-                rect.anchoredPosition -= new Vector2(0f, 300f * (type == MiningUpgradeType.RegenIntervalReduction ? 1f : 2f));
-            }
+            foreach (var item in parent.GetComponentsInChildren<JuicyUpgradeItem>(true))
+                if (IsCardUpgrade(item.UpgradeType)) item.gameObject.SetActive(false);
         }
 
         private static RectTransform Rect(string name, Transform parent, Vector2 size, Vector2 position)

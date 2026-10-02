@@ -34,9 +34,38 @@ namespace MiningSimulator.Ores
         {
             if(player!=null) playerHealth=player.GetComponent<MiningCharacterHealth>();
             if(choices==null || choices.Length<3) return;
+            if (choices.Length < 5 && choicePanel != null)
+            {
+                var expanded = new UnityEngine.UI.Button[5];
+                System.Array.Copy(choices, expanded, choices.Length);
+                for (int i = choices.Length; i < 5; i++)
+                {
+                    string name = ((MiningCardChoice)i).ToString();
+                    var authored = choicePanel.Find(name);
+                    expanded[i] = authored != null ? authored.GetComponent<UnityEngine.UI.Button>() : null;
+                    if (expanded[i] == null) expanded[i] = Instantiate(choices[2], choicePanel);
+                    expanded[i].name = name;
+                    expanded[i].onClick = new UnityEngine.UI.Button.ButtonClickedEvent();
+                }
+                choices = expanded;
+                choicePanel.sizeDelta = new Vector2(choicePanel.sizeDelta.x, Mathf.Max(choicePanel.sizeDelta.y, 600f));
+                for (int i = 0; i < 5; i++)
+                {
+                    var rect = (RectTransform)choices[i].transform;
+                    int column = i < 3 ? i : i - 3;
+                    rect.anchorMin = new Vector2(.04f + column * .32f, i < 3 ? .43f : .06f);
+                    rect.anchorMax = new Vector2(.31f + column * .32f, i < 3 ? .74f : .37f);
+                    rect.offsetMin = rect.offsetMax = Vector2.zero;
+                }
+            }
             choices[0].onClick.RemoveListener(ChooseDamage); choices[0].onClick.AddListener(ChooseDamage);
             choices[1].onClick.RemoveListener(ChooseSpeed); choices[1].onClick.AddListener(ChooseSpeed);
             choices[2].onClick.RemoveListener(ChooseHealth); choices[2].onClick.AddListener(ChooseHealth);
+            if (choices.Length >= 5)
+            {
+                choices[3].onClick.RemoveListener(ChooseRegen); choices[3].onClick.AddListener(ChooseRegen);
+                choices[4].onClick.RemoveListener(ChooseHealing); choices[4].onClick.AddListener(ChooseHealing);
+            }
         }
         public bool TryDrop(Vector3 position, bool boss)
         {
@@ -80,12 +109,12 @@ namespace MiningSimulator.Ores
             if(!CanCollect || tier==null || choicePanel==null || choices==null || choices.Length<3) return false;
             pending=tier;
             title.text=MiningLocalization.Text(tier.name,tier.name)+" — "+MiningLocalization.Text("CARD_CHOOSE","Chọn một chỉ số");
-            string[] keys={"CARD_DAMAGE","CARD_AS","CARD_HEALTH"};
-            string[] fallback={"Sát thương","Tốc đánh","Máu tối đa"};
-            for(int i=0;i<3;i++)
+            string[] keys={"CARD_DAMAGE","CARD_AS","CARD_HEALTH","CARD_REGEN_INTERVAL","CARD_HEALING"};
+            string[] fallback={"Sát thương","Tốc đánh","Máu tối đa","Giảm thời gian hồi máu","Tăng hiệu quả hồi máu"};
+            for(int i=0;i<choices.Length && i<keys.Length;i++)
             {
                 choices[i].interactable=true;
-                choices[i].GetComponentInChildren<TMP_Text>().text=MiningLocalization.Text(keys[i],fallback[i])+"\n+"+tier.Bonus((MiningCardChoice)i).ToString("0.##")+"%";
+                choices[i].GetComponentInChildren<TMP_Text>().text=MiningLocalization.Text(keys[i],fallback[i])+"\n"+(i==3?"-":"+")+tier.Bonus((MiningCardChoice)i).ToString("0.##")+"%";
             }
             if(coordinator!=null) coordinator.OpenPanel(choicePanel); else choicePanel.gameObject.SetActive(true);
             Cursor.lockState=CursorLockMode.None;Cursor.visible=true;
@@ -94,9 +123,11 @@ namespace MiningSimulator.Ores
         private void ChooseDamage()=>Choose(MiningCardChoice.Damage);
         private void ChooseSpeed()=>Choose(MiningCardChoice.AttackSpeed);
         private void ChooseHealth()=>Choose(MiningCardChoice.Health);
+        private void ChooseRegen()=>Choose(MiningCardChoice.RegenInterval);
+        private void ChooseHealing()=>Choose(MiningCardChoice.HealingEffectiveness);
         public bool Choose(MiningCardChoice choice)
         {
-            if(pending==null || player==null || (int)choice<0 || (int)choice>2) return false;
+            if(pending==null || player==null || (int)choice<0 || (int)choice>4) return false;
             if(!player.AddCardBonus(choice,pending.Bonus(choice))) return false;
             pending=null;
             foreach(var button in choices) button.interactable=false;

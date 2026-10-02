@@ -203,6 +203,9 @@ namespace MiningSimulator.Ores
                 "banana" => Text("Banana", "Chuối"),
                 "grape" => Text("Grape", "Nho"),
                 "rare_gift_box" => Text("Rare Gift Box", "Hộp Quà Hiếm"),
+                "yellow_potion" => Text("Yellow Potion", "Lọ vàng"),
+                "green_potion" => Text("Green Potion", "Lọ xanh"),
+                "red_potion" => Text("Red Potion", "Lọ đỏ"),
                 _ => fallback
             };
         }
@@ -212,6 +215,9 @@ namespace MiningSimulator.Ores
             return itemId?.ToLowerInvariant() switch
             {
                 "apple" => Text("Increases NPC damage for a limited time.", fallback),
+                "yellow_potion" => Text("Temporarily increases player attack speed.", "Tạm thời tăng tốc độ đánh của người chơi."),
+                "green_potion" => Text("Temporarily increases player experience received.", "Tạm thời tăng XP người chơi nhận được."),
+                "red_potion" => Text("Temporarily increases player damage.", "Tạm thời tăng sát thương của người chơi."),
                 "banana" => Text("Increases money earned from ores and Lucky Blocks for a limited time.", fallback),
                 "grape" => Text("Increases NPC move speed for a limited time.", fallback),
                 "rare_gift_box" => Text(
@@ -227,6 +233,9 @@ namespace MiningSimulator.Ores
                 return effectType switch
                 {
                     MiningItemEffectType.NpcDamage => Text("NPC DMG", "DMG NPC"),
+                    MiningItemEffectType.PlayerAttackSpeed => Text("ATTACK SPEED", "TỐC ĐÁNH"),
+                    MiningItemEffectType.PlayerExperience => Text("PLAYER XP", "XP PLAYER"),
+                    MiningItemEffectType.PlayerDamage => Text("PLAYER DMG", "DMG PLAYER"),
                     MiningItemEffectType.MoneyReward => Text("MONEY", "VÀNG"),
                 MiningItemEffectType.NpcMoveSpeed => Text("NPC SPEED", "TỐC NPC"),
                 MiningItemEffectType.MiningSpeed => Text("MINING SPEED", "TỐC ĐÀO"),
@@ -239,6 +248,9 @@ namespace MiningSimulator.Ores
             return effectType switch
             {
                 MiningItemEffectType.NpcDamage => Text("NPC damage", "Sát thương NPC"),
+                MiningItemEffectType.PlayerAttackSpeed => Text("Player attack speed", "Tốc độ đánh người chơi"),
+                MiningItemEffectType.PlayerExperience => Text("Player XP received", "XP người chơi nhận được"),
+                MiningItemEffectType.PlayerDamage => Text("Player damage", "Sát thương người chơi"),
                 MiningItemEffectType.MoneyReward => Text("Money earned", "Vàng nhận được"),
                 MiningItemEffectType.NpcMoveSpeed => Text("NPC move speed", "Tốc chạy NPC"),
                 MiningItemEffectType.MiningSpeed => Text("Mining speed", "Tốc độ đào"),

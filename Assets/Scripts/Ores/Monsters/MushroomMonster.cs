@@ -108,6 +108,13 @@ namespace MiningSimulator.Ores
         }
         public int Level { get; private set; } = 1;
         private float scaledDamage;
+
+        // Applied once after normal level and boss tuning, never to shared prefab data.
+        public void ApplyEncounterModifiers(float sizeMultiplier, float damageMultiplier)
+        {
+            transform.localScale *= Mathf.Max(0.01f, sizeMultiplier);
+            scaledDamage *= Mathf.Max(0f, damageMultiplier);
+        }
         private float scaledBurnDamage;
         private static readonly List<MushroomMonster> ActiveMonsters = new();
         public static IReadOnlyList<MushroomMonster> Monsters => ActiveMonsters;

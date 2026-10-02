@@ -22,6 +22,8 @@ MonoBehaviour:
     damage: 1
     attackSpeed: 3
     health: 5
+    regenIntervalReduction: 1
+    healingEffectiveness: 1
   - name: Uncommon
     prefab: {fileID: 7989740430997621431, guid: 8e054e5d99f79664fb530a6133e9f29b, type: 3}
     color: {r: 0, g: 1, b: 0, a: 1}
@@ -29,6 +31,8 @@ MonoBehaviour:
     damage: 3
     attackSpeed: 6
     health: 15
+    regenIntervalReduction: 1
+    healingEffectiveness: 1
   - name: Rare
     prefab: {fileID: 5961986394851754826, guid: a9eaa03187b93614184f1e0f990eda27, type: 3}
     color: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
@@ -36,6 +40,8 @@ MonoBehaviour:
     damage: 6
     attackSpeed: 12
     health: 30
+    regenIntervalReduction: 1
+    healingEffectiveness: 1
   spawnHeight: 1
   upwardImpulse: 3
   sidewaysImpulse: 1.3

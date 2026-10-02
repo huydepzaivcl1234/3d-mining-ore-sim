@@ -32,14 +32,29 @@ namespace MiningSimulator.Ores
     public sealed class MonsterSpawnZone : MonoBehaviour
     {
         [SerializeField] private List<MonsterSpawnEntry> monsters = new();
+        [Tooltip("Additional species. Authored scene entries take precedence if the prefab already exists.")]
+        [SerializeField] private MonsterSpawnRoster additionalRoster;
         [SerializeField] private NavMeshSurface miningSurface;
         [Min(0.5f), SerializeField] private float minimumSpawnDistance = 4f;
         [Min(0.5f), SerializeField] private float maximumSpawnDistance = 7f;
         [Min(0f), SerializeField] private float minimumPlayerDistance = 3f;
         [Header("Daily encounters")]
         [SerializeField] private DayNightSystem dayNight;
+        [SerializeField] private DailyEncounterEventData dailyEvents;
+        public DailyEncounterEvent CurrentDailyEvent { get; private set; }
+        public MiningTimePeriod SpawnPeriod => CurrentDailyEvent == DailyEncounterEvent.NightOnly
+            ? MiningTimePeriod.Night : MiningTimePeriod.Day;
+        public Sprite DailyEventIcon => dailyEvents == null ? null :
+            CurrentDailyEvent == DailyEncounterEvent.NightOnly ? dailyEvents.nightOnlyIcon : dailyEvents.bossInvasionIcon;
+        public string DailyEventLabel => CurrentDailyEvent == DailyEncounterEvent.NightOnly
+            ? MiningLocalization.TextKey("DAILY_EVENT_NIGHT_ONLY", "Day off - monsters arrive at night")
+            : MiningLocalization.TextKey("DAILY_EVENT_BOSS", "Boss invasion");
         [Min(0), SerializeField] private int minimumPerDay = 3;
         [Min(0), SerializeField] private int maximumPerDay = 12;
+        [Tooltip("Extra daily monsters per current day number. 1 means roll + current day.")]
+        [Min(0), SerializeField] private int extraMonstersPerDayNumber = 1;
+        [Tooltip("Total daily cap across every species, including boss variants.")]
+        [Min(1), SerializeField] private int dailyMonsterCap = 50;
         [Range(1, 12), SerializeField] private int maximumPerWave = 3;
         [Range(0.01f, 0.99f), SerializeField] private float largerWaveRelativeWeight = 0.35f;
         [SerializeField] private bool showDailyForecast = true;
@@ -163,6 +178,11 @@ namespace MiningSimulator.Ores
         }
         private void Start()
         {
+            additionalRoster ??= Resources.Load<MonsterSpawnRoster>("MonsterSpawnRoster");
+            if (additionalRoster != null)
+                foreach (var entry in additionalRoster.Entries)
+                    if (entry != null && entry.prefab != null && !monsters.Exists(e => e != null && e.prefab == entry.prefab))
+                        monsters.Add(entry);
             if (player == null)
             {
                 var stats = FindAnyObjectByType<MiningPlayerStats>();
@@ -232,9 +252,10 @@ namespace MiningSimulator.Ores
             alive.RemoveAll(m => m == null || m.IsDespawning || m.Health == null || m.Health.Health <= 0f);
             if (dayNight == null || !dayNight.isActiveAndEnabled) return;
             if (scheduledDay != dayNight.DayNumber) BuildDailySchedule();
-            if (dayNight.CurrentPeriod != MiningTimePeriod.Day)
+            if (dayNight.CurrentPeriod != SpawnPeriod)
             {
-                SkipWavesBefore(1f);
+                // Night-only waves are deferred during the day, not discarded.
+                if (SpawnPeriod == MiningTimePeriod.Day) SkipWavesBefore(1f);
                 return;
             }
             float progress = dayNight.CurrentPeriodProgress;
@@ -255,7 +276,8 @@ namespace MiningSimulator.Ores
                     ForecastChanged?.Invoke();
                     continue;
                 }
-                if (!SpawnOne(entry.Entry)) break;
+                bool invasion = CurrentDailyEvent == DailyEncounterEvent.BossInvasion;
+                if (!SpawnOne(entry.Entry, invasion, invasion)) break;
                 entry.Spawned++;
                 wave.Completed++;
                 ForecastChanged?.Invoke();
@@ -301,15 +323,24 @@ namespace MiningSimulator.Ores
                 (playerStats != null ? playerStats.Level : 1) >= Mathf.Max(1, entry.minimumPlayerLevel));
         }
 
-        private MonsterSpawnEntry RollMonsterEntry()
+        private bool CanSpawnEventBoss(MonsterSpawnEntry entry)
+        {
+            if (!CanSpawnSpecies(entry) || entry.chance <= 0f) return false;
+            var boss = entry.prefab.RewardData != null ? entry.prefab.RewardData.boss : null;
+            var tuning = MiningGameplayTuning.Current;
+            return boss != null && boss.CanSpawn(playerStats != null ? playerStats.Level : 1,
+                tuning != null && tuning.IgnoreBossLevel);
+        }
+
+        private MonsterSpawnEntry RollMonsterEntry(bool bossOnly = false)
         {
             float total = 0f;
             foreach (MonsterSpawnEntry entry in monsters)
-                if (CanSpawnSpecies(entry)) total += Mathf.Max(0f, entry.chance);
+                if (CanSpawnSpecies(entry) && (!bossOnly || CanSpawnEventBoss(entry))) total += Mathf.Max(0f, entry.chance);
             if (total <= 0f) return null;
             float roll = UnityEngine.Random.value * total;
             foreach (MonsterSpawnEntry entry in monsters)
-                if (CanSpawnSpecies(entry) && entry.chance > 0f && (roll -= entry.chance) <= 0f)
+                if (CanSpawnSpecies(entry) && (!bossOnly || CanSpawnEventBoss(entry)) && entry.chance > 0f && (roll -= entry.chance) <= 0f)
                     return entry;
             return null;
         }
@@ -331,17 +362,22 @@ namespace MiningSimulator.Ores
         {
             forecast.Clear(); waves.Clear(); nextWave = 0; nextSpawnRetry = 0f;
             scheduledDay = dayNight != null ? dayNight.DayNumber : 1;
-            if (dayNight == null || dayNight.CurrentPeriod != MiningTimePeriod.Day)
+            if (dayNight == null)
             { ForecastChanged?.Invoke(); return; }
+            dailyEvents ??= Resources.Load<DailyEncounterEventData>("DailyEncounterEvents");
+            bool bossEligible = monsters.Exists(CanSpawnEventBoss);
+            CurrentDailyEvent = dailyEvents != null ? dailyEvents.Roll(UnityEngine.Random.value, bossEligible) : DailyEncounterEvent.Normal;
             int min = Mathf.Clamp(minimumPerDay, 0, 256);
-            int remaining = UnityEngine.Random.Range(min, Mathf.Clamp(maximumPerDay, min, 256) + 1);
+            int rolled = UnityEngine.Random.Range(min, Mathf.Clamp(maximumPerDay, min, 256) + 1);
+            bool invasion = CurrentDailyEvent == DailyEncounterEvent.BossInvasion;
+            int remaining = invasion ? 1 : CalculateDailyMonsterCount(rolled, scheduledDay);
             while (remaining > 0)
             {
                 var wave = new SpawnWave();
                 int count = RollWaveSize(remaining);
                 for (int i = 0; i < count; i++)
                 {
-                    MonsterSpawnEntry entry = RollMonsterEntry();
+                    MonsterSpawnEntry entry = RollMonsterEntry(invasion);
                     if (entry == null) { remaining = 0; break; }
                     DailyMonsterForecast item = forecast.Find(f => f.Entry == entry);
                     if (item == null) { item = new DailyMonsterForecast { Entry = entry }; forecast.Add(item); }
@@ -351,7 +387,7 @@ namespace MiningSimulator.Ores
                 }
                 if (wave.Members.Count > 0) waves.Add(wave);
             }
-            float start = dayNight.CurrentPeriodProgress;
+            float start = dayNight.CurrentPeriod == SpawnPeriod ? dayNight.CurrentPeriodProgress : 0f;
             for (int i = 0; i < waves.Count; i++)
                 waves[i].Progress = Mathf.Lerp(start, 1f, (i + 1f) / (waves.Count + 1f));
             ForecastChanged?.Invoke();
@@ -362,6 +398,13 @@ namespace MiningSimulator.Ores
             SpawnWave wave = waves[nextWave++];
             for (int i = wave.Completed; i < wave.Members.Count; i++) wave.Members[i].Skipped++;
             ForecastChanged?.Invoke();
+        }
+
+        public int CalculateDailyMonsterCount(int rolled, int day)
+        {
+            long total = (long)Mathf.Max(0, rolled) +
+                (long)Mathf.Max(1, day) * Mathf.Max(0, extraMonstersPerDayNumber);
+            return (int)Math.Min(Mathf.Max(1, dailyMonsterCap), total);
         }
         private void SkipWavesBefore(float progress)
         {
@@ -382,7 +425,7 @@ namespace MiningSimulator.Ores
             var entry = monsters.Find(m => m != null && m.prefab == prefab);
             return entry != null && SpawnOne(entry, true);
         }
-        private bool SpawnOne(MonsterSpawnEntry entry, bool forceBoss = false)
+        private bool SpawnOne(MonsterSpawnEntry entry, bool forceBoss = false, bool invasion = false)
         {
             if (!CanSpawnSpecies(entry)) return false;
             MushroomMonster prefab = entry.prefab;
@@ -395,6 +438,8 @@ namespace MiningSimulator.Ores
                 : bossSettings.Roll(playerStats != null ? playerStats.Level : 1, UnityEngine.Random.value, ignoreLevel));
             if (forceBoss && !boss) return false;
             float bossScale = boss ? bossSettings.ScaleMultiplier : 1f;
+            float extraScale = invasion && dailyEvents != null ? 1f + Mathf.Max(0, dailyEvents.bossExtraSizePercent) * 0.01f : 1f;
+            bossScale *= extraScale;
             for (int attempt = 0; attempt < 24; attempt++)
             {
                 if (!TryGetSpawnCandidate(out Vector3 position)) return false;
@@ -419,6 +464,8 @@ namespace MiningSimulator.Ores
                 var instance = Instantiate(prefab, ground.point,
                     Quaternion.Euler(0, UnityEngine.Random.Range(0f, 360f), 0), transform);
                 instance.Initialize(this, player, boss);
+                if (invasion && dailyEvents != null)
+                    instance.ApplyEncounterModifiers(extraScale, 1f + Mathf.Max(0, dailyEvents.bossExtraDamagePercent) * 0.01f);
                 alive.Add(instance);
                 return true;
             }

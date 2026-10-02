@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace MiningSimulator.Ores
 {
-    public enum MiningCardChoice { Damage, AttackSpeed, Health }
+    public enum MiningCardChoice { Damage = 0, AttackSpeed = 1, Health = 2, RegenInterval = 3, HealingEffectiveness = 4 }
     [CreateAssetMenu(menuName = "Mining Simulator/Card Drops")]
     public sealed class MiningCardData : ScriptableObject
     {
@@ -20,7 +20,17 @@ namespace MiningSimulator.Ores
             [Min(0f)] public float attackSpeed = 5f;
             [Tooltip("Percentage points added to level-scaled base max health.")]
             [Min(0f)] public float health = 5f;
-            public float Bonus(MiningCardChoice choice) => choice == MiningCardChoice.Damage ? damage : choice == MiningCardChoice.AttackSpeed ? attackSpeed : health;
+            [Min(0f)] public float regenIntervalReduction = 1f;
+            [Min(0f)] public float healingEffectiveness = 1f;
+            public float Bonus(MiningCardChoice choice) => choice switch
+            {
+                MiningCardChoice.Damage => damage,
+                MiningCardChoice.AttackSpeed => attackSpeed,
+                MiningCardChoice.Health => health,
+                MiningCardChoice.RegenInterval => regenIntervalReduction,
+                MiningCardChoice.HealingEffectiveness => healingEffectiveness,
+                _ => 0f
+            };
         }
         [Range(0,100)] public float monsterDropPercent = 10f;
         [Range(0,100)] public float bossDropPercent = 50f;
