@@ -23,7 +23,7 @@ public class PlayerCombatInput : MonoBehaviour
         "Toggle Combat", InputActionType.Button, "<Keyboard>/e");
     [SerializeField] private InputAction attack = new InputAction(
         "Attack", InputActionType.Button, "<Mouse>/leftButton");
-    [SerializeField] private InputAction autoAim = new InputAction(
+    [HideInInspector, SerializeField] private InputAction autoAim = new InputAction(
         "Auto Aim", InputActionType.Button, "<Keyboard>/f");
     [SerializeField] private string drawWeaponParameter = "DrawWeapon";
     [SerializeField] private string sheathWeaponParameter = "SheathWeapon";
@@ -36,6 +36,10 @@ public class PlayerCombatInput : MonoBehaviour
     [Min(0.01f), SerializeField] private float softAimDuration = 0.15f;
     private readonly Collider[] softAimHits = new Collider[64];
     private bool softAimActive;
+    private float softAimElapsed;
+    private Quaternion softAimStartRotation;
+    private MiningOrbitCamera orbitCamera;
+    public bool IsShiftLocked => orbitCamera != null && orbitCamera.IsShiftLocked;
     private MushroomMonster attackAimTarget;
     private MushroomMonster aimedMonster;
     private StarterAssets.ThirdPersonController movement;
@@ -84,7 +88,7 @@ public class PlayerCombatInput : MonoBehaviour
     public float Damage => Stats != null ? GetComponent<MiningPlayerStats>().Damage : Mathf.Max(0, damage);
     public float AttackRange => Mathf.Max(0.1f, Stats != null ? Stats.attackRange : attackRange);
     public float AttackAngle => Mathf.Clamp(Stats != null ? Stats.attackAngle : attackAngle, 1, 180);
-    public float AttackSpeed => Mathf.Max(0.1f, Stats != null ? Stats.attackSpeed : attackSpeed);
+    public float AttackSpeed => Mathf.Max(0.1f, Stats != null ? GetComponent<MiningPlayerStats>().AttackSpeed : attackSpeed);
     private float BlendSeconds => Mathf.Max(0.01f, Stats != null ? Stats.combatBlendSeconds : combatBlendSeconds);
     private Vector3 HitOriginOffset => Stats != null ? Stats.hitOriginOffset : hitOriginOffset;
     private float HitHalfHeight => 0.9f;
@@ -94,7 +98,6 @@ public class PlayerCombatInput : MonoBehaviour
     {
         toggleCombat?.Enable();
         attack?.Enable();
-        autoAim?.Enable();
     }
     private void OnDisable()
     {
@@ -119,6 +122,7 @@ public class PlayerCombatInput : MonoBehaviour
             ClearAim();
             return;
         }
+        if (IsShiftLocked) { StopSoftAim(); return; }
         if (aimedMonster != null && !IsAimValid(aimedMonster)) aimedMonster = null;
         int layer = animator != null ? animator.GetLayerIndex(CombatLayerName) : -1;
         bool swinging = layer >= 0 && (IsAttackState(animator.GetCurrentAnimatorStateInfo(layer)) ||
@@ -129,19 +133,20 @@ public class PlayerCombatInput : MonoBehaviour
             return;
         }
 
-        // Re-evaluate the nearest reachable enemy, not a sticky distant lock.
-        attackAimTarget = FindBestSoftAimTarget();
-        if (attackAimTarget == null) { StopSoftAim(); return; }
+        // Acquire once per strike, not every frame: nearby enemies cannot spin us
+        // between targets. Shift lock disables this assistance entirely.
+        if (!softAimActive || !IsAimValid(attackAimTarget)) { StopSoftAim(); return; }
         softAimActive = true;
         if (movement != null) movement.ExternalFacing = true;
         Vector3 direction = attackAimTarget.transform.position - transform.position;
         direction.y = 0f;
         if (direction.sqrMagnitude < 0.0001f) return;
         Quaternion targetRotation = Quaternion.LookRotation(direction);
-        float angle = Quaternion.Angle(transform.rotation, targetRotation);
-        float turnSpeed = Mathf.Max(aimTurnSpeed, angle / Mathf.Max(0.01f, softAimDuration));
-        transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation,
-            turnSpeed * Time.deltaTime);
+        softAimElapsed += Time.deltaTime;
+        float progress = Mathf.Clamp01(softAimElapsed / Mathf.Max(.01f, softAimDuration));
+        Quaternion smooth = Quaternion.Slerp(softAimStartRotation, targetRotation, Mathf.SmoothStep(0f, 1f, progress));
+        transform.rotation = Quaternion.RotateTowards(transform.rotation, smooth, aimTurnSpeed * Time.deltaTime);
+        if (progress >= 1f) StopSoftAim();
     }
     private void OnDestroy()
     {
@@ -156,13 +161,13 @@ public class PlayerCombatInput : MonoBehaviour
         ownHealth = GetComponent<MiningCharacterHealth>();
         movement = GetComponent<StarterAssets.ThirdPersonController>();
         panels = FindFirstObjectByType<MiningUiPanelCoordinator>();
+        foreach (var rig in FindObjectsByType<MiningOrbitCamera>(FindObjectsSortMode.None))
+            if (rig.FollowTarget == transform) { orbitCamera = rig; break; }
     }
     private void Update()
     {
         if (!CanUseGameplay()) { ClearAim(); return; }
         aimedMonster = combatMode ? FindNearestMonster() : null;
-        if (combatMode && autoAim != null && autoAim.WasPressedThisFrame())
-            aimedMonster = FindNearestMonster();
         if (animator == null || animator.runtimeAnimatorController == null) return;
         int layer = animator.GetLayerIndex(CombatLayerName);
         if (HasParameter("AttackSpeed", AnimatorControllerParameterType.Float)) animator.SetFloat("AttackSpeed", AttackSpeed);
@@ -331,6 +336,9 @@ public class PlayerCombatInput : MonoBehaviour
 
     private void BeginSoftAim()
     {
+        if (IsShiftLocked) { StopSoftAim(); return; }
+        softAimElapsed = 0f;
+        softAimStartRotation = transform.rotation;
         attackAimTarget = FindBestSoftAimTarget();
         softAimActive = attackAimTarget != null;
         if (movement != null) movement.ExternalFacing = softAimActive;
@@ -351,7 +359,7 @@ public class PlayerCombatInput : MonoBehaviour
     {
         attackAimTarget = null;
         softAimActive = false;
-        if (movement != null) movement.ExternalFacing = false;
+        if (movement != null) movement.ExternalFacing = IsShiftLocked;
     }
 
     private void TrackAttack(int layer)
@@ -377,7 +385,7 @@ public class PlayerCombatInput : MonoBehaviour
         lastAttackStateHash = active ? state.shortNameHash : 0;
         if (!active)
         {
-            if (movement != null && !softAimActive) movement.ExternalFacing = false;
+            if (movement != null && !softAimActive) movement.ExternalFacing = IsShiftLocked;
             returningFromAttack = false;
             queuedAttack = false;
             queuedAttackStateHash = 0;

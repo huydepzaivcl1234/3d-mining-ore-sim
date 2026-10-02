@@ -11,6 +11,15 @@ namespace MiningSimulator.Ores
         [Min(0), SerializeField] private int purchaseCost = 25;
         [Tooltip("Percentage added to the next miner price after each successful purchase. 0 keeps a fixed price.")]
         [Min(0f), SerializeField] private float purchaseCostIncreasePercent = 10f;
+        [Min(0f), SerializeField] private float rebirthPurchaseCostIncreasePercent = 10f;
+        [Header("Miner health display")]
+        [SerializeField] private GameObject minerHealthBarPrefab;
+        [SerializeField] private Vector3 minerHealthBarOffset = new(0f, 2.1f, 0f);
+        [Min(0.01f), SerializeField] private float minerHealthBarScale = .6f;
+        public GameObject MinerHealthBarPrefab => minerHealthBarPrefab;
+        public Vector3 MinerHealthBarOffset => minerHealthBarOffset;
+        public float MinerHealthBarScale => minerHealthBarScale;
+        public float RebirthPurchaseCostIncreasePercent => Mathf.Max(0f, rebirthPurchaseCostIncreasePercent);
         [Min(0), SerializeField] private int startingMaximumMiners = 3;
         [Min(0f), SerializeField] private float spawnSpread = 1.25f;
         [SerializeField] private float spawnHeightOffset = 0.9f;
@@ -83,11 +92,12 @@ namespace MiningSimulator.Ores
         public int PurchaseCost => purchaseCost;
         public float PurchaseCostIncreasePercent => Mathf.Max(0f, purchaseCostIncreasePercent);
 
-        public int GetPurchaseCost(int previousPurchases)
+        public int GetPurchaseCost(int previousPurchases, int rebirths = 0)
         {
             if (purchaseCost <= 0) return 0;
             double cost = purchaseCost * Math.Pow(1d + PurchaseCostIncreasePercent / 100d,
-                Mathf.Max(0, previousPurchases));
+                Mathf.Max(0, previousPurchases)) * Math.Pow(
+                1d + RebirthPurchaseCostIncreasePercent / 100d, Mathf.Max(0, rebirths));
             // Round only the final price, and saturate before converting to int.
             return (int)Math.Min(int.MaxValue, Math.Ceiling(cost));
         }

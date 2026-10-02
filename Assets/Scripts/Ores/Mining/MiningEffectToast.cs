@@ -160,8 +160,8 @@ namespace MiningSimulator.Ores
             headerRect.offsetMax = Vector2.zero;
             headerLabel.color = new Color(1f, 0.82f, 0.35f, 1f);
             headerLabel.enableAutoSizing = true;
-            headerLabel.fontSizeMin = 9f;
-            headerLabel.fontSizeMax = 16f;
+            headerLabel.fontSizeMin = uiData != null ? uiData.EffectToastFontSize : 19f;
+            headerLabel.fontSizeMax = headerLabel.fontSizeMin;
             headerLabel.characterSpacing = 2f;
 
             Transform slotsTransform = presentation.Find("Cards");
@@ -181,7 +181,7 @@ namespace MiningSimulator.Ores
                                            slotsRoot.gameObject.AddComponent<HorizontalLayoutGroup>();
             layout.childAlignment = TextAnchor.MiddleCenter;
             layout.padding = new RectOffset(0, 0, 0, 0);
-            layout.spacing = 7f;
+            layout.spacing = uiData != null ? uiData.EffectToastSlotSpacing : 10f;
             layout.childControlWidth = true;
             layout.childControlHeight = true;
             layout.childForceExpandWidth = true;
@@ -195,7 +195,20 @@ namespace MiningSimulator.Ores
             {
                 int index = slotViews.Count;
                 Transform existing = slotsRoot.Find($"Effect Card {index + 1:00}");
-                slotViews.Add(existing != null ? CacheSlot(existing) : CreateSlot(index));
+                var view = existing != null ? CacheSlot(existing) : CreateSlot(index);
+                if (view.name != null)
+                {
+                    SetAnchored(view.name.rectTransform, new Vector2(.42f, .48f), new Vector2(.97f, .98f));
+                    view.name.fontSizeMin = view.name.fontSizeMax = uiData != null ? uiData.EffectToastPercentFontSize : 20f;
+                    view.name.enableAutoSizing = true;
+                }
+                if (view.timer != null)
+                {
+                    SetAnchored(view.timer.rectTransform, new Vector2(.42f, .18f), new Vector2(.97f, .48f));
+                    view.timer.fontSizeMin = view.timer.fontSizeMax = uiData != null ? uiData.EffectToastTimerFontSize : 24f;
+                    view.timer.enableAutoSizing = true;
+                }
+                slotViews.Add(view);
             }
         }
 
@@ -227,16 +240,16 @@ namespace MiningSimulator.Ores
                 TextAlignmentOptions.Left);
             SetAnchored(name.rectTransform, new Vector2(0.42f, 0.53f), new Vector2(0.95f, 0.88f));
             name.enableAutoSizing = true;
-            name.fontSizeMin = 6f;
-            name.fontSizeMax = 11f;
+            name.fontSizeMin = uiData != null ? uiData.EffectToastPercentFontSize : 18f;
+            name.fontSizeMax = name.fontSizeMin;
             name.overflowMode = TextOverflowModes.Ellipsis;
 
             TextMeshProUGUI timer = CreateText(slotObject.transform, "Time", 12f,
                 TextAlignmentOptions.Left);
             SetAnchored(timer.rectTransform, new Vector2(0.42f, 0.26f), new Vector2(0.95f, 0.58f));
             timer.enableAutoSizing = true;
-            timer.fontSizeMin = 7f;
-            timer.fontSizeMax = 13f;
+            timer.fontSizeMin = uiData != null ? uiData.EffectToastTimerFontSize : 22f;
+            timer.fontSizeMax = timer.fontSizeMin;
 
             return new EffectSlotView
             {

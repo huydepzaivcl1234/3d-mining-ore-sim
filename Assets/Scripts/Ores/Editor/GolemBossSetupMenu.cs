@@ -89,6 +89,11 @@ namespace MiningSimulator.Ores.Editor
                     so.FindProperty("moveSpeed").floatValue = 1.3f;
                     so.FindProperty("deathDelay").floatValue = 3f;
                     so.FindProperty("hitMoment").floatValue = .5f;
+                    so.FindProperty("secondAttackState").stringValue = "Hit";
+                    so.FindProperty("secondHitMoment").floatValue = .52f;
+                    so.FindProperty("areaSideOffset").floatValue = -.02f;
+                    so.FindProperty("areaForwardOffset").floatValue = 1.61f;
+                    so.FindProperty("secondAreaOffset").vector2Value = new Vector2(.3f, 1.71f);
                     so.FindProperty("hitShape").enumValueIndex = 1;
                     so.FindProperty("warningShader").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Shader>("Assets/Shaders/MonsterAttackWarning.shader");
                     so.ApplyModifiedPropertiesWithoutUndo();

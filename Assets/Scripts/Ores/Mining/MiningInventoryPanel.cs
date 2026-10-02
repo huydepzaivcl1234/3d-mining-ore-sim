@@ -25,11 +25,14 @@ namespace MiningSimulator.Ores
         [SerializeField] private Button openButton;
         [SerializeField] private Button closeButton;
         [SerializeField] private TextMeshProUGUI titleLabel;
+        [Tooltip("Authored item grid; leave empty to use the legacy Grid child.")]
+        [SerializeField] private RectTransform itemGrid;
 
         private readonly SlotView[] slotViews =
             new SlotView[MiningItemDatabase.InventoryCapacity];
         private TextMeshProUGUI openButtonLabel;
         private MiningGiftBoxWheelPanel giftBoxWheelPanel;
+        public MiningInventoryInteractions Interactions { get; private set; }
 
         public event Action PanelOpened;
         public event Action PanelClosed;
@@ -45,6 +48,7 @@ namespace MiningSimulator.Ores
                 inventoryPanel != null ? inventoryPanel.GetComponent<RectTransform>() : null);
             openButtonLabel = FindOpenButtonLabel(openButton);
             CacheSlotViews();
+            PrepareInteractions();
             EnsureGiftBoxWheelPanel();
             inventoryPanel?.SetActive(false);
         }
@@ -96,6 +100,7 @@ namespace MiningSimulator.Ores
 
         public void UseSlot(int index)
         {
+            Interactions?.DismissMenu();
             if (itemSystem == null)
             {
                 return;
@@ -129,6 +134,7 @@ namespace MiningSimulator.Ores
 
         private void ClosePanel()
         {
+            Interactions?.CancelInteraction();
             if (panelCoordinator != null)
             {
                 panelCoordinator.ClosePanel(inventoryPanel != null
@@ -148,7 +154,7 @@ namespace MiningSimulator.Ores
             {
                 return;
             }
-            Transform grid = inventoryPanel.transform.Find("Grid");
+            Transform grid = itemGrid != null ? itemGrid : inventoryPanel.transform.Find("Grid");
             if (grid == null)
             {
                 return;
@@ -231,6 +237,14 @@ namespace MiningSimulator.Ores
         private void HandleLanguageChanged()
         {
             Refresh();
+        }
+
+        public void PrepareInteractions()
+        {
+            if (inventoryPanel == null) return;
+            Interactions = inventoryPanel.GetComponent<MiningInventoryInteractions>();
+            if (Interactions == null) Interactions = inventoryPanel.AddComponent<MiningInventoryInteractions>();
+            Interactions.Configure(itemSystem);
         }
 
         private void EnsureGiftBoxWheelPanel()

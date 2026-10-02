@@ -11,8 +11,12 @@ namespace MiningSimulator.Ores
     {
         public MushroomMonster prefab;
         public Sprite icon;
+        [Tooltip("Optional localized name used by unlock notifications. Empty uses the prefab name.")]
+        public string displayName;
         [Tooltip("Relative spawn weight. With entries 75 and 25 the probabilities are 75% and 25%. 0 disables this species.")]
         [Min(0f)] public float chance = 100f;
+        [Tooltip("This species enters the daily spawn pool at this player level. Boss rules still apply separately.")]
+        [Min(1)] public int minimumPlayerLevel = 1;
     }
     public sealed class DailyMonsterForecast
     {
@@ -45,7 +49,17 @@ namespace MiningSimulator.Ores
         [SerializeField] private MiningCharacterHealth player;
         [SerializeField] private PlayerWallet wallet;
         [SerializeField] private MiningItemSystem inventory;
+        [SerializeField] private MiningUpgradeSystem upgradeSystem;
+        [Header("Monster unlock notifications")]
+        [SerializeField] private bool showUnlockNotifications = true;
+        [SerializeField] private MiningUnlockNotifier unlockNotifier;
+        [Header("Debug - opt-in only")]
+        [Tooltip("Test locked species without changing the player's saved level. Does not bypass boss gates.")]
+        [SerializeField] private bool debugIgnoreSpeciesLevel;
         private MiningPlayerStats playerStats;
+        private int lastKnownPlayerLevel;
+        private readonly HashSet<MushroomMonster> announcedSpecies = new();
+        private readonly HashSet<MushroomMonster> announcedBosses = new();
         private OreSpawner oreSpawner;
         private MiningAudioManager audioManager;
         private readonly List<MushroomMonster> alive = new();
@@ -155,8 +169,12 @@ namespace MiningSimulator.Ores
                 if (stats != null) player = stats.GetComponent<MiningCharacterHealth>();
             }
             if (player != null) playerStats = player.GetComponent<MiningPlayerStats>();
+            // Loaded progression is the baseline, not a new unlock on every launch.
+            lastKnownPlayerLevel = playerStats != null ? playerStats.Level : 1;
+            if (unlockNotifier == null) unlockNotifier = FindFirstObjectByType<MiningUnlockNotifier>();
             if (wallet == null) wallet = FindAnyObjectByType<PlayerWallet>();
             if (inventory == null) inventory = FindAnyObjectByType<MiningItemSystem>();
+            if (upgradeSystem == null) upgradeSystem = FindAnyObjectByType<MiningUpgradeSystem>();
             oreSpawner = FindAnyObjectByType<OreSpawner>();
             audioManager = FindAnyObjectByType<MiningAudioManager>();
             if (dayNight == null) dayNight = FindAnyObjectByType<DayNightSystem>();
@@ -172,17 +190,26 @@ namespace MiningSimulator.Ores
         {
             // Start runs only once. Recreate Ground monsters after a return from Lava.
             if (!started) return;
+            CheckMonsterUnlocks();
             if (dayNight != null && scheduledDay != dayNight.DayNumber) BuildDailySchedule();
             if (forecastHud != null) forecastHud.SetVisible(true);
         }
         public void GrantRewards(MonsterRewardData data, Vector3 origin, float goldMultiplier = 1, float experienceMultiplier = 1)
         {
             if (data == null) return;
-            if (playerStats != null) playerStats.AddExperience(Mathf.Max(0, data.experience) * Mathf.Max(0f, experienceMultiplier));
+            float xp = Mathf.Max(0, data.experience) * Mathf.Max(0f, experienceMultiplier);
+            float money = Mathf.Max(0, data.gold) * Mathf.Max(0f, goldMultiplier);
+            if (upgradeSystem != null)
+            {
+                xp = upgradeSystem.CalculatePlayerExperienceReward(xp);
+                money = upgradeSystem.CalculateMonsterMoneyReward(money);
+            }
+            // AddExperience applies GameManager PlayerXpMultiplier exactly once.
+            if (playerStats != null) playerStats.AddExperience(xp);
             if (wallet != null)
             {
                 float previousMoney = wallet.CurrentMoney;
-                wallet.AddMoney(Mathf.Max(0, data.gold) * Mathf.Max(0, goldMultiplier));
+                wallet.AddMoney(money);
                 if (oreSpawner == null) oreSpawner = FindAnyObjectByType<OreSpawner>();
                 if (oreSpawner != null)
                     oreSpawner.ShowMoneyRewardPopup(wallet.CurrentMoney - previousMoney, origin);
@@ -201,6 +228,7 @@ namespace MiningSimulator.Ores
         }
         private void Update()
         {
+            CheckMonsterUnlocks();
             alive.RemoveAll(m => m == null || m.IsDespawning || m.Health == null || m.Health.Health <= 0f);
             if (dayNight == null || !dayNight.isActiveAndEnabled) return;
             if (scheduledDay != dayNight.DayNumber) BuildDailySchedule();
@@ -220,6 +248,13 @@ namespace MiningSimulator.Ores
             while (wave.Completed < wave.Members.Count && alive.Count < maximumAlive)
             {
                 DailyMonsterForecast entry = wave.Members[wave.Completed];
+                if (!CanSpawnSpecies(entry.Entry))
+                {
+                    entry.Skipped++;
+                    wave.Completed++;
+                    ForecastChanged?.Invoke();
+                    continue;
+                }
                 if (!SpawnOne(entry.Entry)) break;
                 entry.Spawned++;
                 wave.Completed++;
@@ -228,15 +263,53 @@ namespace MiningSimulator.Ores
             if (wave.Completed == wave.Members.Count) nextWave++;
         }
 
+        private void CheckMonsterUnlocks()
+        {
+            if (playerStats == null) return;
+            int level = playerStats.Level;
+            if (level == lastKnownPlayerLevel) return;
+            int previous = lastKnownPlayerLevel;
+            lastKnownPlayerLevel = level;
+            if (level < previous)
+            {
+                announcedSpecies.Clear();
+                announcedBosses.Clear();
+                return;
+            }
+            if (!showUnlockNotifications || unlockNotifier == null) return;
+            foreach (var entry in monsters)
+            {
+                if (entry == null || entry.prefab == null || entry.chance <= 0f) continue;
+                string key = string.IsNullOrWhiteSpace(entry.displayName) ? entry.prefab.name : entry.displayName;
+                string name = MiningLocalization.Text(key, key);
+                int required = Mathf.Max(1, entry.minimumPlayerLevel);
+                if (previous < required && level >= required && announcedSpecies.Add(entry.prefab))
+                    unlockNotifier.ShowToast(string.Format(MiningLocalization.Text("MONSTER_UNLOCKED",
+                        "Đã mở khóa quái: {0} (Lv. {1})!"), name, required));
+                var boss = entry.prefab.RewardData != null ? entry.prefab.RewardData.boss : null;
+                if (boss == null || !boss.enabled || boss.chancePercent <= 0f) continue;
+                int bossRequired = Mathf.Max(required, Mathf.Max(1, boss.minimumPlayerLevel));
+                if (previous < bossRequired && level >= bossRequired && announcedBosses.Add(entry.prefab))
+                    unlockNotifier.ShowToast(string.Format(MiningLocalization.Text("MONSTER_BOSS_UNLOCKED",
+                        "Đã mở khóa boss: {0} (Lv. {1})!"), name, bossRequired));
+            }
+        }
+
+        public bool CanSpawnSpecies(MonsterSpawnEntry entry)
+        {
+            return entry != null && entry.prefab != null && (debugIgnoreSpeciesLevel ||
+                (playerStats != null ? playerStats.Level : 1) >= Mathf.Max(1, entry.minimumPlayerLevel));
+        }
+
         private MonsterSpawnEntry RollMonsterEntry()
         {
             float total = 0f;
             foreach (MonsterSpawnEntry entry in monsters)
-                if (entry != null && entry.prefab != null) total += Mathf.Max(0f, entry.chance);
+                if (CanSpawnSpecies(entry)) total += Mathf.Max(0f, entry.chance);
             if (total <= 0f) return null;
             float roll = UnityEngine.Random.value * total;
             foreach (MonsterSpawnEntry entry in monsters)
-                if (entry != null && entry.prefab != null && entry.chance > 0f && (roll -= entry.chance) <= 0f)
+                if (CanSpawnSpecies(entry) && entry.chance > 0f && (roll -= entry.chance) <= 0f)
                     return entry;
             return null;
         }
@@ -303,12 +376,24 @@ namespace MiningSimulator.Ores
                 if (monster != null) Destroy(monster.gameObject);
             alive.Clear();
         }
-        private bool SpawnOne(MonsterSpawnEntry entry)
+        public bool DebugSpawnBoss(MushroomMonster prefab)
         {
-            if (entry == null || entry.prefab == null) return false;
+            if (!Application.isPlaying || prefab == null) return false;
+            var entry = monsters.Find(m => m != null && m.prefab == prefab);
+            return entry != null && SpawnOne(entry, true);
+        }
+        private bool SpawnOne(MonsterSpawnEntry entry, bool forceBoss = false)
+        {
+            if (!CanSpawnSpecies(entry)) return false;
             MushroomMonster prefab = entry.prefab;
             var bossSettings = prefab.RewardData != null ? prefab.RewardData.boss : null;
-            bool boss = bossSettings != null && bossSettings.Roll(playerStats != null ? playerStats.Level : 1, UnityEngine.Random.value);
+            var tuning = MiningGameplayTuning.Current;
+            bool ignoreLevel = tuning != null && tuning.IgnoreBossLevel;
+            bool force = forceBoss || (tuning != null && tuning.ForceBossSpawns);
+            bool boss = bossSettings != null && (force
+                ? bossSettings.CanSpawn(playerStats != null ? playerStats.Level : 1, ignoreLevel)
+                : bossSettings.Roll(playerStats != null ? playerStats.Level : 1, UnityEngine.Random.value, ignoreLevel));
+            if (forceBoss && !boss) return false;
             float bossScale = boss ? bossSettings.ScaleMultiplier : 1f;
             for (int attempt = 0; attempt < 24; attempt++)
             {

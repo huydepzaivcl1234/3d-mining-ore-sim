@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using PrimeTween;
 using UnityEngine;
 
@@ -49,6 +50,41 @@ namespace MiningSimulator.Ores
         private Coroutine ambiencePlaylist;
         private Coroutine worldAmbienceTransition;
         private AudioClip currentPlaylistAmbience;
+        // Local/spatial channels retain their authored level; settings apply once.
+        private readonly Dictionary<AudioSource, float> externalSfxSources = new();
+        private readonly List<AudioSource> deadSfxSources = new();
+        private readonly List<StarterAssets.ThirdPersonController> movementAudioOwners = new();
+        private void RegisterMovementAudioSource(AudioSource source) => RegisterSfxSource(source);
+        public float SfxGain => (sfxMuted ? 0f : masterVolume * sfxVolume) * (audioData != null ? audioData.SfxVolume : 1f);
+
+        public void RegisterSfxSource(AudioSource source, float baseVolume = -1f)
+        {
+            if (source == null || source == sfxSource || source == musicSource ||
+                source == ambienceSource || source == ambienceCueSource) return;
+            if (audioData != null && audioData.MusicMixerGroup != null &&
+                audioData.MusicMixerGroup != audioData.SfxMixerGroup &&
+                source.outputAudioMixerGroup == audioData.MusicMixerGroup) return;
+            if (baseVolume >= 0f || !externalSfxSources.ContainsKey(source))
+                externalSfxSources[source] = baseVolume >= 0f ? Mathf.Clamp01(baseVolume) : source.volume;
+            if (audioData != null && audioData.SfxMixerGroup != null)
+                source.outputAudioMixerGroup = audioData.SfxMixerGroup;
+            source.volume = externalSfxSources[source] * SfxGain;
+        }
+
+        public void RegisterSfxSources(GameObject owner)
+        {
+            if (owner == null) return;
+            foreach (var source in owner.GetComponentsInChildren<AudioSource>(true)) RegisterSfxSource(source);
+        }
+
+        private void RefreshExternalSfx()
+        {
+            deadSfxSources.Clear();
+            foreach (var pair in externalSfxSources)
+                if (pair.Key == null) deadSfxSources.Add(pair.Key);
+                else pair.Key.volume = pair.Value * SfxGain;
+            foreach (var source in deadSfxSources) externalSfxSources.Remove(source);
+        }
 
         public MiningAudioData AudioData => audioData;
         public bool MusicMuted => musicMuted;
@@ -116,6 +152,13 @@ namespace MiningSimulator.Ores
 
         private void OnEnable()
         {
+            foreach (var movement in FindObjectsByType<StarterAssets.ThirdPersonController>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                movement.MovementAudioSourceCreated -= RegisterMovementAudioSource;
+                movement.MovementAudioSourceCreated += RegisterMovementAudioSource;
+                movementAudioOwners.Add(movement);
+                RegisterSfxSource(movement.MovementAudioSource);
+            }
             if (oreSpawner != null)
             {
                 oreSpawner.OreRewardGranted -= HandleOreRewardGranted;
@@ -186,6 +229,10 @@ namespace MiningSimulator.Ores
 
             ResolveSources();
             ConfigureSources();
+            // One enable-time scan covers authored UI/player/monster channels. Runtime
+            // channels register when created; never scan the scene each frame.
+            foreach (var source in FindObjectsByType<AudioSource>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                RegisterSfxSource(source);
         }
 
         private void Start()
@@ -225,6 +272,12 @@ namespace MiningSimulator.Ores
 
         private void OnDisable()
         {
+            foreach (var movement in movementAudioOwners)
+                if (movement != null) movement.MovementAudioSourceCreated -= RegisterMovementAudioSource;
+            movementAudioOwners.Clear();
+            foreach (var pair in externalSfxSources)
+                if (pair.Key != null) pair.Key.volume = pair.Value;
+            externalSfxSources.Clear();
             StopWorldAmbienceSwitch();
             StopAmbiencePlaylist();
             if (oreSpawner != null)
@@ -405,6 +458,7 @@ namespace MiningSimulator.Ores
         public void SetSfxMuted(bool muted)
         {
             sfxMuted = muted;
+            RefreshExternalSfx();
             if (sfxSource != null)
             {
                 sfxSource.mute = muted;
@@ -552,6 +606,7 @@ namespace MiningSimulator.Ores
 
         private void ConfigureSources()
         {
+            RefreshExternalSfx();
             if (audioData == null)
             {
                 return;

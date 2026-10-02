@@ -8,8 +8,29 @@ namespace MiningSimulator.Ores
     {
         [SerializeField] private MiningPlayerStatsData data;
         public MiningPlayerStatsData Data => data;
-        public float MaxHealth => data != null ? Mathf.Max(1, data.maxHealth + Mathf.Max(0, data.healthPerLevel) * (Level - 1)) : 100;
-        public float Damage => data != null ? Mathf.Max(0, data.damage + Mathf.Max(0, data.damagePerLevel) * (Level - 1)) : 1;
+        public float MaxHealth => (data != null ? Mathf.Max(1, data.maxHealth + Mathf.Max(0, data.healthPerLevel) * (Level - 1)) : 100) * (1f + CardHealthPercent * .01f) + CardHealth;
+        public float Damage => (data != null ? Mathf.Max(0, data.damage + Mathf.Max(0, data.damagePerLevel) * (Level - 1)) : 1) * (1f + CardDamagePercent * .01f) + CardDamage;
+        public float AttackSpeed => Mathf.Max(.1f, (data != null ? data.attackSpeed : 1f) * (1f + CardAttackSpeedPercent * .01f) + CardAttackSpeed);
+        // Retain old flat bonuses for v2 saves; new cards add percentage points.
+        public float CardDamagePercent { get; private set; }
+        public float CardHealthPercent { get; private set; }
+        public float CardAttackSpeedPercent { get; private set; }
+        public float CardDamage { get; private set; }
+        public float CardHealth { get; private set; }
+        public float CardAttackSpeed { get; private set; }
+        public bool AddCardBonus(MiningCardChoice choice, float amount)
+        {
+            if (amount < 0f || float.IsNaN(amount) || float.IsInfinity(amount)) return false;
+            float current = choice == MiningCardChoice.Damage ? CardDamagePercent : choice == MiningCardChoice.AttackSpeed ? CardAttackSpeedPercent : CardHealthPercent;
+            if (float.IsInfinity(current + amount)) return false;
+            if (choice == MiningCardChoice.Damage) CardDamagePercent += amount;
+            else if (choice == MiningCardChoice.AttackSpeed) CardAttackSpeedPercent += amount;
+            else if (choice == MiningCardChoice.Health) CardHealthPercent += amount;
+            else return false;
+            dirty = true;
+            SaveProgress();
+            return true;
+        }
         public int Level { get; private set; } = 1;
         public float Experience { get; private set; }
         public float ExperienceRequired { get; private set; } = 100;
@@ -22,7 +43,9 @@ namespace MiningSimulator.Ores
         [System.Serializable]
         private sealed class SavedProgress
         {
-            public int version = 1;
+            public int version = 3;
+            public float cardDamage, cardHealth, cardAttackSpeed;
+            public float cardDamagePercent, cardHealthPercent, cardAttackSpeedPercent;
             public int level;
             public float experience;
             public float requiredExperience;
@@ -30,6 +53,8 @@ namespace MiningSimulator.Ores
         private void Awake()
         {
             movement = GetComponent<ThirdPersonController>();
+            if (movement != null && GetComponent<PlayerMonsterHeadDeflection>() == null)
+                gameObject.AddComponent<PlayerMonsterHeadDeflection>();
             feedbackAudio = FindFirstObjectByType<MiningAudioManager>();
             if (data != null) SetProgress(data.startingLevel, data.startingExperience, data.experienceRequired);
             LoadProgress();
@@ -38,6 +63,8 @@ namespace MiningSimulator.Ores
         }
         public void AddExperience(float amount)
         {
+            if (amount <= 0 || float.IsNaN(amount) || float.IsInfinity(amount)) return;
+            amount *= MiningGameplayTuning.Current != null ? MiningGameplayTuning.Current.PlayerXpMultiplier : 1f;
             if (amount <= 0 || float.IsNaN(amount) || float.IsInfinity(amount)) return;
             double remaining = (double)Experience + amount;
             float growth = data != null ? Mathf.Max(1, data.experienceRequirementGrowth) : 1.25f;
@@ -69,7 +96,7 @@ namespace MiningSimulator.Ores
             try
             {
                 var saved = JsonUtility.FromJson<SavedProgress>(PlayerPrefs.GetString(ProgressSaveKey));
-                if (saved == null || saved.version != 1 || saved.level < 1 ||
+                if (saved == null || (saved.version != 1 && saved.version != 2 && saved.version != 3) || saved.level < 1 ||
                     float.IsNaN(saved.experience) || float.IsInfinity(saved.experience) || saved.experience < 0 ||
                     float.IsNaN(saved.requiredExperience) || float.IsInfinity(saved.requiredExperience) || saved.requiredExperience < 1)
                 {
@@ -78,6 +105,12 @@ namespace MiningSimulator.Ores
                     return;
                 }
                 SetProgress(saved.level, saved.experience, saved.requiredExperience);
+                CardDamage = SafeBonus(saved.cardDamage);
+                CardHealth = SafeBonus(saved.cardHealth);
+                CardAttackSpeed = SafeBonus(saved.cardAttackSpeed);
+                CardDamagePercent = SafeBonus(saved.cardDamagePercent);
+                CardHealthPercent = SafeBonus(saved.cardHealthPercent);
+                CardAttackSpeedPercent = SafeBonus(saved.cardAttackSpeedPercent);
             }
             catch (System.ArgumentException)
             {
@@ -89,7 +122,10 @@ namespace MiningSimulator.Ores
         {
             if (!Application.isPlaying || !dirty || saveBlocked || data == null) return;
             PlayerPrefs.SetString(ProgressSaveKey, JsonUtility.ToJson(new SavedProgress
-            { level = Level, experience = Experience, requiredExperience = ExperienceRequired }));
+            { level = Level, experience = Experience, requiredExperience = ExperienceRequired,
+                cardDamage = CardDamage, cardHealth = CardHealth, cardAttackSpeed = CardAttackSpeed,
+                cardDamagePercent = CardDamagePercent, cardHealthPercent = CardHealthPercent,
+                cardAttackSpeedPercent = CardAttackSpeedPercent }));
             PlayerPrefs.SetInt("MiningSimulator.SaveExists.v1", 1);
             PlayerPrefs.Save();
             dirty = false;
@@ -100,6 +136,8 @@ namespace MiningSimulator.Ores
             foreach (var player in FindObjectsByType<MiningPlayerStats>(FindObjectsInactive.Include, FindObjectsSortMode.None))
             {
                 var defaults = player.Data;
+                player.CardDamage = player.CardHealth = player.CardAttackSpeed = 0f;
+                player.CardDamagePercent = player.CardHealthPercent = player.CardAttackSpeedPercent = 0f;
                 player.SetProgress(defaults != null ? defaults.startingLevel : 1,
                     defaults != null ? defaults.startingExperience : 0,
                     defaults != null ? defaults.experienceRequired : 100);
@@ -109,6 +147,7 @@ namespace MiningSimulator.Ores
             PlayerPrefs.Save();
         }
         private void OnApplicationPause(bool paused) { if (paused) SaveProgress(); }
+        private static float SafeBonus(float value) => float.IsNaN(value) || float.IsInfinity(value) ? 0f : Mathf.Max(0f, value);
         private void OnApplicationQuit() => SaveProgress();
         private void OnEnable()
         {

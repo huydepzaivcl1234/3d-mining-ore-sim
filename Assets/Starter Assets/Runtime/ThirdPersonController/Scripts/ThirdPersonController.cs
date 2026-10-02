@@ -90,6 +90,18 @@ namespace StarterAssets
         private float _targetRotation = 0.0f;
         private float _rotationVelocity;
         private float _verticalVelocity;
+        private Vector3 _headDeflectionVelocity;
+        private float _headDeflectionUntil;
+
+        // Gameplay callers supply the impulse; this motor remains the sole owner of Move/gravity.
+        public void DeflectFromMonsterHead(Vector3 direction, float sidewaysSpeed, float downwardSpeed, float seconds)
+        {
+            direction.y = 0f;
+            _headDeflectionVelocity = direction.normalized * Mathf.Max(0f, sidewaysSpeed);
+            _headDeflectionUntil = Time.time + Mathf.Max(0f, seconds);
+            _verticalVelocity = -Mathf.Max(0f, downwardSpeed);
+            Grounded = false;
+        }
         private float _terminalVelocity = 53.0f;
 
         // timeout deltatime
@@ -119,6 +131,8 @@ namespace StarterAssets
         private float _lastFootstepTime = -10f;
         private float _lastLandingTime = -10f;
         private AudioSource _footstepSource;
+        public event System.Action<AudioSource> MovementAudioSourceCreated;
+        public AudioSource MovementAudioSource => _footstepSource;
 
         private bool IsCurrentDeviceMouse
         {
@@ -168,6 +182,8 @@ namespace StarterAssets
         {
             _speed = _animationBlend = _rotationVelocity = 0f;
             _verticalVelocity = -2f;
+            _headDeflectionUntil = 0f;
+            _headDeflectionVelocity = Vector3.zero;
             _targetRotation = transform.eulerAngles.y;
             _jumpTimeoutDelta = JumpTimeout;
             _fallTimeoutDelta = FallTimeout;
@@ -206,6 +222,7 @@ namespace StarterAssets
                 transform.position.z);
             Grounded = Physics.CheckSphere(spherePosition, GroundedRadius, GroundLayers,
                 QueryTriggerInteraction.Ignore);
+            if (Time.time < _headDeflectionUntil) Grounded = false;
 
             // update animator if using character
             if (_hasAnimator)
@@ -293,7 +310,8 @@ namespace StarterAssets
 
             // move the player
             _controller.Move(targetDirection.normalized * (_speed * Time.deltaTime) +
-                             new Vector3(0.0f, _verticalVelocity, 0.0f) * Time.deltaTime);
+                             ((_headDeflectionUntil > Time.time ? _headDeflectionVelocity : Vector3.zero) +
+                             new Vector3(0.0f, _verticalVelocity, 0.0f)) * Time.deltaTime);
 
             // update animator if using character
             if (_hasAnimator)
@@ -425,6 +443,7 @@ namespace StarterAssets
                 _footstepSource.playOnAwake = false;
                 _footstepSource.loop = false;
                 _footstepSource.spatialBlend = 0;
+                MovementAudioSourceCreated?.Invoke(_footstepSource);
             }
             _footstepSource.PlayOneShot(clip, FootstepAudioVolume);
         }

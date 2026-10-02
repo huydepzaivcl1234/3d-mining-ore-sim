@@ -160,6 +160,10 @@ namespace MiningSimulator.Ores
         }
 
         public float CalculateMiningReward(int baseReward)
+            => CalculateMonsterMoneyReward(baseReward);
+
+        // Shared economy rules for ore and monster money; do not round scaled loot.
+        public float CalculateMonsterMoneyReward(float baseReward)
         {
             if (baseReward <= 0)
             {
@@ -193,6 +197,13 @@ namespace MiningSimulator.Ores
         public void SetPermanentExperienceMultiplier(float multiplier)
         {
             permanentExperienceMultiplier = Mathf.Max(1f, multiplier);
+        }
+
+        public float CalculatePlayerExperienceReward(float baseExperience)
+        {
+            if (baseExperience <= 0f) return 0f;
+            return baseExperience * GetMultiplier(MiningUpgradeType.NpcExperience) *
+                PermanentExperienceMultiplier;
         }
 
         /// <summary>Permanent, Rebirth-granted multiplier applied to every NPC mining hit.</summary>

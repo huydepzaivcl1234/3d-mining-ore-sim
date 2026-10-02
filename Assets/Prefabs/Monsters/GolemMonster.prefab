@@ -402,8 +402,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningCharacterHealth
   maxHealth: 80
-  regenAmount: 5
-  regenInterval: 5
+  regenAmount: 0
+  regenInterval: 0.1
   healthBar: {fileID: 5587691360387498288}
   microBar: {fileID: 4807180599171495706}
   healthLabel: {fileID: 1771801055955424562}
@@ -446,6 +446,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MushroomMonster
   animator: {fileID: 2537059592043421808}
   attackState: Hammer
+  secondAttackState: Hit
+  secondHitMoment: 0.52
+  secondAreaRadius: 1.6
+  secondAreaOffset: {x: 0.3, y: 1.71}
+  attackTurnSpeed: 720
+  trackingEndFraction: 0.85
+  chaseTurnSpeed: 240
+  animationBlendSeconds: 0.15
   moveSpeed: 1.3
   detectionRange: 6
   attackRange: 2.1
@@ -455,7 +463,8 @@ MonoBehaviour:
   hitMoment: 0.5
   hitShape: 1
   areaRadius: 1.6
-  areaForwardOffset: 1.6
+  areaForwardOffset: 1.61
+  areaSideOffset: -0.02
   hitHeight: 2.5
   warningColor: {r: 1, g: 0.08, b: 0.02, a: 0.65}
   warningShader: {fileID: 4800000, guid: b0d2120fa98d498498f08fd811238915, type: 3}

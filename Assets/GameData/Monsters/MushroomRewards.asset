@@ -21,7 +21,7 @@ MonoBehaviour:
     damageMultiplier: 1.5
     goldMultiplier: 5
     experienceMultiplier: 3
-    rewardOverride: {fileID: 0}
+    rewardOverride: {fileID: 11400000}
     effectColor: {r: 1, g: 0.2, b: 0.06, a: 1}
     combatSeconds: 120
   combatSeconds: 0

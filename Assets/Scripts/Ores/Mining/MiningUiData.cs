@@ -163,18 +163,29 @@ namespace MiningSimulator.Ores
         [Header("Inventory Layout")]
         [SerializeField] private Vector2 inventoryMenuButtonPosition = new(-24f, -278f);
         [SerializeField] private Vector2 inventoryMenuButtonSize = new(180f, 48f);
-        [SerializeField] private Vector2 inventoryPanelSize = new(930f, 590f);
-        [SerializeField] private Vector2 inventoryHeaderSize = new(930f, 72f);
-        [SerializeField] private Vector2 inventoryCloseButtonPosition = new(872f, -8f);
+        [SerializeField] private Vector2 inventoryPanelSize = new(960f, 960f);
+        [SerializeField] private Vector2 inventoryHeaderSize = new(960f, 72f);
+        [SerializeField] private Vector2 inventoryCloseButtonPosition = new(896f, -12f);
         [SerializeField] private Vector2 inventoryCloseButtonSize = new(48f, 48f);
-        [SerializeField] private Vector2 inventoryFirstSlotPosition = new(35f, -94f);
-        [SerializeField] private Vector2 inventorySlotSize = new(96f, 104f);
-        [SerializeField] private Vector2 inventorySlotSpacing = new(114f, 116f);
-        [Min(1f), SerializeField] private float inventoryItemFontSize = 15f;
+        [SerializeField] private Vector2 inventoryFirstSlotPosition = new(40f, -536f);
+        [SerializeField] private Vector2 inventorySlotSize = new(102f, 88f);
+        [SerializeField] private Vector2 inventorySlotSpacing = new(111f, 98f);
+        [Min(1f), SerializeField] private float inventoryItemFontSize = 13f;
         [Min(1f), SerializeField] private float inventoryCountFontSize = 17f;
         [SerializeField] private Color inventoryPanelColor = new(0.08f, 0.07f, 0.05f, 0.96f);
         [SerializeField] private Color inventoryHeaderColor = new(0.55f, 0.35f, 0.15f, 1f);
         [SerializeField] private Color inventorySlotColor = new(0.10f, 0.08f, 0.06f, 0.92f);
+        [Header("Inventory character / future equipment layout (SVG coordinates)")]
+        [Min(.01f), SerializeField] private float inventoryEquipmentLayoutScale = 4.2f;
+        [SerializeField] private Vector2 inventoryEquipmentLayoutPosition = new(259.5f, -90f);
+        [SerializeField] private Vector2 inventoryModelRectPosition = new(28f, 25f);
+        [SerializeField] private Vector2 inventoryModelRectSize = new(49f, 71f);
+        [SerializeField] private Vector2 inventoryEquipmentSlotSize = new(19f, 19f);
+        [SerializeField] private Vector2[] inventoryEquipmentSlotPositions =
+            { new(0f, 30f), new(0f, 67f), new(43f, 0f), new(86f, 30f), new(86f, 67f) };
+        [Min(1), SerializeField] private int inventoryGridColumns = 8;
+        [SerializeField] private Color inventoryEquipmentSlotColor = new(.52f, .52f, .52f, 1f);
+        [SerializeField] private Color inventoryEquipmentOutlineColor = new(.85f, .85f, .85f, 1f);
 
         [Header("Gift Box Wheel")]
         [SerializeField] private Vector2 giftWheelPanelSize = new(720f, 620f);
@@ -199,14 +210,14 @@ namespace MiningSimulator.Ores
 
         [Header("Active Effect Toast")]
         [SerializeField] private Vector2 effectToastPosition = new(0f, -190f);
-        [SerializeField] private Vector2 effectToastSize = new(620f, 120f);
+        [SerializeField] private Vector2 effectToastSize = new(660f, 150f);
         [Min(1f), SerializeField] private float effectToastFontSize = 19f;
         [SerializeField] private Color effectToastColor = new(0.07f, 0.06f, 0.04f, 0.95f);
         [SerializeField] private Vector2 effectToastSlotSize = new(78f, 78f);
         [Min(0f), SerializeField] private float effectToastSlotSpacing = 10f;
         [Min(0f), SerializeField] private float effectToastIconPadding = 7f;
-        [Min(1f), SerializeField] private float effectToastTimerFontSize = 16f;
-        [Min(1f), SerializeField] private float effectToastPercentFontSize = 13f;
+        [Min(1f), SerializeField] private float effectToastTimerFontSize = 24f;
+        [Min(1f), SerializeField] private float effectToastPercentFontSize = 20f;
         [SerializeField] private Color effectToastSlotColor = new(0.10f, 0.08f, 0.06f, 0.96f);
 
         [Header("Panel Slide Animation")]
@@ -511,6 +522,15 @@ namespace MiningSimulator.Ores
         public Color InventoryPanelColor => inventoryPanelColor;
         public Color InventoryHeaderColor => inventoryHeaderColor;
         public Color InventorySlotColor => inventorySlotColor;
+        public float InventoryEquipmentLayoutScale => inventoryEquipmentLayoutScale;
+        public Vector2 InventoryEquipmentLayoutPosition => inventoryEquipmentLayoutPosition;
+        public Vector2 InventoryModelRectPosition => inventoryModelRectPosition;
+        public Vector2 InventoryModelRectSize => inventoryModelRectSize;
+        public Vector2 InventoryEquipmentSlotSize => inventoryEquipmentSlotSize;
+        public Vector2[] InventoryEquipmentSlotPositions => inventoryEquipmentSlotPositions;
+        public int InventoryGridColumns => Mathf.Max(1, inventoryGridColumns);
+        public Color InventoryEquipmentSlotColor => inventoryEquipmentSlotColor;
+        public Color InventoryEquipmentOutlineColor => inventoryEquipmentOutlineColor;
         public Vector2 GiftWheelPanelSize => giftWheelPanelSize;
         public Vector2 GiftWheelHeaderSize => giftWheelHeaderSize;
         public Vector2 GiftWheelSize => giftWheelSize;

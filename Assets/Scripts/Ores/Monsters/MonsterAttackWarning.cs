@@ -23,6 +23,15 @@ namespace MiningSimulator.Ores
                 renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 renderer.receiveShadows = false;
             }
+            MoveCenter(center, owner);
+            disk.transform.localScale = new Vector3(radius * 2f, radius * 2f, 1f);
+            material.SetColor("_Color", color);
+            SetProgress(0f);
+            disk.SetActive(true);
+        }
+        public void MoveCenter(Vector3 center, Transform owner)
+        {
+            if (disk == null) return;
             // Ignore the monster and other actors: the marker belongs on ground, never on a head.
             int count = Physics.RaycastNonAlloc(center + Vector3.up * 3f, Vector3.down, groundHits, 8f, ~0, QueryTriggerInteraction.Ignore);
             float distance = float.PositiveInfinity;
@@ -33,10 +42,6 @@ namespace MiningSimulator.Ores
                 if (hit.distance < distance) { distance = hit.distance; center.y = hit.point.y; }
             }
             disk.transform.SetPositionAndRotation(center + Vector3.up * .035f, Quaternion.Euler(90f, 0f, 0f));
-            disk.transform.localScale = new Vector3(radius * 2f, radius * 2f, 1f);
-            material.SetColor("_Color", color);
-            SetProgress(0f);
-            disk.SetActive(true);
         }
         public void SetProgress(float progress) { if (material != null) material.SetFloat(Progress, Mathf.Clamp01(progress)); }
         public void Hide() { if (disk != null) disk.SetActive(false); }

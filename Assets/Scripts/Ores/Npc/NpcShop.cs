@@ -18,6 +18,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private NpcProgressionSystem progressionSystem;
         [SerializeField] private MiningUpgradeSystem upgradeSystem;
         [SerializeField] private LuckyBlockDropSystem luckyBlockSystem;
+        [SerializeField] private MiningRebirthSystem rebirthSystem;
 
         [Header("Wandering Trader")]
         [Tooltip("Optional civilian prefab used by the wandering trader. Leave empty to reuse the miner humanoid.")]
@@ -28,7 +29,8 @@ namespace MiningSimulator.Ores
         private int purchasedCount;
         private int totalPurchases;
 
-        public int NpcCost => npcData != null ? npcData.GetPurchaseCost(totalPurchases) : 0;
+        public int NpcCost => npcData != null ? npcData.GetPurchaseCost(purchasedCount,
+            rebirthSystem != null ? rebirthSystem.CompletedRebirths : 0) : 0;
         public int TotalPurchases => totalPurchases;
         public int PurchasedCount => purchasedCount;
         public NpcData NpcData => npcData;
@@ -66,6 +68,7 @@ namespace MiningSimulator.Ores
 
         private void Awake()
         {
+            rebirthSystem ??= FindFirstObjectByType<MiningRebirthSystem>(FindObjectsInactive.Include);
             // Old saves have only the living miner count. Preserve it as the initial price tier.
             totalPurchases = Mathf.Max(0, PlayerPrefs.GetInt(TotalPurchasesSaveKey,
                 PlayerPrefs.GetInt(PurchasedCountSaveKey, 0)));

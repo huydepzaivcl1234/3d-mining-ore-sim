@@ -42,6 +42,11 @@ namespace MiningSimulator.Ores
         [Min(0.1f), SerializeField] private float cameraMaximumDistance = 45f;
 
         [Header("Camera rotation comfort")]
+        [Min(.01f), SerializeField] private float mouseSensitivityDefault = 1f;
+        [Min(.01f), SerializeField] private float mouseSensitivityMinimum = .25f;
+        [Min(.01f), SerializeField] private float mouseSensitivityMaximum = 4f;
+        [Min(1f), SerializeField] private float shiftLockMaximumRotationSpeed = 720f;
+        [Min(.001f), SerializeField] private float shiftLockRotationSmoothSeconds = .025f;
         [Min(1f), SerializeField] private float cameraMaximumRotationSpeed = 180f;
         [Min(0.01f), SerializeField] private float cameraRotationSmoothSeconds = 0.06f;
         [Tooltip("Optional subtle blur while rotating. Set strength to zero to disable.")]
@@ -71,6 +76,11 @@ namespace MiningSimulator.Ores
         public float CameraMinimumDistance => cameraMinimumDistance;
         public float CameraMaximumDistance => cameraMaximumDistance;
         public float CameraMaximumRotationSpeed => Mathf.Max(1f, cameraMaximumRotationSpeed);
+        public float MouseSensitivityMinimum => Mathf.Max(.01f, mouseSensitivityMinimum);
+        public float MouseSensitivityMaximum => Mathf.Max(MouseSensitivityMinimum, mouseSensitivityMaximum);
+        public float MouseSensitivityDefault => Mathf.Clamp(mouseSensitivityDefault, MouseSensitivityMinimum, MouseSensitivityMaximum);
+        public float ShiftLockMaximumRotationSpeed => Mathf.Max(1f, shiftLockMaximumRotationSpeed);
+        public float ShiftLockRotationSmoothSeconds => Mathf.Max(.001f, shiftLockRotationSmoothSeconds);
         public float CameraRotationSmoothSeconds => Mathf.Max(0.01f, cameraRotationSmoothSeconds);
         public float CameraRotationBlurStrength => Mathf.Clamp(cameraRotationBlurStrength, 0f, 0.2f);
         public float CameraRotationBlurClamp => Mathf.Clamp(cameraRotationBlurClamp, 0f, 0.05f);

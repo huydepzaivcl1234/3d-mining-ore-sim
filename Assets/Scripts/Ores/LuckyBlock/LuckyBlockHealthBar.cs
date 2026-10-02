@@ -13,6 +13,16 @@ namespace MiningSimulator.Ores
         [SerializeField] private TextMeshPro healthText;
         [SerializeField] private Transform visualRoot;
         [SerializeField] private Camera targetCamera;
+        [Min(0f), SerializeField] private float hideAfterHitSeconds = 3f;
+        private Renderer[] displayRenderers;
+        private int lastDurability = -1;
+        private float visibleUntil = -1f;
+        private void SetVisible(bool visible)
+        {
+            if (displayRenderers == null)
+                displayRenderers = (visualRoot != null ? visualRoot : transform).GetComponentsInChildren<Renderer>(true);
+            foreach (var r in displayRenderers) if (r != null) r.enabled = visible;
+        }
 
         private int initializedMaximum;
         private bool initialized;
@@ -35,6 +45,9 @@ namespace MiningSimulator.Ores
 
         private void OnEnable()
         {
+            lastDurability = -1;
+            visibleUntil = -1f;
+            SetVisible(false);
             if (luckyBlock == null)
             {
                 return;
@@ -47,6 +60,11 @@ namespace MiningSimulator.Ores
 
         private void LateUpdate()
         {
+            if (visibleUntil >= 0f && Time.time >= visibleUntil)
+            {
+                SetVisible(false);
+                visibleUntil = -1f;
+            }
             LuckyBlockData settings = luckyBlock != null ? luckyBlock.Settings : null;
             if (settings == null || visualRoot == null)
             {
@@ -84,6 +102,12 @@ namespace MiningSimulator.Ores
 
         private void HandleDurabilityChanged(int current, int maximum)
         {
+            if (lastDurability >= 0 && current < lastDurability)
+            {
+                visibleUntil = Time.time + hideAfterHitSeconds;
+                SetVisible(true);
+            }
+            lastDurability = current;
             RefreshHealthText(current, maximum);
             if (healthBar == null || maximum <= 0)
             {

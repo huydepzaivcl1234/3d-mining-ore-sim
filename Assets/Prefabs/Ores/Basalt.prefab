@@ -150,6 +150,7 @@ MonoBehaviour:
   healthText: {fileID: 2483159747793259114}
   visualRoot: {fileID: 4522081851500401841}
   targetCamera: {fileID: 0}
+  hideAfterHitSeconds: 3
 --- !u!114 &8064737814888872701 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 7923854003312105274, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}

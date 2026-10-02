@@ -678,3 +678,4 @@ MonoBehaviour:
   healthText: {fileID: 0}
   visualRoot: {fileID: 1124989257477466903}
   targetCamera: {fileID: 0}
+  hideAfterHitSeconds: 3

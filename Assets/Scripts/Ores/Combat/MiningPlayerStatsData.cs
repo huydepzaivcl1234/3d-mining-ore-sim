@@ -64,6 +64,12 @@ namespace MiningSimulator.Ores
         [Range(0, 1)] public float hitTime = 0.45f;
         public Vector3 hitOriginOffset = new Vector3(0, 1, 0);
         [Header("Movement")]
+        [Header("Landing on monsters - collision-aware sideways / downward deflection")]
+        public bool deflectFromMonsterHeads = true;
+        [Min(0f)] public float monsterHeadSidewaysSpeed = 7f;
+        [Min(0f)] public float monsterHeadDownwardSpeed = 4f;
+        [Min(0f)] public float monsterHeadDeflectionSeconds = .45f;
+        [Range(0f, 1f)] public float monsterHeadMinimumUpNormal = .5f;
         [Min(0)] public float MoveSpeed = 2;
         [Min(0)] public float SprintSpeed = 5.335f;
         [Min(0.001f)] public float RotationSmoothTime = 0.12f;

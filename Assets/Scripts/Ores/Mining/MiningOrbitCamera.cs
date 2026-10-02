@@ -9,6 +9,7 @@ namespace MiningSimulator.Ores
 {
     /// <summary>Provides 360-degree orbit, keyboard movement, and mouse-wheel zoom.</summary>
     [DisallowMultipleComponent]
+    [DefaultExecutionOrder(-100)]
     public sealed class MiningOrbitCamera : MonoBehaviour
     {
         [SerializeField] private Camera controlledCamera;
@@ -24,6 +25,32 @@ namespace MiningSimulator.Ores
         [SerializeField] private bool followPlayerHeading = true;
         [Min(0.01f), SerializeField] private float headingSmoothTime = 0.3f;
         [Min(0f), SerializeField] private float manualOrbitResumeDelay = 1f;
+        [Header("Shift lock (camera leads, character follows)")]
+        [SerializeField] private InputAction toggleShiftLock = new InputAction("Shift Lock", InputActionType.Button, "<Keyboard>/leftShift");
+        [Min(.01f), SerializeField] private float shiftFacingSmoothSeconds = .15f;
+        [Min(0f), SerializeField] private float shiftFacingMaximumSpeed = 540f;
+        [SerializeField] private bool suppressHeadingDuringCombat = true;
+        private bool shiftLocked;
+        public InputAction ShiftLockAction => toggleShiftLock;
+        private bool ownsCursor;
+        private CursorLockMode previousCursorLock;
+        private bool previousCursorVisible;
+        private float shiftFacingVelocity;
+        private MiningCharacterHealth playerHealth;
+        private const string MouseSensitivityKey = "MiningSimulator.MouseSensitivity.v1";
+        private float mouseSensitivity = 1f;
+        public float MouseSensitivity => mouseSensitivity;
+        public float SensitivityMinimum => gameData != null ? gameData.MouseSensitivityMinimum : .25f;
+        public float SensitivityMaximum => gameData != null ? gameData.MouseSensitivityMaximum : 4f;
+        private float EffectiveMaximumRotationSpeed => (IsShiftLocked ? gameData.ShiftLockMaximumRotationSpeed : gameData.CameraMaximumRotationSpeed) * mouseSensitivity;
+        public void SetMouseSensitivity(float value)
+        {
+            if (float.IsNaN(value) || float.IsInfinity(value)) return;
+            mouseSensitivity = Mathf.Clamp(value, SensitivityMinimum, SensitivityMaximum);
+            PlayerPrefs.SetFloat(MouseSensitivityKey, mouseSensitivity);
+        }
+        public bool IsShiftLocked => shiftLocked && !inputLocked && !cinematicOverride &&
+            isActiveAndEnabled && Time.timeScale > 0f && (playerHealth == null || playerHealth.Health > 0f);
 
         [Header("Combat framing (follows the player's Standing/Combat mode)")]
         [SerializeField] private bool adaptiveCombatFraming = true;
@@ -81,6 +108,8 @@ namespace MiningSimulator.Ores
 
         private void Awake()
         {
+            mouseSensitivity = Mathf.Clamp(PlayerPrefs.GetFloat(MouseSensitivityKey,
+                gameData != null ? gameData.MouseSensitivityDefault : 1f), SensitivityMinimum, SensitivityMaximum);
             controlledCamera ??= Camera.main;
             EnsureCameraBodyCollider();
             if (gameData != null)
@@ -98,6 +127,7 @@ namespace MiningSimulator.Ores
                 distance = followDistance;
                 playerInput = followTarget.GetComponentInChildren<PlayerInput>(true);
                 combatInput = followTarget.GetComponent<PlayerCombatInput>();
+                playerHealth = followTarget.GetComponent<MiningCharacterHealth>();
                 playerMovement = followTarget.GetComponent<StarterAssets.ThirdPersonController>();
                 if (playerMovement != null) playerMovement.ExternalCameraControl = true;
             }
@@ -105,6 +135,11 @@ namespace MiningSimulator.Ores
 
         private void Update()
         {
+            if (shiftLocked && (playerHealth != null && playerHealth.Health <= 0f)) SetShiftLocked(false);
+            if (followTarget != null && gameData != null && !inputLocked && !cinematicOverride && Time.timeScale > 0f &&
+                toggleShiftLock != null && toggleShiftLock.WasPressedThisFrame()) SetShiftLocked(!shiftLocked);
+            UpdateShiftCursor();
+            if (IsShiftLocked && playerMovement != null) playerMovement.ExternalFacing = true;
             if (gameData == null || inputLocked || cinematicOverride)
             {
                 return;
@@ -116,6 +151,7 @@ namespace MiningSimulator.Ores
 
         private void OnEnable()
         {
+            toggleShiftLock?.Enable();
             if (playerMovement != null) playerMovement.ExternalCameraControl = true;
             EnsureRotationBlur();
         }
@@ -195,6 +231,38 @@ namespace MiningSimulator.Ores
                 resolvedCameraPosition = position;
             }
             controlledCamera.transform.SetPositionAndRotation(position, rotation);
+            if (IsShiftLocked && followTarget != null)
+            {
+                float facing = Mathf.SmoothDampAngle(followTarget.eulerAngles.y, rotation.eulerAngles.y,
+                    ref shiftFacingVelocity, shiftFacingSmoothSeconds, shiftFacingMaximumSpeed, Time.deltaTime);
+                followTarget.rotation = Quaternion.Euler(0f, facing, 0f);
+            }
+        }
+
+        public void SetShiftLocked(bool locked)
+        {
+            shiftLocked = locked && followTarget != null;
+            headingVelocity = 0f;
+            shiftFacingVelocity = 0f;
+            lastManualOrbitTime = Time.unscaledTime;
+            if (playerMovement != null) playerMovement.ExternalFacing = IsShiftLocked;
+            UpdateShiftCursor();
+        }
+
+        private void UpdateShiftCursor()
+        {
+            if (IsShiftLocked && Application.isFocused)
+            {
+                if (!ownsCursor) { previousCursorLock = Cursor.lockState; previousCursorVisible = Cursor.visible; ownsCursor = true; }
+                Cursor.lockState = CursorLockMode.Locked;
+                Cursor.visible = false;
+            }
+            else if (ownsCursor)
+            {
+                Cursor.lockState = previousCursorLock;
+                Cursor.visible = previousCursorVisible;
+                ownsCursor = false;
+            }
         }
 
         public void PlayRewardShake(float strength, float duration, float frequency)
@@ -221,6 +289,8 @@ namespace MiningSimulator.Ores
 
         private void OnDisable()
         {
+            SetShiftLocked(false);
+            toggleShiftLock?.Disable();
             ReleaseRotationBlur();
             if (playerMovement != null) playerMovement.ExternalCameraControl = false;
             if (shakeTween.isAlive)
@@ -235,6 +305,7 @@ namespace MiningSimulator.Ores
 
         private void OnDestroy()
         {
+            toggleShiftLock?.Dispose();
             ReleaseRotationBlur();
             if (ownsRuntimeCollider && collisionEye != null)
             {
@@ -306,6 +377,9 @@ namespace MiningSimulator.Ores
 
         private void UpdateFollowHeading()
         {
+            // Never feed combat-facing changes back into the camera yaw.
+            if (IsShiftLocked || suppressHeadingDuringCombat && combatInput != null && combatInput.IsCombatMode)
+            { headingVelocity = 0f; return; }
             if (!followPlayerHeading || followTarget == null || inputLocked ||
                 Time.unscaledTime - lastManualOrbitTime < manualOrbitResumeDelay ||
                 (playerMovement != null && playerMovement.ExternalFacing)) return;
@@ -327,15 +401,15 @@ namespace MiningSimulator.Ores
             // Limit real rendered angular speed as well as mouse input. Follow/recentre
             // rotations use the same comfort path; position uses this exact rotation.
             Quaternion smooth = Quaternion.Slerp(previous, desired,
-                1f - Mathf.Exp(-dt / gameData.CameraRotationSmoothSeconds));
+                1f - Mathf.Exp(-dt / (IsShiftLocked ? gameData.ShiftLockRotationSmoothSeconds : gameData.CameraRotationSmoothSeconds)));
             Quaternion result = Quaternion.RotateTowards(previous, smooth,
-                gameData.CameraMaximumRotationSpeed * dt);
+                EffectiveMaximumRotationSpeed * dt);
             EnsureRotationBlur();
             if (rotationBlur != null)
             {
                 float angularSpeed = Quaternion.Angle(previous, result) / dt;
                 float strength = gameData.CameraRotationBlurStrength *
-                    Mathf.InverseLerp(40f, gameData.CameraMaximumRotationSpeed, angularSpeed);
+                    Mathf.InverseLerp(40f, EffectiveMaximumRotationSpeed, angularSpeed);
                 rotationBlur.intensity.value = Mathf.Lerp(rotationBlur.intensity.value,
                     strength, 1f - Mathf.Exp(-dt / 0.08f));
                 rotationBlur.clamp.value = gameData.CameraRotationBlurClamp;
@@ -447,15 +521,15 @@ namespace MiningSimulator.Ores
             }
 
             Vector2 delta = mouse.delta.ReadValue();
-            if (!rotateOnlyWhileRightMouseHeld || mouse.rightButton.isPressed)
+            if (IsShiftLocked || !rotateOnlyWhileRightMouseHeld || mouse.rightButton.isPressed)
             {
                 if (mouse.rightButton.isPressed || delta.sqrMagnitude > 0f)
                 {
                     lastManualOrbitTime = Time.unscaledTime;
                     headingVelocity = 0f;
                 }
-                Vector2 degrees = Vector2.ClampMagnitude(delta * gameData.CameraRotationDegreesPerPixel,
-                    gameData.CameraMaximumRotationSpeed * Time.deltaTime);
+                Vector2 degrees = Vector2.ClampMagnitude(delta * gameData.CameraRotationDegreesPerPixel * mouseSensitivity,
+                    EffectiveMaximumRotationSpeed * Time.deltaTime);
                 yaw += degrees.x;
                 pitch = Mathf.Clamp(pitch - degrees.y,
                     gameData.CameraMinimumPitch, gameData.CameraMaximumPitch);

@@ -38,8 +38,8 @@ namespace MiningSimulator.Ores
         private Quaternion spawnRotation, cameraRotation;
         private float remaining, yaw, pitch, animatorSpeed, nearClip;
         private float[] layerWeights;
-        private CursorLockMode cursorLock;
-        private bool cursorVisible, rootMotion;
+        private bool rootMotion;
+        private bool inputCursorLocked;
         private readonly Collider[] overlaps = new Collider[64];
         private MiningAudioManager audioManager;
         private AudioSource deathSource;
@@ -150,10 +150,8 @@ namespace MiningSimulator.Ores
         }
         private void BeginCamera()
         {
-            cursorLock = Cursor.lockState;
-            cursorVisible = Cursor.visible;
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
+            inputCursorLocked = inputs != null && inputs.cursorLocked;
+            if (inputs != null) inputs.cursorLocked = false;
             driverEnabled = new bool[cameraDrivers != null ? cameraDrivers.Length : 0];
             for (int i = 0; i < driverEnabled.Length; i++)
                 if (cameraDrivers[i] != null)
@@ -161,6 +159,8 @@ namespace MiningSimulator.Ores
                     driverEnabled[i] = cameraDrivers[i].enabled;
                     cameraDrivers[i].enabled = false;
                 }
+            // Orbit OnDisable restores its previously owned cursor. Release AFTER it.
+            ReleaseDeathCursor();
             if (spectatorCamera == null) return;
             cameraPosition = spectatorCamera.transform.position;
             cameraRotation = spectatorCamera.transform.rotation;
@@ -216,6 +216,7 @@ namespace MiningSimulator.Ores
 
         private void LateUpdate()
         {
+            if (dead) ReleaseDeathCursor();
             if (!dead || spectatorCamera == null || cameraBody == null || Time.deltaTime <= 0f) return;
             Keyboard keyboard = Keyboard.current;
             Mouse mouse = Mouse.current;
@@ -311,8 +312,16 @@ namespace MiningSimulator.Ores
             if (movement != null) movement.enabled = movementEnabled;
             if (combat != null) combat.enabled = combatEnabled;
             if (CanRestorePlayerInput()) playerInput.ActivateInput();
-            Cursor.lockState = cursorLock;
-            Cursor.visible = cursorVisible;
+            if (inputs != null) inputs.cursorLocked = inputCursorLocked;
+            // Death clears shift lock. Do not restore an orphaned hidden cursor.
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
+
+        private void ReleaseDeathCursor()
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
         }
 
         private bool CanRestorePlayerInput()

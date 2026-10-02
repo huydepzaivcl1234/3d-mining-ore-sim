@@ -338,6 +338,7 @@ MonoBehaviour:
   healthText: {fileID: 7791134842440706802}
   visualRoot: {fileID: 8118853243140895785}
   targetCamera: {fileID: 0}
+  hideAfterHitSeconds: 3
 --- !u!212 &2387168889128385743 stripped
 SpriteRenderer:
   m_CorrespondingSourceObject: {fileID: 7878530095124935056, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}

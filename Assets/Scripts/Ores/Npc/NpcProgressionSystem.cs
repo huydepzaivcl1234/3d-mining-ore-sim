@@ -124,6 +124,8 @@ namespace MiningSimulator.Ores
 
         public void AddExperience(float baseExperience)
         {
+            baseExperience *= MiningGameplayTuning.Current != null ? MiningGameplayTuning.Current.MiningXpMultiplier : 1f;
+            if (float.IsNaN(baseExperience) || float.IsInfinity(baseExperience)) return;
             if (baseExperience <= 0f || currentLevel >= MaximumLevel)
             {
                 return;

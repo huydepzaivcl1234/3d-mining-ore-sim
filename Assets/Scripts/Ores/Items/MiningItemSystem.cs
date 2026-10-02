@@ -273,8 +273,26 @@ namespace MiningSimulator.Ores
 
         public bool TryUseSlot(int index)
         {
+            return TryUseSlot(index, 1);
+        }
+
+        public bool TryMoveSlot(int from, int to, MiningItemData expectedItem)
+        {
             EnsureRuntimeSlots();
-            if (index < 0 || index >= slots.Length)
+            if (from < 0 || to < 0 || from >= slots.Length || to >= slots.Length ||
+                from == to || expectedItem == null || slots[from].item != expectedItem ||
+                slots[from].count <= 0) return false;
+            // Swap whole stacks; empty destinations are moves. Save format is unchanged.
+            (slots[from], slots[to]) = (slots[to], slots[from]);
+            SaveInventory();
+            InventoryChanged?.Invoke();
+            return true;
+        }
+
+        public bool TryUseSlot(int index, int requestedCount)
+        {
+            EnsureRuntimeSlots();
+            if (index < 0 || index >= slots.Length || requestedCount <= 0)
             {
                 return false;
             }
@@ -289,8 +307,10 @@ namespace MiningSimulator.Ores
             {
                 return false;
             }
-            ConsumeOne(slot);
-            ActivateEffect(item);
+            int count = Mathf.Min(requestedCount, slot.count);
+            slot.count -= count;
+            if (slot.count == 0) slot.item = null;
+            ActivateEffect(item, count);
             SaveInventory();
             InventoryChanged?.Invoke();
             ItemUsed?.Invoke(item);
@@ -365,7 +385,7 @@ namespace MiningSimulator.Ores
             EffectsChanged?.Invoke();
         }
 
-        private void ActivateEffect(MiningItemData item)
+        private void ActivateEffect(MiningItemData item, int count = 1)
         {
             float startTime = Time.time;
             if (activeEffects.TryGetValue(item.EffectType, out RuntimeEffect current))
@@ -375,7 +395,7 @@ namespace MiningSimulator.Ores
             activeEffects[item.EffectType] = new RuntimeEffect
             {
                 item = item,
-                endTime = startTime + item.EffectDurationSeconds
+                endTime = startTime + item.EffectDurationSeconds * count
             };
             EffectsChanged?.Invoke();
         }

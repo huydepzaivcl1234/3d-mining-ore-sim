@@ -13,6 +13,16 @@ namespace MiningSimulator.Ores
         [SerializeField] private TextMeshPro healthText;
         [SerializeField] private Transform visualRoot;
         [SerializeField] private Camera targetCamera;
+        [Min(0f), SerializeField] private float hideAfterHitSeconds = 3f;
+        private Renderer[] displayRenderers;
+        private int lastDurability = -1;
+        private float visibleUntil = -1f;
+        private void SetVisible(bool visible)
+        {
+            if (displayRenderers == null)
+                displayRenderers = (visualRoot != null ? visualRoot : transform).GetComponentsInChildren<Renderer>(true);
+            foreach (var r in displayRenderers) if (r != null) r.enabled = visible;
+        }
 
         private bool initialized;
         private int initializedMaxHealth;
@@ -39,6 +49,9 @@ namespace MiningSimulator.Ores
 
         private void OnEnable()
         {
+            lastDurability = -1;
+            visibleUntil = -1f;
+            SetVisible(false);
             if (ore != null)
             {
                 ore.DurabilityChanged -= HandleDurabilityChanged;
@@ -58,6 +71,11 @@ namespace MiningSimulator.Ores
 
         private void LateUpdate()
         {
+            if (visibleUntil >= 0f && Time.time >= visibleUntil)
+            {
+                SetVisible(false);
+                visibleUntil = -1f;
+            }
             if (targetCamera == null)
             {
                 targetCamera = Camera.main;
@@ -151,6 +169,12 @@ namespace MiningSimulator.Ores
 
         private void HandleDurabilityChanged(int current, int maximum)
         {
+            if (lastDurability >= 0 && current < lastDurability)
+            {
+                visibleUntil = Time.time + hideAfterHitSeconds;
+                SetVisible(true);
+            }
+            lastDurability = current;
             RefreshHealthText(current, maximum);
             InitializeBarIfNeeded();
             if (!initialized)
@@ -192,6 +216,7 @@ namespace MiningSimulator.Ores
             healthBar.UpdateBar(ore.CurrentDurability, true);
             RefreshHealthText(ore.CurrentDurability, ore.MaxDurability);
             initialized = true;
+            if (lastDurability < 0) lastDurability = ore.CurrentDurability;
         }
     }
 }

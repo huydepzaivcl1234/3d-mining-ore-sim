@@ -148,18 +148,18 @@ MonoBehaviour:
   languageButtonColor: {r: 0.55, g: 0.35, b: 0.15, a: 1}
   inventoryMenuButtonPosition: {x: -24, y: -278}
   inventoryMenuButtonSize: {x: 180, y: 48}
-  inventoryPanelSize: {x: 930, y: 590}
-  inventoryHeaderSize: {x: 930, y: 72}
-  inventoryCloseButtonPosition: {x: 872, y: -8}
+  inventoryPanelSize: {x: 960, y: 960}
+  inventoryHeaderSize: {x: 960, y: 72}
+  inventoryCloseButtonPosition: {x: 896, y: -12}
   inventoryCloseButtonSize: {x: 48, y: 48}
-  inventoryFirstSlotPosition: {x: 35, y: -94}
-  inventorySlotSize: {x: 96, y: 104}
-  inventorySlotSpacing: {x: 114, y: 116}
-  inventoryItemFontSize: 15
+  inventoryFirstSlotPosition: {x: 40, y: -536}
+  inventorySlotSize: {x: 102, y: 88}
+  inventorySlotSpacing: {x: 111, y: 98}
+  inventoryItemFontSize: 13
   inventoryCountFontSize: 17
-  inventoryPanelColor: {r: 0.08, g: 0.07, b: 0.05, a: 0.96}
-  inventoryHeaderColor: {r: 0.55, g: 0.35, b: 0.15, a: 1}
-  inventorySlotColor: {r: 0.1, g: 0.08, b: 0.06, a: 0.92}
+  inventoryPanelColor: {r: 0.2, g: 0.22, b: 0.24, a: 0.98}
+  inventoryHeaderColor: {r: 0.12, g: 0.14, b: 0.16, a: 1}
+  inventorySlotColor: {r: 0.52, g: 0.52, b: 0.52, a: 1}
   giftWheelPanelSize: {x: 720, y: 620}
   giftWheelHeaderSize: {x: 720, y: 72}
   giftWheelSize: {x: 360, y: 360}
@@ -179,14 +179,14 @@ MonoBehaviour:
   giftRewardPopupColor: {r: 0.35, g: 0.22, b: 0.08, a: 0.98}
   giftRewardPopupTextColor: {r: 1, g: 0.85, b: 0.3, a: 1}
   effectToastPosition: {x: 0, y: -190}
-  effectToastSize: {x: 620, y: 120}
+  effectToastSize: {x: 660, y: 150}
   effectToastFontSize: 19
   effectToastColor: {r: 0.07, g: 0.06, b: 0.04, a: 0.95}
   effectToastSlotSize: {x: 78, y: 78}
   effectToastSlotSpacing: 10
   effectToastIconPadding: 7
-  effectToastTimerFontSize: 16
-  effectToastPercentFontSize: 13
+  effectToastTimerFontSize: 24
+  effectToastPercentFontSize: 20
   effectToastSlotColor: {r: 0.1, g: 0.08, b: 0.06, a: 0.96}
   panelTransitionDuration: 0.28
   panelSlideExtraDistance: 100

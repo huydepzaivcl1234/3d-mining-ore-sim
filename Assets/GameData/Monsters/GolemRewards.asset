@@ -14,14 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MonsterRewardData
   boss:
     enabled: 1
-    chancePercent: 5
+    chancePercent: 0
     minimumPlayerLevel: 5
     sizeIncreasePercent: 35
     healthMultiplier: 3
     damageMultiplier: 1.5
     goldMultiplier: 5
     experienceMultiplier: 3
-    rewardOverride: {fileID: 0}
+    rewardOverride: {fileID: 11400000}
     effectColor: {r: 1, g: 0.2, b: 0.06, a: 1}
     combatSeconds: 120
   combatSeconds: 0
@@ -35,7 +35,6 @@ MonoBehaviour:
   randomStatMultiplier: {x: 0.9, y: 1.1}
   experience: 35
   gold: 75
-  minerWarningSeconds: 2
   burnDamagePerTick: 0
   burnTickSeconds: 0.1
   burnDurationSeconds: 0

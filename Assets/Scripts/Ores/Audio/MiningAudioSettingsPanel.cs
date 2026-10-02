@@ -18,6 +18,9 @@ namespace MiningSimulator.Ores
         [SerializeField] private Slider masterSlider;
         [SerializeField] private Slider musicSlider;
         [SerializeField] private Slider sfxSlider;
+        [SerializeField] private MiningOrbitCamera cameraRig;
+        [SerializeField] private UnityEngine.UI.Slider sensitivitySlider;
+        [SerializeField] private TextMeshProUGUI sensitivityValueLabel;
         [SerializeField] private TextMeshProUGUI masterValueLabel;
         [SerializeField] private TextMeshProUGUI musicValueLabel;
         [SerializeField] private TextMeshProUGUI sfxValueLabel;
@@ -39,6 +42,14 @@ namespace MiningSimulator.Ores
 
         private void Awake()
         {
+            if (cameraRig == null)
+                foreach (var rig in FindObjectsByType<MiningOrbitCamera>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                    if (rig.FollowTarget != null) { cameraRig = rig; break; }
+            if (sensitivitySlider != null && cameraRig != null)
+            {
+                sensitivitySlider.minValue = cameraRig.SensitivityMinimum;
+                sensitivitySlider.maxValue = cameraRig.SensitivityMaximum;
+            }
             if (uiData == null && panelCoordinator != null)
             {
                 uiData = panelCoordinator.UiData;
@@ -62,6 +73,7 @@ namespace MiningSimulator.Ores
             masterSlider?.onValueChanged.AddListener(SetMasterVolume);
             musicSlider?.onValueChanged.AddListener(SetMusicVolume);
             sfxSlider?.onValueChanged.AddListener(SetSfxVolume);
+            sensitivitySlider?.onValueChanged.AddListener(SetMouseSensitivity);
             resetDataButton?.onClick.RemoveListener(HandleResetDataClicked);
             resetDataButton?.onClick.AddListener(HandleResetDataClicked);
             languageButton?.onClick.RemoveListener(HandleLanguageClicked);
@@ -81,6 +93,7 @@ namespace MiningSimulator.Ores
             masterSlider?.onValueChanged.RemoveListener(SetMasterVolume);
             musicSlider?.onValueChanged.RemoveListener(SetMusicVolume);
             sfxSlider?.onValueChanged.RemoveListener(SetSfxVolume);
+            sensitivitySlider?.onValueChanged.RemoveListener(SetMouseSensitivity);
             resetDataButton?.onClick.RemoveListener(HandleResetDataClicked);
             languageButton?.onClick.RemoveListener(HandleLanguageClicked);
             returnToMenuButton?.onClick.RemoveListener(HandleReturnToMenuClicked);
@@ -146,6 +159,11 @@ namespace MiningSimulator.Ores
 
         private void RefreshFromManager()
         {
+            if (cameraRig != null)
+            {
+                SetSliderWithoutNotify(sensitivitySlider, cameraRig.MouseSensitivity);
+                RefreshSensitivityLabel(cameraRig.MouseSensitivity);
+            }
             if (audioManager == null)
             {
                 return;
@@ -165,6 +183,19 @@ namespace MiningSimulator.Ores
             {
                 slider.SetValueWithoutNotify(value);
             }
+        }
+
+        private void SetMouseSensitivity(float value)
+        {
+            // Both the gameplay rig and the existing overview rig use the same preference.
+            foreach (var rig in FindObjectsByType<MiningOrbitCamera>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                rig.SetMouseSensitivity(value);
+            RefreshSensitivityLabel(cameraRig != null ? cameraRig.MouseSensitivity : value);
+        }
+
+        private void RefreshSensitivityLabel(float value)
+        {
+            if (sensitivityValueLabel != null) sensitivityValueLabel.text = $"{value:0.00}x";
         }
 
         private static void RefreshValueLabel(TextMeshProUGUI label, float value)
@@ -420,6 +451,8 @@ namespace MiningSimulator.Ores
                 "Music Label", "MUSIC", "NHẠC");
             SetLocalizedChildText(settingsPanel != null ? settingsPanel.transform : null,
                 "SFX Label", "SOUND EFFECTS", "HIỆU ỨNG");
+            SetLocalizedChildText(settingsPanel != null ? settingsPanel.transform : null,
+                "Mouse Label", "MOUSE SENSITIVITY", "ĐỘ NHẠY CHUỘT");
             TextMeshProUGUI title = settingsPanel != null
                 ? settingsPanel.transform.Find("Header/Title")?.GetComponent<TextMeshProUGUI>()
                 : null;

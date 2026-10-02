@@ -711,8 +711,7 @@ namespace MiningSimulator.Ores
             }
             sharedChestAudioSource.Stop();
             sharedChestAudioSource.outputAudioMixerGroup = audioManager.AudioData.SfxMixerGroup;
-            sharedChestAudioSource.volume = audioManager.AudioData.SfxVolume *
-                audioManager.MasterVolume * audioManager.SfxVolume;
+            audioManager.RegisterSfxSource(sharedChestAudioSource, 1f);
             sharedChestAudioSource.pitch = UnityEngine.Random.Range(
                 audioManager.AudioData.MinimumPitch, audioManager.AudioData.MaximumPitch);
             sharedChestAudioSource.clip = clip;

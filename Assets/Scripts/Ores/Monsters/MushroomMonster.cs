@@ -9,6 +9,20 @@ namespace MiningSimulator.Ores
         [SerializeField] private Animator animator;
         [Tooltip("Animator state containing this species' attack clip.")]
         [SerializeField] private string attackState = "Headbutt";
+        [Tooltip("Optional second attack. Empty keeps this species' original single attack.")]
+        [SerializeField] private string secondAttackState;
+        [Range(0f, 1f), SerializeField] private float secondHitMoment = .52f;
+        [Min(.1f), SerializeField] private float secondAreaRadius = 1.6f;
+        [SerializeField] private Vector2 secondAreaOffset = new Vector2(.3f, 1.71f);
+        [Min(0f), SerializeField] private float attackTurnSpeed = 720f;
+        [Range(0f, 1f), Tooltip("Fraction of windup where tracking ends; 1 tracks until contact, 0 locks at start.")]
+        [SerializeField] private float trackingEndFraction = .85f;
+        [Min(0f), SerializeField] private float chaseTurnSpeed = 240f;
+        [Min(0f), SerializeField] private float animationBlendSeconds = .15f;
+        private bool secondAttack, nextSecondAttack;
+        private string ActiveAttackState => secondAttack ? secondAttackState : attackState;
+        private float ActiveHitMoment => secondAttack ? secondHitMoment : hitMoment;
+        private float ActiveAreaRadius => secondAttack ? secondAreaRadius : areaRadius;
         [Min(0f), SerializeField] private float moveSpeed = 1.5f;
         [Min(0f), SerializeField] private float detectionRange = 6f;
         [Min(0.1f), SerializeField] private float attackRange = 1.5f;
@@ -21,6 +35,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private HitShape hitShape;
         [Min(.1f), SerializeField] private float areaRadius = 1.6f;
         [Min(0f), SerializeField] private float areaForwardOffset = 1.6f;
+        [SerializeField] private float areaSideOffset;
         [Min(.1f), SerializeField] private float hitHeight = 2.5f;
         [SerializeField] private Color warningColor = new Color(1f, .08f, .02f, .65f);
         [SerializeField] private Shader warningShader;
@@ -36,15 +51,12 @@ namespace MiningSimulator.Ores
         private Collider targetCollider;
         private MiningNpc targetMiner;
         private Collider minerCollider;
-        private float warningUntil;
         private float nextMinerSearch;
-        private bool committedMinerAttack;
         private readonly List<Vector3> chasePath = new();
         private readonly RaycastHit[] strikeObstructions = new RaycastHit[32];
         private int chaseWaypoint;
         private float nextRepath;
         private Vector3 lastPathGoal;
-        public float WarningRemaining => Mathf.Max(0f, warningUntil - Time.time);
         private MonsterSpawnZone zone;
         private Vector3 destination;
         private float nextDecision, nextAttack, verticalSpeed;
@@ -103,6 +115,8 @@ namespace MiningSimulator.Ores
         private static void ResetMonsterRegistry() => ActiveMonsters.Clear();
         private void OnEnable()
         {
+            var audioManager = FindFirstObjectByType<MiningAudioManager>();
+            if (audioManager != null) audioManager.RegisterSfxSources(gameObject);
             if (!ActiveMonsters.Contains(this)) ActiveMonsters.Add(this);
             foreach (MiningNpc miner in MiningNpc.Miners)
                 if (miner != null) miner.IgnoreMonsterCollision(this);
@@ -116,7 +130,8 @@ namespace MiningSimulator.Ores
             MonsterRewardData definition = rewards;
             bossSettings = definition != null ? definition.boss : null;
             var stats = player != null ? player.GetComponent<MiningPlayerStats>() : null;
-            IsBoss = boss && bossSettings != null && bossSettings.CanSpawn(stats != null ? stats.Level : 1);
+            IsBoss = boss && bossSettings != null && bossSettings.CanSpawn(stats != null ? stats.Level : 1,
+                MiningGameplayTuning.Current != null && MiningGameplayTuning.Current.IgnoreBossLevel);
             if (IsBoss)
             {
                 transform.localScale *= bossSettings.ScaleMultiplier;
@@ -148,7 +163,6 @@ namespace MiningSimulator.Ores
         }
         private void OnDestroy()
         {
-            ClearMinerWarning();
             if (health == null) return;
             health.Damaged -= OnDamage;
             health.Died -= OnDeath;
@@ -156,7 +170,6 @@ namespace MiningSimulator.Ores
         private void OnDamage()
         {
             if (health.Health <= 0f) return;
-            ClearMinerWarning();
             // Preserve the committed contact frame, then allow the hit reaction.
             // Otherwise a player's strike can cancel every incoming headbutt.
             if (animationState != attackStateHash || hitApplied) Play("Damage");
@@ -165,10 +178,11 @@ namespace MiningSimulator.Ores
         {
             if (IsDespawning) return;
             if (encounterVisuals != null) encounterVisuals.CancelExpiry();
-            ClearMinerWarning();
             if (rewardsGranted) return;
             rewardsGranted = true;
             Play("Down");
+            var cards = FindFirstObjectByType<MiningCardSystem>();
+            if (cards != null) cards.TryDrop(transform.position, IsBoss);
             motor.enabled = false;
             if (zone != null) zone.GrantRewards(rewards, transform.position + Vector3.up * 0.6f,
                 (rewards != null ? rewards.GoldMultiplier(Level) : 1f) * (IsBoss ? bossSettings.goldMultiplier : 1f),
@@ -180,7 +194,6 @@ namespace MiningSimulator.Ores
             if (IsDespawning || health == null || health.Health <= 0f) return;
             IsDespawning = true;
             rewardsGranted = true; // Timeout is not a kill, including late hits/DOT during the dissolve.
-            ClearMinerWarning();
             health.SetDamageEnabled(false);
             health.enabled = false;
             if (health.HealthBar != null) health.HealthBar.gameObject.SetActive(false);
@@ -198,13 +211,12 @@ namespace MiningSimulator.Ores
                 Vector3 victim = targetMiner != null ? targetMiner.transform.position : target != null ? target.transform.position : transform.position + transform.forward;
                 Vector3 facing = Vector3.ProjectOnPlane(victim - transform.position, Vector3.up);
                 if (facing.sqrMagnitude > .001f) transform.rotation = Quaternion.LookRotation(facing);
-                strikeForward = transform.forward;
-                strikeCenter = transform.position + (hitShape == HitShape.Area ? strikeForward * areaForwardOffset * HitScale : Vector3.zero);
                 strikeLocked = true;
+                UpdateStrikeCenter();
                 if (hitShape == HitShape.Area)
                 {
                     if (groundWarning == null) groundWarning = gameObject.AddComponent<MonsterAttackWarning>();
-                    groundWarning.Show(strikeCenter, areaRadius * HitScale, warningColor, warningShader, transform);
+                    groundWarning.Show(strikeCenter, ActiveAreaRadius * HitScale, warningColor, warningShader, transform);
                 }
             }
             else if (hash != attackStateHash)
@@ -212,24 +224,58 @@ namespace MiningSimulator.Ores
                 strikeLocked = false;
                 if (groundWarning != null) groundWarning.Hide();
             }
-            animator.CrossFadeInFixedTime(hash, 0.15f);
+            animator.CrossFadeInFixedTime(hash, animationBlendSeconds);
+        }
+        private void BeginAttack()
+        {
+            secondAttack = nextSecondAttack && !string.IsNullOrEmpty(secondAttackState);
+            nextSecondAttack = !secondAttack && !string.IsNullOrEmpty(secondAttackState);
+            attackStateHash = Animator.StringToHash(ActiveAttackState);
+            nextAttack = Time.time + attackCooldown;
+            hitApplied = false;
+            Play(ActiveAttackState, true);
+        }
+        private Vector3 AreaCenter
+        {
+            get
+            {
+                Vector2 offset = secondAttack ? secondAreaOffset : new Vector2(areaSideOffset, areaForwardOffset);
+                return transform.position + (transform.right * offset.x + transform.forward * offset.y) * HitScale;
+            }
+        }
+        private void UpdateStrikeCenter()
+        {
+            strikeForward = transform.forward;
+            strikeCenter = hitShape == HitShape.Area ? AreaCenter : transform.position;
+        }
+        private void TrackAttackTarget(float normalizedTime)
+        {
+            if (hitApplied || normalizedTime >= ActiveHitMoment * trackingEndFraction) return;
+            Transform victim = IsMinerTargetValid() ? targetMiner.transform : target != null && target.Health > 0f ? target.transform : null;
+            if (victim == null) return;
+            Vector3 facing = Vector3.ProjectOnPlane(victim.position - transform.position, Vector3.up);
+            if (facing.sqrMagnitude > .001f)
+                transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(facing), attackTurnSpeed * Time.deltaTime);
+            UpdateStrikeCenter();
+            if (groundWarning != null && hitShape == HitShape.Area) groundWarning.MoveCenter(strikeCenter, transform);
         }
         private void Update()
         {
             if (health.Health <= 0f || animator == null) return;
             var state = animator.GetCurrentAnimatorStateInfo(0);
-            bool attacking = state.IsName(attackState);
+            bool attacking = state.IsName(ActiveAttackState);
             bool reacting = state.IsName("Damage");
+            var windup = animator.IsInTransition(0) && animator.GetNextAnimatorStateInfo(0).IsName(ActiveAttackState)
+                ? animator.GetNextAnimatorStateInfo(0) : state;
+            if (windup.IsName(ActiveAttackState) && animationState == attackStateHash) TrackAttackTarget(windup.normalizedTime);
             if (groundWarning != null)
             {
-                var windup = animator.IsInTransition(0) && animator.GetNextAnimatorStateInfo(0).IsName(attackState)
-                    ? animator.GetNextAnimatorStateInfo(0) : state;
-                if (windup.IsName(attackState) && !hitApplied)
-                    groundWarning.SetProgress(Mathf.Clamp01(windup.normalizedTime / Mathf.Max(.001f, hitMoment)));
+                if (windup.IsName(ActiveAttackState) && !hitApplied)
+                    groundWarning.SetProgress(Mathf.Clamp01(windup.normalizedTime / Mathf.Max(.001f, ActiveHitMoment)));
                 else if (hitApplied || animationState != attackStateHash) groundWarning.Hide();
             }
             if (attacking && !animator.IsInTransition(0) && !hitApplied &&
-                state.normalizedTime >= hitMoment)
+                state.normalizedTime >= ActiveHitMoment)
             {
                 hitApplied = true;
                 if (groundWarning != null) groundWarning.Hide();
@@ -249,30 +295,7 @@ namespace MiningSimulator.Ores
                 }
             }
             Vector3 movement = Vector3.zero;
-            bool warning = warningUntil > 0f;
-            if (warning)
-            {
-                if (!IsMinerTargetValid() || !CanHitTarget())
-                {
-                    ClearMinerWarning();
-                    nextAttack = Time.time + attackCooldown;
-                }
-                else
-                {
-                    Vector3 facing = Vector3.ProjectOnPlane(targetMiner.transform.position - transform.position, Vector3.up);
-                    if (facing.sqrMagnitude > 0.01f)
-                        transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(facing), 240f * Time.deltaTime);
-                    if (Time.time >= warningUntil)
-                    {
-                        ClearMinerWarning();
-                        nextAttack = Time.time + attackCooldown;
-                        hitApplied = false;
-                        committedMinerAttack = true;
-                        Play(attackState, true);
-                    }
-                }
-            }
-            if (!warning && !animator.IsInTransition(0) && ((!attacking && !reacting) || state.normalizedTime >= 1f))
+            if (!animator.IsInTransition(0) && ((!attacking && !reacting) || state.normalizedTime >= 1f))
             {
                 SelectMinerTarget();
                 bool chasingPlayer = targetMiner == null && target != null && target.Health > 0f &&
@@ -293,19 +316,7 @@ namespace MiningSimulator.Ores
                 delta.y = 0f;
                 if (chasing && delta.magnitude <= attackRange && Time.time >= nextAttack)
                 {
-                    if (targetMiner != null)
-                    {
-                        warningUntil = Time.time + Mathf.Max(2f, rewards != null ? rewards.minerWarningSeconds : 2f);
-                        targetMiner.SetThreat(this, true);
-                        Play("Idle");
-                    }
-                    else
-                    {
-                        nextAttack = Time.time + attackCooldown;
-                        hitApplied = false;
-                        committedMinerAttack = false;
-                        Play(attackState, true);
-                    }
+                    BeginAttack();
                 }
                 else if (delta.magnitude > (chasing ? attackRange : 0.3f))
                 {
@@ -315,19 +326,12 @@ namespace MiningSimulator.Ores
                 else Play("Idle");
                 if (delta.sqrMagnitude > 0.01f)
                     transform.rotation = Quaternion.RotateTowards(transform.rotation,
-                        Quaternion.LookRotation(movement.sqrMagnitude > 0.01f ? movement : delta), 240f * Time.deltaTime);
+                        Quaternion.LookRotation(movement.sqrMagnitude > 0.01f ? movement : delta), chaseTurnSpeed * Time.deltaTime);
             }
             verticalSpeed = motor.isGrounded ? -2f : verticalSpeed + Physics.gravity.y * Time.deltaTime;
             motor.Move((movement + Vector3.up * verticalSpeed) * Time.deltaTime);
         }
 
-        private bool CanHitTarget()
-        {
-            // A destroyed/disabled miner must not redirect an already committed hit to the player.
-            if (committedMinerAttack && targetMiner == null) return false;
-            if (targetMiner != null ? !IsMinerTargetValid() : target == null || target.Health <= 0f) return false;
-            return ContainsVictim(targetMiner != null ? targetMiner.transform : target.transform, targetMiner != null ? minerCollider : targetCollider);
-        }
         private float HitScale => Mathf.Max(.01f, Mathf.Max(transform.lossyScale.x, transform.lossyScale.z));
         private void ApplyHitHealing(float dealt)
         {
@@ -335,18 +339,18 @@ namespace MiningSimulator.Ores
         }
         public bool ContainsHitPoint(Vector3 point)
         {
-            Vector3 center = strikeLocked ? strikeCenter : transform.position + (hitShape == HitShape.Area ? transform.forward * areaForwardOffset * HitScale : Vector3.zero);
+            Vector3 center = strikeLocked ? strikeCenter : hitShape == HitShape.Area ? AreaCenter : transform.position;
             Vector3 forward = strikeLocked ? strikeForward : transform.forward;
             Vector3 delta = point - center;
             if (Mathf.Abs(delta.y) > hitHeight * HitScale) return false;
             delta.y = 0;
-            float radius = (hitShape == HitShape.Area ? areaRadius : attackRange) * HitScale;
+            float radius = (hitShape == HitShape.Area ? ActiveAreaRadius : attackRange) * HitScale;
             return delta.sqrMagnitude <= radius * radius && (hitShape == HitShape.Area || delta.sqrMagnitude < .0001f || Vector3.Angle(forward, delta) <= attackArc * .5f);
         }
         private bool ContainsVictim(Transform victim, Collider victimCollider)
         {
             Vector3 origin = transform.TransformPoint(motor.center);
-            Vector3 center = strikeLocked ? strikeCenter : transform.position + (hitShape == HitShape.Area ? transform.forward * areaForwardOffset * HitScale : Vector3.zero);
+            Vector3 center = strikeLocked ? strikeCenter : hitShape == HitShape.Area ? AreaCenter : transform.position;
             Vector3 position = victim.position;
             Vector3 point = victimCollider != null && victimCollider.enabled
                 ? victimCollider.ClosestPoint(center + Vector3.up * .5f) : position;
@@ -401,7 +405,6 @@ namespace MiningSimulator.Ores
         {
             if (zone != null && !zone.IsInsideMine(transform.position))
             {
-                ClearMinerWarning();
                 targetMiner = null;
                 minerCollider = null;
                 return;
@@ -423,16 +426,10 @@ namespace MiningSimulator.Ores
             if (targetMiner != null) minerCollider = targetMiner.GetComponent<Collider>();
         }
 
-        private void ClearMinerWarning()
-        {
-            if (targetMiner != null) targetMiner.SetThreat(this, false);
-            warningUntil = 0f;
-        }
         private void OnDisable()
         {
             if (groundWarning != null) groundWarning.Hide();
             strikeLocked = false;
-            ClearMinerWarning();
             ActiveMonsters.Remove(this);
         }
         private void OnDrawGizmosSelected()
@@ -444,10 +441,10 @@ namespace MiningSimulator.Ores
         private void DrawHitGizmo()
         {
             Gizmos.color = warningColor;
-            Vector3 center = strikeLocked ? strikeCenter : transform.position + (hitShape == HitShape.Area ? transform.forward * areaForwardOffset * HitScale : Vector3.zero);
+            Vector3 center = strikeLocked ? strikeCenter : hitShape == HitShape.Area ? AreaCenter : transform.position;
             Vector3 forward = strikeLocked ? strikeForward : transform.forward;
             float angle = hitShape == HitShape.Area ? 360f : attackArc;
-            float radius = (hitShape == HitShape.Area ? areaRadius : attackRange) * HitScale;
+            float radius = (hitShape == HitShape.Area ? ActiveAreaRadius : attackRange) * HitScale;
             Vector3 first = center + Quaternion.AngleAxis(-angle * .5f, Vector3.up) * forward * radius;
             Vector3 previous = first;
             for (int i = 1; i <= 64; i++)

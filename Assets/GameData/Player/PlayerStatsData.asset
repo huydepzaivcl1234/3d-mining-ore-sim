@@ -38,11 +38,11 @@ MonoBehaviour:
   jumpSfx: {fileID: 8300000, guid: a6f741ac730dd6a4fb595ec6080c1551, type: 3}
   jumpSfxVolume: 1
   attackSfx: {fileID: 8300000, guid: 8b9c3ae2a8b25584d961e94222913c63, type: 3}
-  attackSfxVolume: 0.7
+  attackSfxVolume: 1
   drawWeaponSfx: {fileID: 8300000, guid: 088f851c767ff08429b2222dcaa8468e, type: 3}
-  drawWeaponSfxVolume: 0.7
+  drawWeaponSfxVolume: 1
   sheathWeaponSfx: {fileID: 8300000, guid: c08cd1c5feca2434f9f92f67ee4beab6, type: 3}
-  sheathWeaponSfxVolume: 0.55
+  sheathWeaponSfxVolume: 1
   attackImpactVfxPrefab: {fileID: 1035977224672214417, guid: 057aa477789506a44bd206e9c5acad19, type: 3}
   impactVfxLifetime: 2
   damage: 1

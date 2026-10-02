@@ -9,7 +9,7 @@ namespace MiningSimulator.Ores
     {
         public bool enabled = true;
         [Range(0, 100)] public float chancePercent = 5f;
-        [Min(5)] public int minimumPlayerLevel = 5;
+        [Min(1)] public int minimumPlayerLevel = 5;
         [Min(0)] public float sizeIncreasePercent = 35f;
         [Min(1)] public float healthMultiplier = 3f;
         [Min(0)] public float damageMultiplier = 1.5f;
@@ -19,8 +19,8 @@ namespace MiningSimulator.Ores
         public MonsterRewardData rewardOverride;
         public Color effectColor = new Color(1f, .2f, .06f, 1f);
         [Min(1)] public float combatSeconds = 120f;
-        public bool CanSpawn(int playerLevel) => enabled && playerLevel >= Mathf.Max(5, minimumPlayerLevel);
-        public bool Roll(int playerLevel, float sample) => CanSpawn(playerLevel) &&
+        public bool CanSpawn(int playerLevel, bool ignoreLevel = false) => enabled && (ignoreLevel || playerLevel >= Mathf.Max(1, minimumPlayerLevel));
+        public bool Roll(int playerLevel, float sample, bool ignoreLevel = false) => CanSpawn(playerLevel, ignoreLevel) &&
             (chancePercent >= 100f || Mathf.Clamp01(sample) < Mathf.Clamp(chancePercent, 0f, 100f) * .01f);
         public float ScaleMultiplier => 1f + Mathf.Max(0f, sizeIncreasePercent) * .01f;
     }
@@ -63,7 +63,6 @@ namespace MiningSimulator.Ores
         [Min(0)] public float experience = 25;
         [Min(0)] public float gold = 50;
         [Header("Monster attack / healing effects (0 disables an effect)")]
-        [Min(2f)] public float minerWarningSeconds = 2f;
         [Min(0)] public float burnDamagePerTick;
         [Min(0.1f)] public float burnTickSeconds = 1f;
         [Min(0)] public float burnDurationSeconds;
