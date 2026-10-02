@@ -15,7 +15,7 @@ MonoBehaviour:
   boss:
     enabled: 1
     chancePercent: 5
-    minimumPlayerLevel: 5
+    minimumPlayerLevel: 7
     sizeIncreasePercent: 35
     healthMultiplier: 3
     damageMultiplier: 1.5
@@ -35,7 +35,6 @@ MonoBehaviour:
   randomStatMultiplier: {x: 0.9, y: 1.1}
   experience: 5
   gold: 5
-  minerWarningSeconds: 2
   burnDamagePerTick: 0
   burnTickSeconds: 0.1
   burnDurationSeconds: 0

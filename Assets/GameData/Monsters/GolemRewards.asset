@@ -15,7 +15,7 @@ MonoBehaviour:
   boss:
     enabled: 1
     chancePercent: 0
-    minimumPlayerLevel: 5
+    minimumPlayerLevel: 10
     sizeIncreasePercent: 35
     healthMultiplier: 3
     damageMultiplier: 1.5

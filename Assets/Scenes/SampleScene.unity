@@ -311,7 +311,7 @@ MonoBehaviour:
     icon: {fileID: 21300000, guid: 4bebccb0a69183b43ac6c40615742c48, type: 3}
     displayName: 
     chance: 25
-    minimumPlayerLevel: 1
+    minimumPlayerLevel: 5
   miningSurface: {fileID: 1293138316}
   minimumSpawnDistance: 4
   maximumSpawnDistance: 7
@@ -332,7 +332,7 @@ MonoBehaviour:
   inventory: {fileID: 0}
   upgradeSystem: {fileID: 0}
   showUnlockNotifications: 1
-  unlockNotifier: {fileID: 0}
+  unlockNotifier: {fileID: 1491607851}
   debugIgnoreSpeciesLevel: 0
 --- !u!4 &6420753
 Transform:
@@ -61693,6 +61693,8 @@ MonoBehaviour:
   luckyBlockDropChanceStacks: 0
   npcExperienceStacks: 0
   itemDropChanceStacks: 0
+  regenIntervalReductionStacks: 0
+  healingEffectivenessStacks: 0
 --- !u!4 &1144114549
 Transform:
   m_ObjectHideFlags: 0

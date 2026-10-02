@@ -73,7 +73,18 @@ namespace MiningSimulator.Ores
             Row(text, "RANGE", "Attack range", $"{(combat != null ? combat.AttackRange : d.attackRange):0.##}m");
             var stamina = player.GetComponent<MiningPlayerStamina>();
             Row(text, "STAMINA", "Stamina", $"{(stamina != null ? stamina.Current : d.maxStamina):0} / {d.maxStamina:0}");
-            body.text = text.ToString();
+            var health = player.GetComponent<MiningCharacterHealth>();
+            if (health != null)
+            {
+                Row(text, "HEALTH", "Health", $"{health.Health:0.##} / {health.MaxHealth:0.##}");
+                Row(text, "REGEN_SPEED", "Regeneration speed", string.Format(
+                    L("PLAYER_STATS_REGEN_RATE_FORMAT", "{0:0.##} HP/s"),
+                    health.EffectiveRegenAmount / health.RegenInterval));
+                Row(text, "REGEN_AMOUNT", "Health regenerated", string.Format(
+                    L("PLAYER_STATS_REGEN_TICK_FORMAT", "{0:0.##} HP every {1:0.##}s"),
+                    health.EffectiveRegenAmount, health.RegenInterval));
+            }
+            body.text = text.ToString().TrimEnd('\n');
         }
         private static string L(string key, string fallback) => MiningLocalization.TextKey(key, fallback);
         private static void Row(StringBuilder text, string key, string fallback, string value)

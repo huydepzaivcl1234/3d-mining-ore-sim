@@ -35,6 +35,24 @@ MonoBehaviour:
   regenAmount: 1
   regenInterval: 10
   respawnSeconds: 10
+  damagePopup:
+    enabled: 1
+    duration: 0.85
+    riseHeight: 0.65
+    fallDistance: 0.3
+    peakTime: 0.32
+    sidewaysDistance: 0.25
+    worldOffset: {x: 0, y: 0.35, z: 0}
+    worldScale: 0.18
+    fontSize: 18
+    font: {fileID: 0}
+    color: {r: 1, g: 0.015202586, b: 0, a: 1}
+    outlineColor: {r: 0, g: 0, b: 0, a: 1}
+    outlineWidth: 0.2
+    fadeStart: 0.55
+    scalePunch: 0.25
+    punchFraction: 0.25
+    maximumVisible: 64
   jumpSfx: {fileID: 8300000, guid: a6f741ac730dd6a4fb595ec6080c1551, type: 3}
   jumpSfxVolume: 1
   attackSfx: {fileID: 8300000, guid: 8b9c3ae2a8b25584d961e94222913c63, type: 3}
@@ -57,6 +75,11 @@ MonoBehaviour:
   combatBlendSeconds: 0.15
   hitTime: 0.45
   hitOriginOffset: {x: 0, y: 1, z: 0}
+  deflectFromMonsterHeads: 1
+  monsterHeadSidewaysSpeed: 7
+  monsterHeadDownwardSpeed: 4
+  monsterHeadDeflectionSeconds: 0.45
+  monsterHeadMinimumUpNormal: 0.5
   MoveSpeed: 3.5
   SprintSpeed: 7
   RotationSmoothTime: 0.12

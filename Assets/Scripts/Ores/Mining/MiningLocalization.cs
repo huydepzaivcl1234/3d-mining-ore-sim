@@ -189,6 +189,8 @@ namespace MiningSimulator.Ores
                 MiningUpgradeType.LuckyBlockDropChance => Text("Increase Lucky Block chance", "Tăng tỉ lệ Lucky Block"),
                 MiningUpgradeType.NpcExperience => Text("Increase NPC experience", "Tăng kinh nghiệm NPC"),
                 MiningUpgradeType.ItemDropChance => Text("Increase item drop chance", "Tăng tỉ lệ rơi vật phẩm"),
+                MiningUpgradeType.RegenIntervalReduction => Text("Reduce regeneration interval", "Giảm thời gian hồi máu"),
+                MiningUpgradeType.HealingEffectiveness => Text("Increase healing effectiveness", "Tăng hiệu quả hồi máu"),
                 _ => fallback
             };
         }

@@ -14,7 +14,9 @@ namespace MiningSimulator.Ores
         LuckyBlockReward = 6,
         LuckyBlockDropChance = 7,
         NpcExperience = 8,
-        ItemDropChance = 9
+        ItemDropChance = 9,
+        RegenIntervalReduction = 10,
+        HealingEffectiveness = 11
     }
 
     [Serializable]
@@ -128,6 +130,16 @@ namespace MiningSimulator.Ores
             new("Tăng tỉ lệ rơi vật phẩm", 1f);
 
         public MiningUpgradeDefinition MoneyReward => moneyReward;
+        [Header("Player regeneration")]
+        [Tooltip("Percent removed from the current regeneration interval per level (multiplicative).")]
+        [SerializeField] private MiningUpgradeDefinition regenIntervalReduction =
+            new("Giảm thời gian hồi máu", 1f);
+        [SerializeField] private MiningUpgradeDefinition healingEffectiveness =
+            new("Tăng hiệu quả hồi máu", 1f);
+        public MiningUpgradeDefinition RegenIntervalReduction => regenIntervalReduction ??=
+            new MiningUpgradeDefinition("Giảm thời gian hồi máu", 1f);
+        public MiningUpgradeDefinition HealingEffectiveness => healingEffectiveness ??=
+            new MiningUpgradeDefinition("Tăng hiệu quả hồi máu", 1f);
         public MiningUpgradeDefinition RareOreSpawn => rareOreSpawn;
         public MiningUpgradeDefinition OreDamage => oreDamage;
         public MiningUpgradeDefinition OreSpawnSpeed => oreSpawnSpeed;
@@ -156,6 +168,8 @@ namespace MiningSimulator.Ores
                 MiningUpgradeType.LuckyBlockDropChance => LuckyBlockDropChance,
                 MiningUpgradeType.NpcExperience => NpcExperience,
                 MiningUpgradeType.ItemDropChance => ItemDropChance,
+                MiningUpgradeType.RegenIntervalReduction => RegenIntervalReduction,
+                MiningUpgradeType.HealingEffectiveness => HealingEffectiveness,
                 _ => moneyReward
             };
         }
@@ -172,6 +186,8 @@ namespace MiningSimulator.Ores
             LuckyBlockDropChance.Validate();
             NpcExperience.Validate();
             ItemDropChance.Validate();
+            RegenIntervalReduction.Validate();
+            HealingEffectiveness.Validate();
         }
     }
 }

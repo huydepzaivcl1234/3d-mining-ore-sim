@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 06f77ebbec746d04cb9a846a8b2273eb, type: 3}
   m_Name: CardDrops
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningCardData
-  monsterDropPercent: 100
+  monsterDropPercent: 15
   bossDropPercent: 50
   tiers:
   - name: Common

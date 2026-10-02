@@ -35,6 +35,8 @@ namespace MiningSimulator.Ores
         [Min(0.1f)] public float regenInterval = 10;
         [Min(1)] public float respawnSeconds = 10;
         [Header("Combat")]
+        [Header("Damage number feedback")]
+        public MiningDamagePopupSettings damagePopup = new();
         [Header("Jump / attack feedback")]
         public AudioClip jumpSfx;
         [Range(0, 1)] public float jumpSfxVolume = 0.6f;

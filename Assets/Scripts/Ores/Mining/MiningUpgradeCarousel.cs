@@ -41,6 +41,7 @@ namespace MiningSimulator.Ores
             closeAction = close;
             if (content != null)
             {
+                EnsureRegenerationCards(content);
                 // Reuse the authored view. Never regenerate its graphics, text sizes or icon offsets.
                 foreach (var item in content.GetComponentsInChildren<JuicyUpgradeItem>(true))
                 {
@@ -50,6 +51,10 @@ namespace MiningSimulator.Ores
                 }
                 var authoredScroll = content.GetComponentInParent<UpgradeCardScrollRect>(true);
                 if (authoredScroll != null) authoredScroll.Owner = this;
+                content.sizeDelta = new Vector2(content.sizeDelta.x,
+                    Mathf.Max(content.sizeDelta.y, (cards.Count + 2) * Row));
+                scrollbar.size = Mathf.Min(1f, 3f / Mathf.Max(3, cards.Count));
+                scrollbar.numberOfSteps = Mathf.Max(2, cards.Count);
                 scrollbar.onValueChanged.AddListener(OnScrollbar);
                 if (closeButton != null) closeButton.onClick.AddListener(CloseView);
                 initialized = true; SetFirst(0); ApplyPresentation(true);
@@ -60,6 +65,8 @@ namespace MiningSimulator.Ores
             var vectorSource = Resources.Load<GameObject>("UpgradeCard");
             if (vectorSource != null) vectorMaterial = vectorSource.GetComponent<SVGImage>().material;
             var items = GetComponentsInChildren<JuicyUpgradeItem>(true);
+            EnsureRegenerationCards(transform);
+            items = GetComponentsInChildren<JuicyUpgradeItem>(true);
             // An ordered list is optional: newly added buttons are appended in their authored hierarchy order.
             var sorted = new List<JuicyUpgradeItem>();
             if (order != null) foreach (var type in order)
@@ -156,6 +163,27 @@ namespace MiningSimulator.Ores
             item.ConfigureCard(system, wallet, title, detail, price);
             cards.Add(new Card { Item = item, Rect = rect, Group = group, Hover = hover });
             item.gameObject.SetActive(true);
+        }
+
+        private static void EnsureRegenerationCards(Transform parent)
+        {
+            var items = parent.GetComponentsInChildren<JuicyUpgradeItem>(true);
+            if (items.Length == 0) return;
+            // Clone only missing rows; retain every authored row, order, SVG and purchase behavior.
+            foreach (var type in new[] { MiningUpgradeType.RegenIntervalReduction, MiningUpgradeType.HealingEffectiveness })
+            {
+                bool exists = false;
+                foreach (var item in items) if (item.UpgradeType == type) { exists = true; break; }
+                if (exists) continue;
+                var source = items[items.Length - 1];
+                var clone = Instantiate(source, source.transform.parent);
+                clone.name = type + " Upgrade";
+                clone.SetUpgradeType(type);
+                // Never copy an old persistent onClick that purchases the template's upgrade.
+                clone.GetComponent<UnityEngine.UI.Button>().onClick = new UnityEngine.UI.Button.ButtonClickedEvent();
+                var rect = (RectTransform)clone.transform;
+                rect.anchoredPosition -= new Vector2(0f, 300f * (type == MiningUpgradeType.RegenIntervalReduction ? 1f : 2f));
+            }
         }
 
         private static RectTransform Rect(string name, Transform parent, Vector2 size, Vector2 position)

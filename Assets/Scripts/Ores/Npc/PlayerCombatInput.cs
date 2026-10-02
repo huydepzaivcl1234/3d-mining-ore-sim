@@ -477,6 +477,8 @@ public class PlayerCombatInput : MonoBehaviour
         if (Damage <= 0 || target == null || target.Health <= 0f) return;
         float dealt = target.DealDamage(Damage);
         if (dealt <= 0f) return;
+        if (target.GetComponent<MushroomMonster>() != null && Stats != null)
+            MiningDamagePopup.Show(dealt, point, Stats.damagePopup);
         if (Stats != null)
         {
             if (ownHealth != null && ownHealth.Health > 0f)

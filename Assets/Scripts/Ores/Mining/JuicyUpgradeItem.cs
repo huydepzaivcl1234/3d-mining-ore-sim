@@ -23,6 +23,7 @@ namespace MiningSimulator.Ores
         [SerializeField, HideInInspector] private bool ownsPurchase;
         public MiningUpgradeType UpgradeType => upgradeType;
         public Sprite CardIcon => cardIcon;
+        public void SetUpgradeType(MiningUpgradeType type) => upgradeType = type;
 
         public void BindCard(MiningUpgradeSystem system, PlayerWallet playerWallet)
         {
@@ -93,6 +94,8 @@ namespace MiningSimulator.Ores
                 string format = upgradeType == MiningUpgradeType.NpcCapacity
                     ? MiningLocalization.Text("+{0:0.##} miner/Lv {1}/{2}", "+{0:0.##} thợ/cấp {1}/{2}")
                     : MiningLocalization.Text("+{0:0.##}% / level [{1}/{2}]", "+{0:0.##}% / cấp [{1}/{2}]");
+                if (upgradeType == MiningUpgradeType.RegenIntervalReduction)
+                    format = MiningLocalization.Text("-{0:0.##}% / level [{1}/{2}]", "-{0:0.##}% / cấp [{1}/{2}]");
                 detailText.text = string.Format(format, value, stacks, definition.MaximumStacks);
             }
             if (priceText != null)

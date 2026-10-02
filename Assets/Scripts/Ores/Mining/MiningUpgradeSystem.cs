@@ -21,6 +21,8 @@ namespace MiningSimulator.Ores
         [SerializeField, Min(0)] private int luckyBlockDropChanceStacks;
         [SerializeField, Min(0)] private int npcExperienceStacks;
         [SerializeField, Min(0)] private int itemDropChanceStacks;
+        [SerializeField, Min(0)] private int regenIntervalReductionStacks;
+        [SerializeField, Min(0)] private int healingEffectivenessStacks;
 
         private float permanentMoneyMultiplier = 1f;
         private float permanentExperienceMultiplier = 1f;
@@ -60,6 +62,8 @@ namespace MiningSimulator.Ores
                 MiningUpgradeType.LuckyBlockDropChance => luckyBlockDropChanceStacks,
                 MiningUpgradeType.NpcExperience => npcExperienceStacks,
                 MiningUpgradeType.ItemDropChance => itemDropChanceStacks,
+                MiningUpgradeType.RegenIntervalReduction => regenIntervalReductionStacks,
+                MiningUpgradeType.HealingEffectiveness => healingEffectivenessStacks,
                 _ => 0
             };
         }
@@ -125,6 +129,12 @@ namespace MiningSimulator.Ores
                 case MiningUpgradeType.ItemDropChance:
                     itemDropChanceStacks++;
                     break;
+                case MiningUpgradeType.RegenIntervalReduction:
+                    regenIntervalReductionStacks++;
+                    break;
+                case MiningUpgradeType.HealingEffectiveness:
+                    healingEffectivenessStacks++;
+                    break;
             }
 
             UpgradesChanged?.Invoke();
@@ -140,6 +150,10 @@ namespace MiningSimulator.Ores
             }
 
             MiningUpgradeDefinition definition = upgradeData.GetDefinition(type);
+            // Compounding the reduction keeps intervals positive, even at high upgrade levels.
+            if (type == MiningUpgradeType.RegenIntervalReduction)
+                return Mathf.Pow(1f - Mathf.Clamp(definition.PercentPerStack, 0f, 100f) * 0.01f,
+                    GetStacks(type));
             float multiplier = 1f + definition.PercentPerStack * GetStacks(type) * 0.01f;
             return type == MiningUpgradeType.OreDamage
                 ? multiplier * PermanentMiningStrengthMultiplier
@@ -233,6 +247,8 @@ namespace MiningSimulator.Ores
             luckyBlockDropChanceStacks = 0;
             npcExperienceStacks = 0;
             itemDropChanceStacks = 0;
+            regenIntervalReductionStacks = 0;
+            healingEffectivenessStacks = 0;
             UpgradesChanged?.Invoke();
         }
 
@@ -260,6 +276,10 @@ namespace MiningSimulator.Ores
                 upgradeData.NpcExperience.MaximumStacks);
             itemDropChanceStacks = Mathf.Clamp(itemDropChanceStacks, 0,
                 upgradeData.ItemDropChance.MaximumStacks);
+            regenIntervalReductionStacks = Mathf.Clamp(regenIntervalReductionStacks, 0,
+                upgradeData.RegenIntervalReduction.MaximumStacks);
+            healingEffectivenessStacks = Mathf.Clamp(healingEffectivenessStacks, 0,
+                upgradeData.HealingEffectiveness.MaximumStacks);
         }
     }
 }

@@ -26,6 +26,7 @@ namespace MiningSimulator.Ores
         public void SetDamageEnabled(bool value) => damageEnabled = value;
         private int displayedBossSeconds = -1;
         private float healingBonusPercent;
+        private MiningUpgradeSystem playerUpgrades;
         private float burnDamagePerTick;
         private float burnTickSeconds;
         private float burnRemaining;
@@ -44,7 +45,15 @@ namespace MiningSimulator.Ores
             Refresh(true);
         }
         public float RegenAmount => Mathf.Max(0f, Stats != null ? Stats.regenAmount : regenAmount);
-        public float RegenInterval => Mathf.Max(0.1f, Stats != null ? Stats.regenInterval : regenInterval);
+        public float RegenInterval => Mathf.Max(0.1f,
+            (Stats != null ? Stats.regenInterval : regenInterval) *
+            (Stats != null && playerUpgrades != null
+                ? playerUpgrades.GetMultiplier(MiningUpgradeType.RegenIntervalReduction) : 1f));
+        public float HealingMultiplier => 1f + (Mathf.Max(0f,
+            Stats != null ? Stats.healingBonusPercent : healingBonusPercent) +
+            (Stats != null && playerUpgrades != null
+                ? playerUpgrades.GetAddedPercent(MiningUpgradeType.HealingEffectiveness) : 0f)) * 0.01f;
+        public float EffectiveRegenAmount => RegenAmount * HealingMultiplier;
         private float initializedMaxHealth;
         public void Respawn()
         {
@@ -101,8 +110,7 @@ namespace MiningSimulator.Ores
         public void Heal(float amount)
         {
             if (amount <= 0f || health <= 0f) return;
-            float bonus = Stats != null ? Stats.healingBonusPercent : healingBonusPercent;
-            health = Mathf.Min(MaxHealth, health + amount * (1f + Mathf.Max(0f, bonus) * 0.01f));
+            health = Mathf.Min(MaxHealth, health + amount * HealingMultiplier);
             Refresh(false, UpdateAnim.Heal);
         }
 
@@ -156,6 +164,8 @@ namespace MiningSimulator.Ores
         private void Awake()
         {
             combatInput = GetComponent<PlayerCombatInput>();
+            if (GetComponent<MiningPlayerStats>() != null)
+                playerUpgrades = FindFirstObjectByType<MiningUpgradeSystem>(FindObjectsInactive.Include);
             health = MaxHealth;
             initializedMaxHealth = MaxHealth;
             if (microBar == null && healthBar != null)
