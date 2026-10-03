@@ -18,7 +18,7 @@ MonoBehaviour:
     and Lucky Blocks.
   rarity: 2
   worldModel: {fileID: 3497661880722294818, guid: 492d59b740506494086bb01c4b392b14, type: 3}
-  inventoryIcon: {fileID: 405525012, guid: fb02805d54e997d4fa24e4f8030d8766, type: 3}
+  inventoryIcon: {fileID: 665014490, guid: 9a4c94d0e91b7c74b8cb3f6d32b74e38, type: 3}
   iconFallback: C
   fallbackColor: {r: 0.26, g: 0.82, b: 0.18, a: 1}
   worldScale: 5

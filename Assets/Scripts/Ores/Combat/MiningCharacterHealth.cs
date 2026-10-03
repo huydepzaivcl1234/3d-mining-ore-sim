@@ -18,6 +18,12 @@ namespace MiningSimulator.Ores
         [SerializeField] private Transform healthBar;
         [SerializeField] private MicroBar microBar;
         [SerializeField] private TMP_Text healthLabel;
+        [Header("Micro Bar labels (optional styled layout)")]
+        [SerializeField] private TMP_Text levelLabel;
+        [SerializeField] private TMP_Text nameLabel;
+        [SerializeField] private string displayName;
+        [SerializeField] private bool screenSpaceBar;
+        private int displayedLevel = -1;
         private Camera healthCamera;
         private PlayerCombatInput combatInput;
         private bool displayedCombatMode;
@@ -187,7 +193,10 @@ namespace MiningSimulator.Ores
             }
             bool mode = combatInput != null && combatInput.IsCombatMode;
             if (mode != displayedCombatMode) RefreshLabel();
+            var playerStats = GetComponent<MiningPlayerStats>();
+            if (playerStats != null && playerStats.Level != displayedLevel) RefreshLabel();
             if (healthBar == null) return;
+            if (screenSpaceBar) return;
             if (healthCamera == null) healthCamera = Camera.main;
             if (healthCamera != null)
                 healthBar.rotation = Quaternion.LookRotation(
@@ -198,7 +207,7 @@ namespace MiningSimulator.Ores
         private void Refresh(bool skipAnimation, UpdateAnim updateType = UpdateAnim.Damage)
         {
             var monster = GetComponent<MushroomMonster>();
-            bool showBar = monster != null && monster.IsBoss || health < MaxHealth - 0.001f;
+            bool showBar = screenSpaceBar || monster != null && monster.IsBoss || health < MaxHealth - 0.001f;
             // Enable before updating MicroBar so the first hit after spawning
             // animates correctly; hide the whole bar (including its text) at full HP.
             if (showBar && healthBar != null && !healthBar.gameObject.activeSelf)
@@ -219,6 +228,7 @@ namespace MiningSimulator.Ores
                 var player = GetComponent<MiningPlayerStats>();
                 var monster = GetComponent<MushroomMonster>();
                 int level = player != null ? player.Level : monster != null ? monster.Level : 1;
+                displayedLevel = level;
                 string status = combatInput != null
                     ? MiningLocalization.Text(displayedCombatMode ? "Combat" : "Standing") + "\n"
                     : string.Empty;
@@ -227,7 +237,15 @@ namespace MiningSimulator.Ores
                     int seconds = Mathf.CeilToInt(monster.CombatTimeRemaining);
                     status = $"{MiningLocalization.TextKey("MONSTER_BOSS", "BOSS")} {seconds / 60:00}:{seconds % 60:00}\n";
                 }
-                healthLabel.text = $"{status}Lv. {level} | {Mathf.Ceil(health):0} / {Mathf.Ceil(MaxHealth):0}";
+                if (levelLabel != null && nameLabel != null)
+                {
+                    levelLabel.text = level.ToString();
+                    string title = string.IsNullOrWhiteSpace(displayName) ? gameObject.name.Replace("(Clone)", "") : displayName;
+                    nameLabel.text = string.IsNullOrEmpty(status) ? MiningLocalization.Text(title) : status.Trim();
+                    healthLabel.text = $"{Mathf.Ceil(health):0} / {Mathf.Ceil(MaxHealth):0}";
+                }
+                else
+                    healthLabel.text = $"{status}Lv. {level} | {Mathf.Ceil(health):0} / {Mathf.Ceil(MaxHealth):0}";
             }
         }
 
