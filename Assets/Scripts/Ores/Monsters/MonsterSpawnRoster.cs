@@ -9,5 +9,8 @@ namespace MiningSimulator.Ores
     {
         [SerializeField] private List<MonsterSpawnEntry> entries = new();
         public IReadOnlyList<MonsterSpawnEntry> Entries => entries;
+        [Tooltip("Shared daily event settings. A reference remains valid when its asset moves outside Resources.")]
+        [SerializeField] private DailyEncounterEventData dailyEvents;
+        public DailyEncounterEventData DailyEvents => dailyEvents;
     }
 }

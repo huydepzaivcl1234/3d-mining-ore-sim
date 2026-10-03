@@ -16,6 +16,7 @@ namespace MiningSimulator.Ores
         private readonly List<TMP_Text> counts = new();
         private readonly List<UnityEngine.UI.Image> icons = new();
         private readonly List<GameObject> rows = new();
+        private readonly List<MonsterSpawnEntry> visibleEntries = new();
 
         public void Configure(MonsterSpawnZone spawner)
         {
@@ -54,7 +55,7 @@ namespace MiningSimulator.Ores
             if (settings == null || settings.parent == null) return;
             root = CreateRect("Daily Monster Forecast", settings.parent);
             root.anchorMin = root.anchorMax = root.pivot = Vector2.one;
-            root.sizeDelta = new Vector2(260f, 120f);
+            root.sizeDelta = new Vector2(320f, 120f);
             root.anchoredPosition = new Vector2(-14f, settings.anchoredPosition.y - settings.rect.height - 12f);
             var background = root.gameObject.AddComponent<UnityEngine.UI.Image>();
             background.color = new Color(0.10f, 0.065f, 0.035f, 0.94f);
@@ -92,7 +93,7 @@ namespace MiningSimulator.Ores
         {
             RectTransform row = CreateRect("Monster", root);
             var size = row.gameObject.AddComponent<UnityEngine.UI.LayoutElement>();
-            size.preferredHeight = 44f;
+            size.preferredHeight = 50f;
             var layout = row.gameObject.AddComponent<UnityEngine.UI.HorizontalLayoutGroup>();
             layout.spacing = 10f;
             layout.childControlWidth = layout.childControlHeight = true;
@@ -105,7 +106,7 @@ namespace MiningSimulator.Ores
             var imageSize = imageRect.gameObject.AddComponent<UnityEngine.UI.LayoutElement>();
             imageSize.preferredWidth = imageSize.preferredHeight = 42f;
             imageSize.minWidth = 42f;
-            TMP_Text count = CreateText("Count", row, 42f, 18f);
+            TMP_Text count = CreateText("Count", row, 50f, 17f);
             count.GetComponent<UnityEngine.UI.LayoutElement>().flexibleWidth = 1f;
             count.alignment = TextAlignmentOptions.MidlineLeft;
             rows.Add(row.gameObject); icons.Add(image); counts.Add(count);
@@ -117,22 +118,32 @@ namespace MiningSimulator.Ores
             Build();
             if (root == null) return;
             var forecast = source.DailyForecast;
-            while (rows.Count < forecast.Count) AddRow();
+            visibleEntries.Clear();
+            foreach (var entry in source.MonsterEntries)
+            {
+                if (entry == null || entry.prefab == null) continue;
+                bool planned = false;
+                foreach (var daily in forecast) if (daily.Entry == entry && daily.Planned > 0) { planned = true; break; }
+                if (planned || source.GetAliveCount(entry) > 0) visibleEntries.Add(entry);
+            }
+            while (rows.Count < visibleEntries.Count) AddRow();
             int pending = 0;
+            foreach (var daily in forecast) pending += daily.Remaining;
             for (int i = 0; i < rows.Count; i++)
             {
-                bool active = i < forecast.Count;
+                bool active = i < visibleEntries.Count;
                 rows[i].SetActive(active);
                 if (!active) continue;
-                DailyMonsterForecast entry = forecast[i];
-                pending += entry.Remaining;
-                Sprite icon = entry.Entry.icon;
-                if (icon == null && entry.Entry.prefab != null)
-                    icon = Resources.Load<Sprite>("MiningMonsterIcons/" + entry.Entry.prefab.name);
+                MonsterSpawnEntry entry = visibleEntries[i];
+                int planned = 0;
+                foreach (var daily in forecast) if (daily.Entry == entry) { planned = daily.Planned; break; }
+                Sprite icon = entry.icon;
+                if (icon == null && entry.prefab != null)
+                    icon = Resources.Load<Sprite>("MiningMonsterIcons/" + entry.prefab.name);
                 icons[i].sprite = icon;
                 icons[i].enabled = icon != null;
-                // Counts are for the pre-rolled daily roster, not the live population.
-                counts[i].text = $"x {entry.Planned}";
+                counts[i].text = string.Format(MiningLocalization.TextKey("MONSTER_FORECAST_COUNTS", "Today: {0}\nAlive: {1}"),
+                    planned, source.GetAliveCount(entry));
             }
             heading.text = string.Format(MiningLocalization.TextKey("MONSTER_FORECAST_TITLE", "DAY {0} - MONSTERS"), source.ForecastDay);
             bool hasEvent = source.CurrentDailyEvent != DailyEncounterEvent.Normal;
@@ -142,7 +153,7 @@ namespace MiningSimulator.Ores
             eventLabel.text = hasEvent ? source.DailyEventLabel : "";
             remaining.text = string.Format(MiningLocalization.TextKey("MONSTER_FORECAST_REMAINING", "Still arriving: {0}"), pending);
             remaining.transform.SetAsLastSibling();
-            root.sizeDelta = new Vector2(260f, 76f + forecast.Count * 48f + (hasEvent ? 72f : 0f));
+            root.sizeDelta = new Vector2(320f, 76f + visibleEntries.Count * 54f + (hasEvent ? 72f : 0f));
         }
 
         private static RectTransform CreateRect(string name, Transform parent)

@@ -275,3 +275,4 @@ CARD_REGEN_INTERVAL = Giảm thời gian hồi máu
 CARD_HEALING = Tăng hiệu quả hồi máu
 DAILY_EVENT_NIGHT_ONLY = Ngày nghỉ xã hội - quái xuất hiện ban đêm
 DAILY_EVENT_BOSS = Boss xâm chiếm
+MONSTER_FORECAST_COUNTS = Hôm nay: {0}\nCòn sống: {1}

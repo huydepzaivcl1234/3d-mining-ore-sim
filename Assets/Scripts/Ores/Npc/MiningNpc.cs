@@ -120,6 +120,10 @@ namespace MiningSimulator.Ores
         private bool inFinalApproach;
         private MiningPathSource currentPathSource;
         private int stuckRepathAttempts;
+        public float NavigationRadius => npcData != null ? npcData.ColliderRadius : .4f;
+        private Ore approachOre;
+        private Vector3 oreApproachPoint;
+        private float nextApproachRefresh;
 
         private readonly RaycastHit[] obstacleHits = new RaycastHit[32];
         private Ore targetOre;
@@ -504,22 +508,18 @@ namespace MiningSimulator.Ores
                     return;
                 }
 
-                // A chest can spawn after the path was calculated. Drop that stale
-                // path so the next query includes its carved footprint; steer
-                // around it locally on this frame too.
-                if (hasGlobalPath && blocker is MiningChest)
+                // A fresh ore or a tight corner can invalidate body clearance even
+                // when the old route was valid. Repath on the normal cadence and
+                // use the existing committed detour while carving catches up.
+                if (hasGlobalPath)
                 {
                     currentPath.Clear();
                     pathWaypointIndex = 0;
                     currentPathSource = MiningPathSource.None;
-                    nextRepathTime = 0f;
+                    nextRepathTime = Time.time + repathInterval;
                     hasGlobalPath = false;
                 }
 
-                // With a global path the route around an ore is already planned, so the heading
-                // is left alone. The probe above still runs purely so a non-commanded miner can
-                // opportunistically claim a closer ore it happens to walk past (handled in the
-                // branch above) - that is a gameplay feature, not steering.
                 if (!hasGlobalPath)
                 {
                     movementDirection = ResolveBlockedPath(
@@ -835,9 +835,16 @@ namespace MiningSimulator.Ores
                     reservedSlot, npcData.ColliderRadius, npcData.StandSlotSpacingPadding);
             }
 
-            return targetOre != null
-                ? targetOre.GetClosestSurfacePoint(currentPosition)
-                : transform.position;
+            if (targetOre == null) return transform.position;
+            if (approachOre != targetOre || Time.time >= nextApproachRefresh)
+            {
+                approachOre = targetOre;
+                nextApproachRefresh = Time.time + repathInterval;
+                oreApproachPoint = MiningNavigation.TryGetOreApproach(targetOre, currentPosition,
+                    NavigationRadius, out Vector3 approach, out _)
+                    ? approach : targetOre.GetClosestSurfacePoint(currentPosition);
+            }
+            return oreApproachPoint;
         }
 
         /// <summary>Prevents runtime ore placement on or directly beside an active miner.</summary>
@@ -1468,9 +1475,8 @@ namespace MiningSimulator.Ores
 
             bool targetMoved = !hasPathTarget || (standPosition - lastPathTarget).sqrMagnitude >
                 repathTargetMoveThreshold * repathTargetMoveThreshold;
-            bool pathExhausted = currentPath.Count == 0 || pathWaypointIndex >= currentPath.Count;
-
-            if (Time.time < nextRepathTime && !targetMoved && !pathExhausted)
+            // Failed/exhausted paths still obey the throttle; don't query every frame.
+            if (Time.time < nextRepathTime && !targetMoved)
             {
                 return;
             }
@@ -1604,7 +1610,16 @@ namespace MiningSimulator.Ores
                 return fallbackTarget;
             }
 
-            return GetLookAheadPoint(currentPosition, fallbackTarget);
+            Vector3 lookAhead = GetLookAheadPoint(currentPosition, fallbackTarget);
+            // Smoothing must not cut through an ore at a tight corner. Shorten the
+            // look-ahead before falling back to the actual NavMesh corner.
+            for (int attempt = 0; attempt < 4; attempt++)
+            {
+                if (MiningNavigation.IsMineableSegmentClear(currentPosition, lookAhead,
+                    NavigationRadius, targetOre != null ? (Component)targetOre : targetChest)) return lookAhead;
+                lookAhead = Vector3.Lerp(currentPath[pathWaypointIndex], lookAhead, .5f);
+            }
+            return currentPath[pathWaypointIndex];
         }
 
         /// <summary>

@@ -78,6 +78,10 @@ namespace MiningSimulator.Ores
         private OreSpawner oreSpawner;
         private MiningAudioManager audioManager;
         private readonly List<MushroomMonster> alive = new();
+        private readonly Dictionary<MushroomMonster, MonsterSpawnEntry> liveSpecies = new();
+        private MiningUiPanelCoordinator uiCoordinator;
+        private bool dailyAnnouncementPending;
+        private DailyEncounterEvent? forcedDailyEvent;
         private readonly RaycastHit[] groundHits = new RaycastHit[64];
         private bool started;
         private readonly List<DailyMonsterForecast> forecast = new();
@@ -95,6 +99,15 @@ namespace MiningSimulator.Ores
         public int ForecastDay => scheduledDay;
         public event Action ForecastChanged;
         public int AliveCount => alive.Count;
+        public IReadOnlyList<MonsterSpawnEntry> MonsterEntries => monsters;
+        public int GetAliveCount(MonsterSpawnEntry entry)
+        {
+            int count = 0;
+            foreach (var monster in alive)
+                if (monster != null && !monster.IsDespawning && monster.Health != null && monster.Health.Health > 0f &&
+                    liveSpecies.TryGetValue(monster, out var species) && species == entry) count++;
+            return count;
+        }
         private bool TryGetMineSurface(out NavMeshSurface surface)
         {
             if (miningSurface == null && MiningNavMeshBuilder.Instance != null)
@@ -192,6 +205,7 @@ namespace MiningSimulator.Ores
             // Loaded progression is the baseline, not a new unlock on every launch.
             lastKnownPlayerLevel = playerStats != null ? playerStats.Level : 1;
             if (unlockNotifier == null) unlockNotifier = FindFirstObjectByType<MiningUnlockNotifier>();
+            uiCoordinator = FindFirstObjectByType<MiningUiPanelCoordinator>(FindObjectsInactive.Include);
             if (wallet == null) wallet = FindAnyObjectByType<PlayerWallet>();
             if (inventory == null) inventory = FindAnyObjectByType<MiningItemSystem>();
             if (upgradeSystem == null) upgradeSystem = FindAnyObjectByType<MiningUpgradeSystem>();
@@ -249,9 +263,10 @@ namespace MiningSimulator.Ores
         private void Update()
         {
             CheckMonsterUnlocks();
-            alive.RemoveAll(m => m == null || m.IsDespawning || m.Health == null || m.Health.Health <= 0f);
+            if (alive.RemoveAll(RemoveInactiveMonster) > 0) ForecastChanged?.Invoke();
             if (dayNight == null || !dayNight.isActiveAndEnabled) return;
             if (scheduledDay != dayNight.DayNumber) BuildDailySchedule();
+            AnnounceDailyEvent();
             if (dayNight.CurrentPeriod != SpawnPeriod)
             {
                 // Night-only waves are deferred during the day, not discarded.
@@ -364,9 +379,13 @@ namespace MiningSimulator.Ores
             scheduledDay = dayNight != null ? dayNight.DayNumber : 1;
             if (dayNight == null)
             { ForecastChanged?.Invoke(); return; }
+            dailyEvents ??= additionalRoster != null ? additionalRoster.DailyEvents : null;
             dailyEvents ??= Resources.Load<DailyEncounterEventData>("DailyEncounterEvents");
             bool bossEligible = monsters.Exists(CanSpawnEventBoss);
             CurrentDailyEvent = dailyEvents != null ? dailyEvents.Roll(UnityEngine.Random.value, bossEligible) : DailyEncounterEvent.Normal;
+            if (forcedDailyEvent.HasValue) CurrentDailyEvent = forcedDailyEvent.Value;
+            forcedDailyEvent = null;
+            dailyAnnouncementPending = CurrentDailyEvent != DailyEncounterEvent.Normal;
             int min = Mathf.Clamp(minimumPerDay, 0, 256);
             int rolled = UnityEngine.Random.Range(min, Mathf.Clamp(maximumPerDay, min, 256) + 1);
             bool invasion = CurrentDailyEvent == DailyEncounterEvent.BossInvasion;
@@ -391,6 +410,31 @@ namespace MiningSimulator.Ores
             for (int i = 0; i < waves.Count; i++)
                 waves[i].Progress = Mathf.Lerp(start, 1f, (i + 1f) / (waves.Count + 1f));
             ForecastChanged?.Invoke();
+        }
+
+        private bool RemoveInactiveMonster(MushroomMonster monster)
+        {
+            bool remove = monster == null || monster.IsDespawning || monster.Health == null || monster.Health.Health <= 0f;
+            if (remove && !ReferenceEquals(monster, null)) liveSpecies.Remove(monster);
+            return remove;
+        }
+        private void AnnounceDailyEvent()
+        {
+            if (!dailyAnnouncementPending || (uiCoordinator != null && uiCoordinator.BlocksGameplay)) return;
+            if (unlockNotifier == null) unlockNotifier = FindFirstObjectByType<MiningUnlockNotifier>(FindObjectsInactive.Include);
+            if (unlockNotifier == null || !unlockNotifier.isActiveAndEnabled) return;
+            unlockNotifier.ShowToast(DailyEventLabel);
+            dailyAnnouncementPending = false;
+        }
+        public bool DebugStartDailyEvent(DailyEncounterEvent selected)
+        {
+            if (!Application.isPlaying || !started || dayNight == null || !isActiveAndEnabled) return false;
+            if (selected == DailyEncounterEvent.BossInvasion && !monsters.Exists(CanSpawnEventBoss)) return false;
+            // Explicit preview replaces future slots, not living monsters or saved progress.
+            forcedDailyEvent = selected;
+            BuildDailySchedule();
+            AnnounceDailyEvent();
+            return true;
         }
 
         private void SkipCurrentWave()
@@ -418,6 +462,7 @@ namespace MiningSimulator.Ores
             foreach (MushroomMonster monster in alive)
                 if (monster != null) Destroy(monster.gameObject);
             alive.Clear();
+            liveSpecies.Clear();
         }
         public bool DebugSpawnBoss(MushroomMonster prefab)
         {
@@ -467,6 +512,8 @@ namespace MiningSimulator.Ores
                 if (invasion && dailyEvents != null)
                     instance.ApplyEncounterModifiers(extraScale, 1f + Mathf.Max(0, dailyEvents.bossExtraDamagePercent) * 0.01f);
                 alive.Add(instance);
+                liveSpecies[instance] = entry;
+                ForecastChanged?.Invoke();
                 return true;
             }
             return false;

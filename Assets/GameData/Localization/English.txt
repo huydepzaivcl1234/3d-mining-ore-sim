@@ -275,3 +275,4 @@ CARD_REGEN_INTERVAL = Reduce regeneration interval
 CARD_HEALING = Increase healing effectiveness
 DAILY_EVENT_NIGHT_ONLY = Day off - monsters arrive at night
 DAILY_EVENT_BOSS = Boss invasion
+MONSTER_FORECAST_COUNTS = Today: {0}\nAlive: {1}

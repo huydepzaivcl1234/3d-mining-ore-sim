@@ -136,9 +136,8 @@ namespace MiningSimulator.Ores
                     continue;
                 }
 
-                Vector3 destination = ore.GetClosestSurfacePoint(origin);
-                if (!MiningNavigation.TryGetPathDistance(origin, destination,
-                        out float pathDistance))
+                if (!MiningNavigation.TryGetOreApproach(ore, origin, miner.NavigationRadius,
+                        out _, out float pathDistance))
                 {
                     // A backend exists, so failure means the ore is currently unreachable.
                     continue;

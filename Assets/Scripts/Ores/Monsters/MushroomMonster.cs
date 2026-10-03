@@ -57,6 +57,13 @@ namespace MiningSimulator.Ores
         private int chaseWaypoint;
         private float nextRepath;
         private Vector3 lastPathGoal;
+        [Header("Navigation (collision-aware, including boss size)")]
+        [Min(.05f), SerializeField] private float chaseRepathSeconds = .4f;
+        [Min(.1f), SerializeField] private float avoidanceLookAhead = 1.5f;
+        [Min(.05f), SerializeField] private float avoidanceHoldSeconds = .5f;
+        private float avoidanceUntil;
+        private Vector3 avoidanceHeading;
+        private float avoidanceSide;
         private MonsterSpawnZone zone;
         private Vector3 destination;
         private float nextDecision, nextAttack, verticalSpeed;
@@ -144,7 +151,7 @@ namespace MiningSimulator.Ores
                 transform.localScale *= bossSettings.ScaleMultiplier;
                 if (bossSettings.rewardOverride != null) rewards = bossSettings.rewardOverride;
             }
-            Level = rewards != null ? rewards.RollLevel(Random.value) : 1;
+            Level = rewards != null ? rewards.GetSpawnLevel(rewards.RollLevel(Random.value), stats != null ? stats.Level : 1) : 1;
             float scale = rewards != null ? rewards.StatMultiplier(Level) : 1;
             float low = rewards != null ? Mathf.Max(0.01f, Mathf.Min(rewards.randomStatMultiplier.x, rewards.randomStatMultiplier.y)) : 1;
             float high = rewards != null ? Mathf.Max(low, Mathf.Max(rewards.randomStatMultiplier.x, rewards.randomStatMultiplier.y)) : 1;
@@ -307,7 +314,7 @@ namespace MiningSimulator.Ores
                 SelectMinerTarget();
                 bool chasingPlayer = targetMiner == null && target != null && target.Health > 0f &&
                     (zone == null || zone.IsInsideMine(transform.position)) &&
-                    Vector3.Distance(transform.position, target.transform.position) <= detectionRange;
+                    Vector3.Distance(transform.position, target.transform.position) <= EffectiveDetectionRange;
                 bool chasing = IsMinerTargetValid() || chasingPlayer;
                 if (chasing) destination = targetMiner != null ? targetMiner.transform.position : target.transform.position;
                 else if (zone != null && Time.time >= nextDecision)
@@ -321,11 +328,11 @@ namespace MiningSimulator.Ores
                 }
                 Vector3 delta = destination - transform.position;
                 delta.y = 0f;
-                if (chasing && delta.magnitude <= attackRange && Time.time >= nextAttack)
+                if (chasing && delta.magnitude <= EffectiveAttackRange && Time.time >= nextAttack)
                 {
                     BeginAttack();
                 }
-                else if (delta.magnitude > (chasing ? attackRange : 0.3f))
+                else if (delta.magnitude > (chasing ? EffectiveAttackRange : 0.3f))
                 {
                     movement = ChaseDirection(delta) * moveSpeed;
                     Play(movement.sqrMagnitude > 0f ? "Walk" : "Idle");
@@ -340,6 +347,9 @@ namespace MiningSimulator.Ores
         }
 
         private float HitScale => Mathf.Max(.01f, Mathf.Max(transform.lossyScale.x, transform.lossyScale.z));
+        public float EffectiveAttackRange => attackRange * HitScale;
+        public float EffectiveDetectionRange => detectionRange * HitScale;
+        public float EffectiveAreaRadius => ActiveAreaRadius * HitScale;
         private void ApplyHitHealing(float dealt)
         {
             if (dealt > 0f && rewards != null) health.Heal(dealt * Mathf.Clamp(rewards.lifeStealPercent, 0f, 100f) * .01f);
@@ -386,11 +396,11 @@ namespace MiningSimulator.Ores
                 chasePath.Clear();
                 nextRepath = 0f;
                 return zone.TryGetMineEntryPoint(transform.position, out Vector3 entry)
-                    ? Vector3.ProjectOnPlane(entry - transform.position, Vector3.up).normalized : Vector3.zero;
+                    ? AvoidMineables(Vector3.ProjectOnPlane(entry - transform.position, Vector3.up).normalized) : Vector3.zero;
             }
             if (Time.time >= nextRepath || (lastPathGoal - destination).sqrMagnitude > 1f)
             {
-                nextRepath = Time.time + 0.5f;
+                nextRepath = Time.time + chaseRepathSeconds;
                 lastPathGoal = destination;
                 chaseWaypoint = 0;
                 MiningNavigation.TryFindPath(transform.position, destination, chasePath);
@@ -398,15 +408,53 @@ namespace MiningSimulator.Ores
             while (chaseWaypoint < chasePath.Count)
             {
                 Vector3 delta = Vector3.ProjectOnPlane(chasePath[chaseWaypoint] - transform.position, Vector3.up);
-                if (delta.sqrMagnitude > 0.3f * 0.3f) return delta.normalized;
+                if (delta.sqrMagnitude > 0.3f * 0.3f) return AvoidMineables(delta.normalized);
                 chaseWaypoint++;
             }
-            return MiningNavigation.PathfindingAvailable && chasePath.Count == 0 ? Vector3.zero : direct.normalized;
+            // Off-mesh victims and temporary carving must not freeze pursuit.
+            return AvoidMineables(direct.normalized);
+        }
+        private Vector3 AvoidMineables(Vector3 desired)
+        {
+            if (desired.sqrMagnitude < .001f) return Vector3.zero;
+            float radius = motor.radius * HitScale + motor.skinWidth + .06f;
+            float probe = Mathf.Max(radius, Mathf.Min(avoidanceLookAhead * HitScale,
+                Vector3.ProjectOnPlane(destination - transform.position, Vector3.up).magnitude));
+            if (MiningNavigation.IsMineableSegmentClear(transform.position,
+                transform.position + desired * probe, radius))
+            {
+                avoidanceUntil = 0f;
+                return desired;
+            }
+            if (Time.time < avoidanceUntil && MiningNavigation.IsMineableSegmentClear(
+                transform.position, transform.position + avoidanceHeading * probe, radius)) return avoidanceHeading;
+            float best = float.NegativeInfinity;
+            Vector3 heading = Vector3.zero;
+            for (int step = 1; step <= 6; step++)
+            {
+                for (int side = -1; side <= 1; side += 2)
+                {
+                    Vector3 candidate = Quaternion.AngleAxis(step * 30f * side, Vector3.up) * desired;
+                    if (!MiningNavigation.IsMineableSegmentClear(transform.position,
+                        transform.position + candidate * probe, radius)) continue;
+                    float score = Vector3.Dot(candidate, desired) + (side == avoidanceSide ? .15f : 0f);
+                    if (score <= best) continue;
+                    best = score;
+                    heading = candidate;
+                }
+            }
+            if (heading.sqrMagnitude > .001f)
+            {
+                avoidanceSide = Mathf.Sign(Vector3.Cross(desired, heading).y);
+                avoidanceHeading = heading;
+                avoidanceUntil = Time.time + avoidanceHoldSeconds;
+            }
+            return heading;
         }
         private bool IsMinerTargetValid() => targetMiner != null && targetMiner.isActiveAndEnabled &&
             !targetMiner.IsStunned &&
             (zone == null || zone.IsInsideMine(transform.position)) &&
-            (targetMiner.transform.position - transform.position).sqrMagnitude <= detectionRange * detectionRange;
+            (targetMiner.transform.position - transform.position).sqrMagnitude <= EffectiveDetectionRange * EffectiveDetectionRange;
 
         private void SelectMinerTarget()
         {
@@ -421,7 +469,7 @@ namespace MiningSimulator.Ores
             minerCollider = null;
             if (Time.time < nextMinerSearch) return;
             nextMinerSearch = Time.time + 0.3f;
-            float best = detectionRange * detectionRange;
+            float best = EffectiveDetectionRange * EffectiveDetectionRange;
             foreach (var miner in MiningNpc.Miners)
             {
                 if (miner == null || !miner.IsActivelyMining) continue;
@@ -442,7 +490,7 @@ namespace MiningSimulator.Ores
         private void OnDrawGizmosSelected()
         {
             Gizmos.color = Color.yellow;
-            Gizmos.DrawWireSphere(transform.position, detectionRange);
+            Gizmos.DrawWireSphere(transform.position, EffectiveDetectionRange);
             DrawHitGizmo();
         }
         private void DrawHitGizmo()

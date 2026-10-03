@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MonsterRewardData
   boss:
     enabled: 1
-    chancePercent: 0
+    chancePercent: 5
     minimumPlayerLevel: 10
     sizeIncreasePercent: 35
     healthMultiplier: 3

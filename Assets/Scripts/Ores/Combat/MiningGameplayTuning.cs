@@ -27,10 +27,15 @@ namespace MiningSimulator.Ores
         [SerializeField] private MiningPlayerStatsData playerData;
         public MiningPlayerStats Player => player;
         public MiningPlayerStatsData PlayerData => playerData;
-        [Header("Explicit Play Mode progress edit (saved only when applied)")]
+        [Header("Live Play Mode progress edit (applies automatically, saved)")]
         [Min(1), SerializeField] private int editPlayerLevel = 1;
         [Min(0), SerializeField] private float editPlayerExperience;
         [Min(1), SerializeField] private float editRequiredExperience = 100f;
+        [Header("Daily event preview - Play Mode only")]
+        [SerializeField] private DailyEncounterEvent debugDailyEvent = DailyEncounterEvent.NightOnly;
+        private bool progressReady, progressEditPending;
+        private int lastEditLevel;
+        private float lastEditExperience, lastEditRequired;
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetCurrent() => Current = null;
         private void OnEnable()
@@ -39,6 +44,43 @@ namespace MiningSimulator.Ores
             Current = this;
         }
         private void OnDisable() { if (Current == this) Current = null; }
+        private void Start()
+        {
+            if (player == null) player = FindFirstObjectByType<MiningPlayerStats>(FindObjectsInactive.Include);
+            ReadPlayerProgress();
+            progressReady = true;
+            progressEditPending = false;
+        }
+        private void RememberEditFields()
+        {
+            lastEditLevel = editPlayerLevel;
+            lastEditExperience = editPlayerExperience;
+            lastEditRequired = editRequiredExperience;
+        }
+        private void OnValidate()
+        {
+            // Inspector validation may run off-thread; apply Unity/gameplay work on Update instead.
+            progressEditPending = true;
+        }
+        private void Update()
+        {
+            if (!progressReady) return;
+            if (progressEditPending)
+            {
+                progressEditPending = false;
+                if (editPlayerLevel != lastEditLevel || editPlayerExperience != lastEditExperience ||
+                    editRequiredExperience != lastEditRequired) ApplyPlayerProgress();
+            }
+            // Keep the inspector live as XP changes, so editing only level never restores stale XP.
+            ReadPlayerProgress();
+        }
+        [ContextMenu("Debug/Start selected daily event now")]
+        public void StartSelectedDailyEvent()
+        {
+            if (monsterSpawner == null) monsterSpawner = FindFirstObjectByType<MonsterSpawnZone>(FindObjectsInactive.Include);
+            if (!Application.isPlaying || monsterSpawner == null || !monsterSpawner.DebugStartDailyEvent(debugDailyEvent))
+                Debug.LogWarning("Daily event could not start. Enter Play Mode, start gameplay and check boss/species level gates (or enable existing debug bypasses).", this);
+        }
         [ContextMenu("Debug/Spawn selected boss now")]
         public void SpawnSelectedBoss()
         {
@@ -50,6 +92,7 @@ namespace MiningSimulator.Ores
         {
             if (player == null) return;
             editPlayerLevel = player.Level; editPlayerExperience = player.Experience; editRequiredExperience = player.ExperienceRequired;
+            RememberEditFields();
         }
         [ContextMenu("Player/Apply edit fields to live progress (will be saved)")]
         public void ApplyPlayerProgress()
@@ -57,6 +100,7 @@ namespace MiningSimulator.Ores
             if (!Application.isPlaying || player == null) return;
             if (float.IsNaN(editPlayerExperience) || float.IsInfinity(editPlayerExperience) || float.IsNaN(editRequiredExperience) || float.IsInfinity(editRequiredExperience)) return;
             player.SetProgress(editPlayerLevel, editPlayerExperience, editRequiredExperience);
+            RememberEditFields();
         }
     }
 }

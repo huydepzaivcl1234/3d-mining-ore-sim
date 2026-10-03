@@ -323,7 +323,7 @@ MonoBehaviour:
   maximumSpawnDistance: 7
   minimumPlayerDistance: 3
   dayNight: {fileID: 1889411264}
-  dailyEvents: {fileID: 0}
+  dailyEvents: {fileID: 11400000, guid: 32ce514a15289e74daf52256f326ba6d, type: 2}
   minimumPerDay: 3
   maximumPerDay: 20
   extraMonstersPerDayNumber: 1
@@ -124121,9 +124121,10 @@ MonoBehaviour:
   debugBossPrefab: {fileID: 2305570719447537217, guid: 839c3acd08f172c42bd2b3568a9ec554, type: 3}
   player: {fileID: 58413100611388515}
   playerData: {fileID: 11400000, guid: 787e78c7ad962f54b8a0bc4cc38c8ab8, type: 2}
-  editPlayerLevel: 15
+  editPlayerLevel: 1
   editPlayerExperience: 0
   editRequiredExperience: 100
+  debugDailyEvent: 1
 --- !u!114 &5345239619755833584
 MonoBehaviour:
   m_ObjectHideFlags: 0

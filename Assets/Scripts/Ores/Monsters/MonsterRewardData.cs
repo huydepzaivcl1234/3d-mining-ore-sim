@@ -47,6 +47,8 @@ namespace MiningSimulator.Ores
         public Shader dissolveShader;
         [Header("Random level - geometric rarity, no gameplay level cap")]
         [Min(1)] public int minimumLevel = 1;
+        [Tooltip("Player level added at spawn: 1 = roll + player level, 0 disables it. Existing enemies retain their spawn level.")]
+        [Min(0f)] public float playerLevelContribution = 1f;
         [Range(0, 0.99f)] public float higherLevelChance = 0.35f;
         [Tooltip("Linear growth: level 2 = 1.75x, level 3 = 2.5x at 0.75.")]
         [Min(0)] public float statGrowthPerLevel = 0.75f;
@@ -57,6 +59,11 @@ namespace MiningSimulator.Ores
             double chance = Mathf.Clamp(higherLevelChance, 0, 0.99f);
             double extra = chance <= 0 ? 0 : System.Math.Floor(System.Math.Log(System.Math.Max(1e-12, 1 - Mathf.Clamp01(sample))) / System.Math.Log(chance));
             return (int)System.Math.Min(int.MaxValue, System.Math.Max(1, minimumLevel) + extra);
+        }
+        public int GetSpawnLevel(int rolledLevel, int playerLevel)
+        {
+            double contribution = System.Math.Floor(System.Math.Max(0, playerLevelContribution) * (double)Mathf.Max(1, playerLevel));
+            return (int)System.Math.Min(int.MaxValue, Mathf.Max(1, rolledLevel) + contribution);
         }
         public float StatMultiplier(int level) => 1 + Mathf.Max(0, statGrowthPerLevel) * (Mathf.Max(1, level) - 1);
         public float GoldMultiplier(int level) => 1 + Mathf.Max(0, goldGrowthPerLevel) * (Mathf.Max(1, level) - 1);

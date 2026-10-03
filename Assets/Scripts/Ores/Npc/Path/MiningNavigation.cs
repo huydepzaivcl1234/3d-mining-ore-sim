@@ -37,6 +37,63 @@ namespace MiningSimulator.Ores
         private static readonly List<Vector3> DistancePathBuffer = new(16);
         private static float nextNavigationRecoveryAttempt;
         private static bool navigationRecoveryLogged;
+        private static readonly RaycastHit[] ClearanceHits = new RaycastHit[64];
+        private static readonly Collider[] ClearanceOverlaps = new Collider[64];
+
+        /// <summary>Ore/chest clearance only; miners still pass through monsters.</summary>
+        public static bool IsMineableSegmentClear(Vector3 start, Vector3 end, float radius, Component ignored = null)
+        {
+            Vector3 delta = Vector3.ProjectOnPlane(end - start, Vector3.up);
+            if (delta.sqrMagnitude < .0001f) return true;
+            Vector3 origin = start + Vector3.up * (radius + .12f);
+            int count = Physics.SphereCastNonAlloc(origin, radius, delta.normalized,
+                ClearanceHits, delta.magnitude, ~0, QueryTriggerInteraction.Ignore);
+            if (count == ClearanceHits.Length) return false;
+            for (int i = 0; i < count; i++)
+                if (BlocksMineable(ClearanceHits[i].collider, ignored)) return false;
+            count = Physics.OverlapSphereNonAlloc(end + Vector3.up * (radius + .12f),
+                radius, ClearanceOverlaps, ~0, QueryTriggerInteraction.Ignore);
+            if (count == ClearanceOverlaps.Length) return false;
+            for (int i = 0; i < count; i++)
+                if (BlocksMineable(ClearanceOverlaps[i], ignored)) return false;
+            return true;
+        }
+
+        private static bool BlocksMineable(Collider collider, Component ignored)
+        {
+            if (collider == null) return false;
+            Ore ore = collider.GetComponentInParent<Ore>();
+            if (ore != null) return ore != ignored && !ore.IsDepleted;
+            LuckyBlock block = collider.GetComponentInParent<LuckyBlock>();
+            if (block != null) return block != ignored && !block.IsResolved;
+            MiningChest chest = collider.GetComponentInParent<MiningChest>();
+            return chest != null && chest != ignored && chest.CanMine;
+        }
+
+        /// <summary>Find a free side, not a destination inside the ore's carve.</summary>
+        public static bool TryGetOreApproach(Ore ore, Vector3 start, float radius,
+            out Vector3 point, out float distance)
+        {
+            point = ore.GetClosestSurfacePoint(start);
+            distance = float.PositiveInfinity;
+            if (!ore.TryGetWorldBounds(out Bounds bounds)) return false;
+            Vector3 nearSide = Vector3.ProjectOnPlane(start - bounds.center, Vector3.up).normalized;
+            if (nearSide.sqrMagnitude < .001f) nearSide = Vector3.forward;
+            float standRadius = Mathf.Max(bounds.extents.x, bounds.extents.z) + radius + .15f;
+            for (int step = 0; step < 8; step++)
+            {
+                int turn = step == 0 ? 0 : ((step + 1) / 2) * (step % 2 == 1 ? 1 : -1);
+                Vector3 direction = Quaternion.AngleAxis(turn * 45f, Vector3.up) * nearSide;
+                Vector3 candidate = bounds.center + direction * standRadius;
+                candidate.y = start.y;
+                if (!IsMineableSegmentClear(candidate, candidate + direction * .05f, radius)) continue;
+                if (PathfindingAvailable && !TryGetPathDistance(start, candidate, out distance)) continue;
+                if (!PathfindingAvailable) distance = Vector3.Distance(start, candidate);
+                point = candidate;
+                return true;
+            }
+            return false;
+        }
 
         /// <summary>True when NavMesh path queries are expected to succeed.</summary>
         public static bool NavMeshAvailable =>

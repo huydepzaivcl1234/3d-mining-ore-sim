@@ -18,3 +18,4 @@ MonoBehaviour:
     displayName: BatMonster
     chance: 25
     minimumPlayerLevel: 1
+  dailyEvents: {fileID: 11400000, guid: 32ce514a15289e74daf52256f326ba6d, type: 2}

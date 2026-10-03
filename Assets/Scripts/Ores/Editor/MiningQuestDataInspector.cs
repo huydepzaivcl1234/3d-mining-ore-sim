@@ -9,7 +9,7 @@ using UnityEngine.UI;
 namespace MiningSimulator.Ores.Editor
 {
     /// <summary>Authors the shared Main Menu/gameplay quest UI without replacing scene data.</summary>
-    public static class MiningQuestSetupMenu
+    public static class MiningQuestUiAuthoring
     {
         private const string DataFolder = "Assets/GameData/Quests";
         private const string DataPath = DataFolder + "/MiningQuestData.asset";
@@ -86,86 +86,6 @@ namespace MiningSimulator.Ores.Editor
             EditorSceneManager.MarkSceneDirty(canvas.gameObject.scene);
         }
 
-        [MenuItem("Mining Simulator/Setup/Create Or Update Daily Weekly Quests")]
-        public static void CreateOrUpdateQuests()
-        {
-            if (EditorApplication.isPlayingOrWillChangePlaymode)
-            {
-                EditorUtility.DisplayDialog("Quest Setup", "Exit Play Mode first.", "OK");
-                return;
-            }
-
-            Canvas canvas = FindCanvas();
-            PlayerWallet wallet = Object.FindFirstObjectByType<PlayerWallet>(
-                FindObjectsInactive.Include);
-            if (canvas == null || wallet == null)
-            {
-                EditorUtility.DisplayDialog("Quest Setup",
-                    "Open the gameplay scene containing Mining HUD Canvas and GameManager.", "OK");
-                return;
-            }
-
-            MiningQuestData data = LoadOrCreateData();
-            if (!TryValidateQuestIds(data, out string validationMessage))
-            {
-                EditorUtility.DisplayDialog("Quest Setup", validationMessage, "OK");
-                return;
-            }
-            MiningQuestSystem questSystem = wallet.GetComponent<MiningQuestSystem>() ??
-                                            Undo.AddComponent<MiningQuestSystem>(wallet.gameObject);
-            OreSpawner oreSpawner = Object.FindFirstObjectByType<OreSpawner>(
-                FindObjectsInactive.Include);
-            NpcShop npcShop = Object.FindFirstObjectByType<NpcShop>(FindObjectsInactive.Include);
-            MiningRebirthSystem rebirthSystem = Object.FindFirstObjectByType<MiningRebirthSystem>(
-                FindObjectsInactive.Include);
-            MiningUiPanelCoordinator coordinator = Object.FindFirstObjectByType<
-                MiningUiPanelCoordinator>(FindObjectsInactive.Include);
-            WireQuestSystem(questSystem, data, wallet, oreSpawner, npcShop, rebirthSystem);
-
-            Button gameplayButton = EnsureGameplayButton(canvas.transform);
-            Button mainMenuButton = EnsureMainMenuButton(canvas.transform);
-            RectTransform panelRoot = EnsureQuestPanel(canvas.transform);
-            RectTransform card = panelRoot.Find("Quest Card") as RectTransform;
-            Button closeButton = FindComponent<Button>(card, "Close Button");
-
-            MiningQuestPanel panel = canvas.GetComponent<MiningQuestPanel>() ??
-                                     Undo.AddComponent<MiningQuestPanel>(canvas.gameObject);
-            WireQuestPanel(panel, data, questSystem, coordinator, panelRoot,
-                gameplayButton, mainMenuButton, closeButton, card);
-            if (rebirthSystem != null)
-            {
-                SetReference(new SerializedObject(rebirthSystem), "questSystem", questSystem, true);
-            }
-
-            MiningButtonSfxSetupMenu.AssignAllButtonSfx(false);
-            EditorSceneManager.MarkSceneDirty(canvas.gameObject.scene);
-            Selection.activeGameObject = panelRoot.gameObject;
-            EditorGUIUtility.PingObject(panelRoot.gameObject);
-            Debug.Log("Daily/Weekly Quests ready in Main Menu and gameplay. Save the scene.",
-                panelRoot);
-            EditorUtility.DisplayDialog("Quest Setup",
-                "Daily/Weekly Quests are ready. The panel is selected for editing. Save the scene.",
-                "OK");
-        }
-
-        private static MiningQuestData LoadOrCreateData()
-        {
-            MiningQuestData data = AssetDatabase.LoadAssetAtPath<MiningQuestData>(DataPath);
-            if (data != null) return data;
-            if (!AssetDatabase.IsValidFolder(DataFolder))
-            {
-                if (!AssetDatabase.IsValidFolder("Assets/GameData"))
-                {
-                    AssetDatabase.CreateFolder("Assets", "GameData");
-                }
-                AssetDatabase.CreateFolder("Assets/GameData", "Quests");
-            }
-            data = ScriptableObject.CreateInstance<MiningQuestData>();
-            AssetDatabase.CreateAsset(data, DataPath);
-            AssetDatabase.SaveAssets();
-            return data;
-        }
-
         private static void WireQuestSystem(MiningQuestSystem system, MiningQuestData data,
             PlayerWallet wallet, OreSpawner oreSpawner, NpcShop npcShop,
             MiningRebirthSystem rebirthSystem)
@@ -229,68 +149,6 @@ namespace MiningSimulator.Ores.Editor
             DisableUnusedQuestRows(card, content, expectedRows);
             serialized.ApplyModifiedProperties();
             EditorUtility.SetDirty(panel);
-        }
-
-        private static Button EnsureGameplayButton(Transform canvas)
-        {
-            Transform existing = canvas.Find("Quest Menu Button");
-            if (existing != null) return existing.GetComponent<Button>();
-            Button button = CreateButton(canvas, "Quest Menu Button", "QUESTS",
-                new Vector2(-100f, -510f), new Vector2(190f, 58f), true);
-            RectTransform rect = button.transform as RectTransform;
-            rect.anchorMin = Vector2.one;
-            rect.anchorMax = Vector2.one;
-            rect.pivot = new Vector2(1f, 1f);
-            rect.anchoredPosition = new Vector2(-20f, -500f);
-            return button;
-        }
-
-        private static Button EnsureMainMenuButton(Transform canvas)
-        {
-            Transform mainView = FindDescendant(canvas, "Main View");
-            if (mainView == null) return null;
-            Transform existing = mainView.Find("Quest Button");
-            if (existing != null) return existing.GetComponent<Button>();
-            return CreateButton(mainView, "Quest Button", "QUESTS",
-                new Vector2(-250f, -220f), new Vector2(300f, 64f), false);
-        }
-
-        private static RectTransform EnsureQuestPanel(Transform canvas)
-        {
-            Transform existing = canvas.Find("Quest Panel");
-            if (existing != null)
-            {
-                ConfigureCanvasGroup(existing.gameObject);
-                existing.gameObject.SetActive(true);
-                return existing as RectTransform;
-            }
-
-            GameObject rootObject = CreateImage(canvas, "Quest Panel",
-                new Color(0.015f, 0.025f, 0.055f, 0.86f), false);
-            RectTransform root = rootObject.GetComponent<RectTransform>();
-            Stretch(root);
-            ConfigureCanvasGroup(rootObject);
-
-            GameObject cardObject = CreateImage(root, "Quest Card", Color.white, true,
-                NeutralTop, NeutralBottom);
-            RectTransform card = cardObject.GetComponent<RectTransform>();
-            Center(card, Vector2.zero, new Vector2(1040f, 680f));
-
-            GameObject headerObject = CreateImage(card, "Header", Color.white, true,
-                CyanTop, CyanBottom);
-            RectTransform header = headerObject.GetComponent<RectTransform>();
-            Top(header, Vector2.zero, new Vector2(1040f, 78f));
-            CreateLabel(header, "Title", "DAILY & WEEKLY QUESTS", Vector2.zero,
-                new Vector2(760f, 62f), 34f, TextAlignmentOptions.Center);
-            CreateButton(header, "Close Button", "X", new Vector2(478f, 0f),
-                new Vector2(58f, 58f), false, RedTop, RedBottom);
-
-            CreateLabel(card, "Reset Timer", "DAILY RESET 00:00:00  •  WEEKLY RESET 00:00:00",
-                new Vector2(0f, 245f), new Vector2(900f, 38f), 18f,
-                TextAlignmentOptions.Center);
-            CreateLabel(card, "Quest Status", string.Empty, new Vector2(0f, -305f),
-                new Vector2(900f, 42f), 22f, TextAlignmentOptions.Center);
-            return root;
         }
 
         private static RectTransform EnsureQuestList(RectTransform card, int questCount)
@@ -664,12 +522,12 @@ namespace MiningSimulator.Ores.Editor
         {
             if (DrawDefaultInspector())
             {
-                MiningQuestSetupMenu.QueueOpenPanelSync();
+                MiningQuestUiAuthoring.QueueOpenPanelSync();
             }
             EditorGUILayout.Space();
             if (GUILayout.Button("Sync Quest UI In Open Scene"))
             {
-                MiningQuestSetupMenu.QueueOpenPanelSync();
+                MiningQuestUiAuthoring.QueueOpenPanelSync();
             }
             EditorGUILayout.HelpBox(
                 "Every quest needs a unique Quest Id. Adding, removing or reordering quests " +
