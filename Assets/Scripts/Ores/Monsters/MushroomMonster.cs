@@ -151,7 +151,10 @@ namespace MiningSimulator.Ores
                 transform.localScale *= bossSettings.ScaleMultiplier;
                 if (bossSettings.rewardOverride != null) rewards = bossSettings.rewardOverride;
             }
-            Level = rewards != null ? rewards.GetSpawnLevel(rewards.RollLevel(Random.value), stats != null ? stats.Level : 1) : 1;
+            // Read the current day at spawn; existing enemies retain their rolled level.
+            Level = rewards != null ? rewards.GetSpawnLevel(
+                rewards.RollLevel(Random.value, owner != null ? owner.SpawnDayNumber : 1),
+                stats != null ? stats.Level : 1) : 1;
             float scale = rewards != null ? rewards.StatMultiplier(Level) : 1;
             float low = rewards != null ? Mathf.Max(0.01f, Mathf.Min(rewards.randomStatMultiplier.x, rewards.randomStatMultiplier.y)) : 1;
             float high = rewards != null ? Mathf.Max(low, Mathf.Max(rewards.randomStatMultiplier.x, rewards.randomStatMultiplier.y)) : 1;

@@ -35,16 +35,16 @@ MonoBehaviour:
     costIncreasePerPurchase: 30
   oreSpawnSpeed:
     displayName: "T\u0103ng t\u1ED1c \u0111\u1ED9 spawn qu\u1EB7ng"
-    percentPerStack: 5
+    percentPerStack: 7
     maximumStacks: 100
     startingCost: 15
     costGrowthMultiplier: 1.2
     costIncreasePerPurchase: 10
   npcMoveSpeed:
     displayName: "T\u0103ng t\u1ED1c \u0111\u1ED9 di chuy\u1EC3n NPC"
-    percentPerStack: 1
+    percentPerStack: 0.1
     maximumStacks: 100
-    startingCost: 10
+    startingCost: 15
     costGrowthMultiplier: 1.2
     costIncreasePerPurchase: 10
   npcCapacity:
@@ -77,8 +77,22 @@ MonoBehaviour:
     costIncreasePerPurchase: 10
   itemDropChance:
     displayName: "T\u0103ng t\u1EC9 l\u1EC7 r\u01A1i v\u1EADt ph\u1EA9m"
-    percentPerStack: 0.1
+    percentPerStack: 0.05
     maximumStacks: 100
-    startingCost: 50
+    startingCost: 75
     costGrowthMultiplier: 1.2
     costIncreasePerPurchase: 50
+  regenIntervalReduction:
+    displayName: "Gi\u1EA3m th\u1EDDi gian h\u1ED3i m\xE1u"
+    percentPerStack: 1
+    maximumStacks: 100
+    startingCost: 25
+    costGrowthMultiplier: 1.2
+    costIncreasePerPurchase: 10
+  healingEffectiveness:
+    displayName: "T\u0103ng hi\u1EC7u qu\u1EA3 h\u1ED3i m\xE1u"
+    percentPerStack: 1
+    maximumStacks: 100
+    startingCost: 25
+    costGrowthMultiplier: 1.2
+    costIncreasePerPurchase: 10

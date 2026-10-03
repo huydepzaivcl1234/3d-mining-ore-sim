@@ -97,6 +97,7 @@ namespace MiningSimulator.Ores
         }
         public IReadOnlyList<DailyMonsterForecast> DailyForecast => forecast;
         public int ForecastDay => scheduledDay;
+        public int SpawnDayNumber => dayNight != null ? Mathf.Max(1, dayNight.DayNumber) : 1;
         public event Action ForecastChanged;
         public int AliveCount => alive.Count;
         public IReadOnlyList<MonsterSpawnEntry> MonsterEntries => monsters;

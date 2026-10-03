@@ -87,6 +87,9 @@ namespace StarterAssets
         private float _speed;
         private float _animationBlend;
         public bool ExternalFacing { get; set; }
+        // Combat supplies intent; this motor remains the sole owner of collision-safe movement.
+        public float CombatMoveMultiplier { get; set; } = 1f;
+        public Vector3 CombatStepVelocity { get; set; }
         private float _targetRotation = 0.0f;
         private float _rotationVelocity;
         private float _verticalVelocity;
@@ -180,6 +183,8 @@ namespace StarterAssets
         // Respawn must not reuse pre-death jump velocity or the running blend.
         public void ResetMotionAfterRespawn()
         {
+            CombatMoveMultiplier = 1f;
+            CombatStepVelocity = Vector3.zero;
             _speed = _animationBlend = _rotationVelocity = 0f;
             _verticalVelocity = -2f;
             _headDeflectionUntil = 0f;
@@ -309,7 +314,8 @@ namespace StarterAssets
             Vector3 targetDirection = Quaternion.Euler(0.0f, _targetRotation, 0.0f) * Vector3.forward;
 
             // move the player
-            _controller.Move(targetDirection.normalized * (_speed * Time.deltaTime) +
+            _controller.Move((targetDirection.normalized * (_speed * Mathf.Clamp01(CombatMoveMultiplier)) +
+                             Vector3.ProjectOnPlane(CombatStepVelocity, Vector3.up)) * Time.deltaTime +
                              ((_headDeflectionUntil > Time.time ? _headDeflectionVelocity : Vector3.zero) +
                              new Vector3(0.0f, _verticalVelocity, 0.0f)) * Time.deltaTime);
 

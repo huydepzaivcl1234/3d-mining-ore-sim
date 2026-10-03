@@ -15,6 +15,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private string deathState = "Base Layer.Death";
         [SerializeField] private GameObject respawnPanel;
         [SerializeField] private TMP_Text countdownLabel;
+        [SerializeField] private PlayerRespawnCurtain respawnCurtain;
         [Header("Spectator camera")]
         [SerializeField] private Camera spectatorCamera;
         [Tooltip("Camera drivers only (Orbit camera / Cinemachine Brain). Restored after respawn.")]
@@ -67,6 +68,7 @@ namespace MiningSimulator.Ores
         {
             if (health != null) health.Died -= Die;
             if (dead) RestoreControls();
+            if (respawnCurtain != null) respawnCurtain.ResetImmediate();
             dead = false;
         }
 
@@ -208,6 +210,8 @@ namespace MiningSimulator.Ores
             }
             remaining -= Time.deltaTime;
             UpdateCountdown();
+            if (respawnCurtain != null && remaining <= respawnCurtain.CloseSeconds)
+                respawnCurtain.Close();
             if (animator != null && animator.GetCurrentAnimatorStateInfo(0).IsName(deathState) &&
                 !animator.IsInTransition(0) && animator.GetCurrentAnimatorStateInfo(0).normalizedTime >= 1f)
                 animator.speed = 0f;
@@ -253,6 +257,8 @@ namespace MiningSimulator.Ores
 
         private void TryRespawn()
         {
+            // Hide the teleport only after both shutters have fully covered the screen.
+            if (respawnCurtain != null && !respawnCurtain.IsCovered) return;
             Vector3 position = respawnPoint != null ? respawnPoint.position : spawnPosition;
             Quaternion rotation = respawnPoint != null ? respawnPoint.rotation : spawnRotation;
             // Never resurrect inside an obstacle. Let the designer clear the marker.
@@ -268,6 +274,7 @@ namespace MiningSimulator.Ores
                     if (!overlaps[i].transform.IsChildOf(transform))
                     {
                         remaining = 1f;
+                        if (respawnCurtain != null) respawnCurtain.Open();
                         return;
                     }
             }
@@ -288,6 +295,7 @@ namespace MiningSimulator.Ores
         private void RestoreControls()
         {
             if (respawnPanel != null) respawnPanel.SetActive(false);
+            if (respawnCurtain != null) respawnCurtain.Open();
             if (cameraProxy != null) Destroy(cameraProxy);
             if (spectatorCamera != null)
             {

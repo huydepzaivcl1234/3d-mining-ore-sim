@@ -9,6 +9,7 @@ public class PlayerCombatInput : MonoBehaviour
 {
     // Names match the player's authored Player controller.controller on main.
     private const string CombatLayerName = "combat layer";
+    private const string FootworkLayerName = "Combat Footwork";
     private static readonly int CombatMoveState = Animator.StringToHash("Combat");
     private static readonly int FirstAttackState = Animator.StringToHash("Sword Attack 1");
     private static readonly int SecondAttackState = Animator.StringToHash("Sword Attack 2");
@@ -94,14 +95,92 @@ public class PlayerCombatInput : MonoBehaviour
     private float HitHalfHeight => 0.9f;
     private Vector3 StrikeForward => Vector3.ProjectOnPlane(transform.forward, Vector3.up).normalized;
     private bool hitApplied;
+    [Header("Free-flow footwork (camera remains independent)")]
+    [SerializeField] private bool freeFlowEnabled = true;
+    [Range(0f, 1f), SerializeField] private float movingBodyWeight = 0.9f;
+    [Range(0f, 1f), SerializeField] private float strikeMovementMultiplier = 0.15f;
+    [Min(0.01f), SerializeField] private float footworkBlendSeconds = 0.08f;
+    [Min(0f), SerializeField] private float strikeStepDistance = 0.3f;
+    [Min(0f), SerializeField] private float targetClearance = 0.3f;
+    [Range(0f, 180f), SerializeField] private float maximumStepAngle = 60f;
+    [Range(0f, 1f), SerializeField] private float stepStartPhase = 0.1f;
+    [Tooltip("Match the contact Animation Event in attack 1/2. Values are normalized clip time.")]
+    [Range(0f, 1f), SerializeField] private float firstStrikeContactPhase = 0.46f;
+    [Range(0f, 1f), SerializeField] private float secondStrikeContactPhase = 0.67f;
+    [Range(0f, 1f), SerializeField] private float recoveryDelayPhase = 0.06f;
+    [Range(0f, 1f), SerializeField] private float recoveryEndPhase = 0.96f;
+    [Min(0.01f), SerializeField] private float attackTransitionSeconds = 0.07f;
+    [Range(0f, 1f), SerializeField] private float comboQueueStart = 0.45f;
+    [Range(0f, 1f), SerializeField] private float comboLinkTime = 0.78f;
+    [Range(0f, 1f), SerializeField] private float comboQueueEnd = 0.97f;
+    [Range(0f, 1f), SerializeField] private float attackReturnPhase = 0.98f;
+    [Min(0.01f), SerializeField] private float comboBufferSeconds = 0.25f;
+    private float queuedAttackUntil;
+    private int footworkLayer = -1;
+    private StarterAssets.StarterAssetsInputs locomotionInput;
+    private MushroomMonster stepTarget;
+    private readonly List<AnimatorClipInfo> strikeClips = new List<AnimatorClipInfo>(4);
+
+    private void ResetFootwork()
+    {
+        stepTarget = null;
+        if (movement != null)
+        {
+            movement.CombatMoveMultiplier = 1f;
+            movement.CombatStepVelocity = Vector3.zero;
+        }
+        if (animator != null && footworkLayer >= 0) animator.SetLayerWeight(footworkLayer, 0f);
+    }
+
+    private void UpdateFootwork()
+    {
+        if (animator == null || footworkLayer < 0 || movement == null) return;
+        int layer = animator.GetLayerIndex(CombatLayerName);
+        var state = animator.GetCurrentAnimatorStateInfo(layer);
+        if (animator.IsInTransition(layer) && IsAttackState(animator.GetNextAnimatorStateInfo(layer)))
+            state = animator.GetNextAnimatorStateInfo(layer);
+        bool active = freeFlowEnabled && combatMode && CanUseGameplay() && movement.Grounded && IsAttackState(state);
+        float phase = Mathf.Clamp01(state.normalizedTime);
+        float contact = state.shortNameHash == SecondAttackState ? secondStrikeContactPhase : firstStrikeContactPhase;
+        // Plant the feet through contact, then give locomotion back during recovery.
+        float recoveryStart = Mathf.Min(contact + recoveryDelayPhase, recoveryEndPhase - 0.001f);
+        float recovery = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(recoveryStart, recoveryEndPhase, phase));
+        bool moving = locomotionInput != null && locomotionInput.move.sqrMagnitude > 0.01f;
+        float desired = active ? (moving ? movingBodyWeight : 1f) * (1f - recovery) : 0f;
+        float weight = Mathf.MoveTowards(animator.GetLayerWeight(footworkLayer), desired,
+            Time.deltaTime / Mathf.Max(0.01f, footworkBlendSeconds));
+        animator.SetLayerWeight(footworkLayer, weight);
+        movement.CombatMoveMultiplier = active ? Mathf.Lerp(1f, strikeMovementMultiplier, weight) : 1f;
+        movement.CombatStepVelocity = Vector3.zero;
+        // A small grounded step, never a teleport or a chase to an out-of-range enemy.
+        if (active && IsAimValid(stepTarget) && phase > stepStartPhase && phase < contact &&
+            Vector3.Angle(StrikeForward, Vector3.ProjectOnPlane(stepTarget.transform.position - transform.position,
+                Vector3.up)) < maximumStepAngle)
+        {
+            var targetCollider = stepTarget.GetComponent<Collider>();
+            Vector3 origin = transform.TransformPoint(HitOriginOffset);
+            float gap = Vector3.ProjectOnPlane(targetCollider.ClosestPoint(origin) - origin, Vector3.up).magnitude;
+            strikeClips.Clear();
+            if (animator.IsInTransition(layer) && IsAttackState(animator.GetNextAnimatorStateInfo(layer)))
+                animator.GetNextAnimatorClipInfo(layer, strikeClips);
+            else animator.GetCurrentAnimatorClipInfo(layer, strikeClips);
+            float duration = strikeClips.Count > 0 ? strikeClips[0].clip.length / AttackSpeed : 1f;
+            float pulse = Mathf.Sin(Mathf.InverseLerp(stepStartPhase, contact, phase) * Mathf.PI);
+            float velocity = strikeStepDistance * Mathf.PI * pulse / (2f * Mathf.Max(0.01f, duration * (contact - stepStartPhase)));
+            velocity = Mathf.Min(velocity, Mathf.Max(0f, gap - targetClearance) / Mathf.Max(0.001f, Time.deltaTime));
+            movement.CombatStepVelocity = StrikeForward * velocity;
+        }
+    }
     private void OnEnable()
     {
+        ResetFootwork();
         toggleCombat?.Enable();
         attack?.Enable();
     }
     private void OnDisable()
     {
         StopAllCoroutines();
+        ResetFootwork();
         toggleCombat?.Disable();
         attack?.Disable();
         autoAim?.Disable();
@@ -117,6 +196,7 @@ public class PlayerCombatInput : MonoBehaviour
 
     private void LateUpdate()
     {
+        UpdateFootwork();
         if (!CanUseGameplay())
         {
             ClearAim();
@@ -160,6 +240,9 @@ public class PlayerCombatInput : MonoBehaviour
         feedbackAudio = FindFirstObjectByType<MiningAudioManager>();
         ownHealth = GetComponent<MiningCharacterHealth>();
         movement = GetComponent<StarterAssets.ThirdPersonController>();
+        locomotionInput = GetComponent<StarterAssets.StarterAssetsInputs>();
+        footworkLayer = animator != null ? animator.GetLayerIndex(FootworkLayerName) : -1;
+        ResetFootwork();
         panels = FindFirstObjectByType<MiningUiPanelCoordinator>();
         foreach (var rig in FindObjectsByType<MiningOrbitCamera>(FindObjectsSortMode.None))
             if (rig.FollowTarget == transform) { orbitCamera = rig; break; }
@@ -185,21 +268,22 @@ public class PlayerCombatInput : MonoBehaviour
         // previous 0.55-0.9 window was shorter than the player's click timing
         // at higher attack speeds, so Sword Attack 2 was often skipped.
         if (combatMode && pressed && swinging && !animator.IsInTransition(layer) &&
-            state.normalizedTime >= 0.3f && state.normalizedTime < 0.97f)
+            state.normalizedTime >= comboQueueStart && state.normalizedTime < comboQueueEnd)
         {
             queuedAttack = true;
             queuedAttackStateHash = state.shortNameHash;
+            queuedAttackUntil = Time.time + comboBufferSeconds;
         }
         if (swinging && !animator.IsInTransition(layer))
         {
-            if (queuedAttack && queuedAttackStateHash != state.shortNameHash) queuedAttack = false;
-            if (combatMode && queuedAttack && state.normalizedTime >= 0.7f)
+            if (queuedAttack && (queuedAttackStateHash != state.shortNameHash || Time.time > queuedAttackUntil)) queuedAttack = false;
+            if (combatMode && queuedAttack && hitApplied && state.normalizedTime >= comboLinkTime)
             {
                 queuedAttack = false;
                 PlayAttack(layer, state.shortNameHash == FirstAttackState ? 1 : 0);
             }
-            else if (state.shortNameHash == FirstAttackState && !queuedAttack &&
-                     !returningFromAttack && state.normalizedTime >= 0.98f)
+            else if (!queuedAttack &&
+                     !returningFromAttack && state.normalizedTime >= attackReturnPhase)
             {
                 returningFromAttack = true;
                 if (HasParameter("Move", AnimatorControllerParameterType.Trigger)) animator.SetTrigger("Move");
@@ -226,8 +310,12 @@ public class PlayerCombatInput : MonoBehaviour
         hitApplied = false;
         returningFromAttack = false;
         BeginSoftAim();
+        stepTarget = FindNearestMonster();
         animator.ResetTrigger("attack");
-        animator.CrossFadeInFixedTime(AttackStates[index], 0.08f, layer, 0f);
+        animator.ResetTrigger("Move");
+        animator.CrossFadeInFixedTime(AttackStates[index], attackTransitionSeconds, layer, 0f);
+        if (footworkLayer >= 0)
+            animator.CrossFadeInFixedTime(AttackStates[index], attackTransitionSeconds, footworkLayer, 0f);
     }
 
     private bool HasParameter(string name, AnimatorControllerParameterType type)
@@ -260,7 +348,7 @@ public class PlayerCombatInput : MonoBehaviour
     {
         bool changed = combatMode != enabled;
         combatMode = enabled;
-        if (!enabled) { ClearAim(); queuedAttack = false; queuedAttackStateHash = 0; }
+        if (!enabled) { ClearAim(); ResetFootwork(); queuedAttack = false; queuedAttackStateHash = 0; }
         if (animator == null || animator.runtimeAnimatorController == null) return;
         if (HasParameter(drawWeaponParameter, AnimatorControllerParameterType.Bool))
             animator.SetBool(drawWeaponParameter, enabled);
@@ -359,7 +447,7 @@ public class PlayerCombatInput : MonoBehaviour
     {
         attackAimTarget = null;
         softAimActive = false;
-        if (movement != null) movement.ExternalFacing = IsShiftLocked;
+        if (movement != null) movement.ExternalFacing = IsShiftLocked || wasAttacking && !hitApplied;
     }
 
     private void TrackAttack(int layer)

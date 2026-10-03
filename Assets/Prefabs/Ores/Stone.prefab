@@ -187,9 +187,13 @@ PrefabInstance:
       value: 1.5
       objectReference: {fileID: 0}
     - target: {fileID: 2335520794196699053, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
+      propertyPath: m_fontAsset
+      value: 
+      objectReference: {fileID: 11400000, guid: 46e4afa4556d21e4e83de82013091b2b, type: 2}
+    - target: {fileID: 2335520794196699053, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
       propertyPath: m_sharedMaterial
       value: 
-      objectReference: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+      objectReference: {fileID: 5670340361290394774, guid: 46e4afa4556d21e4e83de82013091b2b, type: 2}
     - target: {fileID: 2335520794196699053, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
       propertyPath: m_TextStyleHashCode
       value: -1183493901
@@ -253,7 +257,7 @@ PrefabInstance:
     - target: {fileID: 5632212856069202798, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+      objectReference: {fileID: 5670340361290394774, guid: 46e4afa4556d21e4e83de82013091b2b, type: 2}
     - target: {fileID: 7923854003312105274, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
       propertyPath: simpleBar._healAnim
       value: 1

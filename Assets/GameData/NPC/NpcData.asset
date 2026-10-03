@@ -15,7 +15,7 @@ MonoBehaviour:
   purchaseCost: 25
   purchaseCostIncreasePercent: 10
   rebirthPurchaseCostIncreasePercent: 10
-  minerHealthBarPrefab: {fileID: 4657497537876699430, guid: c6c27f2d48c96d846a0ee38907d03f3e, type: 3}
+  minerHealthBarPrefab: {fileID: 4657497537876699430, guid: f09c815911c7deb4bb326b017c1c7f29, type: 3}
   minerHealthBarOffset: {x: 0, y: 2.1, z: 0}
   minerHealthBarScale: 0.6
   startingMaximumMiners: 1

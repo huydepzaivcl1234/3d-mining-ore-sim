@@ -29,7 +29,11 @@ MonoBehaviour:
   dissolveColor: {r: 1, g: 0.6, b: 0.1, a: 1}
   dissolveShader: {fileID: 4800000, guid: 02996892a2aa58c4c8c817f73d56d9bf, type: 3}
   minimumLevel: 1
+  addPlayerLevelAtSpawn: 0
+  playerLevelContribution: 1
   higherLevelChance: 0.35
+  higherLevelIncreasePerDayPercent: 0.01
+  maximumHigherLevelChancePercent: 50
   statGrowthPerLevel: 0.75
   goldGrowthPerLevel: 0.75
   randomStatMultiplier: {x: 0.9, y: 1.1}
@@ -61,6 +65,16 @@ MonoBehaviour:
     minimumAmount: 1
     maximumAmount: 1
     icon: {fileID: 21300000, guid: a4d44f5cb6e14a2f8d3d78eea1b7c4f0, type: 3}
+  - item: {fileID: 11400000, guid: 5b9bf846fe04437294a6e85553ab11da, type: 2}
+    chancePercent: 5
+    minimumAmount: 1
+    maximumAmount: 1
+    icon: {fileID: 668051623, guid: 2d91f35370402ca4eaf80ba95f600b29, type: 3}
+  - item: {fileID: 11400000, guid: 220ddadd20ec4e0cad3b5309aa9ce575, type: 2}
+    chancePercent: 5
+    minimumAmount: 1
+    maximumAmount: 1
+    icon: {fileID: 665014490, guid: 9a4c94d0e91b7c74b8cb3f6d32b74e38, type: 3}
   iconSize: 0.45
   launchUpSpeed: 4
   launchOutSpeed: 2
