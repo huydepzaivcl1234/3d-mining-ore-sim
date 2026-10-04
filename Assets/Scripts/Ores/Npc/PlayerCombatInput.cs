@@ -100,8 +100,19 @@ public class PlayerCombatInput : MonoBehaviour
     [Range(0f, 1f), SerializeField] private float movingBodyWeight = 0.9f;
     [Range(0f, 1f), SerializeField] private float strikeMovementMultiplier = 0.15f;
     [Min(0.01f), SerializeField] private float footworkBlendSeconds = 0.08f;
-    [Min(0f), SerializeField] private float strikeStepDistance = 0.3f;
+    [Tooltip("Maximum travel per strike; actual travel stops before the enemy collider.")]
+    [Min(0f), SerializeField] private float strikeStepDistance = 1.15f;
     [Min(0f), SerializeField] private float targetClearance = 0.3f;
+    [Header("Quick smooth lunge (damage range is unchanged)")]
+    [Min(0f), SerializeField] private float lungeExtraRange = 0.55f;
+    [Tooltip("Time for one lunge at attack speed 1. Scales with attack speed.")]
+    [Min(0.01f), SerializeField] private float lungeSeconds = 0.18f;
+    [Min(0.1f), SerializeField] private float lungeMaximumSpeed = 9f;
+    [Tooltip("Limits extra acquisition range at high attack speed so the lunge can still reach before contact.")]
+    [Range(0.1f, 1f), SerializeField] private float lungeReachSafety = 0.5f;
+    [Range(0.1f, 1f), SerializeField] private float lungeStopRangeFraction = 0.6f;
+    [Min(0.01f), SerializeField] private float lungeDirectionSmoothSeconds = 0.04f;
+    [SerializeField] private LayerMask lungeBlockingLayers = ~0;
     [Range(0f, 180f), SerializeField] private float maximumStepAngle = 60f;
     [Range(0f, 1f), SerializeField] private float stepStartPhase = 0.1f;
     [Tooltip("Match the contact Animation Event in attack 1/2. Values are normalized clip time.")]
@@ -119,11 +130,20 @@ public class PlayerCombatInput : MonoBehaviour
     private int footworkLayer = -1;
     private StarterAssets.StarterAssetsInputs locomotionInput;
     private MushroomMonster stepTarget;
-    private readonly List<AnimatorClipInfo> strikeClips = new List<AnimatorClipInfo>(4);
+    private readonly RaycastHit[] lungeOcclusionHits = new RaycastHit[16];
+    private float lungeProgress;
+    private float lungePlannedDistance;
+    private float lungeTravelRemaining;
+    private Vector3 lungeDirection;
+    public float LungeAcquireRange => AttackRange + Mathf.Min(
+        Mathf.Min(Mathf.Max(0f, lungeExtraRange), Mathf.Max(0f, strikeStepDistance)),
+        Mathf.Max(0f, lungeMaximumSpeed) * Mathf.Max(0.01f, lungeSeconds) / AttackSpeed * lungeReachSafety);
 
     private void ResetFootwork()
     {
         stepTarget = null;
+        lungeProgress = lungePlannedDistance = lungeTravelRemaining = 0f;
+        lungeDirection = Vector3.zero;
         if (movement != null)
         {
             movement.CombatMoveMultiplier = 1f;
@@ -136,6 +156,7 @@ public class PlayerCombatInput : MonoBehaviour
     {
         if (animator == null || footworkLayer < 0 || movement == null) return;
         int layer = animator.GetLayerIndex(CombatLayerName);
+        if (layer < 0) { ResetFootwork(); return; }
         var state = animator.GetCurrentAnimatorStateInfo(layer);
         if (animator.IsInTransition(layer) && IsAttackState(animator.GetNextAnimatorStateInfo(layer)))
             state = animator.GetNextAnimatorStateInfo(layer);
@@ -152,23 +173,29 @@ public class PlayerCombatInput : MonoBehaviour
         animator.SetLayerWeight(footworkLayer, weight);
         movement.CombatMoveMultiplier = active ? Mathf.Lerp(1f, strikeMovementMultiplier, weight) : 1f;
         movement.CombatStepVelocity = Vector3.zero;
-        // A small grounded step, never a teleport or a chase to an out-of-range enemy.
-        if (active && IsAimValid(stepTarget) && phase > stepStartPhase && phase < contact &&
-            Vector3.Angle(StrikeForward, Vector3.ProjectOnPlane(stepTarget.transform.position - transform.position,
-                Vector3.up)) < maximumStepAngle)
+        // Acquire only once per strike. Travel has its own short envelope rather
+        // than waiting for a long attack clip, but damage still uses AttackRange.
+        if (active && IsLungeTargetValid(stepTarget) && phase >= stepStartPhase && phase < contact &&
+            lungeProgress < 1f && lungeTravelRemaining > 0f && Time.deltaTime > 0f)
         {
             var targetCollider = stepTarget.GetComponent<Collider>();
             Vector3 origin = transform.TransformPoint(HitOriginOffset);
-            float gap = Vector3.ProjectOnPlane(targetCollider.ClosestPoint(origin) - origin, Vector3.up).magnitude;
-            strikeClips.Clear();
-            if (animator.IsInTransition(layer) && IsAttackState(animator.GetNextAnimatorStateInfo(layer)))
-                animator.GetNextAnimatorClipInfo(layer, strikeClips);
-            else animator.GetCurrentAnimatorClipInfo(layer, strikeClips);
-            float duration = strikeClips.Count > 0 ? strikeClips[0].clip.length / AttackSpeed : 1f;
-            float pulse = Mathf.Sin(Mathf.InverseLerp(stepStartPhase, contact, phase) * Mathf.PI);
-            float velocity = strikeStepDistance * Mathf.PI * pulse / (2f * Mathf.Max(0.01f, duration * (contact - stepStartPhase)));
-            velocity = Mathf.Min(velocity, Mathf.Max(0f, gap - targetClearance) / Mathf.Max(0.001f, Time.deltaTime));
-            movement.CombatStepVelocity = StrikeForward * velocity;
+            Vector3 toTarget = Vector3.ProjectOnPlane(targetCollider.ClosestPoint(origin) - origin, Vector3.up);
+            float previous = lungeProgress;
+            lungeProgress = Mathf.Clamp01(lungeProgress + Time.deltaTime * AttackSpeed / Mathf.Max(0.01f, lungeSeconds));
+            float travel = CombatLungeMotion.TravelBetween(previous, lungeProgress, lungePlannedDistance);
+            travel = Mathf.Min(Mathf.Min(travel, Mathf.Max(0f, lungeMaximumSpeed) * Time.deltaTime),
+                Mathf.Min(lungeTravelRemaining, Mathf.Max(0f, toTarget.magnitude - LungeStopDistance)));
+            if (toTarget.sqrMagnitude > 0.0001f)
+                lungeDirection = Vector3.Slerp(lungeDirection, toTarget.normalized,
+                    1f - Mathf.Exp(-Time.deltaTime / Mathf.Max(0.01f, lungeDirectionSmoothSeconds))).normalized;
+            // Shift lock retains manual facing; do not pull the player sideways.
+            Vector3 direction = IsShiftLocked ? StrikeForward : lungeDirection;
+            if (Vector3.Angle(StrikeForward, toTarget) <= maximumStepAngle)
+            {
+                movement.CombatStepVelocity = direction * (travel / Time.deltaTime);
+                lungeTravelRemaining -= travel;
+            }
         }
     }
     private void OnEnable()
@@ -215,7 +242,8 @@ public class PlayerCombatInput : MonoBehaviour
 
         // Acquire once per strike, not every frame: nearby enemies cannot spin us
         // between targets. Shift lock disables this assistance entirely.
-        if (!softAimActive || !IsAimValid(attackAimTarget)) { StopSoftAim(); return; }
+        if (!softAimActive || !(attackAimTarget == stepTarget ? IsLungeTargetValid(attackAimTarget) :
+            IsAimValid(attackAimTarget))) { StopSoftAim(); return; }
         softAimActive = true;
         if (movement != null) movement.ExternalFacing = true;
         Vector3 direction = attackAimTarget.transform.position - transform.position;
@@ -309,8 +337,8 @@ public class PlayerCombatInput : MonoBehaviour
         queuedAttackStateHash = 0;
         hitApplied = false;
         returningFromAttack = false;
+        BeginLunge();
         BeginSoftAim();
-        stepTarget = FindNearestMonster();
         animator.ResetTrigger("attack");
         animator.ResetTrigger("Move");
         animator.CrossFadeInFixedTime(AttackStates[index], attackTransitionSeconds, layer, 0f);
@@ -381,6 +409,9 @@ public class PlayerCombatInput : MonoBehaviour
     }
 
     private bool IsAimColliderInRange(Collider collider, out float distanceSquared)
+        => IsColliderInRange(collider, AttackRange, out distanceSquared);
+
+    private bool IsColliderInRange(Collider collider, float range, out float distanceSquared)
     {
         distanceSquared = float.PositiveInfinity;
         if (collider == null || !collider.enabled || collider.isTrigger ||
@@ -390,23 +421,27 @@ public class PlayerCombatInput : MonoBehaviour
         if (Mathf.Abs(direction.y) > HitHalfHeight) return false;
         direction.y = 0f;
         distanceSquared = direction.sqrMagnitude;
-        return distanceSquared <= AttackRange * AttackRange;
+        return distanceSquared <= range * range;
     }
 
     private MushroomMonster FindNearestMonster()
+        => FindNearestMonsterInRange(AttackRange, false);
+
+    private MushroomMonster FindNearestMonsterInRange(float range, bool forLunge)
     {
         MushroomMonster nearest = null;
         float distance = float.PositiveInfinity;
         Vector3 origin = transform.TransformPoint(HitOriginOffset);
         int count = Physics.OverlapCapsuleNonAlloc(origin - Vector3.up * HitHalfHeight,
-            origin + Vector3.up * HitHalfHeight, AttackRange, softAimHits, targetLayers,
+            origin + Vector3.up * HitHalfHeight, range, softAimHits, targetLayers,
             QueryTriggerInteraction.Ignore);
         for (int i = 0; i < count; i++)
         {
             var collider = softAimHits[i];
             var monster = collider.GetComponentInParent<MushroomMonster>();
             if (monster == null || !monster.isActiveAndEnabled || monster.Health == null ||
-                monster.Health.Health <= 0f || !IsAimColliderInRange(collider, out float candidate)) continue;
+                monster.Health.Health <= 0f || !IsColliderInRange(collider, range, out float candidate) ||
+                forLunge && !IsLungeTargetValid(monster)) continue;
             if (candidate < distance) { distance = candidate; nearest = monster; }
         }
         // A full NonAlloc buffer is not guaranteed to contain the nearest collider.
@@ -414,7 +449,8 @@ public class PlayerCombatInput : MonoBehaviour
         if (count == softAimHits.Length)
             foreach (var monster in MushroomMonster.Monsters)
             {
-                if (!IsAimValid(monster) || !IsAimColliderInRange(monster.GetComponent<Collider>(),
+                if (monster == null || !monster.isActiveAndEnabled || monster.Health == null || monster.Health.Health <= 0f ||
+                    forLunge && !IsLungeTargetValid(monster) || !IsColliderInRange(monster.GetComponent<Collider>(), range,
                         out float candidate) || candidate >= distance) continue;
                 distance = candidate;
                 nearest = monster;
@@ -422,12 +458,49 @@ public class PlayerCombatInput : MonoBehaviour
         return nearest;
     }
 
+    private float LungeStopDistance => Mathf.Max(targetClearance, AttackRange * lungeStopRangeFraction);
+
+    private void BeginLunge()
+    {
+        lungeProgress = lungePlannedDistance = lungeTravelRemaining = 0f;
+        stepTarget = freeFlowEnabled ? FindNearestMonsterInRange(LungeAcquireRange, true) : null;
+        lungeDirection = StrikeForward;
+        if (stepTarget == null) return;
+        Vector3 origin = transform.TransformPoint(HitOriginOffset);
+        float gap = Vector3.ProjectOnPlane(stepTarget.GetComponent<Collider>().ClosestPoint(origin) - origin,
+            Vector3.up).magnitude;
+        lungePlannedDistance = Mathf.Min(Mathf.Max(0f, strikeStepDistance), Mathf.Max(0f, gap - LungeStopDistance));
+        lungeTravelRemaining = lungePlannedDistance;
+    }
+
+    private bool IsLungeTargetValid(MushroomMonster monster)
+    {
+        if (monster == null || !monster.isActiveAndEnabled || monster.Health == null || monster.Health.Health <= 0f)
+            return false;
+        var collider = monster.GetComponent<Collider>();
+        if (!IsColliderInRange(collider, LungeAcquireRange, out _)) return false;
+        Vector3 origin = transform.TransformPoint(HitOriginOffset);
+        Vector3 delta = collider.ClosestPoint(origin) - origin;
+        if (Vector3.Angle(StrikeForward, Vector3.ProjectOnPlane(delta, Vector3.up)) > maximumStepAngle) return false;
+        int count = Physics.RaycastNonAlloc(origin, delta.normalized, lungeOcclusionHits, delta.magnitude,
+            lungeBlockingLayers, QueryTriggerInteraction.Ignore);
+        if (count == lungeOcclusionHits.Length) return false;
+        for (int i = 0; i < count; i++)
+        {
+            Transform obstacle = lungeOcclusionHits[i].collider.transform;
+            if (obstacle == transform || obstacle.IsChildOf(transform) || obstacle == monster.transform ||
+                obstacle.IsChildOf(monster.transform)) continue;
+            return false;
+        }
+        return true;
+    }
+
     private void BeginSoftAim()
     {
         if (IsShiftLocked) { StopSoftAim(); return; }
         softAimElapsed = 0f;
         softAimStartRotation = transform.rotation;
-        attackAimTarget = FindBestSoftAimTarget();
+        attackAimTarget = stepTarget != null ? stepTarget : FindBestSoftAimTarget();
         softAimActive = attackAimTarget != null;
         if (movement != null) movement.ExternalFacing = softAimActive;
     }
@@ -647,6 +720,27 @@ public class PlayerCombatInput : MonoBehaviour
     private void OnDrawGizmosSelected()
     {
         Vector3 origin = transform.TransformPoint(HitOriginOffset);
+        if (freeFlowEnabled)
+        {
+            Gizmos.color = new Color(0f, .85f, 1f, 1f);
+            float range = LungeAcquireRange;
+            Vector3 last = origin + Quaternion.AngleAxis(-maximumStepAngle, Vector3.up) * StrikeForward * range;
+            Gizmos.DrawLine(origin, last);
+            for (int i = 1; i <= 48; i++)
+            {
+                Vector3 point = origin + Quaternion.AngleAxis(-maximumStepAngle + maximumStepAngle * 2f * i / 48f,
+                    Vector3.up) * StrikeForward * range;
+                Gizmos.DrawLine(last, point);
+                last = point;
+            }
+            Gizmos.DrawLine(origin, last);
+            if (Application.isPlaying && stepTarget != null)
+                Gizmos.DrawLine(origin, stepTarget.transform.position + Vector3.up);
+#if UNITY_EDITOR
+            UnityEditor.Handles.Label(origin + StrikeForward * range,
+                $"Lunge {range:0.00}m | Hit {AttackRange:0.00}m | Step max {strikeStepDistance:0.00}m");
+#endif
+        }
         Gizmos.color = Application.isPlaying && wasAttacking && !hitApplied ? Color.red : Color.yellow;
         // Display the same height band used by the fist hit query.
         Gizmos.DrawLine(origin - Vector3.up * HitHalfHeight, origin + Vector3.up * HitHalfHeight);

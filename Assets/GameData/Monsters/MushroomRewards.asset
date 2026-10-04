@@ -24,6 +24,17 @@ MonoBehaviour:
     rewardOverride: {fileID: 11400000}
     effectColor: {r: 1, g: 0.2, b: 0.06, a: 1}
     combatSeconds: 120
+    skill: 1
+    healTriggerHealthPercent: 20
+    healMaxHealthPercent: 50
+    healSeconds: 5
+    slowEveryStrikes: 3
+    slowRadius: 5
+    slowPercent: 30
+    slowSeconds: 3
+    hasteDamageThresholdPercent: 5
+    hasteAttackSpeedPercent: 100
+    hasteStacks: 0
   combatSeconds: 0
   dissolveSeconds: 2
   dissolveColor: {r: 1, g: 0.6, b: 0.1, a: 1}

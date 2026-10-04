@@ -19,6 +19,18 @@ namespace MiningSimulator.Ores
         public MonsterRewardData rewardOverride;
         public Color effectColor = new Color(1f, .2f, .06f, 1f);
         [Min(1)] public float combatSeconds = 120f;
+        [Header("Species boss skill (normal monsters do not use this)")]
+        public BossSkillKind skill;
+        [Range(0, 100)] public float healTriggerHealthPercent = 20f;
+        [Range(0, 100)] public float healMaxHealthPercent = 50f;
+        [Min(.1f)] public float healSeconds = 5f;
+        [Min(1)] public int slowEveryStrikes = 3;
+        [Min(0)] public float slowRadius = 5f;
+        [Range(0, 100)] public float slowPercent = 30f;
+        [Min(.1f)] public float slowSeconds = 3f;
+        [Range(.1f, 100)] public float hasteDamageThresholdPercent = 5f;
+        [Min(0)] public float hasteAttackSpeedPercent = 100f;
+        public bool hasteStacks;
         public bool CanSpawn(int playerLevel, bool ignoreLevel = false) => enabled && (ignoreLevel || playerLevel >= Mathf.Max(1, minimumPlayerLevel));
         public bool Roll(int playerLevel, float sample, bool ignoreLevel = false) => CanSpawn(playerLevel, ignoreLevel) &&
             (chancePercent >= 100f || Mathf.Clamp01(sample) < Mathf.Clamp(chancePercent, 0f, 100f) * .01f);

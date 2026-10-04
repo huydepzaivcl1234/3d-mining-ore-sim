@@ -13,6 +13,7 @@ namespace MiningSimulator.Ores
         [Range(0, 100)] public float bossInvasionChancePercent = 5f;
         [Min(0)] public float bossExtraSizePercent = 50f;
         [Min(0)] public float bossExtraDamagePercent = 30f;
+        [Min(0)] public float bossExtraHealthPercent = 50f;
         public Sprite nightOnlyIcon, bossInvasionIcon;
         [Tooltip("Force an event for testing; boss level/species gates remain controlled by existing debug settings.")]
         public DailyEncounterOverride debugOverride = DailyEncounterOverride.Random;

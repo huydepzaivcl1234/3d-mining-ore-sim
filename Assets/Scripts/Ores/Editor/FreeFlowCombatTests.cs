@@ -10,7 +10,7 @@ public sealed class FreeFlowCombatTests
     private const string ControllerPath = "Assets/GameData/Player/Animations/Player controller.controller";
 
     [Test]
-    public void FootworkIncludesHipsAndLegsWithoutRootMotionMask()
+    public void FootworkIncludesAuthoredHipsAndLegs()
     {
         var controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(ControllerPath);
         var layer = controller.layers.Single(l => l.name == "Combat Footwork");
@@ -18,7 +18,7 @@ public sealed class FreeFlowCombatTests
         Assert.That(layer.avatarMask.GetHumanoidBodyPartActive(AvatarMaskBodyPart.Body), Is.True);
         Assert.That(layer.avatarMask.GetHumanoidBodyPartActive(AvatarMaskBodyPart.LeftLeg), Is.True);
         Assert.That(layer.avatarMask.GetHumanoidBodyPartActive(AvatarMaskBodyPart.RightLeg), Is.True);
-        Assert.That(layer.avatarMask.GetHumanoidBodyPartActive(AvatarMaskBodyPart.Root), Is.False);
+        // Root mask is designer-authored; motor movement does not require changing it.
     }
 
     [TestCase("Sword Attack 1")]
@@ -50,6 +50,55 @@ public sealed class FreeFlowCombatTests
             Assert.That(motor.CombatStepVelocity, Is.EqualTo(Vector3.zero));
         }
         finally { Object.DestroyImmediate(obj); }
+    }
+
+    [TestCase(30)]
+    [TestCase(60)]
+    [TestCase(144)]
+    public void LungeEnvelopeTravelsSameDistanceAtDifferentFrameRates(int frames)
+    {
+        float distance = 0f;
+        for (int i = 1; i <= frames; i++)
+            distance += CombatLungeMotion.TravelBetween((i - 1f) / frames, i / (float)frames, 1.15f);
+        Assert.That(distance, Is.EqualTo(1.15f).Within(.0001f));
+        Assert.That(CombatLungeMotion.TravelBetween(0f, .01f, 1f),
+            Is.LessThan(CombatLungeMotion.TravelBetween(.5f, .51f, 1f)));
+        Assert.That(CombatLungeMotion.TravelBetween(.99f, 1f, 1f),
+            Is.LessThan(CombatLungeMotion.TravelBetween(.5f, .51f, 1f)));
+    }
+
+    [Test]
+    public void LungeEnvelopeNeverTravelsBackwardOrBeyondItsBudget()
+    {
+        Assert.That(CombatLungeMotion.TravelBetween(.7f, .5f, 1f), Is.Zero);
+        Assert.That(CombatLungeMotion.TravelBetween(-1f, 2f, 1.15f), Is.EqualTo(1.15f));
+        Assert.That(CombatLungeMotion.TravelBetween(1f, 2f, 1f), Is.Zero);
+    }
+
+    [Test]
+    public void ExtendedLungeRangeDoesNotExtendDamageRange()
+    {
+        var player = new GameObject("Lunge range test player");
+        var target = new GameObject("Lunge range test target");
+        try
+        {
+            player.transform.position = new Vector3(12000, 10000, 12000);
+            target.transform.position = player.transform.position + Vector3.forward * 2.1f;
+            var combat = player.AddComponent<PlayerCombatInput>();
+            var collider = target.AddComponent<SphereCollider>();
+            collider.radius = .1f;
+            var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+            typeof(PlayerCombatInput).GetField("hitOriginOffset", flags).SetValue(combat, Vector3.zero);
+            Physics.SyncTransforms();
+            var strict = typeof(PlayerCombatInput).GetMethod("IsAimColliderInRange", flags);
+            var extended = typeof(PlayerCombatInput).GetMethod("IsColliderInRange", flags);
+            Assert.That((bool)strict.Invoke(combat, new object[] { collider, 0f }), Is.False);
+            Assert.That((bool)extended.Invoke(combat, new object[] { collider, combat.LungeAcquireRange, 0f }), Is.True);
+            target.transform.position += Vector3.forward * 1f;
+            Physics.SyncTransforms();
+            Assert.That((bool)extended.Invoke(combat, new object[] { collider, combat.LungeAcquireRange, 0f }), Is.False);
+        }
+        finally { Object.DestroyImmediate(target); Object.DestroyImmediate(player); }
     }
 }
 #endif

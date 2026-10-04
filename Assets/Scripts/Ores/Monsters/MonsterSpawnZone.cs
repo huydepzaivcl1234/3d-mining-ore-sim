@@ -511,7 +511,8 @@ namespace MiningSimulator.Ores
                     Quaternion.Euler(0, UnityEngine.Random.Range(0f, 360f), 0), transform);
                 instance.Initialize(this, player, boss);
                 if (invasion && dailyEvents != null)
-                    instance.ApplyEncounterModifiers(extraScale, 1f + Mathf.Max(0, dailyEvents.bossExtraDamagePercent) * 0.01f);
+                    instance.ApplyEncounterModifiers(extraScale, 1f + Mathf.Max(0, dailyEvents.bossExtraDamagePercent) * 0.01f,
+                        1f + Mathf.Max(0, dailyEvents.bossExtraHealthPercent) * .01f);
                 alive.Add(instance);
                 liveSpecies[instance] = entry;
                 ForecastChanged?.Invoke();

@@ -14,9 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.DailyEncounterEventData
   enabled: 1
   nightOnlyChancePercent: 4
-  bossInvasionChancePercent: 100
+  bossInvasionChancePercent: 1
   bossExtraSizePercent: 50
   bossExtraDamagePercent: 30
+  bossExtraHealthPercent: 50
   nightOnlyIcon: {fileID: 21300000, guid: cbcf685202fb17443982b3ddb98397d1, type: 3}
   bossInvasionIcon: {fileID: 21300000, guid: 7004e2a2e7be53d439f646583ebacf6b, type: 3}
   debugOverride: -1

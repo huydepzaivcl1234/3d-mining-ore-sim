@@ -16,6 +16,8 @@ namespace MiningSimulator.Ores
         [SerializeField] private GameObject respawnPanel;
         [SerializeField] private TMP_Text countdownLabel;
         [SerializeField] private PlayerRespawnCurtain respawnCurtain;
+        [SerializeField] private UnityEngine.UI.Button respawnNowButton;
+        [SerializeField] private TMP_Text respawnNowLabel;
         [Header("Spectator camera")]
         [SerializeField] private Camera spectatorCamera;
         [Tooltip("Camera drivers only (Orbit camera / Cinemachine Brain). Restored after respawn.")]
@@ -63,9 +65,31 @@ namespace MiningSimulator.Ores
             if (respawnPanel != null) respawnPanel.SetActive(false);
         }
 
-        private void OnEnable() => health.Died += Die;
+        private void OnEnable()
+        {
+            health.Died += Die;
+            if (respawnNowButton != null) respawnNowButton.onClick.AddListener(RespawnNow);
+            MiningLocalization.LanguageChanged += RefreshRespawnButton;
+            RefreshRespawnButton();
+        }
+        private void RefreshRespawnButton()
+        {
+            if (respawnNowLabel != null)
+                respawnNowLabel.text = MiningLocalization.Text("Respawn now", "Hồi sinh ngay");
+        }
+        // Skip the countdown, retaining the curtain and safe spawn collision check.
+        public void RespawnNow()
+        {
+            if (!Application.isPlaying || !dead || !isActiveAndEnabled) return;
+            remaining = 0f;
+            if (respawnNowButton != null) respawnNowButton.interactable = false;
+            if (respawnCurtain != null) respawnCurtain.Close();
+            TryRespawn();
+        }
         private void OnDisable()
         {
+            if (respawnNowButton != null) respawnNowButton.onClick.RemoveListener(RespawnNow);
+            MiningLocalization.LanguageChanged -= RefreshRespawnButton;
             if (health != null) health.Died -= Die;
             if (dead) RestoreControls();
             if (respawnCurtain != null) respawnCurtain.ResetImmediate();
@@ -108,6 +132,7 @@ namespace MiningSimulator.Ores
                 else Debug.LogWarning("Player death state is missing. Run Setup/Player Death And Respawn.", this);
             }
             if (respawnPanel != null) respawnPanel.SetActive(true);
+            if (respawnNowButton != null) respawnNowButton.interactable = true;
             BeginCamera();
             UpdateCountdown();
         }
@@ -274,6 +299,7 @@ namespace MiningSimulator.Ores
                     if (!overlaps[i].transform.IsChildOf(transform))
                     {
                         remaining = 1f;
+                        if (respawnNowButton != null) respawnNowButton.interactable = true;
                         if (respawnCurtain != null) respawnCurtain.Open();
                         return;
                     }

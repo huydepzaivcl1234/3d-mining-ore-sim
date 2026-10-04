@@ -89,6 +89,17 @@ namespace StarterAssets
         public bool ExternalFacing { get; set; }
         // Combat supplies intent; this motor remains the sole owner of collision-safe movement.
         public float CombatMoveMultiplier { get; set; } = 1f;
+        private float slowUntil;
+        private float slowMultiplier = 1f;
+        public float MovementSlowMultiplier => Time.time < slowUntil ? slowMultiplier : 1f;
+        // Refresh the strongest active slow; never mutate shared player stat data.
+        public void ApplyMovementSlow(float percent, float seconds)
+        {
+            if (seconds <= 0f || percent <= 0f) return;
+            if (Time.time >= slowUntil) slowMultiplier = 1f;
+            slowMultiplier = Mathf.Min(slowMultiplier, 1f - Mathf.Clamp01(percent * .01f));
+            slowUntil = Mathf.Max(slowUntil, Time.time + seconds);
+        }
         public Vector3 CombatStepVelocity { get; set; }
         private float _targetRotation = 0.0f;
         private float _rotationVelocity;
@@ -183,6 +194,8 @@ namespace StarterAssets
         // Respawn must not reuse pre-death jump velocity or the running blend.
         public void ResetMotionAfterRespawn()
         {
+            slowUntil = 0f;
+            slowMultiplier = 1f;
             CombatMoveMultiplier = 1f;
             CombatStepVelocity = Vector3.zero;
             _speed = _animationBlend = _rotationVelocity = 0f;
@@ -261,6 +274,7 @@ namespace StarterAssets
         {
             // set target speed based on move speed, sprint speed and if sprint is pressed
             float targetSpeed = _input.sprint && SprintAllowed ? SprintSpeed : MoveSpeed;
+            targetSpeed *= MovementSlowMultiplier;
 
             // a simplistic acceleration and deceleration designed to be easy to remove, replace, or iterate upon
 

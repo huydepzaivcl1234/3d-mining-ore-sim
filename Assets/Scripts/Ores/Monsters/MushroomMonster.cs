@@ -71,6 +71,8 @@ namespace MiningSimulator.Ores
         private int animationState;
         private int attackStateHash;
         private MonsterBossSettings bossSettings;
+        private readonly BossSkillRuntime bossSkill = new BossSkillRuntime();
+        private float baseAnimatorSpeed = 1f;
         private MonsterEncounterVisuals encounterVisuals;
         public bool IsBoss { get; private set; }
         public bool IsDespawning { get; private set; }
@@ -117,10 +119,11 @@ namespace MiningSimulator.Ores
         private float scaledDamage;
 
         // Applied once after normal level and boss tuning, never to shared prefab data.
-        public void ApplyEncounterModifiers(float sizeMultiplier, float damageMultiplier)
+        public void ApplyEncounterModifiers(float sizeMultiplier, float damageMultiplier, float healthMultiplier = 1f)
         {
             transform.localScale *= Mathf.Max(0.01f, sizeMultiplier);
             scaledDamage *= Mathf.Max(0f, damageMultiplier);
+            if (healthMultiplier != 1f) health.ConfigureSpawnHealth(health.MaxHealth * Mathf.Max(.01f, healthMultiplier));
         }
         private float scaledBurnDamage;
         private static readonly List<MushroomMonster> ActiveMonsters = new();
@@ -146,6 +149,7 @@ namespace MiningSimulator.Ores
             var stats = player != null ? player.GetComponent<MiningPlayerStats>() : null;
             IsBoss = boss && bossSettings != null && bossSettings.CanSpawn(stats != null ? stats.Level : 1,
                 MiningGameplayTuning.Current != null && MiningGameplayTuning.Current.IgnoreBossLevel);
+            bossSkill.Configure(IsBoss ? bossSettings : null);
             if (IsBoss)
             {
                 transform.localScale *= bossSettings.ScaleMultiplier;
@@ -175,6 +179,7 @@ namespace MiningSimulator.Ores
             scaledDamage = damage;
             attackStateHash = Animator.StringToHash(attackState);
             if (animator == null) animator = GetComponentInChildren<Animator>();
+            baseAnimatorSpeed = animator != null ? animator.speed : 1f;
             health.Damaged += OnDamage;
             health.Died += OnDeath;
         }
@@ -187,12 +192,14 @@ namespace MiningSimulator.Ores
         private void OnDamage()
         {
             if (health.Health <= 0f) return;
+            bossSkill.NotifyHealth(health.Health, health.MaxHealth);
             // Preserve the committed contact frame, then allow the hit reaction.
             // Otherwise a player's strike can cancel every incoming headbutt.
             if (animationState != attackStateHash || hitApplied) Play("Damage");
         }
         private void OnDeath()
         {
+            if (animator != null) animator.speed = baseAnimatorSpeed;
             if (IsDespawning) return;
             if (encounterVisuals != null) encounterVisuals.CancelExpiry();
             if (rewardsGranted) return;
@@ -248,7 +255,7 @@ namespace MiningSimulator.Ores
             secondAttack = nextSecondAttack && !string.IsNullOrEmpty(secondAttackState);
             nextSecondAttack = !secondAttack && !string.IsNullOrEmpty(secondAttackState);
             attackStateHash = Animator.StringToHash(ActiveAttackState);
-            nextAttack = Time.time + attackCooldown;
+            nextAttack = Time.time + attackCooldown / bossSkill.AttackSpeedMultiplier;
             hitApplied = false;
             Play(ActiveAttackState, true);
         }
@@ -279,6 +286,11 @@ namespace MiningSimulator.Ores
         private void Update()
         {
             if (health.Health <= 0f || animator == null) return;
+            if (IsDespawning) return;
+            float healing = bossSkill.TickHealing(Time.deltaTime, health.MaxHealth);
+            if (healing > 0f) health.Heal(healing / health.HealingMultiplier);
+            // Only the attack speeds up, not walk/down/hit-reaction animations.
+            animator.speed = baseAnimatorSpeed * (animationState == attackStateHash ? bossSkill.AttackSpeedMultiplier : 1f);
             var state = animator.GetCurrentAnimatorStateInfo(0);
             bool attacking = state.IsName(ActiveAttackState);
             bool reacting = state.IsName("Damage");
@@ -295,11 +307,22 @@ namespace MiningSimulator.Ores
                 state.normalizedTime >= ActiveHitMoment)
             {
                 hitApplied = true;
+                if (bossSkill.NotifyStrike() && target != null && target.Health > 0f &&
+                    (target.transform.position - transform.position).sqrMagnitude <= bossSettings.slowRadius * bossSettings.slowRadius)
+                {
+                    var playerMotor = target.GetComponent<StarterAssets.ThirdPersonController>();
+                    if (playerMotor != null) playerMotor.ApplyMovementSlow(bossSettings.slowPercent, bossSettings.slowSeconds);
+                }
                 if (groundWarning != null) groundWarning.Hide();
                 // One contact per swing. Area and sweep can hit every victim inside the same shown volume.
                 if (target != null && target.Health > 0f && ContainsVictim(target.transform, targetCollider))
                 {
                     float dealt = target.DealDamage(scaledDamage);
+                    if (bossSkill.NotifyPlayerDamage(dealt, target.MaxHealth))
+                    {
+                        nextAttack = Mathf.Min(nextAttack, Time.time + attackCooldown / bossSkill.AttackSpeedMultiplier);
+                        animator.speed = baseAnimatorSpeed * bossSkill.AttackSpeedMultiplier;
+                    }
                     ApplyHitHealing(dealt);
                     if (dealt > 0f && rewards != null) target.ApplyBurn(scaledBurnDamage, rewards.burnTickSeconds, rewards.burnDurationSeconds);
                 }
@@ -486,6 +509,7 @@ namespace MiningSimulator.Ores
 
         private void OnDisable()
         {
+            if (animator != null) animator.speed = baseAnimatorSpeed;
             if (groundWarning != null) groundWarning.Hide();
             strikeLocked = false;
             ActiveMonsters.Remove(this);
