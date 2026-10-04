@@ -16,6 +16,8 @@ namespace MiningSimulator.Ores
         [SerializeField] private Volume cinematicVolume;
         [SerializeField] private CoinRainEventSystem coinRainEvent;
         [SerializeField] private StalkedEventSystem stalkedEvent;
+        [Tooltip("Seconds between clock checkpoints; also saved on period change, pause and quit.")]
+        [SerializeField, Min(1f)] private float clockSaveInterval = 10f;
 
         private static readonly int SkyTintId = Shader.PropertyToID("_SkyTint");
         private static readonly int TintId = Shader.PropertyToID("_Tint");
@@ -37,6 +39,16 @@ namespace MiningSimulator.Ores
         private float transitionToDaylight;
         private float transitionBellCurve;
         private bool initialized;
+        private const string ClockSaveKey = "MiningSimulator.DayNight.v1";
+        private float nextClockSaveTime;
+        [Serializable]
+        private sealed class SavedClock
+        {
+            public int version = 1;
+            public int day = 1;
+            public MiningTimePeriod period;
+            public float elapsed;
+        }
         private Material originalSkybox;
         private Material runtimeSkybox;
         private Tween lightingTween;
@@ -108,7 +120,40 @@ namespace MiningSimulator.Ores
 
         private void OnDisable()
         {
+            SaveClock();
             StopLightingTween();
+        }
+
+        private void OnApplicationPause(bool paused) { if (paused) SaveClock(); }
+        private void OnApplicationQuit() => SaveClock();
+
+        private void SaveClock()
+        {
+            if (!Application.isPlaying || !initialized || data == null) return;
+            PlayerPrefs.SetString(ClockSaveKey, JsonUtility.ToJson(new SavedClock
+            {
+                day = DayNumber, period = currentPeriod, elapsed = periodElapsed
+            }));
+            PlayerPrefs.Save();
+            nextClockSaveTime = Time.unscaledTime + Mathf.Max(1f, clockSaveInterval);
+        }
+
+        public static void ResetSavedClock()
+        {
+            PlayerPrefs.DeleteKey(ClockSaveKey);
+            foreach (var clock in FindObjectsByType<DayNightSystem>(
+                         FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                clock.StopLightingTween();
+                clock.DayNumber = 1;
+                clock.currentPeriod = clock.data != null ? clock.data.StartingPeriod : MiningTimePeriod.Day;
+                clock.periodElapsed = 0f;
+                clock.daylight = clock.currentPeriod == MiningTimePeriod.Day ? 1f : 0f;
+                clock.transitionBellCurve = 0f;
+                clock.ApplyLighting(clock.daylight);
+                clock.PeriodChanged?.Invoke(clock.currentPeriod);
+            }
+            PlayerPrefs.Save();
         }
 
         private void OnDestroy()
@@ -168,6 +213,7 @@ namespace MiningSimulator.Ores
                         : MiningTimePeriod.Day;
                     if (currentPeriod == MiningTimePeriod.Day) DayNumber++;
                     BeginLightingTransition();
+                    SaveClock();
                     PeriodChanged?.Invoke(currentPeriod);
                 }
             }
@@ -176,6 +222,7 @@ namespace MiningSimulator.Ores
             // so the sun keeps drifting across the sky and gently shimmering for the whole
             // ~1-2 minute period instead of freezing in place once the transition ends.
             ApplyLighting(daylight);
+            if (Time.unscaledTime >= nextClockSaveTime) SaveClock();
         }
 
         private void LateUpdate()
@@ -240,6 +287,7 @@ namespace MiningSimulator.Ores
             if (currentPeriod == MiningTimePeriod.Day) DayNumber++;
             periodElapsed = 0f;
             BeginLightingTransition();
+            SaveClock();
             PeriodChanged?.Invoke(currentPeriod);
         }
 
@@ -252,8 +300,31 @@ namespace MiningSimulator.Ores
 
             currentPeriod = data != null ? data.StartingPeriod : MiningTimePeriod.Day;
             periodElapsed = 0f;
+            if (Application.isPlaying && PlayerPrefs.HasKey(ClockSaveKey))
+                RestoreClock(PlayerPrefs.GetString(ClockSaveKey));
             daylight = currentPeriod == MiningTimePeriod.Day ? 1f : 0f;
             initialized = true;
+        }
+
+        private void RestoreClock(string json)
+        {
+            try
+            {
+                var saved = JsonUtility.FromJson<SavedClock>(json);
+                if (saved != null && saved.version == 1 && saved.day >= 1 &&
+                    Enum.IsDefined(typeof(MiningTimePeriod), saved.period) &&
+                    !float.IsNaN(saved.elapsed) && !float.IsInfinity(saved.elapsed))
+                {
+                    DayNumber = saved.day;
+                    currentPeriod = saved.period;
+                    periodElapsed = Mathf.Clamp(saved.elapsed, 0f,
+                        Mathf.Max(0f, GetPeriodDuration(currentPeriod) - .001f));
+                }
+            }
+            catch (ArgumentException exception)
+            {
+                Debug.LogWarning("Invalid saved day/night clock: " + exception.Message, this);
+            }
         }
 
         private float GetPeriodDuration(MiningTimePeriod period)

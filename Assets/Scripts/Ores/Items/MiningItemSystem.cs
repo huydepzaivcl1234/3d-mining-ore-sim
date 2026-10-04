@@ -6,12 +6,14 @@ namespace MiningSimulator.Ores
 {
     /// <summary>Owns item drops, the 32-slot inventory, saves and active timed effects.</summary>
     [DisallowMultipleComponent]
-    public sealed class MiningItemSystem : MonoBehaviour
+    public sealed partial class MiningItemSystem : MonoBehaviour
     {
         [Serializable]
         private sealed class SavedInventory
         {
-            public int version = 1;
+            public int version = 3;
+            public string necklaceId;
+            public List<string> necklaceIds = new();
             public List<SavedSlot> slots = new();
         }
 
@@ -163,6 +165,7 @@ namespace MiningSimulator.Ores
         public InventorySlotView GetSlot(int index)
         {
             EnsureRuntimeSlots();
+            if (IsNecklaceSlot(index)) return new InventorySlotView(necklaces[index - NecklaceSlotIndex].item, necklaces[index - NecklaceSlotIndex].count);
             if (index < 0 || index >= slots.Length)
             {
                 return new InventorySlotView(null, 0);
@@ -282,6 +285,8 @@ namespace MiningSimulator.Ores
         public bool TryMoveSlot(int from, int to, MiningItemData expectedItem)
         {
             EnsureRuntimeSlots();
+            if (IsNecklaceSlot(from) || IsNecklaceSlot(to))
+                return TryMoveEquipment(from, to, expectedItem);
             if (from < 0 || to < 0 || from >= slots.Length || to >= slots.Length ||
                 from == to || expectedItem == null || slots[from].item != expectedItem ||
                 slots[from].count <= 0) return false;
@@ -295,6 +300,7 @@ namespace MiningSimulator.Ores
         public bool TryUseSlot(int index, int requestedCount)
         {
             EnsureRuntimeSlots();
+            if (requestedCount > 0 && IsNecklaceSlot(index)) return TryUnequipNecklace(index);
             if (index < 0 || index >= slots.Length || requestedCount <= 0)
             {
                 return false;
@@ -306,6 +312,7 @@ namespace MiningSimulator.Ores
             }
 
             MiningItemData item = slot.item;
+            if (item.IsEquipment) return TryMoveEquipment(index, FirstFreeNecklaceSlot(), item);
             if (item.UseType != MiningItemUseType.TimedEffect)
             {
                 return false;
@@ -368,6 +375,7 @@ namespace MiningSimulator.Ores
                 slot.count = 0;
             }
             activeEffects.Clear();
+            foreach (var necklace in necklaces) { necklace.item = null; necklace.count = 0; }
             if (database != null && !string.IsNullOrEmpty(database.InventorySaveKey))
             {
                 PlayerPrefs.DeleteKey(database.InventorySaveKey);
@@ -546,6 +554,15 @@ namespace MiningSimulator.Ores
                 return;
             }
 
+            for (int i = 0; i < necklaces.Length; i++)
+            {
+                string id = save.version >= 3 && save.necklaceIds != null && i < save.necklaceIds.Count
+                    ? save.necklaceIds[i] : i == 0 ? save.necklaceId : null;
+                var equipped = string.IsNullOrEmpty(id) ? null : database.FindById(id);
+                necklaces[i].item = equipped != null && equipped.IsEquipment ? equipped : null;
+                necklaces[i].count = necklaces[i].item != null ? 1 : 0;
+            }
+
             int count = Mathf.Min(slots.Length, save.slots.Count);
             for (int index = 0; index < count; index++)
             {
@@ -563,11 +580,12 @@ namespace MiningSimulator.Ores
         private void SaveInventory()
         {
             EnsureRuntimeSlots();
-            if (database == null || string.IsNullOrEmpty(database.InventorySaveKey))
+            if (!Application.isPlaying || database == null || string.IsNullOrEmpty(database.InventorySaveKey))
             {
                 return;
             }
-            var save = new SavedInventory();
+            var save = new SavedInventory { necklaceId = EquippedNecklace != null ? EquippedNecklace.ItemId : string.Empty };
+            foreach (var necklace in necklaces) save.necklaceIds.Add(necklace.item != null ? necklace.item.ItemId : string.Empty);
             foreach (RuntimeSlot slot in slots)
             {
                 save.slots.Add(new SavedSlot

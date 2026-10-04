@@ -62,13 +62,11 @@ MonoBehaviour:
   sheathWeaponSfx: {fileID: 8300000, guid: c08cd1c5feca2434f9f92f67ee4beab6, type: 3}
   sheathWeaponSfxVolume: 1
   attackImpactVfxPrefab: {fileID: 1035977224672214417, guid: 057aa477789506a44bd206e9c5acad19, type: 3}
+  thirdAttackSlashVfxPrefab: {fileID: 6492071967887182164, guid: 1721b8a39ecfb7847a69ae43168ef016, type: 3}
+  thirdAttackSlashLifetime: 2.5
+  thirdAttackDamageBonusPercent: 100
   impactVfxLifetime: 2
   damage: 1
-  burnDamagePerTick: 0
-  burnTickSeconds: 0.1
-  burnDurationSeconds: 0
-  lifeStealPercent: 0
-  healingBonusPercent: 0
   attackRange: 1.75
   attackAngle: 100
   attackSpeed: 1

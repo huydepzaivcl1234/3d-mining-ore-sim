@@ -94,6 +94,7 @@ namespace MiningSimulator.Ores
             if (items == null || ghost != null) return;
             var slot = items.GetSlot(index);
             if (slot.IsEmpty) return;
+            if (slot.Item.IsEquipment) return; // Left-click equips / removes; bulk-use is consumables only.
             menuSlot = index; menuItem = slot.Item;
             bool timed = slot.Item.UseType == MiningItemUseType.TimedEffect;
             for (int i = 0; i < useButtons.Length; i++)

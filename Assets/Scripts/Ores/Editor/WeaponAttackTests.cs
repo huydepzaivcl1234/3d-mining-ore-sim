@@ -45,7 +45,8 @@ public sealed class WeaponAttackTests
     private void Sweep()
     {
         Physics.SyncTransforms();
-        typeof(PlayerCombatInput).GetMethod("ApplySweepHit", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(combat, null);
+        typeof(PlayerCombatInput).GetMethod("ApplySweepHit", BindingFlags.Instance | BindingFlags.NonPublic)
+            .Invoke(combat, new object[] { 1f });
     }
     [Test] public void CombatBindingsMatchRequestedControls()
     {
@@ -69,6 +70,9 @@ public sealed class WeaponAttackTests
         Assert.That(combat.IsCombatMode, Is.False);
         combat.SetCombatMode(true);
         combat.enabled = false;
+        // EditMode does not drive ordinary MonoBehaviour lifecycle messages.
+        typeof(PlayerCombatInput).GetMethod("OnDisable", BindingFlags.Instance | BindingFlags.NonPublic)
+            .Invoke(combat, null);
         Assert.That(combat.IsCombatMode, Is.False);
     }
 
@@ -76,11 +80,11 @@ public sealed class WeaponAttackTests
     {
         Target(Vector3.forward * 0.5f);
         var far = Target(Vector3.forward * 4f);
-        far.gameObject.AddComponent<MushroomMonster>();
+        AddMonster(far);
         var near = Target(Vector3.forward * 2f);
-        var expected = near.gameObject.AddComponent<MushroomMonster>();
+        var expected = AddMonster(near);
         var dead = Target(Vector3.back);
-        dead.gameObject.AddComponent<MushroomMonster>();
+        AddMonster(dead);
         dead.ApplyDamage(dead.MaxHealth);
         Physics.SyncTransforms();
         var result = typeof(PlayerCombatInput).GetMethod("FindNearestMonster",
@@ -147,13 +151,24 @@ public sealed class WeaponAttackTests
         var flags = BindingFlags.Instance | BindingFlags.NonPublic;
         typeof(MushroomMonster).GetField("target", flags).SetValue(brain, playerHealth);
         typeof(MushroomMonster).GetField("targetCollider", flags).SetValue(brain, playerCollider);
+        typeof(MushroomMonster).GetField("motor", flags)
+            .SetValue(brain, monster.GetComponent<CharacterController>());
         monster.transform.position = player.transform.position - Vector3.forward * 1.8f;
         Physics.SyncTransforms();
-        var canHit = typeof(MushroomMonster).GetMethod("CanHitTarget", flags);
-        Assert.That(canHit.Invoke(brain, null), Is.EqualTo(true));
+        var canHit = typeof(MushroomMonster).GetMethod("ContainsVictim", flags);
+        var victim = new object[] { player.transform, playerCollider };
+        Assert.That(canHit.Invoke(brain, victim), Is.EqualTo(true));
 
         monster.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
-        Assert.That(canHit.Invoke(brain, null), Is.EqualTo(false));
+        Assert.That(canHit.Invoke(brain, victim), Is.EqualTo(false));
+    }
+
+    private static MushroomMonster AddMonster(MiningCharacterHealth health)
+    {
+        var monster = health.gameObject.AddComponent<MushroomMonster>();
+        typeof(MushroomMonster).GetField("health", BindingFlags.Instance | BindingFlags.NonPublic)
+            .SetValue(monster, health);
+        return monster;
     }
 
     [Test] public void SwordDrawSheathAndRespawnResetKeepExactlyOneSword()

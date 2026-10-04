@@ -37,19 +37,25 @@ namespace MiningSimulator.Ores
                 _ => 0f
             };
             if (float.IsInfinity(current + amount)) return false;
-            if (choice == MiningCardChoice.Damage) CardDamagePercent += amount;
-            else if (choice == MiningCardChoice.AttackSpeed) CardAttackSpeedPercent += amount;
-            else if (choice == MiningCardChoice.Health) CardHealthPercent += amount;
-            else if (choice == MiningCardChoice.RegenInterval) CardRegenReductionPercent = Mathf.Min(100f, CardRegenReductionPercent + amount);
-            else if (choice == MiningCardChoice.HealingEffectiveness) CardHealingPercent += amount;
-            else return false;
+            switch (choice)
+            {
+                case MiningCardChoice.Damage: CardDamagePercent += amount; break;
+                case MiningCardChoice.AttackSpeed: CardAttackSpeedPercent += amount; break;
+                case MiningCardChoice.Health: CardHealthPercent += amount; break;
+                case MiningCardChoice.RegenInterval:
+                    CardRegenReductionPercent = Mathf.Min(100f, current + amount);
+                    break;
+                case MiningCardChoice.HealingEffectiveness: CardHealingPercent += amount; break;
+                default: return false;
+            }
             dirty = true;
             SaveProgress();
             return true;
         }
-        public int Level { get; private set; } = 1;
-        public float Experience { get; private set; }
-        public float ExperienceRequired { get; private set; } = 100;
+        private readonly ExperienceProgression progression = new ExperienceProgression();
+        public int Level => progression.Level;
+        public float Experience => progression.Experience;
+        public float ExperienceRequired => progression.Required;
         public float ExperienceProgress => Mathf.Clamp01(Experience / Mathf.Max(1, ExperienceRequired));
         private ThirdPersonController movement;
         private MiningAudioManager feedbackAudio;
@@ -86,28 +92,13 @@ namespace MiningSimulator.Ores
             // Central player XP boundary: the potion applies once to every XP source.
             amount *= itemEffects != null ? itemEffects.PlayerExperienceMultiplier : 1f;
             if (amount <= 0 || float.IsNaN(amount) || float.IsInfinity(amount)) return;
-            double remaining = (double)Experience + amount;
             float growth = data != null ? Mathf.Max(1, data.experienceRequirementGrowth) : 1.25f;
-            if (growth == 1 && remaining >= ExperienceRequired)
-            {
-                int levels = (int)System.Math.Min(int.MaxValue - Level, System.Math.Floor(remaining / ExperienceRequired));
-                Level += levels;
-                remaining -= (double)levels * ExperienceRequired;
-            }
-            while (remaining >= ExperienceRequired && Level < int.MaxValue)
-            {
-                remaining -= ExperienceRequired;
-                Level++;
-                ExperienceRequired = Mathf.Min(float.MaxValue, ExperienceRequired * growth);
-            }
-            Experience = (float)System.Math.Min(remaining, ExperienceRequired);
+            progression.Add(amount, growth);
             dirty = true;
         }
         public void SetProgress(int level, float experience, float requiredExperience)
         {
-            Level = Mathf.Max(1, level);
-            ExperienceRequired = Mathf.Max(1, requiredExperience);
-            Experience = Mathf.Clamp(experience, 0, ExperienceRequired);
+            progression.Set(level, experience, requiredExperience);
             dirty = true;
         }
         private void LoadProgress()

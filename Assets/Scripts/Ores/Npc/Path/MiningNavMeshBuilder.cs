@@ -40,6 +40,21 @@ namespace MiningSimulator.Ores
         private float lastBuildTime = float.NegativeInfinity;
         private Coroutine pendingRebuild;
         private NavMeshSurface pendingSurface;
+        private float minerClearance;
+
+        // Rigidbody miners use a wider obstacle probe than the baked agent type.
+        // Inflate dynamic carves by the difference so complete routes fit that probe.
+        public float AdditionalMinerPadding => surface == null ? 0f : Mathf.Max(0f,
+            minerClearance - NavMesh.GetSettingsByID(surface.agentTypeID).agentRadius);
+
+        public void EnsureMinerClearance(float radius)
+        {
+            if (radius <= minerClearance) return;
+            minerClearance = radius;
+            foreach (var obstacle in Object.FindObjectsByType<MiningNavMeshObstacle>(
+                         FindObjectsSortMode.None))
+                obstacle.EnableCircularCarving();
+        }
 
         /// <summary>True once a NavMesh exists and can answer path queries.</summary>
         public bool HasNavMesh { get; private set; }

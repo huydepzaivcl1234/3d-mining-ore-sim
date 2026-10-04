@@ -79,7 +79,9 @@ namespace MiningSimulator.Ores
                 Mathf.Min(Mathf.Abs(scale.x), Mathf.Abs(scale.z)));
             float verticalScale = Mathf.Max(0.0001f, Mathf.Abs(scale.y));
             float worldRadius = Mathf.Max(minimumRadius,
-                Mathf.Max(bounds.extents.x, bounds.extents.z) + radiusPadding);
+                Mathf.Max(bounds.extents.x, bounds.extents.z) + radiusPadding +
+                (MiningNavMeshBuilder.Instance != null
+                    ? MiningNavMeshBuilder.Instance.AdditionalMinerPadding : 0f));
             obstacle.radius = worldRadius / horizontalScale;
             float worldHeight = Mathf.Max(minimumHeight, bounds.size.y, worldRadius * 2f);
             obstacle.height = worldHeight / verticalScale;

@@ -29,7 +29,8 @@ namespace MiningSimulator.Ores
     public enum MiningItemUseType
     {
         TimedEffect = 0,
-        GiftBox = 1
+        GiftBox = 1,
+        Equipment = 2
     }
 
     public enum MiningGiftRewardType
@@ -126,6 +127,13 @@ namespace MiningSimulator.Ores
         [Header("Use")]
         [SerializeField] private MiningItemUseType useType = MiningItemUseType.TimedEffect;
 
+        [Header("Necklace equipment / pedestal price")]
+        [SerializeField] private MiningEquipmentBonuses equipmentBonuses = new();
+        [Min(0f), SerializeField] private float equipmentGemPrice = 10f;
+        public bool IsEquipment => useType == MiningItemUseType.Equipment;
+        public MiningEquipmentBonuses EquipmentBonuses => IsEquipment ? equipmentBonuses : null;
+        public float EquipmentGemPrice => Mathf.Max(0f, equipmentGemPrice);
+
         [Header("Timed Effect")]
         [SerializeField] private MiningItemEffectType effectType;
         [Min(0f), SerializeField] private float effectPercent = 25f;
@@ -151,7 +159,7 @@ namespace MiningSimulator.Ores
         public Vector3 ModelLocalPosition => modelLocalPosition;
         public Vector3 ModelLocalEulerAngles => modelLocalEulerAngles;
         public float SelectionChancePercent => selectionChancePercent;
-        public int MaximumStack => maximumStack;
+        public int MaximumStack => IsEquipment ? 1 : maximumStack;
         public bool TraderCanBuy => traderCanBuy;
         public bool TraderCanSell => traderCanSell;
         public int TraderMinimumOfferAmount => traderMinimumOfferAmount;
@@ -176,6 +184,7 @@ namespace MiningSimulator.Ores
 
         public string GetEffectSummary()
         {
+            if (IsEquipment) return equipmentBonuses.Summary();
             if (effectType == MiningItemEffectType.OreLuckyCritical)
                 return $"{EffectName} {criticalChancePercent:0.##}% / +{effectPercent:0.##}% / {effectDurationSeconds:0.#}s";
             return $"{EffectName} +{effectPercent:0.##}% / {effectDurationSeconds:0.#}s";
@@ -183,6 +192,7 @@ namespace MiningSimulator.Ores
 
         public string GetInventorySummary()
         {
+            if (IsEquipment) return equipmentBonuses.Summary();
             return useType == MiningItemUseType.GiftBox
                 ? MiningLocalization.Text("OPEN TO SPIN")
                 : effectType == MiningItemEffectType.OreLuckyCritical

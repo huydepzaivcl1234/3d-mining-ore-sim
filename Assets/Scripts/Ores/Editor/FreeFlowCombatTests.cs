@@ -10,6 +10,24 @@ public sealed class FreeFlowCombatTests
     private const string ControllerPath = "Assets/GameData/Player/Animations/Player controller.controller";
 
     [Test]
+    public void ThirdStrikeUsesContactEventAfterDownwardSlashStarts()
+    {
+        var controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(ControllerPath);
+        var state = controller.layers.Single(l => l.name == "combat layer").stateMachine.states
+            .Single(s => s.state.name == "attack combat 3").state;
+        var clip = (AnimationClip)state.motion;
+        var contact = clip.events.Single(e => e.functionName == "OnSwordStrikeThird");
+        var slash = clip.events.Single(e => e.functionName == "OnSlashThirdStart");
+        Assert.That(contact.time, Is.GreaterThan(slash.time));
+        Assert.That(clip.events.Any(e => e.functionName == "OnSwordStrikeDown"), Is.False);
+        var data = AssetDatabase.LoadAssetAtPath<MiningSimulator.Ores.MiningPlayerStatsData>(
+            "Assets/GameData/Player/PlayerStatsData.asset");
+        Assert.That(data.thirdAttackSlashVfxPrefab, Is.Not.Null);
+        Assert.That(data.thirdAttackSlashVfxPrefab.GetComponent<ParticleSystem>().main.simulationSpace,
+            Is.EqualTo(ParticleSystemSimulationSpace.World));
+    }
+
+    [Test]
     public void FootworkIncludesAuthoredHipsAndLegs()
     {
         var controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(ControllerPath);
@@ -23,6 +41,7 @@ public sealed class FreeFlowCombatTests
 
     [TestCase("Sword Attack 1")]
     [TestCase("Sword Attack 2")]
+    [TestCase("attack combat 3")]
     public void FootworkHasSameLengthButNoDuplicateDamageOrVfxEvents(string stateName)
     {
         var controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(ControllerPath);
@@ -34,6 +53,38 @@ public sealed class FreeFlowCombatTests
         Assert.That(((AnimationClip)mirror.motion).events, Is.Empty);
         Assert.That(mirror.speedParameterActive, Is.True);
         Assert.That(mirror.speedParameter, Is.EqualTo("AttackSpeed"));
+    }
+
+    [TestCase("Sword Attack 1", 1)]
+    [TestCase("Sword Attack 2", 2)]
+    [TestCase("attack combat 3", 0)]
+    [TestCase("Combat", 0)]
+    public void AcceptedComboClickAdvancesOneStrike(string current, int expected)
+    {
+        var method = typeof(PlayerCombatInput).GetMethod("NextAttackIndex",
+            System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+        Assert.That(method.Invoke(null, new object[] { Animator.StringToHash(current) }), Is.EqualTo(expected));
+    }
+
+    [Test]
+    public void ComboSequenceMatchesBothAuthoredAnimatorLayers()
+    {
+        var field = typeof(PlayerCombatInput).GetField("AttackStates",
+            System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+        var names = (string[])field.GetValue(null);
+        Assert.That(names, Is.EqualTo(new[] { "Sword Attack 1", "Sword Attack 2", "attack combat 3" }));
+        var controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(ControllerPath);
+        foreach (var layer in controller.layers.Where(l => l.name == "combat layer" || l.name == "Combat Footwork"))
+            foreach (var name in names)
+                Assert.That(layer.stateMachine.states.Any(s => s.state.name == name), Is.True, layer.name + ": " + name);
+    }
+
+    [Test]
+    public void SlashAudioHasNoDuplicatePerStrikeConfiguration()
+    {
+        var fields = typeof(PlayerCombatInput).GetFields(
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+        Assert.That(fields.Any(f => f.Name == "slash1" || f.Name == "slash2" || f.Name == "slash3"), Is.False);
     }
 
     [Test]

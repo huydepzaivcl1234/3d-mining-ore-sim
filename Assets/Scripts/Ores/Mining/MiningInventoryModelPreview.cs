@@ -21,8 +21,12 @@ namespace MiningSimulator.Ores
         [Min(1f), SerializeField] private float framingPadding = 1.12f;
         [SerializeField] private Color background = Color.black;
         [SerializeField] private string idleState = "Base Layer.Idle Walk Run Blend";
+        [Min(0f), SerializeField] private float previewLightIntensity = 3f;
+        [Min(.1f), SerializeField] private float previewLightRange = 12f;
         private GameObject stage;
         private RenderTexture texture;
+        private Camera previewCamera;
+        private Light previewLight;
         private readonly Dictionary<Transform, Transform> copies = new();
 
         private void OnEnable() { if (Application.isPlaying) BuildPreview(); }
@@ -101,6 +105,7 @@ namespace MiningSimulator.Ores
             var cameraObject = new GameObject("Inventory Preview Camera");
             cameraObject.transform.SetParent(stage.transform, false);
             var camera = cameraObject.AddComponent<Camera>();
+            previewCamera = camera;
             camera.clearFlags = CameraClearFlags.SolidColor;
             camera.backgroundColor = background;
             camera.cullingMask = 1 << previewLayer;
@@ -116,10 +121,14 @@ namespace MiningSimulator.Ores
             camera.transform.LookAt(bounds.center);
             var lamp = new GameObject("Inventory Preview Light");
             lamp.transform.SetParent(stage.transform, false);
-            lamp.transform.rotation = Quaternion.Euler(35f, 155f, 0f);
+            lamp.transform.position = bounds.center + new Vector3(1.5f, 1.5f, 2f);
             var light = lamp.AddComponent<Light>();
-            light.type = LightType.Directional;
-            light.intensity = 1.2f;
+            previewLight = light;
+            // Directional lights affect the entire URP scene despite a distant preview stage.
+            // A local light has a bounded reach and cannot illuminate the gameplay world.
+            light.type = LightType.Point;
+            light.range = previewLightRange;
+            light.intensity = previewLightIntensity;
             light.cullingMask = 1 << previewLayer;
             light.shadows = LightShadows.None;
             output.texture = texture;
@@ -141,11 +150,21 @@ namespace MiningSimulator.Ores
         private void ReleasePreview()
         {
             if (output != null) output.texture = null;
-            if (stage != null) Destroy(stage);
-            if (texture != null) { texture.Release(); Destroy(texture); }
+            if (previewCamera != null) { previewCamera.enabled = false; previewCamera.targetTexture = null; }
+            if (previewLight != null) previewLight.enabled = false;
+            if (stage != null) { stage.SetActive(false); ReleaseObject(stage); }
+            if (texture != null) { texture.Release(); ReleaseObject(texture); }
             stage = null;
             texture = null;
+            previewCamera = null;
+            previewLight = null;
             copies.Clear();
+        }
+
+        private static void ReleaseObject(Object value)
+        {
+            if (Application.isPlaying) Destroy(value);
+            else DestroyImmediate(value);
         }
     }
 }

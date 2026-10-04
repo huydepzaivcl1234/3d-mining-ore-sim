@@ -206,6 +206,9 @@ namespace MiningSimulator.Ores
                 "yellow_potion" => Text("Yellow Potion", "Lọ vàng"),
                 "green_potion" => Text("Green Potion", "Lọ xanh"),
                 "red_potion" => Text("Red Potion", "Lọ đỏ"),
+                "necklace_red" => Text("Red Necklace", "Dây chuyền đỏ"),
+                "necklace_green" => Text("Green Necklace", "Dây chuyền xanh"),
+                "necklace_orange" => Text("Orange Necklace", "Dây chuyền cam"),
                 _ => fallback
             };
         }

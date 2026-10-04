@@ -27,9 +27,12 @@ namespace MiningSimulator.Ores
         [SerializeField] private TextMeshProUGUI titleLabel;
         [Tooltip("Authored item grid; leave empty to use the legacy Grid child.")]
         [SerializeField] private RectTransform itemGrid;
+        [Tooltip("First necklace socket (legacy reference preserved).")]
+        [SerializeField] private RectTransform necklaceSocket;
+        [SerializeField] private RectTransform[] additionalNecklaceSockets = new RectTransform[2];
 
         private readonly SlotView[] slotViews =
-            new SlotView[MiningItemDatabase.InventoryCapacity];
+            new SlotView[MiningItemDatabase.InventoryCapacity + MiningItemSystem.NecklaceSlotCount];
         private TextMeshProUGUI openButtonLabel;
         private MiningGiftBoxWheelPanel giftBoxWheelPanel;
         public MiningInventoryInteractions Interactions { get; private set; }
@@ -159,7 +162,7 @@ namespace MiningSimulator.Ores
             {
                 return;
             }
-            for (int index = 0; index < slotViews.Length; index++)
+            for (int index = 0; index < MiningItemDatabase.InventoryCapacity; index++)
             {
                 Transform slot = grid.Find($"Slot {index + 1:00}");
                 if (slot == null)
@@ -179,6 +182,45 @@ namespace MiningSimulator.Ores
                     countLabel = slot.Find("Count")?.GetComponent<TextMeshProUGUI>()
                 };
             }
+            CacheNecklaceSocket();
+        }
+
+        private void CacheNecklaceSocket()
+        {
+            var equipmentPanel = inventoryPanel.transform.Find("Character And Equipment");
+            if (necklaceSocket == null)
+                necklaceSocket = inventoryPanel.transform.Find("Character And Equipment/Equipment Placeholder 01") as RectTransform;
+            BindNecklaceSocket(necklaceSocket, MiningItemSystem.NecklaceSlotIndex);
+            for (int i = 1; i < MiningItemSystem.NecklaceSlotCount; i++)
+            {
+                var socket = additionalNecklaceSockets != null && i - 1 < additionalNecklaceSockets.Length
+                    ? additionalNecklaceSockets[i - 1] : null;
+                if (socket == null && equipmentPanel != null)
+                    socket = equipmentPanel.Find($"Equipment Placeholder {i + 1:00}") as RectTransform;
+                BindNecklaceSocket(socket, MiningItemSystem.NecklaceSlotIndex + i);
+            }
+        }
+
+        private void BindNecklaceSocket(RectTransform socket, int index)
+        {
+            if (socket == null) return;
+            var button = socket.GetComponent<UnityEngine.UI.Button>() ?? socket.gameObject.AddComponent<UnityEngine.UI.Button>();
+            button.targetGraphic = socket.GetComponent<UnityEngine.UI.Image>();
+            var binding = socket.GetComponent<MiningInventorySlotButton>() ?? socket.gameObject.AddComponent<MiningInventorySlotButton>();
+            binding.Configure(this, index);
+            Transform iconChild = socket.Find("Necklace Icon");
+            if (iconChild == null)
+            {
+                var go = new GameObject("Necklace Icon", typeof(RectTransform), typeof(UnityEngine.UI.Image));
+                go.transform.SetParent(socket, false);
+                var rect = (RectTransform)go.transform;
+                rect.anchorMin = Vector2.zero; rect.anchorMax = Vector2.one;
+                rect.offsetMin = Vector2.one; rect.offsetMax = -Vector2.one;
+                iconChild = rect;
+            }
+            var icon = iconChild.GetComponent<UnityEngine.UI.Image>();
+            icon.preserveAspect = true; icon.raycastTarget = false;
+            slotViews[index] = new SlotView { button = button, icon = icon };
         }
 
         private void Refresh()

@@ -33,15 +33,17 @@ namespace MiningSimulator.Ores
         private int displayedBossSeconds = -1;
         private float healingBonusPercent;
         private MiningUpgradeSystem playerUpgrades;
-        private float burnDamagePerTick;
-        private float burnTickSeconds;
-        private float burnRemaining;
-        private float burnTimer;
+        private MiningItemSystem equipmentItems;
+        private MiningEquipmentBonuses EquipmentBonuses => equipmentItems != null ? equipmentItems.EquipmentBonuses : null;
+        private readonly DamageOverTime burn = new DamageOverTime();
+        private System.Action<float> burnDamage;
         public float Health => health;
         public Transform HealthBar => healthBar;
-        private MiningPlayerStatsData Stats => MiningPlayerStats.For(this);
+        private MiningPlayerStats playerStats;
+        private MiningPlayerStats PlayerStats => playerStats != null ? playerStats : playerStats = GetComponent<MiningPlayerStats>();
+        private MiningPlayerStatsData Stats => PlayerStats != null ? PlayerStats.Data : null;
         private float spawnedMaxHealth;
-        public float MaxHealth => Mathf.Max(1f, Stats != null ? GetComponent<MiningPlayerStats>().MaxHealth : spawnedMaxHealth > 0 ? spawnedMaxHealth : maxHealth);
+        public float MaxHealth => Mathf.Max(1f, Stats != null ? PlayerStats.MaxHealth : spawnedMaxHealth > 0 ? spawnedMaxHealth : maxHealth);
         public void ConfigureSpawnHealth(float value)
         {
             spawnedMaxHealth = Mathf.Max(1, value);
@@ -55,12 +57,13 @@ namespace MiningSimulator.Ores
             (Stats != null ? Stats.regenInterval : regenInterval) *
             (Stats != null && playerUpgrades != null
                 ? playerUpgrades.GetMultiplier(MiningUpgradeType.RegenIntervalReduction) : 1f) *
-            (Stats != null ? GetComponent<MiningPlayerStats>().CardRegenIntervalMultiplier : 1f));
+            (Stats != null ? PlayerStats.CardRegenIntervalMultiplier : 1f) *
+            (Stats != null && EquipmentBonuses != null ? EquipmentBonuses.RegenIntervalMultiplier : 1f));
         public float HealingMultiplier => 1f + (Mathf.Max(0f,
-            Stats != null ? Stats.healingBonusPercent : healingBonusPercent) +
+            Stats != null ? (EquipmentBonuses != null ? EquipmentBonuses.healingBonusPercent : 0f) : healingBonusPercent) +
             (Stats != null && playerUpgrades != null
                 ? playerUpgrades.GetAddedPercent(MiningUpgradeType.HealingEffectiveness) : 0f) +
-            (Stats != null ? GetComponent<MiningPlayerStats>().CardHealingPercent : 0f)) * 0.01f;
+            (Stats != null ? PlayerStats.CardHealingPercent : 0f)) * 0.01f;
         public float EffectiveRegenAmount => RegenAmount * HealingMultiplier;
         private float initializedMaxHealth;
         public void Respawn()
@@ -97,22 +100,12 @@ namespace MiningSimulator.Ores
         public void ApplyBurn(float damagePerTick, float tickSeconds, float duration)
         {
             if (health <= 0f || damagePerTick <= 0f || tickSeconds <= 0f || duration <= 0f) return;
-            tickSeconds = Mathf.Max(0.1f, tickSeconds);
-            bool active = burnRemaining > 0f;
-            if (burnRemaining <= 0f || damagePerTick / tickSeconds >= burnDamagePerTick / burnTickSeconds)
-            {
-                // Preserve tick progress on refresh so rapid attacks cannot postpone DOT.
-                float progress = active ? burnTimer / burnTickSeconds : 0f;
-                burnDamagePerTick = damagePerTick;
-                burnTickSeconds = tickSeconds;
-                burnTimer = progress * tickSeconds;
-            }
-            burnRemaining = Mathf.Max(burnRemaining, duration);
+            burn.Apply(damagePerTick, tickSeconds, duration);
         }
 
         private void ClearBurn()
         {
-            burnDamagePerTick = burnTickSeconds = burnRemaining = burnTimer = 0f;
+            burn.Clear();
         }
 
         public void Heal(float amount)
@@ -155,25 +148,18 @@ namespace MiningSimulator.Ores
 
         private void TickBurn(float deltaTime)
         {
-            if (burnRemaining > 0f && health > 0f)
-            {
-                float activeTime = Mathf.Min(Mathf.Max(0f, deltaTime), burnRemaining);
-                burnRemaining -= activeTime;
-                burnTimer += activeTime;
-                while (burnTickSeconds > 0f && burnTimer >= burnTickSeconds && health > 0f)
-                {
-                    burnTimer -= burnTickSeconds;
-                    DealDamage(burnDamagePerTick);
-                }
-                if (burnRemaining <= 0f) ClearBurn();
-            }
+            if (health > 0f) burn.Tick(deltaTime, burnDamage);
         }
 
         private void Awake()
         {
+            burnDamage = ApplyDamage;
             combatInput = GetComponent<PlayerCombatInput>();
             if (GetComponent<MiningPlayerStats>() != null)
+            {
                 playerUpgrades = FindFirstObjectByType<MiningUpgradeSystem>(FindObjectsInactive.Include);
+                equipmentItems = FindFirstObjectByType<MiningItemSystem>(FindObjectsInactive.Include);
+            }
             health = MaxHealth;
             initializedMaxHealth = MaxHealth;
             if (microBar == null && healthBar != null)
@@ -193,8 +179,7 @@ namespace MiningSimulator.Ores
             }
             bool mode = combatInput != null && combatInput.IsCombatMode;
             if (mode != displayedCombatMode) RefreshLabel();
-            var playerStats = GetComponent<MiningPlayerStats>();
-            if (playerStats != null && playerStats.Level != displayedLevel) RefreshLabel();
+            if (PlayerStats != null && PlayerStats.Level != displayedLevel) RefreshLabel();
             if (healthBar == null) return;
             if (screenSpaceBar) return;
             if (healthCamera == null) healthCamera = Camera.main;
@@ -225,7 +210,7 @@ namespace MiningSimulator.Ores
             displayedCombatMode = combatInput != null && combatInput.IsCombatMode;
             if (healthLabel != null)
             {
-                var player = GetComponent<MiningPlayerStats>();
+                var player = PlayerStats;
                 var monster = GetComponent<MushroomMonster>();
                 int level = player != null ? player.Level : monster != null ? monster.Level : 1;
                 displayedLevel = level;

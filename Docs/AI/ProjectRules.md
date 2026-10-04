@@ -1,5 +1,14 @@
 # Project rules for AI contributors
 
+## Code structure and change workflow
+
+- Inspect the actual runtime owner and serialized references before editing. Implement a focused change, compile in the connected Editor, then verify normal, failure, save/load and teardown paths.
+- Prefer small cohesive classes, clear names, early returns and composition. Use inheritance only for a genuine shared contract; do not add interfaces, managers or wrappers merely to appear object-oriented.
+- Keep item/equipment bonuses in item GameData, purchases in the inventory/economy owner, and UI in presentation components. Player baseline data must not duplicate equipment effects.
+- Preserve serialized field identities, component GUIDs, animation events, localization and existing saves. Migrate additive save fields safely; do not reset user data during validation.
+- Bind and unbind events symmetrically; cache references; avoid per-frame scene-wide searches. Public entry points must validate ownership, capacity and currency before mutating state.
+- Do not rewrite unrelated systems or change SampleScene as part of a code cleanup. Report what was actually verified rather than claiming every feature was tested.
+
 - Work on `main`. Do not create or publish feature branches for this project.
 - Deliver changes as a ZIP preserving paths relative to the project root. Do not include `Assets/Scenes/SampleScene.unity` in a ZIP.
 - Preserve the user's authored scene layout and prefab values. Change a scene only when explicitly requested; use opt-in Editor setup tools for scene authoring.

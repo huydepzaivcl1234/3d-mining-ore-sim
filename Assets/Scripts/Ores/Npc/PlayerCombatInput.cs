@@ -5,7 +5,7 @@ using MiningSimulator.Ores;
 using UnityEngine.EventSystems;
 
 [DisallowMultipleComponent]
-public class PlayerCombatInput : MonoBehaviour
+public partial class PlayerCombatInput : MonoBehaviour
 {
     // Names match the player's authored Player controller.controller on main.
     private const string CombatLayerName = "combat layer";
@@ -13,10 +13,10 @@ public class PlayerCombatInput : MonoBehaviour
     private static readonly int CombatMoveState = Animator.StringToHash("Combat");
     private static readonly int FirstAttackState = Animator.StringToHash("Sword Attack 1");
     private static readonly int SecondAttackState = Animator.StringToHash("Sword Attack 2");
-    private static readonly int ThirdAttackState = Animator.StringToHash("Sword Attack 3");
-    // This controller currently authors two sword attacks. Start every combo
-    // with 1, then alternate to 2 only when the player queues another click.
-    private static readonly string[] AttackStates = { "Sword Attack 1", "Sword Attack 2" };
+    private static readonly int ThirdAttackState = Animator.StringToHash("attack combat 3");
+    // Keep the designer's state names on both body layers. A new combo starts
+    // at 1; each accepted follow-up advances exactly one strike.
+    private static readonly string[] AttackStates = { "Sword Attack 1", "Sword Attack 2", "attack combat 3" };
     private static readonly int ArmedState = Animator.StringToHash("Combat");
     [SerializeField] private Animator animator;
     [Header("Input bindings - keyboard or mouse")]
@@ -59,10 +59,6 @@ public class PlayerCombatInput : MonoBehaviour
     [HideInInspector, Range(0f, 1f), SerializeField] private float hitTime = 0.45f; // Legacy serialized value; contact is set by Animation Events.
     [SerializeField] private Vector3 hitOriginOffset = new Vector3(0f, 1f, 0f);
     [SerializeField] private LayerMask targetLayers = ~0;
-    [Header("Slash SFX per attack (empty = PlayerStatsData.attackSfx)")]
-    [SerializeField] private AudioClip slash1;
-    [SerializeField] private AudioClip slash2;
-    [SerializeField] private AudioClip slash3;
 
     [SerializeField] private ParticleSystem slashDownVfx;
     [SerializeField] private ParticleSystem slashUpVfx;
@@ -85,16 +81,20 @@ public class PlayerCombatInput : MonoBehaviour
     private int lastAttackStateHash;
     private bool returningFromAttack;
     private MiningAudioManager feedbackAudio;
-    private MiningPlayerStatsData Stats => MiningPlayerStats.For(this);
-    public float Damage => Stats != null ? GetComponent<MiningPlayerStats>().Damage : Mathf.Max(0, damage);
+    private MiningPlayerStats playerStats;
+    private MiningPlayerStats PlayerStats => playerStats != null ? playerStats : playerStats = GetComponent<MiningPlayerStats>();
+    private MiningPlayerStatsData Stats => PlayerStats != null ? PlayerStats.Data : null;
+    public float Damage => Stats != null ? PlayerStats.Damage : Mathf.Max(0, damage);
     public float AttackRange => Mathf.Max(0.1f, Stats != null ? Stats.attackRange : attackRange);
     public float AttackAngle => Mathf.Clamp(Stats != null ? Stats.attackAngle : attackAngle, 1, 180);
-    public float AttackSpeed => Mathf.Max(0.1f, Stats != null ? GetComponent<MiningPlayerStats>().AttackSpeed : attackSpeed);
+    public float AttackSpeed => Mathf.Max(0.1f, Stats != null ? PlayerStats.AttackSpeed : attackSpeed);
     private float BlendSeconds => Mathf.Max(0.01f, Stats != null ? Stats.combatBlendSeconds : combatBlendSeconds);
     private Vector3 HitOriginOffset => Stats != null ? Stats.hitOriginOffset : hitOriginOffset;
     private float HitHalfHeight => 0.9f;
     private Vector3 StrikeForward => Vector3.ProjectOnPlane(transform.forward, Vector3.up).normalized;
     private bool hitApplied;
+    private readonly HashSet<MiningCharacterHealth> hitTargets = new HashSet<MiningCharacterHealth>();
+    private GameObject thirdSlashInstance;
     [Header("Free-flow footwork (camera remains independent)")]
     [SerializeField] private bool freeFlowEnabled = true;
     [Range(0f, 1f), SerializeField] private float movingBodyWeight = 0.9f;
@@ -115,9 +115,11 @@ public class PlayerCombatInput : MonoBehaviour
     [SerializeField] private LayerMask lungeBlockingLayers = ~0;
     [Range(0f, 180f), SerializeField] private float maximumStepAngle = 60f;
     [Range(0f, 1f), SerializeField] private float stepStartPhase = 0.1f;
-    [Tooltip("Match the contact Animation Event in attack 1/2. Values are normalized clip time.")]
+    [Tooltip("Match the contact Animation Event in each attack. Values are normalized clip time.")]
     [Range(0f, 1f), SerializeField] private float firstStrikeContactPhase = 0.46f;
     [Range(0f, 1f), SerializeField] private float secondStrikeContactPhase = 0.67f;
+    [Tooltip("Footwork recovery phase for attack 3 only. Damage is exclusively applied by OnSwordStrikeThird.")]
+    [Range(0f, 1f), SerializeField] private float thirdStrikeContactPhase = 0.677f;
     [Range(0f, 1f), SerializeField] private float recoveryDelayPhase = 0.06f;
     [Range(0f, 1f), SerializeField] private float recoveryEndPhase = 0.96f;
     [Min(0.01f), SerializeField] private float attackTransitionSeconds = 0.07f;
@@ -139,65 +141,6 @@ public class PlayerCombatInput : MonoBehaviour
         Mathf.Min(Mathf.Max(0f, lungeExtraRange), Mathf.Max(0f, strikeStepDistance)),
         Mathf.Max(0f, lungeMaximumSpeed) * Mathf.Max(0.01f, lungeSeconds) / AttackSpeed * lungeReachSafety);
 
-    private void ResetFootwork()
-    {
-        stepTarget = null;
-        lungeProgress = lungePlannedDistance = lungeTravelRemaining = 0f;
-        lungeDirection = Vector3.zero;
-        if (movement != null)
-        {
-            movement.CombatMoveMultiplier = 1f;
-            movement.CombatStepVelocity = Vector3.zero;
-        }
-        if (animator != null && footworkLayer >= 0) animator.SetLayerWeight(footworkLayer, 0f);
-    }
-
-    private void UpdateFootwork()
-    {
-        if (animator == null || footworkLayer < 0 || movement == null) return;
-        int layer = animator.GetLayerIndex(CombatLayerName);
-        if (layer < 0) { ResetFootwork(); return; }
-        var state = animator.GetCurrentAnimatorStateInfo(layer);
-        if (animator.IsInTransition(layer) && IsAttackState(animator.GetNextAnimatorStateInfo(layer)))
-            state = animator.GetNextAnimatorStateInfo(layer);
-        bool active = freeFlowEnabled && combatMode && CanUseGameplay() && movement.Grounded && IsAttackState(state);
-        float phase = Mathf.Clamp01(state.normalizedTime);
-        float contact = state.shortNameHash == SecondAttackState ? secondStrikeContactPhase : firstStrikeContactPhase;
-        // Plant the feet through contact, then give locomotion back during recovery.
-        float recoveryStart = Mathf.Min(contact + recoveryDelayPhase, recoveryEndPhase - 0.001f);
-        float recovery = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(recoveryStart, recoveryEndPhase, phase));
-        bool moving = locomotionInput != null && locomotionInput.move.sqrMagnitude > 0.01f;
-        float desired = active ? (moving ? movingBodyWeight : 1f) * (1f - recovery) : 0f;
-        float weight = Mathf.MoveTowards(animator.GetLayerWeight(footworkLayer), desired,
-            Time.deltaTime / Mathf.Max(0.01f, footworkBlendSeconds));
-        animator.SetLayerWeight(footworkLayer, weight);
-        movement.CombatMoveMultiplier = active ? Mathf.Lerp(1f, strikeMovementMultiplier, weight) : 1f;
-        movement.CombatStepVelocity = Vector3.zero;
-        // Acquire only once per strike. Travel has its own short envelope rather
-        // than waiting for a long attack clip, but damage still uses AttackRange.
-        if (active && IsLungeTargetValid(stepTarget) && phase >= stepStartPhase && phase < contact &&
-            lungeProgress < 1f && lungeTravelRemaining > 0f && Time.deltaTime > 0f)
-        {
-            var targetCollider = stepTarget.GetComponent<Collider>();
-            Vector3 origin = transform.TransformPoint(HitOriginOffset);
-            Vector3 toTarget = Vector3.ProjectOnPlane(targetCollider.ClosestPoint(origin) - origin, Vector3.up);
-            float previous = lungeProgress;
-            lungeProgress = Mathf.Clamp01(lungeProgress + Time.deltaTime * AttackSpeed / Mathf.Max(0.01f, lungeSeconds));
-            float travel = CombatLungeMotion.TravelBetween(previous, lungeProgress, lungePlannedDistance);
-            travel = Mathf.Min(Mathf.Min(travel, Mathf.Max(0f, lungeMaximumSpeed) * Time.deltaTime),
-                Mathf.Min(lungeTravelRemaining, Mathf.Max(0f, toTarget.magnitude - LungeStopDistance)));
-            if (toTarget.sqrMagnitude > 0.0001f)
-                lungeDirection = Vector3.Slerp(lungeDirection, toTarget.normalized,
-                    1f - Mathf.Exp(-Time.deltaTime / Mathf.Max(0.01f, lungeDirectionSmoothSeconds))).normalized;
-            // Shift lock retains manual facing; do not pull the player sideways.
-            Vector3 direction = IsShiftLocked ? StrikeForward : lungeDirection;
-            if (Vector3.Angle(StrikeForward, toTarget) <= maximumStepAngle)
-            {
-                movement.CombatStepVelocity = direction * (travel / Time.deltaTime);
-                lungeTravelRemaining -= travel;
-            }
-        }
-    }
     private void OnEnable()
     {
         ResetFootwork();
@@ -206,6 +149,7 @@ public class PlayerCombatInput : MonoBehaviour
     }
     private void OnDisable()
     {
+        EndThirdSlash();
         StopAllCoroutines();
         ResetFootwork();
         toggleCombat?.Disable();
@@ -308,19 +252,16 @@ public class PlayerCombatInput : MonoBehaviour
             if (combatMode && queuedAttack && hitApplied && state.normalizedTime >= comboLinkTime)
             {
                 queuedAttack = false;
-                PlayAttack(layer, state.shortNameHash == FirstAttackState ? 1 : 0);
+                PlayAttack(layer, NextAttackIndex(state.shortNameHash));
             }
             else if (!queuedAttack &&
                      !returningFromAttack && state.normalizedTime >= attackReturnPhase)
             {
                 returningFromAttack = true;
-                if (HasParameter("Move", AnimatorControllerParameterType.Trigger)) animator.SetTrigger("Move");
+                // Attack 2 has no Move transition in the authored controller.
+                // Return explicitly without rewriting the user's Animator.
+                animator.CrossFadeInFixedTime("Combat", attackTransitionSeconds, layer, 0f);
             }
-            // The third imported clip has no authored contact event. Use its
-            // normalized strike frame once; existing clips retain their events.
-            if (state.shortNameHash == ThirdAttackState &&
-                state.normalizedTime >= 0.45f && !hitApplied)
-                ApplyAnimationHit(ThirdAttackState, true);
         }
         int armsLayer = animator.GetLayerIndex("Arms Layer");
         bool swordReady = armsLayer < 0 || (!animator.IsInTransition(armsLayer) &&
@@ -329,6 +270,13 @@ public class PlayerCombatInput : MonoBehaviour
             state.shortNameHash != CombatMoveState || !pressed) return;
         queuedAttack = false;
         PlayAttack(layer, 0);
+    }
+
+    private static int NextAttackIndex(int stateHash)
+    {
+        for (int i = 0; i < AttackStates.Length; i++)
+            if (Animator.StringToHash(AttackStates[i]) == stateHash) return (i + 1) % AttackStates.Length;
+        return 0;
     }
 
     private void PlayAttack(int layer, int index)
@@ -401,128 +349,6 @@ public class PlayerCombatInput : MonoBehaviour
             animator.SetTrigger("Move");
     }
 
-    private bool IsAimValid(MushroomMonster monster)
-    {
-        if (monster == null || !monster.isActiveAndEnabled || monster.Health == null ||
-            monster.Health.Health <= 0f) return false;
-        return IsAimColliderInRange(monster.GetComponent<Collider>(), out _);
-    }
-
-    private bool IsAimColliderInRange(Collider collider, out float distanceSquared)
-        => IsColliderInRange(collider, AttackRange, out distanceSquared);
-
-    private bool IsColliderInRange(Collider collider, float range, out float distanceSquared)
-    {
-        distanceSquared = float.PositiveInfinity;
-        if (collider == null || !collider.enabled || collider.isTrigger ||
-            (targetLayers.value & (1 << collider.gameObject.layer)) == 0) return false;
-        Vector3 direction = collider.ClosestPoint(transform.TransformPoint(HitOriginOffset)) -
-            transform.TransformPoint(HitOriginOffset);
-        if (Mathf.Abs(direction.y) > HitHalfHeight) return false;
-        direction.y = 0f;
-        distanceSquared = direction.sqrMagnitude;
-        return distanceSquared <= range * range;
-    }
-
-    private MushroomMonster FindNearestMonster()
-        => FindNearestMonsterInRange(AttackRange, false);
-
-    private MushroomMonster FindNearestMonsterInRange(float range, bool forLunge)
-    {
-        MushroomMonster nearest = null;
-        float distance = float.PositiveInfinity;
-        Vector3 origin = transform.TransformPoint(HitOriginOffset);
-        int count = Physics.OverlapCapsuleNonAlloc(origin - Vector3.up * HitHalfHeight,
-            origin + Vector3.up * HitHalfHeight, range, softAimHits, targetLayers,
-            QueryTriggerInteraction.Ignore);
-        for (int i = 0; i < count; i++)
-        {
-            var collider = softAimHits[i];
-            var monster = collider.GetComponentInParent<MushroomMonster>();
-            if (monster == null || !monster.isActiveAndEnabled || monster.Health == null ||
-                monster.Health.Health <= 0f || !IsColliderInRange(collider, range, out float candidate) ||
-                forLunge && !IsLungeTargetValid(monster)) continue;
-            if (candidate < distance) { distance = candidate; nearest = monster; }
-        }
-        // A full NonAlloc buffer is not guaranteed to contain the nearest collider.
-        // The existing monster registry provides a non-allocating overflow fallback.
-        if (count == softAimHits.Length)
-            foreach (var monster in MushroomMonster.Monsters)
-            {
-                if (monster == null || !monster.isActiveAndEnabled || monster.Health == null || monster.Health.Health <= 0f ||
-                    forLunge && !IsLungeTargetValid(monster) || !IsColliderInRange(monster.GetComponent<Collider>(), range,
-                        out float candidate) || candidate >= distance) continue;
-                distance = candidate;
-                nearest = monster;
-            }
-        return nearest;
-    }
-
-    private float LungeStopDistance => Mathf.Max(targetClearance, AttackRange * lungeStopRangeFraction);
-
-    private void BeginLunge()
-    {
-        lungeProgress = lungePlannedDistance = lungeTravelRemaining = 0f;
-        stepTarget = freeFlowEnabled ? FindNearestMonsterInRange(LungeAcquireRange, true) : null;
-        lungeDirection = StrikeForward;
-        if (stepTarget == null) return;
-        Vector3 origin = transform.TransformPoint(HitOriginOffset);
-        float gap = Vector3.ProjectOnPlane(stepTarget.GetComponent<Collider>().ClosestPoint(origin) - origin,
-            Vector3.up).magnitude;
-        lungePlannedDistance = Mathf.Min(Mathf.Max(0f, strikeStepDistance), Mathf.Max(0f, gap - LungeStopDistance));
-        lungeTravelRemaining = lungePlannedDistance;
-    }
-
-    private bool IsLungeTargetValid(MushroomMonster monster)
-    {
-        if (monster == null || !monster.isActiveAndEnabled || monster.Health == null || monster.Health.Health <= 0f)
-            return false;
-        var collider = monster.GetComponent<Collider>();
-        if (!IsColliderInRange(collider, LungeAcquireRange, out _)) return false;
-        Vector3 origin = transform.TransformPoint(HitOriginOffset);
-        Vector3 delta = collider.ClosestPoint(origin) - origin;
-        if (Vector3.Angle(StrikeForward, Vector3.ProjectOnPlane(delta, Vector3.up)) > maximumStepAngle) return false;
-        int count = Physics.RaycastNonAlloc(origin, delta.normalized, lungeOcclusionHits, delta.magnitude,
-            lungeBlockingLayers, QueryTriggerInteraction.Ignore);
-        if (count == lungeOcclusionHits.Length) return false;
-        for (int i = 0; i < count; i++)
-        {
-            Transform obstacle = lungeOcclusionHits[i].collider.transform;
-            if (obstacle == transform || obstacle.IsChildOf(transform) || obstacle == monster.transform ||
-                obstacle.IsChildOf(monster.transform)) continue;
-            return false;
-        }
-        return true;
-    }
-
-    private void BeginSoftAim()
-    {
-        if (IsShiftLocked) { StopSoftAim(); return; }
-        softAimElapsed = 0f;
-        softAimStartRotation = transform.rotation;
-        attackAimTarget = stepTarget != null ? stepTarget : FindBestSoftAimTarget();
-        softAimActive = attackAimTarget != null;
-        if (movement != null) movement.ExternalFacing = softAimActive;
-    }
-
-    private MushroomMonster FindBestSoftAimTarget()
-    {
-        return FindNearestMonster();
-    }
-
-    private void ClearAim()
-    {
-        aimedMonster = null;
-        StopSoftAim();
-    }
-
-    private void StopSoftAim()
-    {
-        attackAimTarget = null;
-        softAimActive = false;
-        if (movement != null) movement.ExternalFacing = IsShiftLocked || wasAttacking && !hitApplied;
-    }
-
     private void TrackAttack(int layer)
     {
         var state = animator.GetCurrentAnimatorStateInfo(layer);
@@ -536,16 +362,15 @@ public class PlayerCombatInput : MonoBehaviour
         {
             hitApplied = false;
             returningFromAttack = false;
-            AudioClip slash = state.shortNameHash == FirstAttackState ? slash1 :
-                state.shortNameHash == SecondAttackState ? slash2 : slash3;
             if (feedbackAudio != null)
-                feedbackAudio.PlaySfx(slash != null ? slash : Stats != null ? Stats.attackSfx : null,
+                feedbackAudio.PlaySfx(Stats != null ? Stats.attackSfx : null,
                     Stats != null ? Stats.attackSfxVolume : 1f);
         }
         wasAttacking = active;
         lastAttackStateHash = active ? state.shortNameHash : 0;
         if (!active)
         {
+            EndThirdSlash();
             if (movement != null && !softAimActive) movement.ExternalFacing = IsShiftLocked;
             returningFromAttack = false;
             queuedAttack = false;
@@ -560,6 +385,11 @@ public class PlayerCombatInput : MonoBehaviour
     // Called by events on the imported sword clips, exactly when the blade reaches the target.
     public void OnSwordStrikeDown() => ApplyAnimationHit(FirstAttackState, true);
     public void OnSwordSweepUp() => ApplyAnimationHit(SecondAttackState, true);
+    public void OnSwordStrikeThird()
+    {
+        EndThirdSlash();
+        ApplyAnimationHit(ThirdAttackState, true);
+    }
 
     private void ApplyAnimationHit(int expectedState, bool sweep)
     {
@@ -571,196 +401,14 @@ public class PlayerCombatInput : MonoBehaviour
             animator.GetNextAnimatorStateInfo(layer).shortNameHash == expectedState;
         if (!current && !next) return;
         hitApplied = true;
-        if (sweep) ApplySweepHit();
+        float multiplier = expectedState == ThirdAttackState && Stats != null
+            ? 1f + Mathf.Max(0f, Stats.thirdAttackDamageBonusPercent) * .01f : 1f;
+        if (sweep) ApplySweepHit(multiplier);
         else ApplyHit();
-    }
-
-    private void ApplyHit()
-    {
-        Vector3 origin = transform.TransformPoint(HitOriginOffset);
-        MiningCharacterHealth closest = null;
-        Vector3 closestPoint = origin;
-        float closestDistance = float.PositiveInfinity;
-        // Broad phase covers a vertical band; horizontal angle must not reject
-        // mushrooms simply because their collider is below the player's fist.
-        foreach (var collider in Physics.OverlapCapsule(origin - Vector3.up * HitHalfHeight,
-                     origin + Vector3.up * HitHalfHeight, AttackRange, targetLayers,
-                     QueryTriggerInteraction.Ignore))
-        {
-            var target = collider.GetComponentInParent<MiningCharacterHealth>();
-            if (target == null || target.Health <= 0 || target.transform == transform || target.transform.IsChildOf(transform)) continue;
-            Vector3 point = collider.ClosestPoint(origin);
-            Vector3 direction = point - origin;
-            if (Mathf.Abs(direction.y) > HitHalfHeight) continue;
-            direction.y = 0f;
-            if (direction.sqrMagnitude > AttackRange * AttackRange) continue;
-            if (direction.sqrMagnitude > 0.0001f &&
-                Vector3.Angle(StrikeForward, direction) > Mathf.Min(30f, AttackAngle) * 0.5f) continue;
-            if (direction.sqrMagnitude < closestDistance)
-            {
-                closest = target;
-                closestDistance = direction.sqrMagnitude;
-                closestPoint = point;
-            }
-        }
-        if (closest != null) DamageTarget(closest, closestPoint);
-    }
-
-    private void ApplySweepHit()
-    {
-        Vector3 origin = transform.TransformPoint(HitOriginOffset);
-        var hitTargets = new HashSet<MiningCharacterHealth>();
-        foreach (var collider in Physics.OverlapCapsule(origin - Vector3.up * HitHalfHeight,
-                     origin + Vector3.up * HitHalfHeight, AttackRange, targetLayers,
-                     QueryTriggerInteraction.Ignore))
-        {
-            var target = collider.GetComponentInParent<MiningCharacterHealth>();
-            if (target == null || target.Health <= 0 || target.transform == transform ||
-                target.transform.IsChildOf(transform) || hitTargets.Contains(target)) continue;
-            Vector3 point = collider.ClosestPoint(origin);
-            Vector3 direction = point - origin;
-            if (Mathf.Abs(direction.y) > HitHalfHeight) continue;
-            direction.y = 0f;
-            if (direction.sqrMagnitude > AttackRange * AttackRange) continue;
-            if (direction.sqrMagnitude > 0.0001f &&
-                Vector3.Angle(StrikeForward, direction) > AttackAngle * 0.5f) continue;
-            hitTargets.Add(target);
-            DamageTarget(target, point);
-        }
     }
 
     private bool CanUseGameplay() => Time.timeScale > 0f &&
         (ownHealth == null || ownHealth.Health > 0f) &&
         (panels == null || !panels.BlocksGameplay);
 
-    private void DamageTarget(MiningCharacterHealth target, Vector3 point)
-    {
-        if (Damage <= 0 || target == null || target.Health <= 0f) return;
-        float dealt = target.DealDamage(Damage);
-        if (dealt <= 0f) return;
-        if (target.GetComponent<MushroomMonster>() != null && Stats != null)
-            MiningDamagePopup.Show(dealt, point, Stats.damagePopup);
-        if (Stats != null)
-        {
-            if (ownHealth != null && ownHealth.Health > 0f)
-                ownHealth.Heal(dealt * Mathf.Clamp(Stats.lifeStealPercent, 0f, 100f) * 0.01f);
-            target.ApplyBurn(Stats.burnDamagePerTick, Stats.burnTickSeconds, Stats.burnDurationSeconds);
-        }
-        var impactPrefab = Stats != null ? Stats.attackImpactVfxPrefab : null;
-        if (impactPrefab == null) return;
-        Vector3 towardPlayer = transform.position - point;
-        towardPlayer.y = 0f;
-        if (towardPlayer.sqrMagnitude < 0.0001f) towardPlayer = -StrikeForward;
-        SpawnEffect(impactPrefab, point, Quaternion.LookRotation(towardPlayer, Vector3.up));
-    }
-
-    private GameObject SpawnEffect(GameObject prefab, Vector3 position, Quaternion rotation)
-    {
-        var effect = Instantiate(prefab, position, rotation);
-        PlayAndDestroyEffect(effect);
-        return effect;
-    }
-
-    private void PlayAndDestroyEffect(GameObject effect)
-    {
-        // The imported Free Slash VFX prefab disables Play On Awake on its
-        // particle systems; explicitly start it at the animation contact event.
-        var particles = effect.GetComponent<ParticleSystem>();
-        if (particles != null) particles.Play(true);
-        float lifetime = Stats != null ? Stats.impactVfxLifetime : 2f;
-        Destroy(effect, Mathf.Max(0.1f, lifetime));
-    }
-
-    public void OnSlashDownStart()
-    {
-        PlaySlashEffects(slashDownVfx, slashDownEffects);
-    }
-
-    public void OnSlashUpStart()
-    {
-        PlaySlashEffects(slashUpVfx, slashUpEffects);
-    }
-
-    private void PlaySlashEffects(ParticleSystem first, List<SlashVfxCue> additional)
-    {
-        if (!combatMode || !CanUseGameplay()) return;
-        if (first != null) PlaySlashEffect(first);
-        if (additional == null) return;
-        foreach (var cue in additional)
-        {
-            if (cue.effect == null) continue;
-            if (cue.delay <= 0f) PlaySlashEffect(cue.effect);
-            else StartCoroutine(PlaySlashEffectAfterDelay(cue.effect, cue.delay / AttackSpeed));
-        }
-    }
-
-    private System.Collections.IEnumerator PlaySlashEffectAfterDelay(ParticleSystem effect, float delay)
-    {
-        yield return new WaitForSeconds(delay);
-        if (combatMode && CanUseGameplay() && effect != null) PlaySlashEffect(effect);
-    }
-
-    private static void PlaySlashEffect(ParticleSystem effect)
-    {
-        // World-space particles keep the emitted slash in place even when the
-        // scene emitter is parented to the moving hand or player.
-        foreach (var system in effect.GetComponentsInChildren<ParticleSystem>(true))
-        {
-            var main = system.main;
-            main.simulationSpace = ParticleSystemSimulationSpace.World;
-        }
-        if (!effect.gameObject.activeSelf) effect.gameObject.SetActive(true);
-        effect.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-        effect.Play(true);
-    }
-
-
-
-
-    private void OnDrawGizmosSelected()
-    {
-        Vector3 origin = transform.TransformPoint(HitOriginOffset);
-        if (freeFlowEnabled)
-        {
-            Gizmos.color = new Color(0f, .85f, 1f, 1f);
-            float range = LungeAcquireRange;
-            Vector3 last = origin + Quaternion.AngleAxis(-maximumStepAngle, Vector3.up) * StrikeForward * range;
-            Gizmos.DrawLine(origin, last);
-            for (int i = 1; i <= 48; i++)
-            {
-                Vector3 point = origin + Quaternion.AngleAxis(-maximumStepAngle + maximumStepAngle * 2f * i / 48f,
-                    Vector3.up) * StrikeForward * range;
-                Gizmos.DrawLine(last, point);
-                last = point;
-            }
-            Gizmos.DrawLine(origin, last);
-            if (Application.isPlaying && stepTarget != null)
-                Gizmos.DrawLine(origin, stepTarget.transform.position + Vector3.up);
-#if UNITY_EDITOR
-            UnityEditor.Handles.Label(origin + StrikeForward * range,
-                $"Lunge {range:0.00}m | Hit {AttackRange:0.00}m | Step max {strikeStepDistance:0.00}m");
-#endif
-        }
-        Gizmos.color = Application.isPlaying && wasAttacking && !hitApplied ? Color.red : Color.yellow;
-        // Display the same height band used by the fist hit query.
-        Gizmos.DrawLine(origin - Vector3.up * HitHalfHeight, origin + Vector3.up * HitHalfHeight);
-        Vector3 previous = origin + Quaternion.AngleAxis(-AttackAngle * 0.5f, Vector3.up) * StrikeForward * AttackRange;
-        Gizmos.DrawLine(origin, previous);
-        Vector3 up = Vector3.up * HitHalfHeight;
-        Gizmos.DrawLine(origin - up, previous - up);
-        Gizmos.DrawLine(origin + up, previous + up);
-        for (int i = 1; i <= 32; i++)
-        {
-            Vector3 point = origin + Quaternion.AngleAxis(-AttackAngle * 0.5f + AttackAngle * i / 32f,
-                Vector3.up) * StrikeForward * AttackRange;
-            Gizmos.DrawLine(previous, point);
-            Gizmos.DrawLine(previous + up, point + up);
-            Gizmos.DrawLine(previous - up, point - up);
-            if (i % 8 == 0) Gizmos.DrawLine(point - up, point + up);
-            previous = point;
-        }
-        Gizmos.DrawLine(origin, previous);
-        Gizmos.DrawLine(origin - up, previous - up);
-        Gizmos.DrawLine(origin + up, previous + up);
-    }
 }

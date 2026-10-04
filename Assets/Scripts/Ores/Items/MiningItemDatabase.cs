@@ -142,6 +142,7 @@ namespace MiningSimulator.Ores
                 {
                     continue;
                 }
+                if (GetWeightedSelectionChance(candidate) <= 0f) continue;
                 roll -= GetWeightedSelectionChance(candidate);
                 if (roll <= 0f)
                 {
