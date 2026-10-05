@@ -112,49 +112,28 @@ namespace MiningSimulator.Ores
             }
 
             Ore bestOre = null;
-            float bestPathDistance = float.PositiveInfinity;
             float bestDirectSqrDistance = float.PositiveInfinity;
-            bool canComparePaths = MiningNavigation.PathfindingAvailable;
+            bool canCheckApproach = MiningNavigation.PathfindingAvailable;
 
             foreach (Ore ore in activeOres)
             {
                 if (ore == null || ore == excludedOre || ore == additionallyExcludedOre ||
+                    miner.IsNavigationTargetCoolingDown(ore) ||
                     !ore.CanAcceptMiner(miner, miningPower))
                 {
                     continue;
                 }
 
                 float directSqrDistance = ore.SqrDistanceToSurface(origin);
-                if (!canComparePaths)
+                if (directSqrDistance >= bestDirectSqrDistance) continue;
+                if (canCheckApproach && !MiningNavigation.TryGetOreApproach(ore, origin, miner.NavigationRadius,
+                        out _, out _, miner.NavigationMiningReach))
                 {
-                    if (directSqrDistance < bestDirectSqrDistance)
-                    {
-                        bestOre = ore;
-                        bestDirectSqrDistance = directSqrDistance;
-                    }
-
-                    continue;
-                }
-
-                if (!MiningNavigation.TryGetOreApproach(ore, origin, miner.NavigationRadius,
-                        out _, out float pathDistance))
-                {
-                    // A backend exists, so failure means the ore is currently unreachable.
-                    continue;
-                }
-
-                const float tieTolerance = 0.01f;
-                bool shorterPath = pathDistance < bestPathDistance - tieTolerance;
-                bool equalPathButCloser = Mathf.Abs(pathDistance - bestPathDistance) <=
-                                          tieTolerance &&
-                                          directSqrDistance < bestDirectSqrDistance;
-                if (!shorterPath && !equalPathButCloser)
-                {
+                    // No capsule-sized stand point is available beside this ore.
                     continue;
                 }
 
                 bestOre = ore;
-                bestPathDistance = pathDistance;
                 bestDirectSqrDistance = directSqrDistance;
             }
 

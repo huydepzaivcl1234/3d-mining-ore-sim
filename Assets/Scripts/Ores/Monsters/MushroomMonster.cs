@@ -57,13 +57,15 @@ namespace MiningSimulator.Ores
         private int chaseWaypoint;
         private float nextRepath;
         private Vector3 lastPathGoal;
+        private bool chasePathPending;
+        private int chaseRouteRevision;
         [Header("Navigation (collision-aware, including boss size)")]
         [Min(.05f), SerializeField] private float chaseRepathSeconds = .4f;
-        [Min(.1f), SerializeField] private float avoidanceLookAhead = 1.5f;
-        [Min(.05f), SerializeField] private float avoidanceHoldSeconds = .5f;
-        private float avoidanceUntil;
-        private Vector3 avoidanceHeading;
-        private float avoidanceSide;
+        [Min(4), SerializeField] private int chaseStandDirections = 16;
+        [Range(.1f, .95f), SerializeField] private float chaseStandRangeFraction = .75f;
+        [Range(.1f, 1f), SerializeField] private float chaseStandMaximumRangeFraction = .95f;
+        [Min(.1f), SerializeField, HideInInspector] private float avoidanceLookAhead = 1.5f;
+        [Min(.05f), SerializeField, HideInInspector] private float avoidanceHoldSeconds = .5f;
         private MonsterSpawnZone zone;
         private Vector3 destination;
         private float nextDecision, nextAttack, verticalSpeed;
@@ -141,6 +143,8 @@ namespace MiningSimulator.Ores
         }
         public void Initialize(MonsterSpawnZone owner, MiningCharacterHealth player, bool boss = false)
         {
+            MiningNavGrid.Instance?.Cancel(this); chasePathPending = false;
+            chasePath.Clear(); chaseWaypoint = 0; nextRepath = 0; chaseRouteRevision = -1;
             zone = owner;
             target = player;
             targetCollider = player != null ? player.GetComponent<Collider>() : null;
@@ -365,7 +369,7 @@ namespace MiningSimulator.Ores
                 }
                 else if (delta.magnitude > (chasing ? EffectiveAttackRange : 0.3f))
                 {
-                    movement = ChaseDirection(delta) * moveSpeed;
+                    movement = ChaseDirection(chasing) * moveSpeed;
                     Play(movement.sqrMagnitude > 0f ? "Walk" : "Idle");
                 }
                 else Play("Idle");
@@ -419,69 +423,57 @@ namespace MiningSimulator.Ores
             }
             return true;
         }
-        private Vector3 ChaseDirection(Vector3 direct)
+        private Vector3 ChaseDirection(bool chasing)
         {
-            // Outside the bake no NavMesh path can start yet. Walk physically to
-            // the entry point; the CharacterController still collides with scenery.
-            if (zone != null && !zone.IsInsideMine(transform.position))
-            {
-                chasePath.Clear();
-                nextRepath = 0f;
-                return zone.TryGetMineEntryPoint(transform.position, out Vector3 entry)
-                    ? AvoidMineables(Vector3.ProjectOnPlane(entry - transform.position, Vector3.up).normalized) : Vector3.zero;
-            }
-            if (Time.time >= nextRepath || (lastPathGoal - destination).sqrMagnitude > 1f)
+            var grid = MiningNavGrid.Instance;
+            if (grid == null || !grid.HasBaked) return Vector3.zero;
+            // Skin width is collision tolerance, not extra body size. Inflating a small
+            // monster with miner clearance can trap it beside an otherwise clear portal.
+            float radius = motor.radius * HitScale;
+            float height = motor.height * Mathf.Abs(transform.lossyScale.y);
+            if (!chasePathPending && ((Time.time >= nextRepath && chaseWaypoint >= chasePath.Count) ||
+                (lastPathGoal - destination).sqrMagnitude > 1f || chaseRouteRevision != grid.Revision))
             {
                 nextRepath = Time.time + chaseRepathSeconds;
                 lastPathGoal = destination;
-                chaseWaypoint = 0;
-                MiningNavigation.TryFindPath(transform.position, destination, chasePath);
+                Vector3 goal = destination;
+                if (zone != null && !zone.IsInsideMine(transform.position) && zone.TryGetMineEntryPoint(transform.position, out Vector3 entry)) goal = entry;
+                if (chasing && !TryGetChaseStandPoint(grid, goal, radius, height, out goal)) return Vector3.zero;
+                chasePathPending = true;
+                grid.RequestPath(this, transform.position, goal, (success, route) =>
+                {
+                    chasePathPending = false; if (!isActiveAndEnabled) return;
+                    chasePath.Clear(); chaseWaypoint = 0; chaseRouteRevision = grid.Revision;
+                    if (success) chasePath.AddRange(route);
+                }, radius, height);
             }
             while (chaseWaypoint < chasePath.Count)
             {
                 Vector3 delta = Vector3.ProjectOnPlane(chasePath[chaseWaypoint] - transform.position, Vector3.up);
-                if (delta.sqrMagnitude > 0.3f * 0.3f) return AvoidMineables(delta.normalized);
+                if (delta.sqrMagnitude > 0.3f * 0.3f)
+                {
+                    Vector3 next = transform.position + delta.normalized * Mathf.Min(delta.magnitude, radius);
+                    if (grid.IsSegmentClear(transform.position, next, radius, height)) return delta.normalized;
+                    chasePath.Clear(); nextRepath = 0; return Vector3.zero;
+                }
                 chaseWaypoint++;
             }
-            // Off-mesh victims and temporary carving must not freeze pursuit.
-            return AvoidMineables(direct.normalized);
+            return Vector3.zero;
         }
-        private Vector3 AvoidMineables(Vector3 desired)
+        private bool TryGetChaseStandPoint(MiningNavGrid grid, Vector3 victim, float radius, float height, out Vector3 point)
         {
-            if (desired.sqrMagnitude < .001f) return Vector3.zero;
-            float radius = motor.radius * HitScale + motor.skinWidth + .06f;
-            float probe = Mathf.Max(radius, Mathf.Min(avoidanceLookAhead * HitScale,
-                Vector3.ProjectOnPlane(destination - transform.position, Vector3.up).magnitude));
-            if (MiningNavigation.IsMineableSegmentClear(transform.position,
-                transform.position + desired * probe, radius))
+            point = victim;
+            Vector3 toward = Vector3.ProjectOnPlane(transform.position - victim, Vector3.up).normalized;
+            int directions = Mathf.Max(4, chaseStandDirections);
+            for (int step = 0; step < directions; step++)
             {
-                avoidanceUntil = 0f;
-                return desired;
+                Vector3 candidate = victim + Quaternion.AngleAxis(step * 360f / directions, Vector3.up) * toward * (EffectiveAttackRange * chaseStandRangeFraction);
+                if (!grid.TryProject(candidate, grid.StandProjectionRadius, out Vector3 projected)) continue;
+                if (Vector3.ProjectOnPlane(projected - victim, Vector3.up).magnitude > EffectiveAttackRange * chaseStandMaximumRangeFraction ||
+                    !grid.IsPointClear(projected, radius, height)) continue;
+                point = projected; return true;
             }
-            if (Time.time < avoidanceUntil && MiningNavigation.IsMineableSegmentClear(
-                transform.position, transform.position + avoidanceHeading * probe, radius)) return avoidanceHeading;
-            float best = float.NegativeInfinity;
-            Vector3 heading = Vector3.zero;
-            for (int step = 1; step <= 6; step++)
-            {
-                for (int side = -1; side <= 1; side += 2)
-                {
-                    Vector3 candidate = Quaternion.AngleAxis(step * 30f * side, Vector3.up) * desired;
-                    if (!MiningNavigation.IsMineableSegmentClear(transform.position,
-                        transform.position + candidate * probe, radius)) continue;
-                    float score = Vector3.Dot(candidate, desired) + (side == avoidanceSide ? .15f : 0f);
-                    if (score <= best) continue;
-                    best = score;
-                    heading = candidate;
-                }
-            }
-            if (heading.sqrMagnitude > .001f)
-            {
-                avoidanceSide = Mathf.Sign(Vector3.Cross(desired, heading).y);
-                avoidanceHeading = heading;
-                avoidanceUntil = Time.time + avoidanceHoldSeconds;
-            }
-            return heading;
+            return false;
         }
         private bool IsMinerTargetValid() => targetMiner != null && targetMiner.isActiveAndEnabled &&
             !targetMiner.IsStunned &&
@@ -515,6 +507,7 @@ namespace MiningSimulator.Ores
 
         private void OnDisable()
         {
+            MiningNavGrid.Instance?.Cancel(this); chasePathPending = false;
             OreActorTraversal.UnregisterActor(gameObject);
             if (animator != null) animator.speed = baseAnimatorSpeed;
             if (groundWarning != null) groundWarning.Hide();

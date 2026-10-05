@@ -260,7 +260,11 @@ namespace MiningSimulator.Ores
             ResetDurability();
         }
 
-        private void OnEnable() => OreActorTraversal.RegisterOre(this);
+        private void OnEnable()
+        {
+            OreActorTraversal.RegisterOre(this);
+            if (Application.isPlaying) MiningGridObstacle.Ensure(this);
+        }
 
         public void SetData(OreData oreData)
         {

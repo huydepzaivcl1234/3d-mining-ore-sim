@@ -28,6 +28,7 @@ namespace MiningSimulator.Ores
         private bool hasLanded;
         private float damageRemainder;
         private readonly Dictionary<MiningNpc, int> reservedMiners = new();
+        private void OnEnable() { if (Application.isPlaying) MiningGridObstacle.Ensure(this); }
 
         public LuckyBlockType Type => type;
         public LuckyBlockVariantData Variant => variant;

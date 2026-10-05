@@ -47,8 +47,7 @@ namespace MiningSimulator.Ores
             }
             else if (hasMoveTarget)
             {
-                // Gray direct line: no global route is currently available, so this NPC is using
-                // reactive steering. It makes an unbaked/disconnected navigation area obvious.
+                // Gray line is the requested destination, not a movement fallback.
                 Gizmos.color = inFinalApproach ? Color.green : Color.gray;
                 Gizmos.DrawLine(routePosition, desiredMoveTarget + Vector3.up * 0.08f);
             }
@@ -64,7 +63,7 @@ namespace MiningSimulator.Ores
             string sourceLabel = inFinalApproach
                 ? $"{currentPathSource} final approach"
                 : currentPathSource == MiningPathSource.None
-                ? "Reactive fallback"
+                ? (pathPending ? "A* queued" : "Waiting for valid A* route")
                 : currentPathSource.ToString();
             Handles.Label(currentPosition + Vector3.up * 1.25f,
                 $"Path: {sourceLabel}\nWaypoint: {pathWaypointIndex}/{currentPath.Count}");

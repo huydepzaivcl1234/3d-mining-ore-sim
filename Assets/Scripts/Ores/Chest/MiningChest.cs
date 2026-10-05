@@ -111,6 +111,7 @@ namespace MiningSimulator.Ores
             foreach (MiningChest chest in ActiveChests)
             {
                 if (chest == null || chest == excluded || !chest.CanAcceptMiner(miner, miningPower) ||
+                    miner.IsNavigationTargetCoolingDown(chest) ||
                     Mathf.Abs(chest.transform.position.y - position.y) > chest.npcMaxVerticalTargetDistance)
                     continue;
                 float distance = chest.SqrDistanceToSurface(position);
@@ -170,6 +171,7 @@ namespace MiningSimulator.Ores
 
         private void OnEnable()
         {
+            if (Application.isPlaying) MiningGridObstacle.Ensure(this);
             if (Application.isPlaying && gameObject.scene.IsValid() && !ActiveChests.Contains(this))
                 ActiveChests.Add(this);
         }

@@ -147,38 +147,31 @@ namespace MiningSimulator.Ores
 
         private Vector3 GetPathTargetPosition(Vector3 currentPosition)
         {
-            if (targetChest != null)
-                return targetChest.GetClosestSurfacePoint(currentPosition);
-            if (targetLuckyBlock != null)
+            Component target = targetOre != null ? (Component)targetOre : targetChest != null ? targetChest : targetLuckyBlock;
+            if (target == null || !MiningNavigation.PathfindingAvailable) return currentPosition;
+            float reach = NavigationMiningReach;
+            if (approachTarget == target && SqrDistanceToTargetSurface(oreApproachPoint) <= reach * reach &&
+                MiningNavGrid.Instance.IsPointClear(oreApproachPoint, NavigationRadius))
+                return oreApproachPoint;
+            Bounds bounds = new(target.transform.position, Vector3.zero);
+            bool found = false;
+            foreach (Collider collider in target.GetComponentsInChildren<Collider>())
             {
-                return targetLuckyBlock.GetMiningStandPosition(
-                    reservedSlot, npcData.ColliderRadius, npcData.StandSlotSpacingPadding);
+                if (!collider.enabled || collider.isTrigger) continue;
+                if (!found) bounds = collider.bounds; else bounds.Encapsulate(collider.bounds);
+                found = true;
             }
-
-            if (targetOre == null) return transform.position;
-            // Route arrival and mining reach are different thresholds. Close the last gap
-            // instead of braking at a stand point just outside the damage range.
-            float finalReach = npcData.MiningRange + npcData.StoppingDistance;
-            if (targetOre.SqrDistanceToSurface(currentPosition) <= finalReach * finalReach)
-                return targetOre.GetClosestSurfacePoint(currentPosition);
-            // Retain the chosen side while moving around an ore. Re-selecting relative to
-            // our new heading every repath can move the goal around the same rock forever.
-            bool refreshApproach = approachOre != targetOre;
-            if (!refreshApproach && Time.time >= nextApproachRefresh)
-            {
-                nextApproachRefresh = Time.time + repathInterval;
-                refreshApproach = !MiningNavigation.IsMineableSegmentClear(oreApproachPoint,
-                    oreApproachPoint + Vector3.forward * .05f, NavigationRadius, targetOre);
-            }
-            if (refreshApproach)
-            {
-                approachOre = targetOre;
-                nextApproachRefresh = Time.time + repathInterval;
-                oreApproachPoint = MiningNavigation.TryGetOreApproach(targetOre, currentPosition,
-                    NavigationRadius, out Vector3 approach, out _)
-                    ? approach : targetOre.GetClosestSurfacePoint(currentPosition);
-            }
-            return oreApproachPoint;
+            if (found && MiningNavigation.TryGetApproach(bounds, currentPosition, NavigationRadius, reach, out Vector3 point,
+                SqrDistanceToTargetSurface, GetClosestTargetSurface))
+            { approachTarget = target; oreApproachPoint = point; return point; }
+            return currentPosition;
+        }
+        private Vector3 GetClosestTargetSurface(Vector3 position)
+        {
+            if (targetOre != null) return targetOre.GetClosestSurfacePoint(position);
+            if (targetChest != null) return targetChest.GetClosestSurfacePoint(position);
+            Collider collider = targetLuckyBlock != null ? targetLuckyBlock.GetComponent<Collider>() : null;
+            return collider != null ? collider.ClosestPoint(position) : GetTargetPosition();
         }
 
         /// <summary>Prevents runtime ore placement on or directly beside an active miner.</summary>

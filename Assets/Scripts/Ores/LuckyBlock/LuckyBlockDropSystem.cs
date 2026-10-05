@@ -68,7 +68,7 @@ namespace MiningSimulator.Ores
             foreach (LuckyBlock block in activeBlocks)
             {
                 if (block == null || block == excludedBlock ||
-                    !block.CanAcceptMiner(miner, miningPower))
+                    !block.CanAcceptMiner(miner, miningPower) || miner.IsNavigationTargetCoolingDown(block))
                 {
                     continue;
                 }

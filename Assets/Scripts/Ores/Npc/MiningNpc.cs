@@ -88,16 +88,15 @@ namespace MiningSimulator.Ores
         [SerializeField, Min(0f)] private float groundClampEpsilon = 0.01f;
 
         [Header("Global Pathfinding")]
-        [Tooltip("Routes through MiningNavigation for the actual shortest route to the target instead of only reacting to whatever is directly ahead. Uses Unity NavMesh when a MiningNavMeshBuilder exists, otherwise the MiningNavGrid A* fallback, otherwise the old direct-line reactive steering.")]
-        [SerializeField] private bool useGlobalPathfinding = true;
+        [SerializeField, HideInInspector] private bool useGlobalPathfinding = true;
         [Tooltip("How far from the miner / its stand position the NavMesh query may search for a valid point on the mesh. A little slack avoids failed queries near a NavMesh edge.")]
-        [Min(0.1f)][SerializeField] private float navMeshSampleRadius = 2f;
+        [Min(0.1f)][SerializeField, HideInInspector] private float navMeshSampleRadius = 2f;
         [Tooltip("Minimum time between path requests to MiningNavGrid for the same target.")]
         [Min(0.05f)][SerializeField] private float repathInterval = 0.4f;
         [Tooltip("How far the stand position has to move before a fresh path is requested early (instead of waiting for Repath Interval).")]
         [Min(0f)][SerializeField] private float repathTargetMoveThreshold = 0.5f;
         [Tooltip("Within this distance of the mining stand position, the miner may walk straight in only when no other ore blocks that final segment. A neighbouring ore keeps the global route active so the miner does not bounce left and right around a cluster.")]
-        [Min(0.1f)][SerializeField] private float finalApproachDistance = 2.5f;
+        [Min(0.1f)][SerializeField, HideInInspector] private float finalApproachDistance = 2.5f;
         [Tooltip("How far ahead along the route to aim while path-following. Steering exactly at the next corner makes the miner hug it and then snap to the next heading - that is the visible zig-zag. Aiming at a point further along the polyline cuts corners smoothly. Keep it under the typical corner spacing.")]
         [Min(0.1f)][SerializeField] private float pathLookAheadDistance = 1.75f;
         [Tooltip("How many times a stuck miner will force a fresh route before giving up on the target (commanded targets never give up, they just keep re-routing).")]
@@ -108,7 +107,6 @@ namespace MiningSimulator.Ores
         [SerializeField] private bool drawPathGizmos = true;
 
         private readonly List<Vector3> currentPath = new();
-        private readonly List<Vector3> pathRequestBuffer = new();
         private int pathWaypointIndex;
         private float nextRepathTime;
         private Vector3 lastPathTarget;
@@ -117,9 +115,8 @@ namespace MiningSimulator.Ores
         private MiningPathSource currentPathSource;
         private int stuckRepathAttempts;
         public float NavigationRadius => npcData != null ? GetObstacleProbeRadius() : .4f;
-        private Ore approachOre;
+        public float NavigationMiningReach => npcData != null ? Mathf.Max(0, npcData.MiningRange - npcData.StoppingDistance * 2) : 0;
         private Vector3 oreApproachPoint;
-        private float nextApproachRefresh;
 
         private readonly RaycastHit[] obstacleHits = new RaycastHit[32];
         private Ore targetOre;
@@ -128,7 +125,6 @@ namespace MiningSimulator.Ores
         private Ore ignoredOre;
         private LuckyBlock ignoredLuckyBlock;
         private MiningChest ignoredChest;
-        private Component avoidanceObstacle;
         private LuckyBlockDropSystem luckyBlockSystem;
         private Rigidbody body;
         private float nextTargetRefreshTime;
@@ -137,19 +133,11 @@ namespace MiningSimulator.Ores
         private float ignoredLuckyBlockUntil;
         private float ignoredChestUntil;
         private float lastProgressTime;
-        private float avoidanceSide = 1f;
-        private float detourDirectionUntil;
         private int reservedSlot = -1;
         private Vector3 desiredMoveTarget;
         private Vector3 desiredFacingDirection;
         private Vector3 lastProgressPosition;
-        private Vector3 detourDirection;
-        private Vector3 detourWaypoint;
-        private Vector3 detourExitWaypoint;
-        private Component detourWaypointObstacle;
         private bool hasMoveTarget;
-        private bool hasDetourWaypoint;
-        private bool hasDetourExitWaypoint;
         private bool hasCommandedTarget;
         private bool isMining;
         private bool isMoving;
@@ -351,13 +339,12 @@ namespace MiningSimulator.Ores
 
         private void OnDisable()
         {
+            unreachableUntil.Clear();
             OreActorTraversal.UnregisterActor(gameObject);
             ActiveNpcs.Remove(this);
             ReleaseTarget();
             hasMoveTarget = false;
             desiredFacingDirection = Vector3.zero;
-            detourDirection = Vector3.zero;
-            detourDirectionUntil = 0f;
             ResetGlobalPath();
             SetMovingAnimationState(false);
             StopHorizontalMovement();
@@ -474,11 +461,6 @@ namespace MiningSimulator.Ores
             // the detour says "go right", and the NPC averages into standing still.
             // While a path is live the detour layer is suppressed entirely.
             Vector3 navigationTarget = GetNavigationTarget(currentPosition, desiredMoveTarget);
-            bool hasGlobalPath = currentPath.Count > 0;
-            if (!hasGlobalPath && TryGetDetourWaypoint(currentPosition, out Vector3 waypoint))
-            {
-                navigationTarget = waypoint;
-            }
 
             Vector3 movementOffset = navigationTarget - currentPosition;
             movementOffset.y = 0f;
@@ -492,51 +474,6 @@ namespace MiningSimulator.Ores
             }
 
             Vector3 movementDirection = movementOffset.normalized;
-            float probeDistance = Mathf.Min(npcData.ObstacleProbeDistance, movementOffset.magnitude);
-            if (TryGetBlockingMineable(movementDirection, probeDistance, out Component blocker,
-                out Vector3 blockingPoint))
-            {
-                Ore blockingOre = blocker as Ore;
-                if (!hasCommandedTarget && Time.time >= nextTargetSwitchTime &&
-                    blockingOre != null && blockingOre != ignoredOre &&
-                    CanMine(blockingOre) && IsBlockingOreCloser(blockingOre, currentPosition) &&
-                    TrySwitchTarget(blockingOre))
-                {
-                    RotateTowards(movementDirection);
-                    SetMovingAnimationState(true);
-                    return;
-                }
-
-                // A fresh ore or a tight corner can invalidate body clearance even
-                // when the old route was valid. Repath on the normal cadence and
-                // use the existing committed detour while carving catches up.
-                if (hasGlobalPath)
-                {
-                    currentPath.Clear();
-                    pathWaypointIndex = 0;
-                    currentPathSource = MiningPathSource.None;
-                    nextRepathTime = Time.time + repathInterval;
-                    hasGlobalPath = false;
-                }
-
-                if (!hasGlobalPath)
-                {
-                    movementDirection = ResolveBlockedPath(
-                        movementDirection, currentPosition, blocker, blockingPoint);
-                }
-            }
-            else if (!hasGlobalPath)
-            {
-                avoidanceObstacle = null;
-                if (Time.time < detourDirectionUntil && detourDirection.sqrMagnitude > Mathf.Epsilon)
-                {
-                    movementDirection = detourDirection;
-                }
-                else
-                {
-                    ClearDetour();
-                }
-            }
 
             float maximumSpeed = npcData.MoveSpeed * speedMultiplier;
             float brakingDistance = Mathf.Max(0f,
@@ -553,13 +490,7 @@ namespace MiningSimulator.Ores
 
         private void ClearDetour()
         {
-            detourDirection = Vector3.zero;
-            detourDirectionUntil = 0f;
-            detourWaypoint = Vector3.zero;
-            detourExitWaypoint = Vector3.zero;
-            detourWaypointObstacle = null;
-            hasDetourWaypoint = false;
-            hasDetourExitWaypoint = false;
+            approachTarget = null;
         }
 
         private void ApplyHorizontalVelocity(Vector3 desiredHorizontalVelocity, float acceleration,
@@ -576,21 +507,19 @@ namespace MiningSimulator.Ores
             }
             else
             {
-                Vector3 desiredDirection = desiredHorizontalVelocity / desiredSpeed;
-
-                // The route target can turn abruptly at a path corner. Retaining the old
-                // perpendicular Rigidbody velocity lets a fast miner slide past that corner
-                // before braking catches up. Remove only that sideways momentum immediately;
-                // acceleration and braking still control speed along the new heading.
-                float currentForwardSpeed = Mathf.Max(0f,
-                    Vector3.Dot(currentHorizontalVelocity, desiredDirection));
-                float response = desiredSpeed < currentForwardSpeed
+                float response = desiredSpeed < currentHorizontalVelocity.magnitude
                     ? brakingAcceleration
                     : acceleration;
-                float nextSpeed = Mathf.MoveTowards(currentForwardSpeed, desiredSpeed,
-                    response * Time.fixedDeltaTime);
-                nextHorizontalVelocity = desiredDirection * nextSpeed;
+                nextHorizontalVelocity = Vector3.MoveTowards(currentHorizontalVelocity,
+                    desiredHorizontalVelocity, response * Time.fixedDeltaTime);
             }
+
+            // Ore collisions are ignored physically by the game's actor traversal rules.
+            // Validate the real next physics step too, so inertia cannot cut through a new ore.
+            if (hasMoveTarget && nextHorizontalVelocity.sqrMagnitude > .0001f &&
+                !MiningNavigation.IsMineableSegmentClear(body.position,
+                    body.position + nextHorizontalVelocity * Time.fixedDeltaTime, NavigationRadius))
+                nextHorizontalVelocity = Vector3.zero;
 
             body.linearVelocity = new Vector3(
                 nextHorizontalVelocity.x, currentVelocity.y, nextHorizontalVelocity.z);
