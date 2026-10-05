@@ -176,7 +176,7 @@ namespace MiningSimulator.Ores
         private void PlayJumpSound()
         {
             if (data != null && feedbackAudio != null)
-                feedbackAudio.PlaySfx(data.jumpSfx, data.jumpSfxVolume);
+                feedbackAudio.PlayWorldSfx(data.jumpSfx, transform.position, data.jumpSfxVolume);
         }
         // Movement's public fields are compatibility inputs, not a second authoring source.
         private void Update()

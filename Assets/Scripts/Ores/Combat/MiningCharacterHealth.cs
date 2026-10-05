@@ -8,6 +8,10 @@ namespace MiningSimulator.Ores
     public sealed class MiningCharacterHealth : MonoBehaviour
     {
         [Min(1f), SerializeField] private float maxHealth = 100f;
+        [Header("Defenses (player uses PlayerStatsData + equipped items)")]
+        [Min(0f), SerializeField] private float armor;
+        [Min(0f), SerializeField] private float magicResistance;
+        [Min(.01f), SerializeField] private float resistanceScale = 100f;
         [Header("Regeneration")]
         [Tooltip("HP restored per tick. Set 0 to disable; dead characters never regenerate.")]
         [Min(0f), SerializeField] private float regenAmount = 5f;
@@ -42,6 +46,17 @@ namespace MiningSimulator.Ores
         private MiningPlayerStats playerStats;
         private MiningPlayerStats PlayerStats => playerStats != null ? playerStats : playerStats = GetComponent<MiningPlayerStats>();
         private MiningPlayerStatsData Stats => PlayerStats != null ? PlayerStats.Data : null;
+        public float Armor => CombatDamage.NonNegative(Stats != null ? Stats.armor : armor) +
+            (Stats != null && EquipmentBonuses != null ? CombatDamage.NonNegative(EquipmentBonuses.armor) : 0f);
+        public float MagicResistance => CombatDamage.NonNegative(Stats != null ? Stats.magicResistance : magicResistance) +
+            (Stats != null && EquipmentBonuses != null ? CombatDamage.NonNegative(EquipmentBonuses.magicResistance) : 0f);
+        public float ResistanceScale => Stats != null ? Stats.resistanceScale : resistanceScale;
+        public void ConfigureDefenses(float armorRating, float magicRating, float scale = 100f)
+        {
+            armor = CombatDamage.NonNegative(armorRating);
+            magicResistance = CombatDamage.NonNegative(magicRating);
+            resistanceScale = Mathf.Max(.01f, CombatDamage.NonNegative(scale));
+        }
         private float spawnedMaxHealth;
         public float MaxHealth => Mathf.Max(1f, Stats != null ? PlayerStats.MaxHealth : spawnedMaxHealth > 0 ? spawnedMaxHealth : maxHealth);
         public void ConfigureSpawnHealth(float value)
@@ -77,10 +92,14 @@ namespace MiningSimulator.Ores
         {
             DealDamage(amount);
         }
+        public void ApplyDamage(float amount, CombatDamageType type) => DealDamage(amount, type);
 
         // The actual health removed drives life steal; overkill never heals the attacker.
-        public float DealDamage(float amount)
+        public float DealDamage(float amount) => DealDamage(amount, CombatDamageType.Physical);
+
+        public float DealDamage(float amount, CombatDamageType type)
         {
+            amount = CombatDamage.Resolve(amount, type, Armor, MagicResistance, ResistanceScale);
             if (!damageEnabled || amount <= 0f || health <= 0f) return 0f;
             float dealt = Mathf.Min(health, amount);
             health = Mathf.Max(0f, health - amount);
@@ -153,7 +172,7 @@ namespace MiningSimulator.Ores
 
         private void Awake()
         {
-            burnDamage = ApplyDamage;
+            burnDamage = ApplyBurnDamage;
             combatInput = GetComponent<PlayerCombatInput>();
             if (GetComponent<MiningPlayerStats>() != null)
             {
@@ -235,5 +254,6 @@ namespace MiningSimulator.Ores
         }
 
         private void OnValidate() => maxHealth = Mathf.Max(1f, maxHealth);
+        private void ApplyBurnDamage(float amount) => DealDamage(amount, CombatDamageType.Magic);
     }
 }

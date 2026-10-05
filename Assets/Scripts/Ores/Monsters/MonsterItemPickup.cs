@@ -25,7 +25,7 @@ namespace MiningSimulator.Ores
             pickup.settings = settings; pickup.item = drop.item; pickup.amount = count;
             pickup.player = player; pickup.inventory = inventory; pickup.audio = audio;
             if (audio != null && audio.AudioData != null)
-                audio.PlaySfx(audio.AudioData.MonsterDropSfx);
+                audio.PlayWorldSfx(audio.AudioData.MonsterDropSfx, origin);
             Vector2 direction = Random.insideUnitCircle.normalized;
             pickup.velocity = new Vector3(direction.x * settings.launchOutSpeed, settings.launchUpSpeed, direction.y * settings.launchOutSpeed);
             pickup.groundY = origin.y - 0.6f;
@@ -90,7 +90,7 @@ namespace MiningSimulator.Ores
             if ((target - transform.position).sqrMagnitude < 0.15f * 0.15f && inventory.TryAddItem(item, amount))
             {
                 if (audio != null && audio.AudioData != null)
-                    audio.PlaySfx(audio.AudioData.MonsterLootSfx);
+                    audio.PlayWorldSfx(audio.AudioData.MonsterLootSfx, transform.position);
                 Destroy(gameObject);
             }
         }

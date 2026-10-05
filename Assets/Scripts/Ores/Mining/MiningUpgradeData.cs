@@ -89,6 +89,19 @@ namespace MiningSimulator.Ores
     [CreateAssetMenu(fileName = "MiningUpgradeData", menuName = "Mining Simulator/Game Data/Upgrades")]
     public sealed class MiningUpgradeData : ScriptableObject
     {
+        [Header("Auto upgrade - Gem unlock, Money purchases")]
+        [Min(0), SerializeField] private float autoUpgradeGemCost = 25f;
+        [Min(0.05f), SerializeField] private float autoUpgradeInterval = 0.5f;
+        [SerializeField] private string autoUpgradeSaveKey = "MiningSimulator.AutoUpgrade.v1";
+        [SerializeField] private MiningUpgradeType[] autoUpgradeOrder = {
+            MiningUpgradeType.MoneyReward, MiningUpgradeType.OreDamage, MiningUpgradeType.RareOreSpawn,
+            MiningUpgradeType.OreSpawnSpeed, MiningUpgradeType.NpcMoveSpeed, MiningUpgradeType.NpcCapacity,
+            MiningUpgradeType.LuckyBlockReward, MiningUpgradeType.LuckyBlockDropChance,
+            MiningUpgradeType.NpcExperience, MiningUpgradeType.ItemDropChance };
+        public float AutoUpgradeGemCost => Mathf.Max(0f, autoUpgradeGemCost);
+        public float AutoUpgradeInterval => Mathf.Max(0.05f, autoUpgradeInterval);
+        public string AutoUpgradeSaveKey => autoUpgradeSaveKey;
+        public System.Collections.Generic.IReadOnlyList<MiningUpgradeType> AutoUpgradeOrder => autoUpgradeOrder;
         [Header("Money Reward")]
         [SerializeField] private MiningUpgradeDefinition moneyReward =
             new("Tăng tiền nhận được", 1f);

@@ -5,7 +5,7 @@ namespace MiningSimulator.Ores
 {
     /// <summary>Owns runtime upgrade stacks, purchases, and mining modifiers.</summary>
     [DisallowMultipleComponent]
-    public sealed class MiningUpgradeSystem : MonoBehaviour
+    public sealed partial class MiningUpgradeSystem : MonoBehaviour
     {
         [SerializeField] private PlayerWallet wallet;
         [SerializeField] private MiningUpgradeData upgradeData;
@@ -42,6 +42,7 @@ namespace MiningSimulator.Ores
 
         private void Awake()
         {
+            LoadAutoUpgrade();
             if (itemSystem == null)
             {
                 itemSystem = FindFirstObjectByType<MiningItemSystem>(FindObjectsInactive.Include);

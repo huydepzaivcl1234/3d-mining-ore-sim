@@ -30,6 +30,9 @@ namespace MiningSimulator.Ores
         [Tooltip("First necklace socket (legacy reference preserved).")]
         [SerializeField] private RectTransform necklaceSocket;
         [SerializeField] private RectTransform[] additionalNecklaceSockets = new RectTransform[2];
+        [Header("Empty necklace socket hint")]
+        [SerializeField] private Sprite necklacePlaceholder;
+        [SerializeField] private Color necklacePlaceholderTint = new(1f, 1f, 1f, 0.25f);
 
         private readonly SlotView[] slotViews =
             new SlotView[MiningItemDatabase.InventoryCapacity + MiningItemSystem.NecklaceSlotCount];
@@ -187,6 +190,9 @@ namespace MiningSimulator.Ores
 
         private void CacheNecklaceSocket()
         {
+            // Serialized Unity references can be CLR-non-null while comparing equal to null.
+            if (necklacePlaceholder == null)
+                necklacePlaceholder = Resources.Load<Sprite>("NecklaceSlotPlaceholder");
             var equipmentPanel = inventoryPanel.transform.Find("Character And Equipment");
             if (necklaceSocket == null)
                 necklaceSocket = inventoryPanel.transform.Find("Character And Equipment/Equipment Placeholder 01") as RectTransform;
@@ -195,10 +201,55 @@ namespace MiningSimulator.Ores
             {
                 var socket = additionalNecklaceSockets != null && i - 1 < additionalNecklaceSockets.Length
                     ? additionalNecklaceSockets[i - 1] : null;
+                // The four original armour placeholders must remain reserved.
+                if (socket != null && (socket.name == "Equipment Placeholder 02" ||
+                    socket.name == "Equipment Placeholder 03" || socket.name == "Equipment Placeholder 04" ||
+                    socket.name == "Equipment Placeholder 05")) socket = null;
                 if (socket == null && equipmentPanel != null)
-                    socket = equipmentPanel.Find($"Equipment Placeholder {i + 1:00}") as RectTransform;
+                    socket = CreateNecklaceSocket(equipmentPanel, i);
                 BindNecklaceSocket(socket, MiningItemSystem.NecklaceSlotIndex + i);
             }
+        }
+
+        [Header("Additional necklace slots (relative to the existing left slot)")]
+        [SerializeField] private Vector2 upperNecklaceOffset = new(-117.6f, 58.8f);
+        [SerializeField] private Vector2 lowerNecklaceOffset = new(-117.6f, -58.8f);
+
+        private RectTransform CreateNecklaceSocket(Transform parent, int index)
+        {
+            string socketName = $"Equipment Placeholder {index + 5:00}";
+            var existing = parent.Find(socketName) as RectTransform;
+            if (existing != null) return existing;
+            if (necklaceSocket == null) return null;
+
+            var go = new GameObject(socketName, typeof(RectTransform), typeof(Image));
+            go.transform.SetParent(parent, false);
+            var rect = (RectTransform)go.transform;
+            rect.anchorMin = necklaceSocket.anchorMin;
+            rect.anchorMax = necklaceSocket.anchorMax;
+            rect.pivot = necklaceSocket.pivot;
+            rect.sizeDelta = necklaceSocket.sizeDelta;
+            rect.anchoredPosition = necklaceSocket.anchoredPosition +
+                (index == 1 ? upperNecklaceOffset : lowerNecklaceOffset);
+            var template = necklaceSocket.GetComponent<Image>();
+            var image = go.GetComponent<Image>();
+            if (template != null)
+            {
+                image.sprite = template.sprite;
+                image.color = template.color;
+                image.type = template.type;
+                image.material = template.material;
+            }
+            image.raycastTarget = true;
+            var border = necklaceSocket.GetComponent<Outline>();
+            if (border != null)
+            {
+                var outline = go.AddComponent<Outline>();
+                outline.effectColor = border.effectColor;
+                outline.effectDistance = border.effectDistance;
+                outline.useGraphicAlpha = border.useGraphicAlpha;
+            }
+            return rect;
         }
 
         private void BindNecklaceSocket(RectTransform socket, int index)
@@ -206,6 +257,9 @@ namespace MiningSimulator.Ores
             if (socket == null) return;
             var button = socket.GetComponent<UnityEngine.UI.Button>() ?? socket.gameObject.AddComponent<UnityEngine.UI.Button>();
             button.targetGraphic = socket.GetComponent<UnityEngine.UI.Image>();
+            // The authored equipment frames were decorative (raycasts disabled).
+            // Necklace sockets are now interactive, including when empty for drops.
+            if (button.targetGraphic != null) button.targetGraphic.raycastTarget = true;
             var binding = socket.GetComponent<MiningInventorySlotButton>() ?? socket.gameObject.AddComponent<MiningInventorySlotButton>();
             binding.Configure(this, index);
             Transform iconChild = socket.Find("Necklace Icon");
@@ -220,6 +274,7 @@ namespace MiningSimulator.Ores
             }
             var icon = iconChild.GetComponent<UnityEngine.UI.Image>();
             icon.preserveAspect = true; icon.raycastTarget = false;
+            icon.enabled = false; // Empty sockets should show their frame, not a white icon.
             slotViews[index] = new SlotView { button = button, icon = icon };
         }
 
@@ -254,8 +309,10 @@ namespace MiningSimulator.Ores
                 }
                 if (view.icon != null)
                 {
-                    view.icon.sprite = occupied ? slot.Item.InventoryIcon : null;
-                    view.icon.enabled = occupied && slot.Item.InventoryIcon != null;
+                    bool showHint = !occupied && MiningItemSystem.IsNecklaceSlot(index);
+                    view.icon.sprite = occupied ? slot.Item.InventoryIcon : showHint ? necklacePlaceholder : null;
+                    view.icon.color = showHint ? necklacePlaceholderTint : Color.white;
+                    view.icon.enabled = view.icon.sprite != null;
                 }
                 if (view.fallback != null)
                 {

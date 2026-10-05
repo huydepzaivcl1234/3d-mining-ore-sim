@@ -255,7 +255,10 @@ namespace MiningSimulator.Ores
                                      Vector3.up * (probeGroundClearance + probeHeight * 0.5f);
                     int hitCount = Physics.OverlapBoxNonAlloc(center, halfExtents, overlapBuffer,
                         Quaternion.identity, obstacleLayers, QueryTriggerInteraction.Ignore);
-                    bool blocked = hitCount > 0;
+                    bool blocked = hitCount == overlapBuffer.Length;
+                    for (int i = 0; i < hitCount && !blocked; i++)
+                        if (overlapBuffer[i] != null && overlapBuffer[i].GetComponentInParent<Ore>() == null)
+                            blocked = true;
                     rawBlockedBuffer[z * width + x] = blocked;
                     if (blocked)
                     {

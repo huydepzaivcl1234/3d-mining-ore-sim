@@ -25163,6 +25163,11 @@ MonoBehaviour:
   titleLabel: {fileID: 1007296873}
   itemGrid: {fileID: 305880206}
   necklaceSocket: {fileID: 0}
+  additionalNecklaceSockets:
+  - {fileID: 0}
+  - {fileID: 0}
+  upperNecklaceOffset: {x: -117.6, y: 58.8}
+  lowerNecklaceOffset: {x: -117.6, y: -58.8}
 --- !u!114 &450512008
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -71963,15 +71968,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1013031880026177674, guid: e38c3bb610e501d429963fbbcc5410a5, type: 3}
       propertyPath: m_LocalScale.x
-      value: 3
+      value: 2.5
       objectReference: {fileID: 0}
     - target: {fileID: 1013031880026177674, guid: e38c3bb610e501d429963fbbcc5410a5, type: 3}
       propertyPath: m_LocalScale.y
-      value: 3
+      value: 2.5
       objectReference: {fileID: 0}
     - target: {fileID: 1013031880026177674, guid: e38c3bb610e501d429963fbbcc5410a5, type: 3}
       propertyPath: m_LocalScale.z
-      value: 3
+      value: 2.5
       objectReference: {fileID: 0}
     - target: {fileID: 1013031880026177674, guid: e38c3bb610e501d429963fbbcc5410a5, type: 3}
       propertyPath: m_LocalPosition.x
@@ -122594,6 +122599,8 @@ MonoBehaviour:
   framingPadding: 1.12
   background: {r: 0, g: 0, b: 0, a: 1}
   idleState: Base Layer.Idle Walk Run Blend
+  previewLightIntensity: 3
+  previewLightRange: 12
 --- !u!114 &2126854136
 MonoBehaviour:
   m_ObjectHideFlags: 0

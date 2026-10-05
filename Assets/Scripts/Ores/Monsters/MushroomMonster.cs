@@ -132,8 +132,9 @@ namespace MiningSimulator.Ores
         private static void ResetMonsterRegistry() => ActiveMonsters.Clear();
         private void OnEnable()
         {
+            OreActorTraversal.RegisterActor(gameObject);
             var audioManager = FindFirstObjectByType<MiningAudioManager>();
-            if (audioManager != null) audioManager.RegisterSfxSources(gameObject);
+            if (audioManager != null) audioManager.RegisterWorldSfxSources(gameObject);
             if (!ActiveMonsters.Contains(this)) ActiveMonsters.Add(this);
             foreach (MiningNpc miner in MiningNpc.Miners)
                 if (miner != null) miner.IgnoreMonsterCollision(this);
@@ -156,16 +157,19 @@ namespace MiningSimulator.Ores
                 if (bossSettings.rewardOverride != null) rewards = bossSettings.rewardOverride;
             }
             // Read the current day at spawn; existing enemies retain their rolled level.
-            Level = rewards != null ? rewards.GetSpawnLevel(
-                rewards.RollLevel(Random.value, owner != null ? owner.SpawnDayNumber : 1),
-                stats != null ? stats.Level : 1) : 1;
+            Level = rewards != null ? rewards.RollSpawnLevel(Random.value,
+                stats != null ? stats.Level : 1, owner != null ? owner.SpawnDayNumber : 1) : 1;
             float scale = rewards != null ? rewards.StatMultiplier(Level) : 1;
             float low = rewards != null ? Mathf.Max(0.01f, Mathf.Min(rewards.randomStatMultiplier.x, rewards.randomStatMultiplier.y)) : 1;
             float high = rewards != null ? Mathf.Max(low, Mathf.Max(rewards.randomStatMultiplier.x, rewards.randomStatMultiplier.y)) : 1;
             scaledDamage = damage * scale * Random.Range(low, high) * (IsBoss ? bossSettings.damageMultiplier : 1f);
             scaledBurnDamage = rewards != null ? rewards.burnDamagePerTick * scale : 0f;
             health.ConfigureSpawnHealth(health.MaxHealth * scale * Random.Range(low, high) * (IsBoss ? bossSettings.healthMultiplier : 1f));
-            if (rewards != null) health.ConfigureHealingBonus(rewards.healingBonusPercent);
+            if (rewards != null)
+            {
+                health.ConfigureHealingBonus(rewards.healingBonusPercent);
+                health.ConfigureDefenses(rewards.ArmorAtLevel(Level), rewards.MagicResistanceAtLevel(Level), rewards.resistanceScale);
+            }
             if (definition != null)
             {
                 encounterVisuals = gameObject.AddComponent<MonsterEncounterVisuals>();
@@ -317,7 +321,8 @@ namespace MiningSimulator.Ores
                 // One contact per swing. Area and sweep can hit every victim inside the same shown volume.
                 if (target != null && target.Health > 0f && ContainsVictim(target.transform, targetCollider))
                 {
-                    float dealt = target.DealDamage(scaledDamage);
+                    float dealt = target.DealDamage(scaledDamage,
+                        rewards != null ? rewards.attackDamageType : CombatDamageType.Physical);
                     if (bossSkill.NotifyPlayerDamage(dealt, target.MaxHealth))
                     {
                         nextAttack = Mathf.Min(nextAttack, Time.time + attackCooldown / bossSkill.AttackSpeedMultiplier);
@@ -408,6 +413,7 @@ namespace MiningSimulator.Ores
                 for (int i = 0; i < count; i++)
                 {
                     Transform obstacle = strikeObstructions[i].transform;
+                    if (obstacle != null && obstacle.GetComponentInParent<Ore>() != null) continue;
                     if (obstacle != null && !obstacle.IsChildOf(transform) && !obstacle.IsChildOf(victim)) return false;
                 }
             }
@@ -509,6 +515,7 @@ namespace MiningSimulator.Ores
 
         private void OnDisable()
         {
+            OreActorTraversal.UnregisterActor(gameObject);
             if (animator != null) animator.speed = baseAnimatorSpeed;
             if (groundWarning != null) groundWarning.Hide();
             strikeLocked = false;

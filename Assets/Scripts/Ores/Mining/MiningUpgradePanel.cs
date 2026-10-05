@@ -61,6 +61,8 @@ namespace MiningSimulator.Ores
             var carousel = upgradePanel.GetComponent<MiningUpgradeCarousel>();
             if (carousel == null) carousel = upgradePanel.AddComponent<MiningUpgradeCarousel>();
             carousel.Initialize(upgradeSystem, wallet, worldStation.UpgradeOrder, worldStation.Close);
+            var autoButton = upgradePanel.GetComponent<MiningAutoUpgradeButton>() ?? upgradePanel.AddComponent<MiningAutoUpgradeButton>();
+            autoButton.Configure(upgradeSystem);
             panelCoordinator?.RegisterWorldUpgradePanel(upgradePanel.GetComponent<RectTransform>());
             worldStation.Initialize(this, upgradePanel.GetComponent<RectTransform>(), panelCoordinator);
             // Preserve the authored reference/listeners, but retire the flat HUD button.

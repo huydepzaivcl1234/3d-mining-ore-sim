@@ -8,7 +8,8 @@ namespace MiningSimulator.Ores
         {
             if (audioData != null && (ore == null || !ore.LastDamageWasNpc))
             {
-                PlaySfx(audioData.OreBreakSfx);
+                if (ore != null) PlayWorldSfx(audioData.OreBreakSfx, ore.transform.position);
+                else PlaySfx(audioData.OreBreakSfx);
             }
         }
 
@@ -30,6 +31,7 @@ namespace MiningSimulator.Ores
 
         private void HandleUpgradePurchased(MiningUpgradeType type)
         {
+            if (upgradeSystem != null && upgradeSystem.IsAutoUpgradePurchase) return;
             if (audioData != null)
             {
                 PlaySfx(audioData.UpgradePurchasedSfx);

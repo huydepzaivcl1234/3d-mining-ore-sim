@@ -63,7 +63,7 @@ namespace MiningSimulator.Ores
         {
             if (collider == null) return false;
             Ore ore = collider.GetComponentInParent<Ore>();
-            if (ore != null) return ore != ignored && !ore.IsDepleted;
+            if (ore != null) return false; // AI can walk through ore; player colliders remain intact.
             LuckyBlock block = collider.GetComponentInParent<LuckyBlock>();
             if (block != null) return block != ignored && !block.IsResolved;
             MiningChest chest = collider.GetComponentInParent<MiningChest>();

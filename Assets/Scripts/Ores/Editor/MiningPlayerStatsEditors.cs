@@ -34,7 +34,7 @@ public abstract class MiningPlayerStatsBoundEditor : Editor
 }
 [CustomEditor(typeof(MiningCharacterHealth)), CanEditMultipleObjects]
 public sealed class MiningPlayerHealthStatsEditor : MiningPlayerStatsBoundEditor
-{ protected override string[] StatFields => new[] { "maxHealth", "regenAmount", "regenInterval" }; }
+{ protected override string[] StatFields => new[] { "maxHealth", "regenAmount", "regenInterval", "armor", "magicResistance", "resistanceScale" }; }
 [CustomEditor(typeof(PlayerCombatInput)), CanEditMultipleObjects]
 public sealed class MiningPlayerCombatStatsEditor : MiningPlayerStatsBoundEditor
 { protected override string[] StatFields => new[] { "damage", "attackRange", "attackAngle", "attackSpeed", "combatBlendSeconds", "hitOriginOffset" }; }

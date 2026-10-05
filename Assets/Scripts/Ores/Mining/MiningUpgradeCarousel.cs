@@ -58,6 +58,7 @@ namespace MiningSimulator.Ores
                 scrollbar.numberOfSteps = Mathf.Max(2, cards.Count);
                 scrollbar.onValueChanged.AddListener(OnScrollbar);
                 if (closeButton != null) closeButton.onClick.AddListener(CloseView);
+                SyncAutoUpgradeOrder(system);
                 initialized = true; SetFirst(0); ApplyPresentation(true);
                 return;
             }
@@ -117,8 +118,16 @@ namespace MiningSimulator.Ores
             closeRect.gameObject.AddComponent<MiningButtonSfx>();
             var closeText = Text("Close", closeRect, new Vector2(95f, 65f), Vector2.zero, 48f);
             closeText.text = "×"; closeText.color = Color.white; closeText.alignment = TextAlignmentOptions.Center;
+            SyncAutoUpgradeOrder(system);
             initialized = true;
             SetFirst(0); ApplyPresentation(true);
+        }
+
+        private void SyncAutoUpgradeOrder(MiningUpgradeSystem system)
+        {
+            var order = new List<MiningUpgradeType>(cards.Count);
+            foreach (var card in cards) order.Add(card.Item.UpgradeType);
+            system?.SetAutoUpgradeOrder(order);
         }
 
         private void BuildCard(JuicyUpgradeItem item, MiningUpgradeSystem system, PlayerWallet wallet)

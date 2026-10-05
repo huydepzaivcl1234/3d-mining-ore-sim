@@ -100,6 +100,18 @@ namespace MiningSimulator.Ores
         public int SpawnDayNumber => dayNight != null ? Mathf.Max(1, dayNight.DayNumber) : 1;
         public event Action ForecastChanged;
         public int AliveCount => alive.Count;
+        public DayNightSystem DayNight => dayNight;
+        public bool HasForecastBoss
+        {
+            get
+            {
+                if (CurrentDailyEvent == DailyEncounterEvent.BossInvasion) return true;
+                foreach (var monster in alive)
+                    if (monster != null && monster.IsBoss && !monster.IsDespawning &&
+                        monster.Health != null && monster.Health.Health > 0f) return true;
+                return false;
+            }
+        }
         public IReadOnlyList<MonsterSpawnEntry> MonsterEntries => monsters;
         public int GetAliveCount(MonsterSpawnEntry entry)
         {

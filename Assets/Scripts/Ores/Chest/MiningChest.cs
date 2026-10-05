@@ -710,6 +710,8 @@ namespace MiningSimulator.Ores
                 sharedChestAudioSource.spatialBlend = 0f;
             }
             sharedChestAudioSource.Stop();
+            sharedChestAudioSource.transform.position = transform.position;
+            audioManager.RegisterWorldSfxSource(sharedChestAudioSource, 1f);
             sharedChestAudioSource.outputAudioMixerGroup = audioManager.AudioData.SfxMixerGroup;
             audioManager.RegisterSfxSource(sharedChestAudioSource, 1f);
             sharedChestAudioSource.pitch = UnityEngine.Random.Range(

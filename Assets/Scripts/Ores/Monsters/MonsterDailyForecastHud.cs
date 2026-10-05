@@ -5,7 +5,7 @@ using UnityEngine;
 namespace MiningSimulator.Ores
 {
     /// <summary>Read-only forecast. Modal visibility remains owned by the existing HUD coordinator.</summary>
-    public sealed class MonsterDailyForecastHud : MonoBehaviour
+    public sealed partial class MonsterDailyForecastHud : MonoBehaviour
     {
         private MonsterSpawnZone source;
         private RectTransform root;
@@ -44,7 +44,11 @@ namespace MiningSimulator.Ores
             if (source != null) source.ForecastChanged -= Refresh;
             MiningLocalization.LanguageChanged -= Refresh;
         }
-        public void SetVisible(bool visible) { if (root != null) root.gameObject.SetActive(visible); }
+        public void SetVisible(bool visible)
+        {
+            hudRequested = visible;
+            if (root != null) root.gameObject.SetActive(visible && (slideProgress > 0f || IsDaytime));
+        }
 
         private void Build()
         {
@@ -57,6 +61,8 @@ namespace MiningSimulator.Ores
             root.anchorMin = root.anchorMax = root.pivot = Vector2.one;
             root.sizeDelta = new Vector2(320f, 120f);
             root.anchoredPosition = new Vector2(-14f, settings.anchoredPosition.y - settings.rect.height - 12f);
+            shownPosition = root.anchoredPosition;
+            slideProgress = IsDaytime ? 1f : 0f;
             var background = root.gameObject.AddComponent<UnityEngine.UI.Image>();
             background.color = new Color(0.10f, 0.065f, 0.035f, 0.94f);
             background.raycastTarget = false;
@@ -110,6 +116,8 @@ namespace MiningSimulator.Ores
             count.GetComponent<UnityEngine.UI.LayoutElement>().flexibleWidth = 1f;
             count.alignment = TextAlignmentOptions.MidlineLeft;
             rows.Add(row.gameObject); icons.Add(image); counts.Add(count);
+            row.gameObject.AddComponent<CanvasGroup>();
+            numbers.Add(new ForecastNumbers());
         }
 
         private void Refresh()
@@ -142,18 +150,21 @@ namespace MiningSimulator.Ores
                     icon = Resources.Load<Sprite>("MiningMonsterIcons/" + entry.prefab.name);
                 icons[i].sprite = icon;
                 icons[i].enabled = icon != null;
-                counts[i].text = string.Format(MiningLocalization.TextKey("MONSTER_FORECAST_COUNTS", "Today: {0}\nAlive: {1}"),
-                    planned, source.GetAliveCount(entry));
+                SetRowNumbers(i, planned, source.GetAliveCount(entry));
             }
             heading.text = string.Format(MiningLocalization.TextKey("MONSTER_FORECAST_TITLE", "DAY {0} - MONSTERS"), source.ForecastDay);
-            bool hasEvent = source.CurrentDailyEvent != DailyEncounterEvent.Normal;
+            bool hasEvent = source.CurrentDailyEvent != DailyEncounterEvent.Normal || source.HasForecastBoss;
             eventRow.gameObject.SetActive(hasEvent);
             eventIcon.sprite = source.DailyEventIcon;
             eventIcon.enabled = eventIcon.sprite != null;
             eventLabel.text = hasEvent ? source.DailyEventLabel : "";
+            if (source.CurrentDailyEvent == DailyEncounterEvent.Normal) eventLabel.text = "";
+            if (source.HasForecastBoss) eventLabel.text += (eventLabel.text.Length > 0 ? "\n" : "") +
+                MiningLocalization.TextKey("MONSTER_FORECAST_BOSS_PRESENT", "BOSS PRESENT");
             remaining.text = string.Format(MiningLocalization.TextKey("MONSTER_FORECAST_REMAINING", "Still arriving: {0}"), pending);
             remaining.transform.SetAsLastSibling();
             root.sizeDelta = new Vector2(320f, 76f + visibleEntries.Count * 54f + (hasEvent ? 72f : 0f));
+            if (revealedDay != source.ForecastDay && IsDaytime) BeginMorningReveal();
         }
 
         private static RectTransform CreateRect(string name, Transform parent)

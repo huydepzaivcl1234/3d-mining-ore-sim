@@ -57,7 +57,13 @@ namespace MiningSimulator.Ores
         [Min(.1f)] public float dissolveSeconds = 2f;
         public Color dissolveColor = new Color(1f, .6f, .1f, 1f);
         public Shader dissolveShader;
-        [Header("Random level - geometric rarity, no gameplay level cap")]
+        [Header("Spawn level relative to player (normal and boss)")]
+        public bool usePlayerRelativeLevels = true;
+        [Min(1)] public int minimumLevelsBelowPlayer = 1;
+        [Min(1)] public int maximumLevelsBelowPlayer = 4;
+        [Min(1)] public int maximumLevelsAbovePlayer = 20;
+        [Tooltip("Upper-level probability uses Higher Level Chance and the existing daily increase. Otherwise roll 1-4 levels below the player, clamped to level 1.")]
+        [Header("Legacy level roll (used only when relative levels are disabled)")]
         [Min(1)] public int minimumLevel = 1;
         [Tooltip("Optional legacy rule. Off keeps level 1 possible regardless of player level.")]
         public bool addPlayerLevelAtSpawn;
@@ -81,6 +87,34 @@ namespace MiningSimulator.Ores
                 Mathf.Clamp(maximumHigherLevelChancePercent, 0f, 99f) * 0.01d);
         }
         public int RollLevel(float sample) => RollLevel(sample, 1);
+        public int RollSpawnLevel(float sample, int playerLevel, int dayNumber)
+        {
+            if (!usePlayerRelativeLevels)
+                return GetSpawnLevel(RollLevel(sample, dayNumber), playerLevel);
+
+            sample = float.IsNaN(sample) ? 0f : Mathf.Clamp01(sample);
+            int player = Mathf.Max(1, playerLevel);
+            double higherChance = HigherLevelProbability(dayNumber);
+            double lowerChance = 1d - higherChance;
+            long level;
+            if (higherChance > 0d && sample >= lowerChance)
+            {
+                int maximum = Mathf.Max(1, maximumLevelsAbovePlayer);
+                double t = (sample - lowerChance) / higherChance;
+                long offset = 1L + System.Math.Min(maximum - 1L, (long)System.Math.Floor(t * maximum));
+                level = player + offset;
+            }
+            else
+            {
+                int minimum = Mathf.Max(1, Mathf.Min(minimumLevelsBelowPlayer, maximumLevelsBelowPlayer));
+                int maximum = Mathf.Max(minimum, Mathf.Max(minimumLevelsBelowPlayer, maximumLevelsBelowPlayer));
+                long count = (long)maximum - minimum + 1L;
+                double t = sample / lowerChance;
+                long offset = minimum + System.Math.Min(count - 1L, (long)System.Math.Floor(t * count));
+                level = player - offset;
+            }
+            return (int)System.Math.Max(1L, System.Math.Min(int.MaxValue, level));
+        }
         public int RollLevel(float sample, int dayNumber)
         {
             double chance = HigherLevelProbability(dayNumber);
@@ -97,6 +131,17 @@ namespace MiningSimulator.Ores
         public float GoldMultiplier(int level) => 1 + Mathf.Max(0, goldGrowthPerLevel) * (Mathf.Max(1, level) - 1);
         [Min(0)] public float experience = 25;
         [Min(0)] public float gold = 50;
+        [Header("Defenses and direct attack damage type")]
+        [Min(0f)] public float armor;
+        [Min(0f)] public float magicResistance;
+        [Min(0f)] public float armorPerLevel;
+        [Min(0f)] public float magicResistancePerLevel;
+        [Min(.01f)] public float resistanceScale = 100f;
+        public CombatDamageType attackDamageType = CombatDamageType.Physical;
+        public float ArmorAtLevel(int level) => CombatDamage.NonNegative(armor) +
+            CombatDamage.NonNegative(armorPerLevel) * (Mathf.Max(1, level) - 1);
+        public float MagicResistanceAtLevel(int level) => CombatDamage.NonNegative(magicResistance) +
+            CombatDamage.NonNegative(magicResistancePerLevel) * (Mathf.Max(1, level) - 1);
         [Header("Monster attack / healing effects (0 disables an effect)")]
         [Min(0)] public float burnDamagePerTick;
         [Min(0.1f)] public float burnTickSeconds = 1f;

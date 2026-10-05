@@ -8,7 +8,8 @@ public partial class PlayerCombatInput
     private void DamageTarget(MiningCharacterHealth target, Vector3 point, float damageMultiplier = 1f)
     {
         if (Damage <= 0 || target == null || target.Health <= 0f) return;
-        float dealt = target.DealDamage(Damage * damageMultiplier);
+        float dealt = target.DealDamage(Damage * damageMultiplier,
+            Stats != null ? Stats.attackDamageType : CombatDamageType.Physical);
         if (dealt <= 0f) return;
         if (target.GetComponent<MushroomMonster>() != null && Stats != null)
             MiningDamagePopup.Show(dealt, point, Stats.damagePopup);

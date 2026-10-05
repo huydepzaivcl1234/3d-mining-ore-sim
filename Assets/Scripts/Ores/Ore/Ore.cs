@@ -260,6 +260,8 @@ namespace MiningSimulator.Ores
             ResetDurability();
         }
 
+        private void OnEnable() => OreActorTraversal.RegisterOre(this);
+
         public void SetData(OreData oreData)
         {
             data = oreData;
@@ -409,6 +411,7 @@ namespace MiningSimulator.Ores
 
         private void OnDisable()
         {
+            OreActorTraversal.UnregisterOre(this);
             reservedMiners.Clear();
             hitPunch?.ResetImmediately();
         }

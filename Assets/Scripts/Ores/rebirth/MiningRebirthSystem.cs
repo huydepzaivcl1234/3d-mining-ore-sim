@@ -99,6 +99,7 @@ namespace MiningSimulator.Ores
         {
             FindResetTargetsIfMissing();
             MiningPlayerStats.ResetSavedProgress();
+            upgradeSystem?.ResetAutoUpgrade();
             DayNightSystem.ResetSavedClock();
             completedRebirths = 0;
             PlayerPrefs.DeleteKey("MiningSimulator.SaveExists.v1");

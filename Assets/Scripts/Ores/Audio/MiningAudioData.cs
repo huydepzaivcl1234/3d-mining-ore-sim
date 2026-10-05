@@ -69,6 +69,13 @@ namespace MiningSimulator.Ores
         [SerializeField] private AudioClip wheelRewardSfx;
 
         [Header("SFX Playback")]
+        [Header("World SFX distance")]
+        [Min(0.01f), SerializeField] private float worldSfxMinimumDistance = 2f;
+        [Min(0.02f), SerializeField] private float worldSfxMaximumDistance = 30f;
+        [Range(1, 64), SerializeField] private int worldSfxVoiceCount = 16;
+        public float WorldSfxMinimumDistance => Mathf.Max(0.01f, worldSfxMinimumDistance);
+        public float WorldSfxMaximumDistance => Mathf.Max(WorldSfxMinimumDistance + 0.01f, worldSfxMaximumDistance);
+        public int WorldSfxVoiceCount => Mathf.Clamp(worldSfxVoiceCount, 1, 64);
         [Range(0f, 1f), SerializeField] private float sfxVolume = 0.8f;
         [SerializeField] private AudioMixerGroup sfxMixerGroup;
         [Range(0.1f, 3f), SerializeField] private float minimumPitch = 0.96f;

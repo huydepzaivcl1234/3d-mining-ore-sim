@@ -15,6 +15,7 @@ namespace MiningSimulator.Ores
             get
             {
                 bool equipped = false;
+                combinedBonuses.armor = combinedBonuses.magicResistance = 0f;
                 combinedBonuses.lifeStealPercent = combinedBonuses.healingBonusPercent = 0f;
                 combinedBonuses.regenIntervalReductionPercent = combinedBonuses.burnDamagePerTick = 0f;
                 combinedBonuses.burnDurationSeconds = 0f;
@@ -24,6 +25,8 @@ namespace MiningSimulator.Ores
                     var bonus = slot.item != null ? slot.item.EquipmentBonuses : null;
                     if (bonus == null) continue;
                     equipped = true;
+                    combinedBonuses.armor += CombatDamage.NonNegative(bonus.armor);
+                    combinedBonuses.magicResistance += CombatDamage.NonNegative(bonus.magicResistance);
                     combinedBonuses.lifeStealPercent += bonus.lifeStealPercent;
                     combinedBonuses.healingBonusPercent += bonus.healingBonusPercent;
                     combinedBonuses.regenIntervalReductionPercent += bonus.regenIntervalReductionPercent;

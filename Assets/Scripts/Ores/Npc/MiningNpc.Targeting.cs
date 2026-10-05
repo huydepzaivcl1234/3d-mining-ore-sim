@@ -296,13 +296,13 @@ namespace MiningSimulator.Ores
 
             if (targetOre != null && targetOre.LastDamageWasNpc)
             {
-                audioManager.PlayMiningImpactSfx(targetOre.IsDepleted);
+                audioManager.PlayMiningImpactSfx(targetOre.IsDepleted, targetOre.transform.position);
                 return;
             }
 
             if (targetLuckyBlock != null && targetLuckyBlock.LastDamageWasNpc)
             {
-                audioManager.PlayMiningImpactSfx(targetLuckyBlock.IsResolved);
+                audioManager.PlayMiningImpactSfx(targetLuckyBlock.IsResolved, targetLuckyBlock.transform.position);
             }
         }
 

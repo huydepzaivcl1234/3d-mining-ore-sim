@@ -51,7 +51,7 @@ public class EquipmentSystem : MonoBehaviour
         var clip = drawing ? data.drawWeaponSfx : data.sheathWeaponSfx;
         var volume = drawing ? data.drawWeaponSfxVolume : data.sheathWeaponSfxVolume;
         if (audioManager == null) audioManager = FindFirstObjectByType<MiningAudioManager>();
-        if (audioManager != null) audioManager.PlaySfx(clip, volume);
+        if (audioManager != null) audioManager.PlayWorldSfx(clip, transform.position, volume);
     }
 
     private void MoveWeapon(GameObject holder)

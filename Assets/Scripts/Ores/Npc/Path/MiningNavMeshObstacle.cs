@@ -55,6 +55,11 @@ namespace MiningSimulator.Ores
                 return;
             }
 
+            if (Application.isPlaying && GetComponentInParent<Ore>() != null)
+            {
+                obstacle.enabled = false;
+                return;
+            }
             obstacle.shape = NavMeshObstacleShape.Capsule;
             obstacle.carving = true;
             obstacle.carveOnlyStationary = true;
@@ -132,6 +137,11 @@ namespace MiningSimulator.Ores
             }
 
             obstacle = target;
+            if (Application.isPlaying && GetComponentInParent<Ore>() != null)
+            {
+                target.enabled = false;
+                return;
+            }
             target.shape = NavMeshObstacleShape.Capsule;
             target.carving = true;
             target.carveOnlyStationary = true;

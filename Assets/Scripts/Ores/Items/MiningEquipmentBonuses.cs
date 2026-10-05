@@ -8,6 +8,8 @@ namespace MiningSimulator.Ores
     [Serializable]
     public sealed class MiningEquipmentBonuses
     {
+        [Min(0f)] public float armor;
+        [Min(0f)] public float magicResistance;
         [Range(0f, 100f)] public float lifeStealPercent;
         [Min(0f)] public float healingBonusPercent;
         [Range(0f, 99f)] public float regenIntervalReductionPercent;
@@ -21,6 +23,8 @@ namespace MiningSimulator.Ores
         public string Summary()
         {
             var lines = new List<string>(3);
+            if (armor > 0f) lines.Add(string.Format(MiningLocalization.TextKey("EQUIPMENT_ARMOR_BONUS", "Armor +{0}"), armor.ToString("0.##")));
+            if (magicResistance > 0f) lines.Add(string.Format(MiningLocalization.TextKey("EQUIPMENT_MR_BONUS", "MR +{0}"), magicResistance.ToString("0.##")));
             if (lifeStealPercent > 0f) lines.Add(string.Format(MiningLocalization.Text("Life steal +{0}%", "Hút máu +{0}%"), lifeStealPercent.ToString("0.##")));
             if (healingBonusPercent > 0f) lines.Add(string.Format(MiningLocalization.Text("Healing +{0}%", "Hồi máu +{0}%"), healingBonusPercent.ToString("0.##")));
             if (regenIntervalReductionPercent > 0f) lines.Add(string.Format(MiningLocalization.Text("Regen interval -{0}%", "Thời gian hồi máu -{0}%"), regenIntervalReductionPercent.ToString("0.##")));

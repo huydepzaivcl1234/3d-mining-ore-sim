@@ -345,11 +345,13 @@ namespace MiningSimulator.Ores
 
         private void OnEnable()
         {
+            OreActorTraversal.RegisterActor(gameObject);
             RegisterNpcCollisionPairing();
         }
 
         private void OnDisable()
         {
+            OreActorTraversal.UnregisterActor(gameObject);
             ActiveNpcs.Remove(this);
             ReleaseTarget();
             hasMoveTarget = false;

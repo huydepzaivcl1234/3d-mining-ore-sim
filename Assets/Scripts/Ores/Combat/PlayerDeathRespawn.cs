@@ -384,7 +384,7 @@ namespace MiningSimulator.Ores
         private void TestDeath()
         {
             if (Application.isPlaying && isActiveAndEnabled && health != null)
-                health.ApplyDamage(health.MaxHealth);
+                health.ApplyDamage(health.MaxHealth, CombatDamageType.True);
         }
 #endif
     }

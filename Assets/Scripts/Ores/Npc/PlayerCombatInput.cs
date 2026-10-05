@@ -363,7 +363,7 @@ public partial class PlayerCombatInput : MonoBehaviour
             hitApplied = false;
             returningFromAttack = false;
             if (feedbackAudio != null)
-                feedbackAudio.PlaySfx(Stats != null ? Stats.attackSfx : null,
+                feedbackAudio.PlayWorldSfx(Stats != null ? Stats.attackSfx : null, transform.position,
                     Stats != null ? Stats.attackSfxVolume : 1f);
         }
         wasAttacking = active;

@@ -102,6 +102,7 @@ namespace MiningSimulator.Ores
             {
                 RaycastHit hit = obstacleHits[index];
                 Ore ore = hit.collider != null ? hit.collider.GetComponentInParent<Ore>() : null;
+                if (ore != null) continue;
                 MiningChest chest = hit.collider != null
                     ? hit.collider.GetComponentInParent<MiningChest>() : null;
                 if (hit.distance >= closestDistance ||
@@ -374,6 +375,7 @@ namespace MiningSimulator.Ores
             {
                 RaycastHit hit = obstacleHits[index];
                 Ore ore = hit.collider != null ? hit.collider.GetComponentInParent<Ore>() : null;
+                if (ore != null) continue;
                 MiningChest chest = hit.collider != null
                     ? hit.collider.GetComponentInParent<MiningChest>() : null;
                 if ((ore == null || ore == targetOre || ore.IsDepleted) &&
