@@ -8,10 +8,12 @@ public sealed class ArmorAndRelativeLevelTests
     [Test]
     public void DamageTypesUseTheirOwnResistance()
     {
-        Assert.That(CombatDamage.Resolve(150, CombatDamageType.Physical, 100, 300, 100), Is.EqualTo(50));
-        Assert.That(CombatDamage.Resolve(325, CombatDamageType.Magic, 100, 300, 100), Is.EqualTo(25));
-        Assert.That(CombatDamage.Resolve(100, CombatDamageType.Physical, 100, 0, 100), Is.Zero);
-        Assert.That(CombatDamage.Resolve(50, CombatDamageType.Magic, 0, 100, 100), Is.Zero);
+        Assert.That(CombatDamage.Resolve(100, CombatDamageType.Physical, 100, 300, 100), Is.EqualTo(50));
+        Assert.That(CombatDamage.Resolve(100, CombatDamageType.Magic, 100, 300, 100), Is.EqualTo(25));
+        Assert.That(CombatDamage.Resolve(1, CombatDamageType.Physical, 900, 0, 100), Is.EqualTo(.1f).Within(.00001f));
+        Assert.That(CombatDamage.Resolve(1, CombatDamageType.Magic, 0, 9900, 100), Is.EqualTo(.01f).Within(.00001f));
+        Assert.That(CombatDamage.ReductionFraction(100), Is.EqualTo(.5f));
+        Assert.That(CombatDamage.Resolve(100, CombatDamageType.Physical, 100, 0, 200), Is.EqualTo(200f / 3f).Within(.0001f));
         Assert.That(CombatDamage.Resolve(100, CombatDamageType.True, 100, 300, 100), Is.EqualTo(100));
         Assert.That(CombatDamage.Resolve(100, CombatDamageType.Physical, 0, 300, 100), Is.EqualTo(100));
         Assert.That(CombatDamage.Resolve(float.NaN, CombatDamageType.Physical, 0, 0, 100), Is.Zero);
@@ -27,9 +29,9 @@ public sealed class ArmorAndRelativeLevelTests
             var health = root.AddComponent<MiningCharacterHealth>();
             health.ConfigureDefenses(100, 300);
             health.Respawn();
-            Assert.That(health.DealDamage(150, CombatDamageType.Physical), Is.EqualTo(50));
+            Assert.That(health.DealDamage(100, CombatDamageType.Physical), Is.EqualTo(50));
             Assert.That(health.Health, Is.EqualTo(50));
-            Assert.That(health.DealDamage(325, CombatDamageType.Magic), Is.EqualTo(25));
+            Assert.That(health.DealDamage(100, CombatDamageType.Magic), Is.EqualTo(25));
             Assert.That(health.DealDamage(1000, CombatDamageType.True), Is.EqualTo(25));
             Assert.That(health.Health, Is.Zero);
         }

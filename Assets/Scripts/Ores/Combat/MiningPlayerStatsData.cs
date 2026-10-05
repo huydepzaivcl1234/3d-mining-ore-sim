@@ -34,12 +34,13 @@ namespace MiningSimulator.Ores
         [Min(0)] public float regenAmount = 1;
         [Min(0.1f)] public float regenInterval = 10;
         [Min(1)] public float respawnSeconds = 10;
-        [Header("Defenses - flat damage reduction")]
+        [Header("Defenses - percentage damage reduction")]
         [Min(0)] public float armor;
         [Min(0)] public float magicResistance;
         [Min(0)] public float armorPerLevel = 1f;
         [Min(0)] public float magicResistancePerLevel = 1f;
-        [HideInInspector] public float resistanceScale = 100f; // Legacy serialized field.
+        [Tooltip("Rating that halves incoming damage. 100 uses the LoL-style curve.")]
+        [Min(.01f)] public float resistanceScale = 100f;
         public CombatDamageType attackDamageType = CombatDamageType.Physical;
         [Header("Combat")]
         [Header("Damage number feedback")]

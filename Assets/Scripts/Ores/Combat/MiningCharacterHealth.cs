@@ -11,7 +11,7 @@ namespace MiningSimulator.Ores
         [Header("Defenses (player uses PlayerStatsData + equipped items)")]
         [Min(0f), SerializeField] private float armor;
         [Min(0f), SerializeField] private float magicResistance;
-        [HideInInspector, SerializeField] private float resistanceScale = 100f;
+        [Min(.01f), SerializeField] private float resistanceScale = 100f;
         [Header("Regeneration")]
         [Tooltip("HP restored per tick. Set 0 to disable; dead characters never regenerate.")]
         [Min(0f), SerializeField] private float regenAmount = 5f;
