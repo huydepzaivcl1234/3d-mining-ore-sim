@@ -11,7 +11,7 @@ namespace MiningSimulator.Ores
         [Header("Defenses (player uses PlayerStatsData + equipped items)")]
         [Min(0f), SerializeField] private float armor;
         [Min(0f), SerializeField] private float magicResistance;
-        [Min(.01f), SerializeField] private float resistanceScale = 100f;
+        [HideInInspector, SerializeField] private float resistanceScale = 100f;
         [Header("Regeneration")]
         [Tooltip("HP restored per tick. Set 0 to disable; dead characters never regenerate.")]
         [Min(0f), SerializeField] private float regenAmount = 5f;
@@ -46,9 +46,9 @@ namespace MiningSimulator.Ores
         private MiningPlayerStats playerStats;
         private MiningPlayerStats PlayerStats => playerStats != null ? playerStats : playerStats = GetComponent<MiningPlayerStats>();
         private MiningPlayerStatsData Stats => PlayerStats != null ? PlayerStats.Data : null;
-        public float Armor => CombatDamage.NonNegative(Stats != null ? Stats.armor : armor) +
+        public float Armor => CombatDamage.NonNegative(Stats != null ? PlayerStats.Armor : armor) +
             (Stats != null && EquipmentBonuses != null ? CombatDamage.NonNegative(EquipmentBonuses.armor) : 0f);
-        public float MagicResistance => CombatDamage.NonNegative(Stats != null ? Stats.magicResistance : magicResistance) +
+        public float MagicResistance => CombatDamage.NonNegative(Stats != null ? PlayerStats.MagicResistance : magicResistance) +
             (Stats != null && EquipmentBonuses != null ? CombatDamage.NonNegative(EquipmentBonuses.magicResistance) : 0f);
         public float ResistanceScale => Stats != null ? Stats.resistanceScale : resistanceScale;
         public void ConfigureDefenses(float armorRating, float magicRating, float scale = 100f)

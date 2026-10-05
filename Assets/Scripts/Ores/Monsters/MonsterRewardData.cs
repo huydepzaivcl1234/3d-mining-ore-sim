@@ -136,7 +136,7 @@ namespace MiningSimulator.Ores
         [Min(0f)] public float magicResistance;
         [Min(0f)] public float armorPerLevel;
         [Min(0f)] public float magicResistancePerLevel;
-        [Min(.01f)] public float resistanceScale = 100f;
+        [HideInInspector] public float resistanceScale = 100f; // Legacy serialized field.
         public CombatDamageType attackDamageType = CombatDamageType.Physical;
         public float ArmorAtLevel(int level) => CombatDamage.NonNegative(armor) +
             CombatDamage.NonNegative(armorPerLevel) * (Mathf.Max(1, level) - 1);

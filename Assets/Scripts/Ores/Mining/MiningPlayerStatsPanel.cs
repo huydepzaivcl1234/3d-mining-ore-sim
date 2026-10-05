@@ -77,8 +77,8 @@ namespace MiningSimulator.Ores
             if (health != null)
             {
                 Row(text, "HEALTH", "Health", $"{health.Health:0.##} / {health.MaxHealth:0.##}");
-                Row(text, "ARMOR", "Armor", $"{health.Armor:0.##} (-{CombatDamage.ReductionFraction(health.Armor, health.ResistanceScale) * 100f:0.##}%)");
-                Row(text, "MAGIC_RESISTANCE", "Magic resistance", $"{health.MagicResistance:0.##} (-{CombatDamage.ReductionFraction(health.MagicResistance, health.ResistanceScale) * 100f:0.##}%)");
+                Row(text, "ARMOR", "Armor", $"{health.Armor:0.##} (-{health.Armor:0.##})");
+                Row(text, "MAGIC_RESISTANCE", "Magic resistance", $"{health.MagicResistance:0.##} (-{health.MagicResistance:0.##})");
                 Row(text, "REGEN_SPEED", "Regeneration speed", string.Format(
                     L("PLAYER_STATS_REGEN_RATE_FORMAT", "{0:0.##} HP/s"),
                     health.EffectiveRegenAmount / health.RegenInterval));

@@ -8,8 +8,10 @@ public sealed class ArmorAndRelativeLevelTests
     [Test]
     public void DamageTypesUseTheirOwnResistance()
     {
-        Assert.That(CombatDamage.Resolve(100, CombatDamageType.Physical, 100, 300, 100), Is.EqualTo(50));
-        Assert.That(CombatDamage.Resolve(100, CombatDamageType.Magic, 100, 300, 100), Is.EqualTo(25));
+        Assert.That(CombatDamage.Resolve(150, CombatDamageType.Physical, 100, 300, 100), Is.EqualTo(50));
+        Assert.That(CombatDamage.Resolve(325, CombatDamageType.Magic, 100, 300, 100), Is.EqualTo(25));
+        Assert.That(CombatDamage.Resolve(100, CombatDamageType.Physical, 100, 0, 100), Is.Zero);
+        Assert.That(CombatDamage.Resolve(50, CombatDamageType.Magic, 0, 100, 100), Is.Zero);
         Assert.That(CombatDamage.Resolve(100, CombatDamageType.True, 100, 300, 100), Is.EqualTo(100));
         Assert.That(CombatDamage.Resolve(100, CombatDamageType.Physical, 0, 300, 100), Is.EqualTo(100));
         Assert.That(CombatDamage.Resolve(float.NaN, CombatDamageType.Physical, 0, 0, 100), Is.Zero);
@@ -25,13 +27,41 @@ public sealed class ArmorAndRelativeLevelTests
             var health = root.AddComponent<MiningCharacterHealth>();
             health.ConfigureDefenses(100, 300);
             health.Respawn();
-            Assert.That(health.DealDamage(100, CombatDamageType.Physical), Is.EqualTo(50));
+            Assert.That(health.DealDamage(150, CombatDamageType.Physical), Is.EqualTo(50));
             Assert.That(health.Health, Is.EqualTo(50));
-            Assert.That(health.DealDamage(100, CombatDamageType.Magic), Is.EqualTo(25));
+            Assert.That(health.DealDamage(325, CombatDamageType.Magic), Is.EqualTo(25));
             Assert.That(health.DealDamage(1000, CombatDamageType.True), Is.EqualTo(25));
             Assert.That(health.Health, Is.Zero);
         }
         finally { Object.DestroyImmediate(root); }
+    }
+
+    [Test]
+    public void PlayerDefensesFollowCurrentLevel()
+    {
+        var root = new GameObject("Isolated player defense test");
+        root.SetActive(false);
+        var data = ScriptableObject.CreateInstance<MiningPlayerStatsData>();
+        var player = root.AddComponent<MiningPlayerStats>();
+        var field = typeof(MiningPlayerStats).GetField("data", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+        try
+        {
+            data.armor = 10; data.magicResistance = 20;
+            data.armorPerLevel = 2; data.magicResistancePerLevel = 3;
+            field.SetValue(player, data);
+            player.SetProgress(6, 0, 100);
+            Assert.That(player.Armor, Is.EqualTo(20));
+            Assert.That(player.MagicResistance, Is.EqualTo(35));
+            player.SetProgress(1, 0, 100);
+            Assert.That(player.Armor, Is.EqualTo(10));
+            Assert.That(player.MagicResistance, Is.EqualTo(20));
+        }
+        finally
+        {
+            field.SetValue(player, null); // Teardown must not save temporary progress.
+            Object.DestroyImmediate(root);
+            Object.DestroyImmediate(data);
+        }
     }
 
     [Test]

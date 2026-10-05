@@ -8,6 +8,12 @@ namespace MiningSimulator.Ores
     {
         [SerializeField] private MiningPlayerStatsData data;
         public MiningPlayerStatsData Data => data;
+        public float Armor => DefenseAtLevel(data != null ? data.armor : 0f,
+            data != null ? data.armorPerLevel : 0f);
+        public float MagicResistance => DefenseAtLevel(data != null ? data.magicResistance : 0f,
+            data != null ? data.magicResistancePerLevel : 0f);
+        private float DefenseAtLevel(float baseline, float growth) => (float)System.Math.Min(float.MaxValue,
+            (double)CombatDamage.NonNegative(baseline) + (double)CombatDamage.NonNegative(growth) * (Level - 1));
         private MiningItemSystem itemEffects;
         private float DamagePotionMultiplier => itemEffects != null ? itemEffects.PlayerDamageMultiplier : 1f;
         private float AttackSpeedPotionMultiplier => itemEffects != null ? itemEffects.PlayerAttackSpeedMultiplier : 1f;
