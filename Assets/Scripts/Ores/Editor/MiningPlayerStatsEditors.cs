@@ -17,8 +17,14 @@ public abstract class MiningPlayerStatsBoundEditor : Editor
         bool bound = true;
         foreach (Object obj in targets)
             bound &= obj is Component component && MiningPlayerStats.For(component) != null;
+        bool monsterBound = true;
+        foreach (Object obj in targets)
+            monsterBound &= obj is MiningCharacterHealth health &&
+                health.GetComponent<MushroomMonster>() != null &&
+                health.GetComponent<MushroomMonster>().CombatData != null;
+        if (monsterBound) root.Add(new HelpBox("Monster combat and health are edited on its Monster Reward Data asset.", HelpBoxMessageType.Info));
         if (bound) root.Add(new HelpBox("Player stats are edited in GameData/Player/PlayerStatsData. Select the Player Stats Data asset on Mining Player Stats.", HelpBoxMessageType.Info));
-        var hidden = new HashSet<string>(bound ? StatFields : System.Array.Empty<string>());
+        var hidden = new HashSet<string>(bound || monsterBound ? StatFields : System.Array.Empty<string>());
         var property = serializedObject.GetIterator();
         bool enter = true;
         while (property.NextVisible(enter))

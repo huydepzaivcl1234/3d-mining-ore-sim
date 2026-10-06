@@ -14,10 +14,10 @@ public sealed class FreeFlowCombatTests
     {
         var controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(ControllerPath);
         var state = controller.layers.Single(l => l.name == "combat layer").stateMachine.states
-            .Single(s => s.state.name == "attack combat 3").state;
+            .Single(s => s.state.name == "Special Attack").state;
         var clip = (AnimationClip)state.motion;
-        var contact = clip.events.Single(e => e.functionName == "OnSwordStrikeThird");
-        var slash = clip.events.Single(e => e.functionName == "OnSlashThirdStart");
+        var contact = clip.events.Single(e => e.functionName == "OnSpecialAttackHit");
+        var slash = clip.events.Single(e => e.functionName == "OnSpecialSlashStart");
         Assert.That(contact.time, Is.GreaterThan(slash.time));
         Assert.That(clip.events.Any(e => e.functionName == "OnSwordStrikeDown"), Is.False);
         var data = AssetDatabase.LoadAssetAtPath<MiningSimulator.Ores.MiningPlayerStatsData>(
@@ -41,7 +41,7 @@ public sealed class FreeFlowCombatTests
 
     [TestCase("Sword Attack 1")]
     [TestCase("Sword Attack 2")]
-    [TestCase("attack combat 3")]
+    [TestCase("Special Attack")]
     public void FootworkHasSameLengthButNoDuplicateDamageOrVfxEvents(string stateName)
     {
         var controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(ControllerPath);
@@ -57,7 +57,9 @@ public sealed class FreeFlowCombatTests
 
     [TestCase("Sword Attack 1", 1)]
     [TestCase("Sword Attack 2", 2)]
-    [TestCase("attack combat 3", 0)]
+    [TestCase("Special Attack", 0)]
+    [TestCase("lunge attack", -1)]
+    [TestCase("turn attack", 0)]
     [TestCase("Combat", 0)]
     public void AcceptedComboClickAdvancesOneStrike(string current, int expected)
     {
@@ -72,7 +74,7 @@ public sealed class FreeFlowCombatTests
         var field = typeof(PlayerCombatInput).GetField("AttackStates",
             System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
         var names = (string[])field.GetValue(null);
-        Assert.That(names, Is.EqualTo(new[] { "Sword Attack 1", "Sword Attack 2", "attack combat 3" }));
+        Assert.That(names, Is.EqualTo(new[] { "Sword Attack 1", "Sword Attack 2", "Special Attack" }));
         var controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(ControllerPath);
         foreach (var layer in controller.layers.Where(l => l.name == "combat layer" || l.name == "Combat Footwork"))
             foreach (var name in names)

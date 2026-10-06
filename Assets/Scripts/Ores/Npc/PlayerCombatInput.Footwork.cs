@@ -27,12 +27,15 @@ public partial class PlayerCombatInput
         bool active = freeFlowEnabled && combatMode && CanUseGameplay() && movement.Grounded && IsAttackState(state);
         float phase = Mathf.Clamp01(state.normalizedTime);
         float contact = state.shortNameHash == ThirdAttackState ? thirdStrikeContactPhase :
+            state.shortNameHash == LungeAttackState ? lungeContactPhase :
+            state.shortNameHash == TurnAttackState ? turnContactPhase :
             state.shortNameHash == SecondAttackState ? secondStrikeContactPhase : firstStrikeContactPhase;
         // Plant the feet through contact, then give locomotion back during recovery.
         float recoveryStart = Mathf.Min(contact + recoveryDelayPhase, recoveryEndPhase - 0.001f);
         float recovery = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(recoveryStart, recoveryEndPhase, phase));
         bool moving = locomotionInput != null && locomotionInput.move.sqrMagnitude > 0.01f;
-        float desired = active ? (moving ? movingBodyWeight : 1f) * (1f - recovery) : 0f;
+        float desired = active ? (moving ? movingBodyWeight : 1f) * (1f - recovery) :
+            locomotionStateHash != 0 ? 1f : 0f;
         float weight = Mathf.MoveTowards(animator.GetLayerWeight(footworkLayer), desired,
             Time.deltaTime / Mathf.Max(0.01f, footworkBlendSeconds));
         animator.SetLayerWeight(footworkLayer, weight);

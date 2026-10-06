@@ -7,7 +7,7 @@ public partial class PlayerCombatInput
     private MiningItemSystem equipmentItems;
     private void DamageTarget(MiningCharacterHealth target, Vector3 point, float damageMultiplier = 1f)
     {
-        if (Damage <= 0 || target == null || target.Health <= 0f) return;
+        if (!Application.isPlaying || Damage <= 0 || target == null || target.Health <= 0f) return;
         float dealt = target.DealDamage(Damage * damageMultiplier,
             Stats != null ? Stats.attackDamageType : CombatDamageType.Physical);
         if (dealt <= 0f) return;
@@ -56,9 +56,11 @@ public partial class PlayerCombatInput
         PlaySlashEffects(slashUpVfx, slashUpEffects);
     }
 
+    public void OnSpecialSlashStart(AnimationEvent animationEvent) => OnSlashThirdStart(animationEvent);
+
     public void OnSlashThirdStart(AnimationEvent animationEvent)
     {
-        if (!combatMode || !CanUseGameplay() || animator == null || Stats == null) return;
+        if (!Application.isPlaying || !combatMode || !CanUseGameplay() || animator == null || Stats == null) return;
         int layer = animator.GetLayerIndex(CombatLayerName);
         // Ignore an outgoing clip's event during a cancelled strike.
         if (layer < 0 || (animator.IsInTransition(layer)
@@ -69,7 +71,7 @@ public partial class PlayerCombatInput
         var clip = animationEvent.animatorClipInfo.clip;
         float contactTime = clip.length;
         foreach (var cue in clip.events)
-            if (cue.functionName == nameof(OnSwordStrikeThird) && cue.time > animationEvent.time)
+            if ((cue.functionName == nameof(OnSwordStrikeThird) || cue.functionName == nameof(OnSpecialAttackHit)) && cue.time > animationEvent.time)
                 contactTime = Mathf.Min(contactTime, cue.time);
         float window = Mathf.Max(.01f, contactTime - animationEvent.time);
         var state = animationEvent.animatorStateInfo;
@@ -103,7 +105,7 @@ public partial class PlayerCombatInput
 
     private void PlaySlashEffects(ParticleSystem first, List<SlashVfxCue> additional)
     {
-        if (!combatMode || !CanUseGameplay()) return;
+        if (!Application.isPlaying || !combatMode || !CanUseGameplay()) return;
         if (first != null) PlaySlashEffect(first);
         if (additional == null) return;
         foreach (var cue in additional)

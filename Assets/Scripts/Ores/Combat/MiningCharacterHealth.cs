@@ -43,6 +43,8 @@ namespace MiningSimulator.Ores
         private System.Action<float> burnDamage;
         public float Health => health;
         public Transform HealthBar => healthBar;
+        private MushroomMonster combatOwner;
+        private MonsterCombatSettings MonsterCombat => combatOwner != null ? combatOwner.CombatData : null;
         private MiningPlayerStats playerStats;
         private MiningPlayerStats PlayerStats => playerStats != null ? playerStats : playerStats = GetComponent<MiningPlayerStats>();
         private MiningPlayerStatsData Stats => PlayerStats != null ? PlayerStats.Data : null;
@@ -58,7 +60,7 @@ namespace MiningSimulator.Ores
             resistanceScale = Mathf.Max(.01f, CombatDamage.NonNegative(scale));
         }
         private float spawnedMaxHealth;
-        public float MaxHealth => Mathf.Max(1f, Stats != null ? PlayerStats.MaxHealth : spawnedMaxHealth > 0 ? spawnedMaxHealth : maxHealth);
+        public float MaxHealth => Mathf.Max(1f, Stats != null ? PlayerStats.MaxHealth : spawnedMaxHealth > 0 ? spawnedMaxHealth : MonsterCombat != null ? MonsterCombat.maxHealth : maxHealth);
         public void ConfigureSpawnHealth(float value)
         {
             spawnedMaxHealth = Mathf.Max(1, value);
@@ -67,9 +69,9 @@ namespace MiningSimulator.Ores
             if (microBar != null) microBar.Initialize(MaxHealth);
             Refresh(true);
         }
-        public float RegenAmount => Mathf.Max(0f, Stats != null ? Stats.regenAmount : regenAmount);
+        public float RegenAmount => Mathf.Max(0f, Stats != null ? Stats.regenAmount : MonsterCombat != null ? MonsterCombat.regenAmount : regenAmount);
         public float RegenInterval => Mathf.Max(0.1f,
-            (Stats != null ? Stats.regenInterval : regenInterval) *
+            (Stats != null ? Stats.regenInterval : MonsterCombat != null ? MonsterCombat.regenInterval : regenInterval) *
             (Stats != null && playerUpgrades != null
                 ? playerUpgrades.GetMultiplier(MiningUpgradeType.RegenIntervalReduction) : 1f) *
             (Stats != null ? PlayerStats.CardRegenIntervalMultiplier : 1f) *
@@ -172,6 +174,7 @@ namespace MiningSimulator.Ores
 
         private void Awake()
         {
+            combatOwner = GetComponent<MushroomMonster>();
             burnDamage = ApplyBurnDamage;
             combatInput = GetComponent<PlayerCombatInput>();
             if (GetComponent<MiningPlayerStats>() != null)

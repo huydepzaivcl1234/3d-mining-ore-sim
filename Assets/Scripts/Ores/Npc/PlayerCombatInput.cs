@@ -13,10 +13,12 @@ public partial class PlayerCombatInput : MonoBehaviour
     private static readonly int CombatMoveState = Animator.StringToHash("Combat");
     private static readonly int FirstAttackState = Animator.StringToHash("Sword Attack 1");
     private static readonly int SecondAttackState = Animator.StringToHash("Sword Attack 2");
-    private static readonly int ThirdAttackState = Animator.StringToHash("attack combat 3");
+    private static readonly int ThirdAttackState = Animator.StringToHash("Special Attack");
+    private static readonly int LungeAttackState = Animator.StringToHash("lunge attack");
+    private static readonly int TurnAttackState = Animator.StringToHash("turn attack");
     // Keep the designer's state names on both body layers. A new combo starts
     // at 1; each accepted follow-up advances exactly one strike.
-    private static readonly string[] AttackStates = { "Sword Attack 1", "Sword Attack 2", "attack combat 3" };
+    private static readonly string[] AttackStates = { "Sword Attack 1", "Sword Attack 2", "Special Attack" };
     private static readonly int ArmedState = Animator.StringToHash("Combat");
     [SerializeField] private Animator animator;
     [Header("Input bindings - keyboard or mouse")]
@@ -144,11 +146,13 @@ public partial class PlayerCombatInput : MonoBehaviour
     private void OnEnable()
     {
         ResetFootwork();
+        BindLocomotionAnimation();
         toggleCombat?.Enable();
         attack?.Enable();
     }
     private void OnDisable()
     {
+        UnbindLocomotionAnimation();
         EndThirdSlash();
         StopAllCoroutines();
         ResetFootwork();
@@ -244,7 +248,10 @@ public partial class PlayerCombatInput : MonoBehaviour
         {
             queuedAttack = true;
             queuedAttackStateHash = state.shortNameHash;
-            queuedAttackUntil = Time.time + comboBufferSeconds;
+            // Long authored openers must retain a deliberate click until their link frame.
+            float secondsToLink = Mathf.Max(0f, comboLinkTime - state.normalizedTime) * state.length /
+                Mathf.Max(.01f, state.speed * state.speedMultiplier * animator.speed);
+            queuedAttackUntil = Time.time + Mathf.Max(comboBufferSeconds, secondsToLink + attackTransitionSeconds);
         }
         if (swinging && !animator.IsInTransition(layer))
         {
@@ -267,31 +274,39 @@ public partial class PlayerCombatInput : MonoBehaviour
         bool swordReady = armsLayer < 0 || (!animator.IsInTransition(armsLayer) &&
             animator.GetCurrentAnimatorStateInfo(armsLayer).shortNameHash == ArmedState);
         if (!combatMode || !swordReady || swinging || animator.IsInTransition(layer) ||
-            state.shortNameHash != CombatMoveState || !pressed) return;
+            (state.shortNameHash != CombatMoveState && !IsLocomotionState(state.shortNameHash)) || !pressed) return;
         queuedAttack = false;
-        PlayAttack(layer, 0);
+        PlayAttack(layer, 0, true);
     }
 
     private static int NextAttackIndex(int stateHash)
     {
+        if (stateHash == LungeAttackState) return -1;
+        if (stateHash == TurnAttackState) return 0;
         for (int i = 0; i < AttackStates.Length; i++)
             if (Animator.StringToHash(AttackStates[i]) == stateHash) return (i + 1) % AttackStates.Length;
         return 0;
     }
 
-    private void PlayAttack(int layer, int index)
+    private void PlayAttack(int layer, int index, bool opening = false)
     {
         queuedAttack = false;
         queuedAttackStateHash = 0;
         hitApplied = false;
         returningFromAttack = false;
         BeginLunge();
+        if (opening && lungeTravelRemaining > 0.01f &&
+            animator.HasState(layer, LungeAttackState)) index = -2;
+        // Only the actual lunge opener travels. Turn/combo retain normal damage range.
+        if (index != -2) lungeTravelRemaining = 0f;
+        ClearLocomotionAnimation(false);
         BeginSoftAim();
         animator.ResetTrigger("attack");
         animator.ResetTrigger("Move");
-        animator.CrossFadeInFixedTime(AttackStates[index], attackTransitionSeconds, layer, 0f);
+        string stateName = index == -2 ? "lunge attack" : index == -1 ? "turn attack" : AttackStates[index];
+        animator.CrossFadeInFixedTime(stateName, attackTransitionSeconds, layer, 0f);
         if (footworkLayer >= 0)
-            animator.CrossFadeInFixedTime(AttackStates[index], attackTransitionSeconds, footworkLayer, 0f);
+            animator.CrossFadeInFixedTime(stateName, attackTransitionSeconds, footworkLayer, 0f);
     }
 
     private bool HasParameter(string name, AnimatorControllerParameterType type)
@@ -324,7 +339,7 @@ public partial class PlayerCombatInput : MonoBehaviour
     {
         bool changed = combatMode != enabled;
         combatMode = enabled;
-        if (!enabled) { ClearAim(); ResetFootwork(); queuedAttack = false; queuedAttackStateHash = 0; }
+        if (!enabled) { ClearAim(); ResetFootwork(); ClearLocomotionAnimation(false); queuedAttack = false; queuedAttackStateHash = 0; }
         if (animator == null || animator.runtimeAnimatorController == null) return;
         if (HasParameter(drawWeaponParameter, AnimatorControllerParameterType.Bool))
             animator.SetBool(drawWeaponParameter, enabled);
@@ -380,11 +395,15 @@ public partial class PlayerCombatInput : MonoBehaviour
 
     private static bool IsAttackState(AnimatorStateInfo state) =>
         state.shortNameHash == FirstAttackState || state.shortNameHash == SecondAttackState ||
-        state.shortNameHash == ThirdAttackState;
+        state.shortNameHash == ThirdAttackState || state.shortNameHash == LungeAttackState ||
+        state.shortNameHash == TurnAttackState;
 
     // Called by events on the imported sword clips, exactly when the blade reaches the target.
     public void OnSwordStrikeDown() => ApplyAnimationHit(FirstAttackState, true);
     public void OnSwordSweepUp() => ApplyAnimationHit(SecondAttackState, true);
+    public void OnLungeAttackHit() => ApplyAnimationHit(LungeAttackState, true);
+    public void OnTurnAttackHit() => ApplyAnimationHit(TurnAttackState, true);
+    public void OnSpecialAttackHit() => OnSwordStrikeThird();
     public void OnSwordStrikeThird()
     {
         EndThirdSlash();

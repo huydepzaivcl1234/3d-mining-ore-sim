@@ -12,6 +12,51 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5ce228d6dde5489e959cc89554e9ce6d, type: 3}
   m_Name: MushroomRewards
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MonsterRewardData
+  combat:
+    maxHealth: 10
+    regenAmount: 0
+    regenInterval: 1
+    attackSpeed: 1.5
+    attackState: Headbutt
+    secondAttackState: 
+    secondHitMoment: 0.52
+    secondAreaRadius: 1.6
+    secondAreaOffset: {x: 0.3, y: 1.71}
+    attackTurnSpeed: 720
+    trackingEndFraction: 0.85
+    chaseTurnSpeed: 240
+    animationBlendSeconds: 0.15
+    moveSpeed: 1.5
+    detectionRange: 6
+    attackRange: 1.5
+    attackArc: 120
+    damage: 5
+    attackCooldown: 2
+    hitMoment: 0.45
+    hitShape: 0
+    areaRadius: 1.6
+    areaForwardOffset: 1.6
+    areaSideOffset: 0
+    hitHeight: 2.5
+    warningColor: {r: 1, g: 0.08, b: 0.02, a: 0.65}
+    warningShader: {fileID: 4800000, guid: b0d2120fa98d498498f08fd811238915, type: 3}
+    deathDelay: 2
+    chaseRepathSeconds: 0.4
+    chaseStandDirections: 16
+    chaseStandRangeFraction: 0.75
+    chaseStandMaximumRangeFraction: 0.95
+    projectile: {fileID: 0}
+    fireState: Fire
+    rangedRange: 8
+    releaseMoment: 0.45
+    projectileSpeed: 8
+    projectileTurnDegreesPerSecond: 540
+    projectileRadius: 0.12
+    projectileLifetime: 8
+    projectileCollisionLayers:
+      serializedVersion: 2
+      m_Bits: 4294967295
+  combatSettingsVersion: 1
   boss:
     enabled: 1
     chancePercent: 5

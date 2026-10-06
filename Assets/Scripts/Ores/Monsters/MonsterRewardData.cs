@@ -49,6 +49,10 @@ namespace MiningSimulator.Ores
     [CreateAssetMenu(menuName = "Mining Simulator/Game Data/Monster Rewards")]
     public sealed class MonsterRewardData : ScriptableObject
     {
+        [Tooltip("Species combat loadout. Null only for legacy assets not yet migrated.")]
+        public MonsterCombatSettings combat = new MonsterCombatSettings();
+        [HideInInspector] public int combatSettingsVersion;
+        public bool HasCombatData => combatSettingsVersion > 0 && combat != null;
         [Header("Boss variant (same species)")]
         public MonsterBossSettings boss = new();
         [Header("Encounter expiry")]

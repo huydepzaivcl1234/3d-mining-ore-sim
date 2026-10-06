@@ -5,11 +5,17 @@ namespace MiningSimulator.Ores
     /// <summary>Swept, one-hit projectile. Steering follows the chosen living player or miner.</summary>
     public sealed class HomingMonsterProjectile : MonoBehaviour
     {
-        [SerializeField, Min(.1f)] private float speed = 8f;
-        [SerializeField, Min(0f)] private float turnDegreesPerSecond = 540f;
-        [SerializeField, Min(.01f)] private float radius = .12f;
-        [SerializeField, Min(.1f)] private float lifetime = 8f;
-        [SerializeField] private LayerMask collisionLayers = ~0;
+        [SerializeField, Min(.1f)] [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("speed")] private float legacy_speed = 8f;
+        private float speed => data != null ? data.projectileSpeed : legacy_speed;
+        [SerializeField, Min(0f)] [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("turnDegreesPerSecond")] private float legacy_turnDegreesPerSecond = 540f;
+        private float turnDegreesPerSecond => data != null ? data.projectileTurnDegreesPerSecond : legacy_turnDegreesPerSecond;
+        [SerializeField, Min(.01f)] [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("radius")] private float legacy_radius = .12f;
+        private float radius => data != null ? data.projectileRadius : legacy_radius;
+        [SerializeField, Min(.1f)] [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("lifetime")] private float legacy_lifetime = 8f;
+        private float lifetime => data != null ? data.projectileLifetime : legacy_lifetime;
+        [SerializeField] [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("collisionLayers")] private LayerMask legacy_collisionLayers = ~0;
+        private LayerMask collisionLayers => data != null ? data.projectileCollisionLayers : legacy_collisionLayers;
+        private MonsterCombatSettings data;
         private readonly RaycastHit[] hits = new RaycastHit[32];
         private MushroomMonster owner;
         private Transform victim;
@@ -26,6 +32,7 @@ namespace MiningSimulator.Ores
         public void Launch(MushroomMonster attacker, Transform target)
         {
             owner = attacker;
+            data = attacker != null ? attacker.CombatData : null;
             victim = target;
             victimHealth = target != null ? target.GetComponent<MiningCharacterHealth>() : null;
             victimMiner = target != null ? target.GetComponent<MiningNpc>() : null;

@@ -1120,7 +1120,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c08874384dfc41f3ab5cfe48a0372797, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningCharacterHealth
-  maxHealth: 100
+  maxHealth: 80
+  armor: 0
+  magicResistance: 0
+  resistanceScale: 100
   regenAmount: 1
   regenInterval: 5
   healthBar: {fileID: 5587691360387498288}
@@ -1194,6 +1197,9 @@ MonoBehaviour:
   deathDelay: 2
   rewards: {fileID: 11400000, guid: 38356a852b244db4d804a9e371dd9e5c, type: 2}
   chaseRepathSeconds: 0.4
+  chaseStandDirections: 16
+  chaseStandRangeFraction: 0.75
+  chaseStandMaximumRangeFraction: 0.95
   avoidanceLookAhead: 1.5
   avoidanceHoldSeconds: 0.5
 --- !u!1 &7791511158296427687

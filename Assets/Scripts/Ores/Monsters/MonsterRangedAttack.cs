@@ -7,10 +7,16 @@ namespace MiningSimulator.Ores
     public sealed class MonsterRangedAttack : MonoBehaviour
     {
         [SerializeField] private Transform muzzle;
-        [SerializeField] private HomingMonsterProjectile projectile;
-        [SerializeField] private string fireState = "Fire";
-        [SerializeField, Min(.1f)] private float range = 8f;
-        [SerializeField, Range(0f, 1f)] private float releaseMoment = .45f;
+        [SerializeField] [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("projectile")] private HomingMonsterProjectile legacy_projectile;
+        private HomingMonsterProjectile projectile => Data != null ? Data.projectile : legacy_projectile;
+        [SerializeField] [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("fireState")] private string legacy_fireState = "Fire";
+        private string fireState => Data != null ? Data.fireState : legacy_fireState;
+        [SerializeField, Min(.1f)] [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("range")] private float legacy_range = 8f;
+        private float range => Data != null ? Data.rangedRange : legacy_range;
+        [SerializeField, Range(0f, 1f)] [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("releaseMoment")] private float legacy_releaseMoment = .45f;
+        private float releaseMoment => Data != null ? Data.releaseMoment : legacy_releaseMoment;
+        private MushroomMonster monster;
+        private MonsterCombatSettings Data => (monster != null ? monster : monster = GetComponent<MushroomMonster>())?.CombatData;
         private readonly RaycastHit[] sightHits = new RaycastHit[32];
         public string FireState => fireState;
         public float ReleaseMoment => releaseMoment;

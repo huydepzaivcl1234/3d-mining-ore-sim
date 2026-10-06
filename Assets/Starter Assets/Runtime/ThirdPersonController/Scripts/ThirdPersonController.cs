@@ -89,6 +89,7 @@ namespace StarterAssets
         public bool ExternalFacing { get; set; }
         // Combat supplies intent; this motor remains the sole owner of collision-safe movement.
         public float CombatMoveMultiplier { get; set; } = 1f;
+        public float LocomotionMoveMultiplier { get; set; } = 1f;
         private float slowUntil;
         private float slowMultiplier = 1f;
         public float MovementSlowMultiplier => Time.time < slowUntil ? slowMultiplier : 1f;
@@ -138,6 +139,8 @@ namespace StarterAssets
         private GameObject _mainCamera;
         // Set by the project's active camera owner without coupling this package assembly to it.
         public bool ExternalCameraControl { get; set; }
+        public event System.Action<Vector3, bool, float> MovementAnimationRequested;
+        public float ExternalRotationSmoothTime { get; set; }
 
         private const float _threshold = 0.01f;
 
@@ -197,6 +200,7 @@ namespace StarterAssets
             slowUntil = 0f;
             slowMultiplier = 1f;
             CombatMoveMultiplier = 1f;
+            LocomotionMoveMultiplier = 1f;
             CombatStepVelocity = Vector3.zero;
             _speed = _animationBlend = _rotationVelocity = 0f;
             _verticalVelocity = -2f;
@@ -314,6 +318,8 @@ namespace StarterAssets
 
             // normalise input direction
             Vector3 inputDirection = new Vector3(_input.move.x, 0.0f, _input.move.y).normalized;
+            Vector3 animationDirection = Quaternion.Euler(0f, _mainCamera.transform.eulerAngles.y, 0f) * inputDirection;
+            MovementAnimationRequested?.Invoke(animationDirection, _input.sprint && SprintAllowed, MovementDeltaTime);
 
             // note: Vector2's != operator uses approximation so is not floating point error prone, and is cheaper than magnitude
             // if there is a move input rotate player when the player is moving
@@ -322,7 +328,8 @@ namespace StarterAssets
                 _targetRotation = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg +
                                   _mainCamera.transform.eulerAngles.y;
                 float rotation = Mathf.SmoothDampAngle(transform.eulerAngles.y, _targetRotation, ref _rotationVelocity,
-                    RotationSmoothTime, Mathf.Infinity, MovementDeltaTime);
+                    ExternalRotationSmoothTime > 0f ? ExternalRotationSmoothTime : RotationSmoothTime,
+                    Mathf.Infinity, MovementDeltaTime);
 
                 // rotate to face input direction relative to camera position
                 if (!ExternalFacing) transform.rotation = Quaternion.Euler(0.0f, rotation, 0.0f);
@@ -332,7 +339,8 @@ namespace StarterAssets
             Vector3 targetDirection = Quaternion.Euler(0.0f, _targetRotation, 0.0f) * Vector3.forward;
 
             // move the player
-            _controller.Move((targetDirection.normalized * (_speed * Mathf.Clamp01(CombatMoveMultiplier)) +
+            _controller.Move((targetDirection.normalized * (_speed * Mathf.Clamp01(CombatMoveMultiplier) *
+                             Mathf.Clamp01(LocomotionMoveMultiplier)) +
                              Vector3.ProjectOnPlane(CombatStepVelocity, Vector3.up)) * MovementDeltaTime +
                              ((_headDeflectionUntil > Time.time ? _headDeflectionVelocity : Vector3.zero) +
                              new Vector3(0.0f, _verticalVelocity, 0.0f)) * MovementDeltaTime);

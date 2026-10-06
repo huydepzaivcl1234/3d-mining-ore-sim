@@ -69,6 +69,8 @@ namespace MiningSimulator.Ores
         [Min(0.01f), SerializeField] private float collisionRadius = 0.35f;
         [Tooltip("Small clearance kept between the camera and a blocking surface.")]
         [Min(0f), SerializeField] private float collisionPadding = 0.08f;
+        [Tooltip("Time to ease back to the normal orbit distance after leaving a wall. Moving inward stays collision-safe.")]
+        [Min(0.01f), SerializeField] private float collisionReturnSmoothTime = 0.25f;
 
         private const int CollisionHitCapacity = 32;
         private readonly RaycastHit[] collisionHits = new RaycastHit[CollisionHitCapacity];
@@ -215,21 +217,9 @@ namespace MiningSimulator.Ores
                 desiredPosition += rotation * (localShake * (shakeStrength * shakeEnvelope));
             }
 
-            Vector3 position = ResolveCameraPosition(desiredPosition);
-            if (followTarget != null)
-            {
-                position = ResolveFollowLineOfSight(position);
-                Vector3 fromFocus = position - focusPoint;
-                float safeDistance = fromFocus.magnitude;
-                if (unobstructedDistance <= 0f || safeDistance < unobstructedDistance)
-                    unobstructedDistance = safeDistance;
-                else
-                    unobstructedDistance = Mathf.SmoothDamp(unobstructedDistance, safeDistance,
-                        ref obstructionReturnVelocity, 0.25f, Mathf.Infinity, RuneStation.PlayerDeltaTime);
-                if (safeDistance > 0.001f)
-                    position = focusPoint + fromFocus * (unobstructedDistance / safeDistance);
-                resolvedCameraPosition = position;
-            }
+            Vector3 position = followTarget != null
+                ? ResolveFollowCameraPosition(desiredPosition, RuneStation.PlayerDeltaTime)
+                : ResolveCameraPosition(desiredPosition);
             controlledCamera.transform.SetPositionAndRotation(position, rotation);
             if (IsShiftLocked && followTarget != null)
             {
@@ -563,15 +553,39 @@ namespace MiningSimulator.Ores
             return resolvedCameraPosition;
         }
 
-        private Vector3 ResolveFollowLineOfSight(Vector3 position)
+        private Vector3 ResolveFollowCameraPosition(Vector3 desiredPosition, float deltaTime)
         {
-            Vector3 offset = position - focusPoint;
+            // Solve the intended orbit ray, not the previous camera's wall-slide path.
+            // Sliding first changes its height; a subsequent focus cast pulls it back,
+            // feeding a different slide direction into the next frame.
+            Vector3 offset = desiredPosition - focusPoint;
             float length = offset.magnitude;
-            if (length <= BodyRadius ||
-                !TryGetClosestObstruction(focusPoint, offset, length, out RaycastHit hit))
-                return position;
-            return ResolveEyeOverlap(focusPoint + offset / length *
-                Mathf.Max(0f, hit.distance - collisionPadding));
+            if (length <= Mathf.Epsilon) return ResolveEyeOverlap(focusPoint);
+
+            Vector3 direction = offset / length;
+            float safeDistance = length;
+            if (TryGetClosestObstruction(focusPoint, direction, length, out RaycastHit hit))
+                safeDistance = Mathf.Max(0f, hit.distance - collisionPadding);
+
+            if (!hasResolvedCameraPosition || safeDistance <= unobstructedDistance)
+            {
+                unobstructedDistance = safeDistance;
+                // Discard outward momentum when the wall forces us inward.
+                obstructionReturnVelocity = 0f;
+            }
+            else if (deltaTime > 0f)
+            {
+                unobstructedDistance = Mathf.SmoothDamp(unobstructedDistance, safeDistance,
+                    ref obstructionReturnVelocity, collisionReturnSmoothTime,
+                    Mathf.Infinity, deltaTime);
+            }
+
+            // No minimum zoom clamp: a close wall must be allowed to bring the eye
+            // closer than the ordinary mouse-wheel zoom limit.
+            resolvedCameraPosition = ResolveEyeOverlap(focusPoint + direction *
+                Mathf.Min(unobstructedDistance, safeDistance));
+            hasResolvedCameraPosition = true;
+            return resolvedCameraPosition;
         }
 
         private Vector3 ResolveEyeMovement(Vector3 targetPosition)
@@ -775,6 +789,7 @@ namespace MiningSimulator.Ores
         {
             collisionRadius = Mathf.Max(0.01f, collisionRadius);
             collisionPadding = Mathf.Max(0f, collisionPadding);
+            collisionReturnSmoothTime = Mathf.Max(0.01f, collisionReturnSmoothTime);
             followDistance = Mathf.Max(0.5f, followDistance);
             explorationDistance = Mathf.Max(0.5f, explorationDistance);
             combatDistance = Mathf.Max(0.5f, combatDistance);

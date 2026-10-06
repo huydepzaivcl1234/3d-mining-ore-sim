@@ -12,6 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6d59d2ea18fd45178dc7206b6a8c3294, type: 3}
   m_Name: MiningUpgradeData
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningUpgradeData
+  autoUpgradeGemCost: 50
+  autoUpgradeInterval: 0.5
+  autoUpgradeSaveKey: MiningSimulator.AutoUpgrade.v1
+  autoUpgradeOrder: 00000000020000000100000003000000040000000500000006000000070000000800000009000000
   moneyReward:
     displayName: "T\u0103ng ti\u1EC1n nh\u1EADn \u0111\u01B0\u1EE3c th\xEAm"
     percentPerStack: 5

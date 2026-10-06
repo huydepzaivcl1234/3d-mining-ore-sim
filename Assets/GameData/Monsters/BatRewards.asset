@@ -12,6 +12,51 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5ce228d6dde5489e959cc89554e9ce6d, type: 3}
   m_Name: BatRewards
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MonsterRewardData
+  combat:
+    maxHealth: 25
+    regenAmount: 0
+    regenInterval: 5
+    attackSpeed: 2
+    attackState: Bite
+    secondAttackState: 
+    secondHitMoment: 0.52
+    secondAreaRadius: 1.6
+    secondAreaOffset: {x: 0.3, y: 1.71}
+    attackTurnSpeed: 1080
+    trackingEndFraction: 0.85
+    chaseTurnSpeed: 720
+    animationBlendSeconds: 0.08
+    moveSpeed: 5.5
+    detectionRange: 6
+    attackRange: 1.3
+    attackArc: 60
+    damage: 0.5
+    attackCooldown: 0.75
+    hitMoment: 0.48
+    hitShape: 0
+    areaRadius: 1.6
+    areaForwardOffset: 1.6
+    areaSideOffset: 0
+    hitHeight: 2.5
+    warningColor: {r: 1, g: 0.08, b: 0.02, a: 0.65}
+    warningShader: {fileID: 0}
+    deathDelay: 3
+    chaseRepathSeconds: 0.4
+    chaseStandDirections: 16
+    chaseStandRangeFraction: 0.75
+    chaseStandMaximumRangeFraction: 0.95
+    projectile: {fileID: 0}
+    fireState: Fire
+    rangedRange: 8
+    releaseMoment: 0.45
+    projectileSpeed: 8
+    projectileTurnDegreesPerSecond: 540
+    projectileRadius: 0.12
+    projectileLifetime: 8
+    projectileCollisionLayers:
+      serializedVersion: 2
+      m_Bits: 4294967295
+  combatSettingsVersion: 1
   boss:
     enabled: 1
     chancePercent: 5
@@ -49,7 +94,7 @@ MonoBehaviour:
   higherLevelChance: 0.35
   higherLevelIncreasePerDayPercent: 0.01
   maximumHigherLevelChancePercent: 50
-  statGrowthPerLevel: 0.75
+  statGrowthPerLevel: 0.5
   goldGrowthPerLevel: 0.75
   randomStatMultiplier: {x: 0.9, y: 1.1}
   experience: 50
@@ -60,9 +105,9 @@ MonoBehaviour:
   magicResistancePerLevel: 1
   resistanceScale: 100
   attackDamageType: 0
-  burnDamagePerTick: 1
+  burnDamagePerTick: 0.5
   burnTickSeconds: 1
-  burnDurationSeconds: 5
+  burnDurationSeconds: 3
   lifeStealPercent: 0
   healingBonusPercent: 0
   drops:

@@ -8,44 +8,68 @@ namespace MiningSimulator.Ores
     {
         [SerializeField] private Animator animator;
         [Tooltip("Animator state containing this species' attack clip.")]
-        [SerializeField] private string attackState = "Headbutt";
+        [SerializeField] [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("attackState")] private string legacy_attackState = "Headbutt";
+        private string attackState => CombatData != null ? CombatData.attackState : legacy_attackState;
         [Tooltip("Optional second attack. Empty keeps this species' original single attack.")]
-        [SerializeField] private string secondAttackState;
-        [Range(0f, 1f), SerializeField] private float secondHitMoment = .52f;
-        [Min(.1f), SerializeField] private float secondAreaRadius = 1.6f;
-        [SerializeField] private Vector2 secondAreaOffset = new Vector2(.3f, 1.71f);
-        [Min(0f), SerializeField] private float attackTurnSpeed = 720f;
+        [SerializeField] [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("secondAttackState")] private string legacy_secondAttackState;
+        private string secondAttackState => CombatData != null ? CombatData.secondAttackState : legacy_secondAttackState;
+        [Range(0f, 1f), SerializeField] [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("secondHitMoment")] private float legacy_secondHitMoment = .52f;
+        private float secondHitMoment => CombatData != null ? CombatData.secondHitMoment : legacy_secondHitMoment;
+        [Min(.1f), SerializeField] [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("secondAreaRadius")] private float legacy_secondAreaRadius = 1.6f;
+        private float secondAreaRadius => CombatData != null ? CombatData.secondAreaRadius : legacy_secondAreaRadius;
+        [SerializeField] [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("secondAreaOffset")] private Vector2 legacy_secondAreaOffset = new Vector2(.3f, 1.71f);
+        private Vector2 secondAreaOffset => CombatData != null ? CombatData.secondAreaOffset : legacy_secondAreaOffset;
+        [Min(0f), SerializeField] [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("attackTurnSpeed")] private float legacy_attackTurnSpeed = 720f;
+        private float attackTurnSpeed => CombatData != null ? CombatData.attackTurnSpeed : legacy_attackTurnSpeed;
         [Range(0f, 1f), Tooltip("Fraction of windup where tracking ends; 1 tracks until contact, 0 locks at start.")]
-        [SerializeField] private float trackingEndFraction = .85f;
-        [Min(0f), SerializeField] private float chaseTurnSpeed = 240f;
-        [Min(0f), SerializeField] private float animationBlendSeconds = .15f;
+        [SerializeField] [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("trackingEndFraction")] private float legacy_trackingEndFraction = .85f;
+        private float trackingEndFraction => CombatData != null ? CombatData.trackingEndFraction : legacy_trackingEndFraction;
+        [Min(0f), SerializeField] [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("chaseTurnSpeed")] private float legacy_chaseTurnSpeed = 240f;
+        private float chaseTurnSpeed => CombatData != null ? CombatData.chaseTurnSpeed : legacy_chaseTurnSpeed;
+        [Min(0f), SerializeField] [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("animationBlendSeconds")] private float legacy_animationBlendSeconds = .15f;
+        private float animationBlendSeconds => CombatData != null ? CombatData.animationBlendSeconds : legacy_animationBlendSeconds;
         private bool secondAttack, nextSecondAttack;
         private MonsterRangedAttack rangedAttack;
         private bool rangedStrike;
         private string ActiveAttackState => rangedStrike ? rangedAttack.FireState : secondAttack ? secondAttackState : attackState;
         private float ActiveHitMoment => rangedStrike ? rangedAttack.ReleaseMoment : secondAttack ? secondHitMoment : hitMoment;
         private float ActiveAreaRadius => secondAttack ? secondAreaRadius : areaRadius;
-        [Min(0f), SerializeField] private float moveSpeed = 1.5f;
-        [Min(0f), SerializeField] private float detectionRange = 6f;
-        [Min(0.1f), SerializeField] private float attackRange = 1.5f;
-        [Range(1f, 180f), SerializeField] private float attackArc = 120f;
-        [Min(0f), SerializeField] private float damage = 5f;
-        [Min(0.1f), SerializeField] private float attackCooldown = 2f;
-        [Range(0f, 1f), SerializeField] private float hitMoment = 0.45f;
+        [Min(0f), SerializeField] [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("moveSpeed")] private float legacy_moveSpeed = 1.5f;
+        private float moveSpeed => CombatData != null ? CombatData.moveSpeed : legacy_moveSpeed;
+        [Min(0f), SerializeField] [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("detectionRange")] private float legacy_detectionRange = 6f;
+        private float detectionRange => CombatData != null ? CombatData.detectionRange : legacy_detectionRange;
+        [Min(0.1f), SerializeField] [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("attackRange")] private float legacy_attackRange = 1.5f;
+        private float attackRange => CombatData != null ? CombatData.attackRange : legacy_attackRange;
+        [Range(1f, 180f), SerializeField] [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("attackArc")] private float legacy_attackArc = 120f;
+        private float attackArc => CombatData != null ? CombatData.attackArc : legacy_attackArc;
+        [Min(0f), SerializeField] [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("damage")] private float legacy_damage = 5f;
+        private float damage => CombatData != null ? CombatData.damage : legacy_damage;
+        [Min(0.1f), SerializeField] [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("attackCooldown")] private float legacy_attackCooldown = 2f;
+        private float attackCooldown => CombatData != null ? CombatData.attackCooldown : legacy_attackCooldown;
+        [Range(0f, 1f), SerializeField] [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("hitMoment")] private float legacy_hitMoment = 0.45f;
+        private float hitMoment => CombatData != null ? CombatData.hitMoment : legacy_hitMoment;
         public enum HitShape { Sweep, Area }
         [Header("Hit volume and ground warning")]
-        [SerializeField] private HitShape hitShape;
-        [Min(.1f), SerializeField] private float areaRadius = 1.6f;
-        [Min(0f), SerializeField] private float areaForwardOffset = 1.6f;
-        [SerializeField] private float areaSideOffset;
-        [Min(.1f), SerializeField] private float hitHeight = 2.5f;
-        [SerializeField] private Color warningColor = new Color(1f, .08f, .02f, .65f);
-        [SerializeField] private Shader warningShader;
+        [SerializeField] [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("hitShape")] private HitShape legacy_hitShape;
+        private HitShape hitShape => CombatData != null ? CombatData.hitShape : legacy_hitShape;
+        [Min(.1f), SerializeField] [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("areaRadius")] private float legacy_areaRadius = 1.6f;
+        private float areaRadius => CombatData != null ? CombatData.areaRadius : legacy_areaRadius;
+        [Min(0f), SerializeField] [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("areaForwardOffset")] private float legacy_areaForwardOffset = 1.6f;
+        private float areaForwardOffset => CombatData != null ? CombatData.areaForwardOffset : legacy_areaForwardOffset;
+        [SerializeField] [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("areaSideOffset")] private float legacy_areaSideOffset;
+        private float areaSideOffset => CombatData != null ? CombatData.areaSideOffset : legacy_areaSideOffset;
+        [Min(.1f), SerializeField] [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("hitHeight")] private float legacy_hitHeight = 2.5f;
+        private float hitHeight => CombatData != null ? CombatData.hitHeight : legacy_hitHeight;
+        [SerializeField] [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("warningColor")] private Color legacy_warningColor = new Color(1f, .08f, .02f, .65f);
+        private Color warningColor => CombatData != null ? CombatData.warningColor : legacy_warningColor;
+        [SerializeField] [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("warningShader")] private Shader legacy_warningShader;
+        private Shader warningShader => CombatData != null ? CombatData.warningShader : legacy_warningShader;
         private MonsterAttackWarning groundWarning;
         private Vector3 strikeCenter, strikeForward;
         private bool strikeLocked;
-        [Min(0f), SerializeField] private float deathDelay = 3f;
-        [SerializeField] private MonsterRewardData rewards;
+        [Min(0f), SerializeField] [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("deathDelay")] private float legacy_deathDelay = 3f;
+        private float deathDelay => CombatData != null ? CombatData.deathDelay : legacy_deathDelay;
+        [SerializeField, InspectorName("Monster Game Data")] private MonsterRewardData rewards;
         private bool rewardsGranted;
         private CharacterController motor;
         private MiningCharacterHealth health;
@@ -62,10 +86,14 @@ namespace MiningSimulator.Ores
         private bool chasePathPending;
         private int chaseRouteRevision;
         [Header("Navigation (collision-aware, including boss size)")]
-        [Min(.05f), SerializeField] private float chaseRepathSeconds = .4f;
-        [Min(4), SerializeField] private int chaseStandDirections = 16;
-        [Range(.1f, .95f), SerializeField] private float chaseStandRangeFraction = .75f;
-        [Range(.1f, 1f), SerializeField] private float chaseStandMaximumRangeFraction = .95f;
+        [Min(.05f), SerializeField] [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("chaseRepathSeconds")] private float legacy_chaseRepathSeconds = .4f;
+        private float chaseRepathSeconds => CombatData != null ? CombatData.chaseRepathSeconds : legacy_chaseRepathSeconds;
+        [Min(4), SerializeField] [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("chaseStandDirections")] private int legacy_chaseStandDirections = 16;
+        private int chaseStandDirections => CombatData != null ? CombatData.chaseStandDirections : legacy_chaseStandDirections;
+        [Range(.1f, .95f), SerializeField] [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("chaseStandRangeFraction")] private float legacy_chaseStandRangeFraction = .75f;
+        private float chaseStandRangeFraction => CombatData != null ? CombatData.chaseStandRangeFraction : legacy_chaseStandRangeFraction;
+        [Range(.1f, 1f), SerializeField] [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("chaseStandMaximumRangeFraction")] private float legacy_chaseStandMaximumRangeFraction = .95f;
+        private float chaseStandMaximumRangeFraction => CombatData != null ? CombatData.chaseStandMaximumRangeFraction : legacy_chaseStandMaximumRangeFraction;
         [Min(.1f), SerializeField, HideInInspector] private float avoidanceLookAhead = 1.5f;
         [Min(.05f), SerializeField, HideInInspector] private float avoidanceHoldSeconds = .5f;
         private MonsterSpawnZone zone;
@@ -82,6 +110,12 @@ namespace MiningSimulator.Ores
         public bool IsDespawning { get; private set; }
         public float CombatTimeRemaining => encounterVisuals != null ? encounterVisuals.RemainingSeconds : 0f;
         public MonsterRewardData RewardData => rewards;
+        // Loot overrides must not replace the original species' combat loadout.
+        private MonsterRewardData speciesData;
+        private MonsterRewardData SpeciesData => speciesData != null ? speciesData : rewards;
+        public MonsterCombatSettings CombatData => SpeciesData != null && SpeciesData.HasCombatData ? SpeciesData.combat : null;
+        public float AttackSpeed => (CombatData != null ? CombatData.SafeAttackSpeed : 1f) * bossSkill.AttackSpeedMultiplier;
+        public float EffectiveAttackCooldown => attackCooldown / AttackSpeed;
         public MiningCharacterHealth Health => health;
         /// <summary>Clear a newly placed ore sideways using the existing collision-aware motor.</summary>
         public bool TryClearSpawnedOre(Collider[] oreColliders)
@@ -151,7 +185,8 @@ namespace MiningSimulator.Ores
             target = player;
             targetCollider = player != null ? player.GetComponent<Collider>() : null;
             destination = transform.position;
-            MonsterRewardData definition = rewards;
+            MonsterRewardData definition = speciesData != null ? speciesData : rewards;
+            speciesData = definition;
             bossSettings = definition != null ? definition.boss : null;
             var stats = player != null ? player.GetComponent<MiningPlayerStats>() : null;
             IsBoss = boss && bossSettings != null && bossSettings.CanSpawn(stats != null ? stats.Level : 1,
@@ -170,7 +205,7 @@ namespace MiningSimulator.Ores
             float high = rewards != null ? Mathf.Max(low, Mathf.Max(rewards.randomStatMultiplier.x, rewards.randomStatMultiplier.y)) : 1;
             scaledDamage = damage * scale * Random.Range(low, high) * (IsBoss ? bossSettings.damageMultiplier : 1f);
             scaledBurnDamage = rewards != null ? rewards.burnDamagePerTick * scale : 0f;
-            health.ConfigureSpawnHealth(health.MaxHealth * scale * Random.Range(low, high) * (IsBoss ? bossSettings.healthMultiplier : 1f));
+            health.ConfigureSpawnHealth((CombatData != null ? CombatData.maxHealth : health.MaxHealth) * scale * Random.Range(low, high) * (IsBoss ? bossSettings.healthMultiplier : 1f));
             if (rewards != null)
             {
                 health.ConfigureHealingBonus(rewards.healingBonusPercent);
@@ -184,6 +219,7 @@ namespace MiningSimulator.Ores
         }
         private void Awake()
         {
+            speciesData = rewards;
             health = GetComponent<MiningCharacterHealth>();
             motor = GetComponent<CharacterController>();
             rangedAttack = GetComponent<MonsterRangedAttack>();
@@ -269,7 +305,7 @@ namespace MiningSimulator.Ores
             secondAttack = nextSecondAttack && !string.IsNullOrEmpty(secondAttackState);
             nextSecondAttack = !secondAttack && !string.IsNullOrEmpty(secondAttackState);
             attackStateHash = Animator.StringToHash(ActiveAttackState);
-            nextAttack = Time.time + attackCooldown / bossSkill.AttackSpeedMultiplier;
+            nextAttack = Time.time + EffectiveAttackCooldown;
             hitApplied = false;
             Play(ActiveAttackState, true);
         }
@@ -305,7 +341,7 @@ namespace MiningSimulator.Ores
             float healing = bossSkill.TickHealing(Time.deltaTime, health.MaxHealth);
             if (healing > 0f) health.Heal(healing / health.HealingMultiplier);
             // Only the attack speeds up, not walk/down/hit-reaction animations.
-            animator.speed = baseAnimatorSpeed * (animationState == attackStateHash ? bossSkill.AttackSpeedMultiplier : 1f);
+            animator.speed = baseAnimatorSpeed * (animationState == attackStateHash ? AttackSpeed : 1f);
             var state = animator.GetCurrentAnimatorStateInfo(0);
             bool attacking = state.IsName(ActiveAttackState);
             bool reacting = state.IsName("Damage");
@@ -338,8 +374,8 @@ namespace MiningSimulator.Ores
                         rewards != null ? rewards.attackDamageType : CombatDamageType.Physical);
                     if (bossSkill.NotifyPlayerDamage(dealt, target.MaxHealth))
                     {
-                        nextAttack = Mathf.Min(nextAttack, Time.time + attackCooldown / bossSkill.AttackSpeedMultiplier);
-                        animator.speed = baseAnimatorSpeed * bossSkill.AttackSpeedMultiplier;
+                        nextAttack = Mathf.Min(nextAttack, Time.time + EffectiveAttackCooldown);
+                        animator.speed = baseAnimatorSpeed * AttackSpeed;
                     }
                     ApplyHitHealing(dealt);
                     if (dealt > 0f && rewards != null) target.ApplyBurn(scaledBurnDamage, rewards.burnTickSeconds, rewards.burnDurationSeconds);
