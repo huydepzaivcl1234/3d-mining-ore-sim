@@ -268,6 +268,7 @@ Yellow Potion = Yellow Potion
 Green Potion = Green Potion
 Red Potion = Red Potion
 BatMonster = Bat
+ForestGolem = Forest Golem
 ATTACK SPEED = ATTACK SPEED
 PLAYER XP = PLAYER XP
 PLAYER DMG = PLAYER DMG

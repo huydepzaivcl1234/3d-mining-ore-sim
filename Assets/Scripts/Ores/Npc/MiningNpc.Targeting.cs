@@ -150,7 +150,9 @@ namespace MiningSimulator.Ores
             Component target = targetOre != null ? (Component)targetOre : targetChest != null ? targetChest : targetLuckyBlock;
             if (target == null || !MiningNavigation.PathfindingAvailable) return currentPosition;
             float reach = NavigationMiningReach;
-            if (approachTarget == target && SqrDistanceToTargetSurface(oreApproachPoint) <= reach * reach &&
+            // Use the same numerical tolerance as stand-point selection. Collider.ClosestPoint
+            // can round a point on the reach boundary a fraction outside on the next query.
+            if (approachTarget == target && SqrDistanceToTargetSurface(oreApproachPoint) <= reach * reach + .0001f &&
                 MiningNavGrid.Instance.IsPointClear(oreApproachPoint, NavigationRadius))
                 return oreApproachPoint;
             Bounds bounds = new(target.transform.position, Vector3.zero);

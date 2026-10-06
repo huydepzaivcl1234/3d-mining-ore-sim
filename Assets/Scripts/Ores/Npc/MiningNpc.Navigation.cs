@@ -57,7 +57,7 @@ namespace MiningSimulator.Ores
                 if (!isActiveAndEnabled || generation != requestGeneration) return;
                 pathPending = false; currentPath.Clear(); pathWaypointIndex = 0;
                 currentPathSource = success ? MiningPathSource.Grid : MiningPathSource.None;
-                if (success) { currentPath.AddRange(route); routeRevision = grid.Revision; ResetProgressTracking(); }
+                if (success) { currentPath.AddRange(route); routeRevision = grid.Revision; }
                 else AbandonUnreachableTarget();
             });
         }

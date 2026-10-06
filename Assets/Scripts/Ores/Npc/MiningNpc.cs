@@ -412,6 +412,17 @@ namespace MiningSimulator.Ores
                 SetMiningAnimationState(false);
                 desiredMoveTarget = pathTarget;
                 hasMoveTarget = true;
+                Vector3 approachOffset = pathTarget - currentPosition;
+                approachOffset.y = 0f;
+                if (approachOffset.sqrMagnitude <= .0001f)
+                {
+                    // No valid stand point is not a successful route to ourselves.
+                    // Let stuck recovery retry/release the target instead of resetting
+                    // the progress clock every time that empty route completes.
+                    hasMoveTarget = false;
+                    TrackMovementProgress(currentPosition);
+                    return;
+                }
                 UpdateGlobalPath(currentPosition, pathTarget);
                 TrackMovementProgress(currentPosition);
                 return;

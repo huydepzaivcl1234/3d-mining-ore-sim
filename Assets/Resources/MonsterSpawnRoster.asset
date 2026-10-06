@@ -23,4 +23,9 @@ MonoBehaviour:
     displayName: Mushranon
     chance: 25
     minimumPlayerLevel: 1
+  - prefab: {fileID: 6569428935759115125, guid: c00d46f0db867e34183fab59c9141426, type: 3}
+    icon: {fileID: 21300000, guid: cec1d048fc1ca8145bfcad6ff7441477, type: 3}
+    displayName: ForestGolem
+    chance: 25
+    minimumPlayerLevel: 1
   dailyEvents: {fileID: 11400000, guid: 32ce514a15289e74daf52256f326ba6d, type: 2}

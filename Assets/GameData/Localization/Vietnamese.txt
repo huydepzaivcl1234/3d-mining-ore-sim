@@ -268,6 +268,7 @@ Yellow Potion = Lọ vàng
 Green Potion = Lọ xanh
 Red Potion = Lọ đỏ
 BatMonster = Dơi
+ForestGolem = Golem Rừng
 ATTACK SPEED = TỐC ĐÁNH
 PLAYER XP = XP PLAYER
 PLAYER DMG = DMG PLAYER

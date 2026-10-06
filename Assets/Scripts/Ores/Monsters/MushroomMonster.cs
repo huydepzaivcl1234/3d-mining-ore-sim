@@ -30,6 +30,7 @@ namespace MiningSimulator.Ores
         private float animationBlendSeconds => CombatData != null ? CombatData.animationBlendSeconds : legacy_animationBlendSeconds;
         private bool secondAttack, nextSecondAttack;
         private MonsterRangedAttack rangedAttack;
+        private ForestGolemAbility forestGolem;
         private bool rangedStrike;
         private string ActiveAttackState => rangedStrike ? rangedAttack.FireState : secondAttack ? secondAttackState : attackState;
         private float ActiveHitMoment => rangedStrike ? rangedAttack.ReleaseMoment : secondAttack ? secondHitMoment : hitMoment;
@@ -183,6 +184,7 @@ namespace MiningSimulator.Ores
             chasePath.Clear(); chaseWaypoint = 0; nextRepath = 0; chaseRouteRevision = -1;
             zone = owner;
             target = player;
+            if (forestGolem != null) forestGolem.Initialize(player);
             targetCollider = player != null ? player.GetComponent<Collider>() : null;
             destination = transform.position;
             MonsterRewardData definition = speciesData != null ? speciesData : rewards;
@@ -223,6 +225,7 @@ namespace MiningSimulator.Ores
             health = GetComponent<MiningCharacterHealth>();
             motor = GetComponent<CharacterController>();
             rangedAttack = GetComponent<MonsterRangedAttack>();
+            forestGolem = GetComponent<ForestGolemAbility>();
             scaledDamage = damage;
             attackStateHash = Animator.StringToHash(attackState);
             if (animator == null) animator = GetComponentInChildren<Animator>();
@@ -239,6 +242,7 @@ namespace MiningSimulator.Ores
         private void OnDamage()
         {
             if (health.Health <= 0f) return;
+            if (forestGolem != null && forestGolem.IsCharging) return;
             bossSkill.NotifyHealth(health.Health, health.MaxHealth);
             // Preserve the committed contact frame, then allow the hit reaction.
             // Otherwise a player's strike can cancel every incoming headbutt.
@@ -246,6 +250,7 @@ namespace MiningSimulator.Ores
         }
         private void OnDeath()
         {
+            if (forestGolem != null) forestGolem.Cancel();
             if (animator != null) animator.speed = baseAnimatorSpeed;
             if (IsDespawning) return;
             if (encounterVisuals != null) encounterVisuals.CancelExpiry();
@@ -343,6 +348,12 @@ namespace MiningSimulator.Ores
             // Only the attack speeds up, not walk/down/hit-reaction animations.
             animator.speed = baseAnimatorSpeed * (animationState == attackStateHash ? AttackSpeed : 1f);
             var state = animator.GetCurrentAnimatorStateInfo(0);
+            if (forestGolem != null)
+            {
+                forestGolem.Tick(Time.deltaTime, !animator.IsInTransition(0) && (hitApplied || !state.IsName(ActiveAttackState)));
+                if (forestGolem.IsCharging) return;
+                state = animator.GetCurrentAnimatorStateInfo(0);
+            }
             bool attacking = state.IsName(ActiveAttackState);
             bool reacting = state.IsName("Damage");
             var windup = animator.IsInTransition(0) && animator.GetNextAnimatorStateInfo(0).IsName(ActiveAttackState)
@@ -366,6 +377,7 @@ namespace MiningSimulator.Ores
                 }
                 if (groundWarning != null) groundWarning.Hide();
                 // One contact per swing. Area and sweep can hit every victim inside the same shown volume.
+                if (!rangedStrike && forestGolem != null) forestGolem.BeginSlam(strikeCenter, EffectiveAreaRadius, HitScale, hitHeight * HitScale);
                 if (rangedStrike)
                     rangedAttack.Fire(this, IsMinerTargetValid() ? targetMiner.transform : target != null && target.Health > 0f ? target.transform : null);
                 if (!rangedStrike && target != null && target.Health > 0f && ContainsVictim(target.transform, targetCollider))
@@ -378,6 +390,7 @@ namespace MiningSimulator.Ores
                         animator.speed = baseAnimatorSpeed * AttackSpeed;
                     }
                     ApplyHitHealing(dealt);
+                    if (forestGolem != null) { forestGolem.RememberHit(target); forestGolem.NotifyPlayerHit(target, dealt); }
                     if (dealt > 0f && rewards != null) target.ApplyBurn(scaledBurnDamage, rewards.burnTickSeconds, rewards.burnDurationSeconds);
                 }
                 // Reverse iteration: a fatal hit may remove the miner from the registry immediately.
@@ -385,7 +398,10 @@ namespace MiningSimulator.Ores
                 {
                     var miner = MiningNpc.Miners[i];
                     if (miner != null && miner.isActiveAndEnabled && !miner.IsDead && ContainsVictim(miner.transform, miner.GetComponent<Collider>()))
+                    {
+                        if (forestGolem != null) forestGolem.RememberHit(miner);
                         ApplyHitHealing(miner.ApplyMonsterDamage(scaledDamage));
+                    }
                 }
             }
             Vector3 movement = Vector3.zero;
@@ -447,6 +463,7 @@ namespace MiningSimulator.Ores
                 float dealt = player.DealDamage(scaledDamage, rewards != null ? rewards.attackDamageType : CombatDamageType.Physical);
                 bossSkill.NotifyPlayerDamage(dealt, player.MaxHealth);
                 ApplyHitHealing(dealt);
+                if (forestGolem != null) forestGolem.NotifyPlayerHit(player, dealt);
                 if (dealt > 0f && rewards != null) player.ApplyBurn(scaledBurnDamage, rewards.burnTickSeconds, rewards.burnDurationSeconds);
             }
         }
@@ -462,12 +479,16 @@ namespace MiningSimulator.Ores
         }
         private bool ContainsVictim(Transform victim, Collider victimCollider)
         {
-            Vector3 origin = transform.TransformPoint(motor.center);
             Vector3 center = strikeLocked ? strikeCenter : hitShape == HitShape.Area ? AreaCenter : transform.position;
             Vector3 position = victim.position;
             Vector3 point = victimCollider != null && victimCollider.enabled
                 ? victimCollider.ClosestPoint(center + Vector3.up * .5f) : position;
             if (!ContainsHitPoint(point)) return false;
+            return HasStrikeLineOfSight(victim, point);
+        }
+        internal bool HasStrikeLineOfSight(Transform victim, Vector3 point)
+        {
+            Vector3 origin = transform.TransformPoint(motor.center);
             Vector3 ray = point - origin;
             if (ray.sqrMagnitude > 0.0001f)
             {
@@ -568,6 +589,7 @@ namespace MiningSimulator.Ores
 
         private void OnDisable()
         {
+            if (forestGolem != null) forestGolem.Cancel();
             MiningNavGrid.Instance?.Cancel(this); chasePathPending = false;
             OreActorTraversal.UnregisterActor(gameObject);
             if (animator != null) animator.speed = baseAnimatorSpeed;

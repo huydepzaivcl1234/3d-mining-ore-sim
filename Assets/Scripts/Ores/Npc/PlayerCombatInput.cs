@@ -10,6 +10,8 @@ public partial class PlayerCombatInput : MonoBehaviour
     // Names match the player's authored Player controller.controller on main.
     private const string CombatLayerName = "combat layer";
     private const string FootworkLayerName = "Combat Footwork";
+    private static readonly int CombatStrikeRoute = Animator.StringToHash("CombatStrike");
+    private bool usesCombatStrikeRoute;
     private static readonly int CombatMoveState = Animator.StringToHash("Combat");
     private static readonly int FirstAttackState = Animator.StringToHash("Sword Attack 1");
     private static readonly int SecondAttackState = Animator.StringToHash("Sword Attack 2");
@@ -218,6 +220,7 @@ public partial class PlayerCombatInput : MonoBehaviour
         movement = GetComponent<StarterAssets.ThirdPersonController>();
         locomotionInput = GetComponent<StarterAssets.StarterAssetsInputs>();
         footworkLayer = animator != null ? animator.GetLayerIndex(FootworkLayerName) : -1;
+        usesCombatStrikeRoute = animator != null && HasParameter("CombatStrike", AnimatorControllerParameterType.Int);
         ResetFootwork();
         panels = FindFirstObjectByType<MiningUiPanelCoordinator>();
         foreach (var rig in FindObjectsByType<MiningOrbitCamera>(FindObjectsSortMode.None))
@@ -304,7 +307,12 @@ public partial class PlayerCombatInput : MonoBehaviour
         animator.ResetTrigger("attack");
         animator.ResetTrigger("Move");
         string stateName = index == -2 ? "lunge attack" : index == -1 ? "turn attack" : AttackStates[index];
-        animator.CrossFadeInFixedTime(stateName, attackTransitionSeconds, layer, 0f);
+        if (usesCombatStrikeRoute)
+        {
+            animator.SetInteger(CombatStrikeRoute, index);
+            animator.SetTrigger("attack");
+        }
+        else animator.CrossFadeInFixedTime(stateName, attackTransitionSeconds, layer, 0f);
         if (footworkLayer >= 0)
             animator.CrossFadeInFixedTime(stateName, attackTransitionSeconds, footworkLayer, 0f);
     }
