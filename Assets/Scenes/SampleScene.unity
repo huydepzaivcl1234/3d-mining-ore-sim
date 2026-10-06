@@ -342,8 +342,13 @@ MonoBehaviour:
   - prefab: {fileID: 8773178799201064012, guid: 21613d889b5e46b48ae8ac4978bcc20d, type: 3}
     icon: {fileID: 21300000, guid: e7c9bb8566437f641980fecae1cf33e1, type: 3}
     displayName: 
-    chance: 35
+    chance: 25
     minimumPlayerLevel: 7
+  - prefab: {fileID: 4709780073627244445, guid: d8e6a992228824e4f80c006bddd600e8, type: 3}
+    icon: {fileID: 21300000, guid: 499b0f3f14035a94db8224298aebfe95, type: 3}
+    displayName: 
+    chance: 100
+    minimumPlayerLevel: 1
   additionalRoster: {fileID: 11400000, guid: b075239a392bde7418912362c97c5756, type: 2}
   miningSurface: {fileID: 1293138316}
   minimumSpawnDistance: 4
@@ -352,7 +357,7 @@ MonoBehaviour:
   dayNight: {fileID: 1889411264}
   dailyEvents: {fileID: 11400000, guid: 32ce514a15289e74daf52256f326ba6d, type: 2}
   minimumPerDay: 3
-  maximumPerDay: 20
+  maximumPerDay: 50
   extraMonstersPerDayNumber: 1
   dailyMonsterCap: 50
   maximumPerWave: 3
@@ -25166,6 +25171,8 @@ MonoBehaviour:
   additionalNecklaceSockets:
   - {fileID: 0}
   - {fileID: 0}
+  necklacePlaceholder: {fileID: 0}
+  necklacePlaceholderTint: {r: 1, g: 1, b: 1, a: 0.25}
   upperNecklaceOffset: {x: -117.6, y: 58.8}
   lowerNecklaceOffset: {x: -117.6, y: -58.8}
 --- !u!114 &450512008
@@ -76180,6 +76187,16 @@ MonoBehaviour:
   buildOnStart: 1
   rebuildCoalesceDelay: 0.1
   minimumSecondsBetweenBuilds: 1
+  gridCellSize: 1
+  gridActorRadius: 0.55
+  gridActorHeight: 1.8
+  gridMaximumSlope: 45
+  gridMaximumStep: 0.5
+  gridObstacleLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  gridBakeBudget: 512
+  gridSearchBudget: 256
 --- !u!114 &1293138316
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91261,6 +91278,79 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!1001 &1580593291
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 391529559093388530, guid: 4589edb703eee3249ac246b332c793e1, type: 3}
+      propertyPath: m_Name
+      value: RuneStoneShrine
+      objectReference: {fileID: 0}
+    - target: {fileID: 1019272171947818568, guid: 4589edb703eee3249ac246b332c793e1, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1019272171947818568, guid: 4589edb703eee3249ac246b332c793e1, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1019272171947818568, guid: 4589edb703eee3249ac246b332c793e1, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1019272171947818568, guid: 4589edb703eee3249ac246b332c793e1, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 19.65391
+      objectReference: {fileID: 0}
+    - target: {fileID: 1019272171947818568, guid: 4589edb703eee3249ac246b332c793e1, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -0.009993334
+      objectReference: {fileID: 0}
+    - target: {fileID: 1019272171947818568, guid: 4589edb703eee3249ac246b332c793e1, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 24.38
+      objectReference: {fileID: 0}
+    - target: {fileID: 1019272171947818568, guid: 4589edb703eee3249ac246b332c793e1, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: 1019272171947818568, guid: 4589edb703eee3249ac246b332c793e1, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1019272171947818568, guid: 4589edb703eee3249ac246b332c793e1, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: 1019272171947818568, guid: 4589edb703eee3249ac246b332c793e1, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1019272171947818568, guid: 4589edb703eee3249ac246b332c793e1, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1019272171947818568, guid: 4589edb703eee3249ac246b332c793e1, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: -90
+      objectReference: {fileID: 0}
+    - target: {fileID: 1019272171947818568, guid: 4589edb703eee3249ac246b332c793e1, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1019272171947818568, guid: 4589edb703eee3249ac246b332c793e1, type: 3}
+      propertyPath: m_ConstrainProportionsScale
+      value: 1
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 4589edb703eee3249ac246b332c793e1, type: 3}
 --- !u!1 &1581944557
 GameObject:
   m_ObjectHideFlags: 0
@@ -129497,6 +129587,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningCombatActor
   maxHealth: 100
+  armor: 0
+  magicResistance: 0
+  resistanceScale: 100
   regenAmount: 1
   regenInterval: 10
   healthBar: {fileID: 1110155166}
@@ -130497,6 +130590,11 @@ RectTransform:
   m_LocalScale: {x: 0, y: 0, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 370791527}
+  - {fileID: 1744953960}
+  - {fileID: 2147357732}
+  - {fileID: 1239937135}
+  - {fileID: 1110155166}
   - {fileID: 8061789145596664029}
   - {fileID: 6569625072390773868}
   - {fileID: 7364283642902135031}
@@ -130516,11 +130614,6 @@ RectTransform:
   - {fileID: 1896077275}
   - {fileID: 334491074}
   - {fileID: 804404558}
-  - {fileID: 370791527}
-  - {fileID: 1744953960}
-  - {fileID: 2147357732}
-  - {fileID: 1239937135}
-  - {fileID: 1110155166}
   m_Father: {fileID: 996078877246501140}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -140145,3 +140238,4 @@ SceneRoots:
   - {fileID: 5140329581098352396}
   - {fileID: 1506421499355706885}
   - {fileID: 1238972089}
+  - {fileID: 1580593291}

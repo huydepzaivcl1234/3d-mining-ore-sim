@@ -225,7 +225,7 @@ namespace MiningSimulator.Ores
                     unobstructedDistance = safeDistance;
                 else
                     unobstructedDistance = Mathf.SmoothDamp(unobstructedDistance, safeDistance,
-                        ref obstructionReturnVelocity, 0.25f, Mathf.Infinity, Time.deltaTime);
+                        ref obstructionReturnVelocity, 0.25f, Mathf.Infinity, RuneStation.PlayerDeltaTime);
                 if (safeDistance > 0.001f)
                     position = focusPoint + fromFocus * (unobstructedDistance / safeDistance);
                 resolvedCameraPosition = position;
@@ -234,7 +234,7 @@ namespace MiningSimulator.Ores
             if (IsShiftLocked && followTarget != null)
             {
                 float facing = Mathf.SmoothDampAngle(followTarget.eulerAngles.y, rotation.eulerAngles.y,
-                    ref shiftFacingVelocity, shiftFacingSmoothSeconds, shiftFacingMaximumSpeed, Time.deltaTime);
+                    ref shiftFacingVelocity, shiftFacingSmoothSeconds, shiftFacingMaximumSpeed, RuneStation.PlayerDeltaTime);
                 followTarget.rotation = Quaternion.Euler(0f, facing, 0f);
             }
         }
@@ -366,13 +366,13 @@ namespace MiningSimulator.Ores
             float targetDistance = Mathf.Clamp(baseDistance + zoomOffset,
                 gameData.CameraMinimumDistance, gameData.CameraMaximumDistance);
             distance = Mathf.SmoothDamp(distance, targetDistance, ref distanceVelocity,
-                smooth, Mathf.Infinity, Time.deltaTime);
+                smooth, Mathf.Infinity, RuneStation.PlayerDeltaTime);
             currentPitchOffset = Mathf.SmoothDamp(currentPitchOffset,
                 combat ? combatPitchOffset : 0f, ref pitchOffsetVelocity,
-                smooth, Mathf.Infinity, Time.deltaTime);
+                smooth, Mathf.Infinity, RuneStation.PlayerDeltaTime);
             controlledCamera.fieldOfView = Mathf.SmoothDamp(controlledCamera.fieldOfView,
                 combat ? combatFov : explorationFov, ref fovVelocity,
-                smooth, Mathf.Infinity, Time.deltaTime);
+                smooth, Mathf.Infinity, RuneStation.PlayerDeltaTime);
         }
 
         private void UpdateFollowHeading()
@@ -386,13 +386,13 @@ namespace MiningSimulator.Ores
             // The character's ordinary movement sets its heading. Soft aim owns ExternalFacing
             // during attacks, so acquiring a monster never hijacks the view.
             yaw = Mathf.SmoothDampAngle(yaw, followTarget.eulerAngles.y, ref headingVelocity,
-                headingSmoothTime, Mathf.Infinity, Time.deltaTime);
+                headingSmoothTime, Mathf.Infinity, RuneStation.PlayerDeltaTime);
         }
 
         private Quaternion ResolveComfortRotation(Quaternion desired)
         {
             Quaternion previous = controlledCamera.transform.rotation;
-            float dt = Time.deltaTime;
+            float dt = RuneStation.PlayerDeltaTime;
             if (dt <= 0f || inputLocked)
             {
                 if (rotationBlur != null) rotationBlur.intensity.value = 0f;
@@ -497,10 +497,10 @@ namespace MiningSimulator.Ores
                 direction.Normalize();
             }
             MoveFocusPoint(direction *
-                           (gameData.CameraMoveSpeed * speedMultiplier * Time.deltaTime));
+                           (gameData.CameraMoveSpeed * speedMultiplier * RuneStation.PlayerDeltaTime));
 
             float rotationInput = ReadAxis(keyboard.qKey, keyboard.eKey);
-            yaw += rotationInput * gameData.CameraKeyboardRotationSpeed * Time.deltaTime;
+            yaw += rotationInput * gameData.CameraKeyboardRotationSpeed * RuneStation.PlayerDeltaTime;
         }
 
         private void ReadMouse()
@@ -529,7 +529,7 @@ namespace MiningSimulator.Ores
                     headingVelocity = 0f;
                 }
                 Vector2 degrees = Vector2.ClampMagnitude(delta * gameData.CameraRotationDegreesPerPixel * mouseSensitivity,
-                    EffectiveMaximumRotationSpeed * Time.deltaTime);
+                    EffectiveMaximumRotationSpeed * RuneStation.PlayerDeltaTime);
                 yaw += degrees.x;
                 pitch = Mathf.Clamp(pitch - degrees.y,
                     gameData.CameraMinimumPitch, gameData.CameraMaximumPitch);

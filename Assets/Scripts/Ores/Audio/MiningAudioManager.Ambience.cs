@@ -5,6 +5,25 @@ namespace MiningSimulator.Ores
 {
     public sealed partial class MiningAudioManager
     {
+        private AudioClip runeAmbience;
+        private bool runeAmbienceActive;
+        public void BeginRuneAmbience(AudioClip clip)
+        {
+            runeAmbience = clip;
+            runeAmbienceActive = clip != null;
+            if (!runeAmbienceActive || musicMuted || ambienceSource == null) return;
+            StopAmbiencePlaylist();
+            StopWorldAmbienceSwitch();
+            PlayAmbienceClip(clip, true);
+            ambienceSource.loop = true;
+        }
+        public void EndRuneAmbience()
+        {
+            if (!runeAmbienceActive) return;
+            runeAmbienceActive = false;
+            runeAmbience = null;
+            if (!mainMenuMusicActive && !shopThemeActive) PlayWorldAmbience(true);
+        }
         public void PlayWorldAmbience()
         {
             PlayWorldAmbience(true);
@@ -12,6 +31,7 @@ namespace MiningSimulator.Ores
 
         private void PlayWorldAmbience(bool fadeIn)
         {
+            if (runeAmbienceActive) { BeginRuneAmbience(runeAmbience); return; }
             mainMenuMusicActive = false;
             shopThemeActive = false;
             if (musicSource != null && musicSource.isPlaying)

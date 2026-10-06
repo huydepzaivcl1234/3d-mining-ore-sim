@@ -18,4 +18,9 @@ MonoBehaviour:
     displayName: BatMonster
     chance: 25
     minimumPlayerLevel: 1
+  - prefab: {fileID: 4709780073627244445, guid: d8e6a992228824e4f80c006bddd600e8, type: 3}
+    icon: {fileID: 21300000, guid: 499b0f3f14035a94db8224298aebfe95, type: 3}
+    displayName: Mushranon
+    chance: 25
+    minimumPlayerLevel: 1
   dailyEvents: {fileID: 11400000, guid: 32ce514a15289e74daf52256f326ba6d, type: 2}

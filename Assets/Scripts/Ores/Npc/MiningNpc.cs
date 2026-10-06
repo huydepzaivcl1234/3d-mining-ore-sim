@@ -352,6 +352,7 @@ namespace MiningSimulator.Ores
 
         private void Update()
         {
+            if (RuneStation.PlayerUsesRuneTime) return;
             hasMoveTarget = false;
             desiredFacingDirection = Vector3.zero;
             if (IsStunned) return;

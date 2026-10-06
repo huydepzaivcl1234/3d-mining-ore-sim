@@ -39,6 +39,10 @@ MonoBehaviour:
   dissolveSeconds: 2
   dissolveColor: {r: 1, g: 0.6, b: 0.1, a: 1}
   dissolveShader: {fileID: 4800000, guid: 02996892a2aa58c4c8c817f73d56d9bf, type: 3}
+  usePlayerRelativeLevels: 1
+  minimumLevelsBelowPlayer: 1
+  maximumLevelsBelowPlayer: 4
+  maximumLevelsAbovePlayer: 5
   minimumLevel: 1
   addPlayerLevelAtSpawn: 0
   playerLevelContribution: 1
@@ -48,8 +52,14 @@ MonoBehaviour:
   statGrowthPerLevel: 0.75
   goldGrowthPerLevel: 0.75
   randomStatMultiplier: {x: 0.9, y: 1.1}
-  experience: 35
+  experience: 50
   gold: 60
+  armor: 0
+  magicResistance: 0
+  armorPerLevel: 1
+  magicResistancePerLevel: 1
+  resistanceScale: 100
+  attackDamageType: 0
   burnDamagePerTick: 1
   burnTickSeconds: 1
   burnDurationSeconds: 5

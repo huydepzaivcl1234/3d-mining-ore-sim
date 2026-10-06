@@ -27,6 +27,12 @@ namespace MiningSimulator.Ores
         private bool resolved;
         private bool hasLanded;
         private float damageRemainder;
+        [Tooltip("A falling block crushes the player, but continues down to a real landing surface.")]
+        [SerializeField] private bool fatalPlayerCrush = true;
+        private readonly List<Collider> ignoredActors = new();
+        private readonly RaycastHit[] fallingHits = new RaycastHit[32];
+        private readonly Collider[] fallingOverlaps = new Collider[32];
+        private BoxCollider fallingCollider;
         private readonly Dictionary<MiningNpc, int> reservedMiners = new();
         private void OnEnable() { if (Application.isPlaying) MiningGridObstacle.Ensure(this); }
 
@@ -186,6 +192,7 @@ namespace MiningSimulator.Ores
             resolved = false;
             lifetime = 0f;
             hasLanded = false;
+            RestoreActorCollisions();
             damageRemainder = 0f;
             reservedMiners.Clear();
             body ??= GetComponent<Rigidbody>();
@@ -203,6 +210,7 @@ namespace MiningSimulator.Ores
             body.linearVelocity = Vector3.zero;
             body.angularVelocity = Vector3.up * (spinDegreesPerSecond * Mathf.Deg2Rad);
             body.isKinematic = false;
+            body.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
             body.useGravity = true;
             body.WakeUp();
             DurabilityChanged?.Invoke(currentDurability, MaximumDurability);
@@ -215,18 +223,60 @@ namespace MiningSimulator.Ores
                 return;
             }
 
+            if (HandleActorContact(collision.collider)) return;
+            bool supportingSurface = false;
+            for (int i = 0; i < collision.contactCount; i++)
+                supportingSurface |= collision.GetContact(i).normal.y > .5f;
+            if (!supportingSurface) return; // A wall is not a floor.
             hasLanded = true;
             body ??= GetComponent<Rigidbody>();
-            if (body == null)
-            {
-                return;
-            }
-
-            // The block is mineable once it reaches its first landing surface. Freeze the
-            // dynamic body here so leftover drop velocity and spin cannot roll it away.
+            if (body == null) return;
             body.linearVelocity = Vector3.zero;
             body.angularVelocity = Vector3.zero;
             body.isKinematic = true;
+        }
+
+        private void FixedUpdate()
+        {
+            if (resolved || hasLanded || settings == null || body == null || body.isKinematic || body.linearVelocity.y > 0f) return;
+            fallingCollider ??= GetComponent<BoxCollider>();
+            Vector3 scale = transform.lossyScale;
+            Vector3 half = Vector3.Scale(fallingCollider.size * .5f,
+                new Vector3(Mathf.Abs(scale.x), Mathf.Abs(scale.y), Mathf.Abs(scale.z)));
+            Vector3 center = transform.TransformPoint(fallingCollider.center);
+            // Catch an actor before the physics solver can support the block on its head.
+            int count = Physics.OverlapBoxNonAlloc(center, half, fallingOverlaps,
+                transform.rotation, ~0, QueryTriggerInteraction.Ignore);
+            for (int i = 0; i < count; i++) HandleActorContact(fallingOverlaps[i]);
+            Vector3 travel = (body.linearVelocity + Physics.gravity * Time.fixedDeltaTime) * Time.fixedDeltaTime;
+            if (travel.sqrMagnitude < .000001f) return;
+            count = Physics.BoxCastNonAlloc(center, half, travel.normalized, fallingHits,
+                transform.rotation, travel.magnitude, ~0, QueryTriggerInteraction.Ignore);
+            for (int i = 0; i < count; i++) HandleActorContact(fallingHits[i].collider);
+        }
+
+        private bool HandleActorContact(Collider contact)
+        {
+            var actorHealth = contact.GetComponentInParent<MiningCharacterHealth>();
+            var miner = contact.GetComponentInParent<MiningNpc>();
+            if (actorHealth != null || miner != null)
+            {
+                if (fatalPlayerCrush && actorHealth != null &&
+                    actorHealth.GetComponent<StarterAssets.ThirdPersonController>() != null)
+                    actorHealth.DealDamage(actorHealth.Health, CombatDamageType.True);
+                // Ignore all colliders on this actor, including a corpse after death.
+                Transform actor = actorHealth != null ? actorHealth.transform : miner.transform;
+                var blockCollider = GetComponent<BoxCollider>();
+                foreach (var collider in actor.GetComponentsInChildren<Collider>())
+                {
+                    if (collider == blockCollider || ignoredActors.Contains(collider) ||
+                        Physics.GetIgnoreCollision(blockCollider, collider)) continue;
+                    Physics.IgnoreCollision(blockCollider, collider, true);
+                    ignoredActors.Add(collider);
+                }
+                return true;
+            }
+            return false;
         }
 
         public bool MineOnce()
@@ -314,6 +364,7 @@ namespace MiningSimulator.Ores
 
         private void OnDisable()
         {
+            RestoreActorCollisions();
             reservedMiners.Clear();
             hitPunch?.ResetImmediately();
 
@@ -326,6 +377,14 @@ namespace MiningSimulator.Ores
                 }
                 body.Sleep();
             }
+        }
+
+        private void RestoreActorCollisions()
+        {
+            var collider = GetComponent<BoxCollider>();
+            foreach (var actor in ignoredActors)
+                if (actor != null && collider != null) Physics.IgnoreCollision(collider, actor, false);
+            ignoredActors.Clear();
         }
 
         private void RemoveMissingReservations()

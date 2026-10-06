@@ -20,8 +20,10 @@ namespace MiningSimulator.Ores
         [Min(0f), SerializeField] private float chaseTurnSpeed = 240f;
         [Min(0f), SerializeField] private float animationBlendSeconds = .15f;
         private bool secondAttack, nextSecondAttack;
-        private string ActiveAttackState => secondAttack ? secondAttackState : attackState;
-        private float ActiveHitMoment => secondAttack ? secondHitMoment : hitMoment;
+        private MonsterRangedAttack rangedAttack;
+        private bool rangedStrike;
+        private string ActiveAttackState => rangedStrike ? rangedAttack.FireState : secondAttack ? secondAttackState : attackState;
+        private float ActiveHitMoment => rangedStrike ? rangedAttack.ReleaseMoment : secondAttack ? secondHitMoment : hitMoment;
         private float ActiveAreaRadius => secondAttack ? secondAreaRadius : areaRadius;
         [Min(0f), SerializeField] private float moveSpeed = 1.5f;
         [Min(0f), SerializeField] private float detectionRange = 6f;
@@ -184,6 +186,7 @@ namespace MiningSimulator.Ores
         {
             health = GetComponent<MiningCharacterHealth>();
             motor = GetComponent<CharacterController>();
+            rangedAttack = GetComponent<MonsterRangedAttack>();
             scaledDamage = damage;
             attackStateHash = Animator.StringToHash(attackState);
             if (animator == null) animator = GetComponentInChildren<Animator>();
@@ -245,7 +248,7 @@ namespace MiningSimulator.Ores
                 if (facing.sqrMagnitude > .001f) transform.rotation = Quaternion.LookRotation(facing);
                 strikeLocked = true;
                 UpdateStrikeCenter();
-                if (hitShape == HitShape.Area)
+                if (!rangedStrike && hitShape == HitShape.Area)
                 {
                     if (groundWarning == null) groundWarning = gameObject.AddComponent<MonsterAttackWarning>();
                     groundWarning.Show(strikeCenter, ActiveAreaRadius * HitScale, warningColor, warningShader, transform);
@@ -260,6 +263,9 @@ namespace MiningSimulator.Ores
         }
         private void BeginAttack()
         {
+            Transform victim = IsMinerTargetValid() ? targetMiner.transform : target != null ? target.transform : null;
+            rangedStrike = rangedAttack != null && rangedAttack.IsReady && victim != null &&
+                Vector3.ProjectOnPlane(victim.position - transform.position, Vector3.up).magnitude > EffectiveAttackRange;
             secondAttack = nextSecondAttack && !string.IsNullOrEmpty(secondAttackState);
             nextSecondAttack = !secondAttack && !string.IsNullOrEmpty(secondAttackState);
             attackStateHash = Animator.StringToHash(ActiveAttackState);
@@ -293,6 +299,7 @@ namespace MiningSimulator.Ores
         }
         private void Update()
         {
+            if (RuneStation.PlayerUsesRuneTime) return;
             if (health.Health <= 0f || animator == null) return;
             if (IsDespawning) return;
             float healing = bossSkill.TickHealing(Time.deltaTime, health.MaxHealth);
@@ -323,7 +330,9 @@ namespace MiningSimulator.Ores
                 }
                 if (groundWarning != null) groundWarning.Hide();
                 // One contact per swing. Area and sweep can hit every victim inside the same shown volume.
-                if (target != null && target.Health > 0f && ContainsVictim(target.transform, targetCollider))
+                if (rangedStrike)
+                    rangedAttack.Fire(this, IsMinerTargetValid() ? targetMiner.transform : target != null && target.Health > 0f ? target.transform : null);
+                if (!rangedStrike && target != null && target.Health > 0f && ContainsVictim(target.transform, targetCollider))
                 {
                     float dealt = target.DealDamage(scaledDamage,
                         rewards != null ? rewards.attackDamageType : CombatDamageType.Physical);
@@ -336,7 +345,7 @@ namespace MiningSimulator.Ores
                     if (dealt > 0f && rewards != null) target.ApplyBurn(scaledBurnDamage, rewards.burnTickSeconds, rewards.burnDurationSeconds);
                 }
                 // Reverse iteration: a fatal hit may remove the miner from the registry immediately.
-                for (int i = MiningNpc.Miners.Count - 1; i >= 0; i--)
+                for (int i = rangedStrike ? -1 : MiningNpc.Miners.Count - 1; i >= 0; i--)
                 {
                     var miner = MiningNpc.Miners[i];
                     if (miner != null && miner.isActiveAndEnabled && !miner.IsDead && ContainsVictim(miner.transform, miner.GetComponent<Collider>()))
@@ -363,11 +372,15 @@ namespace MiningSimulator.Ores
                 }
                 Vector3 delta = destination - transform.position;
                 delta.y = 0f;
-                if (chasing && delta.magnitude <= EffectiveAttackRange && Time.time >= nextAttack)
+                Transform victim = chasing ? targetMiner != null ? targetMiner.transform : target.transform : null;
+                bool canShoot = rangedAttack != null && rangedAttack.IsReady &&
+                    delta.magnitude <= rangedAttack.Range && rangedAttack.CanReach(victim);
+                float engagementRange = canShoot ? Mathf.Max(EffectiveAttackRange, rangedAttack.Range) : EffectiveAttackRange;
+                if (chasing && delta.magnitude <= engagementRange && Time.time >= nextAttack)
                 {
                     BeginAttack();
                 }
-                else if (delta.magnitude > (chasing ? EffectiveAttackRange : 0.3f))
+                else if (delta.magnitude > (chasing ? engagementRange : 0.3f))
                 {
                     movement = ChaseDirection(chasing) * moveSpeed;
                     Play(movement.sqrMagnitude > 0f ? "Walk" : "Idle");
@@ -388,6 +401,18 @@ namespace MiningSimulator.Ores
         private void ApplyHitHealing(float dealt)
         {
             if (dealt > 0f && rewards != null) health.Heal(dealt * Mathf.Clamp(rewards.lifeStealPercent, 0f, 100f) * .01f);
+        }
+        public void ApplyProjectileHit(MiningCharacterHealth player, MiningNpc miner)
+        {
+            if (IsDespawning) return;
+            if (miner != null && !miner.IsDead) ApplyHitHealing(miner.ApplyMonsterDamage(scaledDamage));
+            else if (player != null && player.Health > 0f)
+            {
+                float dealt = player.DealDamage(scaledDamage, rewards != null ? rewards.attackDamageType : CombatDamageType.Physical);
+                bossSkill.NotifyPlayerDamage(dealt, player.MaxHealth);
+                ApplyHitHealing(dealt);
+                if (dealt > 0f && rewards != null) player.ApplyBurn(scaledBurnDamage, rewards.burnTickSeconds, rewards.burnDurationSeconds);
+            }
         }
         public bool ContainsHitPoint(Vector3 point)
         {

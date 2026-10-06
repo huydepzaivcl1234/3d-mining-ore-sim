@@ -158,6 +158,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.LuckyBlock
   type: 2
   currentDurability: 0
+  fatalPlayerCrush: 1
 --- !u!114 &-6628158598455379479
 MonoBehaviour:
   m_ObjectHideFlags: 0

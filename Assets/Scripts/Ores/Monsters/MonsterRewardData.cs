@@ -61,7 +61,7 @@ namespace MiningSimulator.Ores
         public bool usePlayerRelativeLevels = true;
         [Min(1)] public int minimumLevelsBelowPlayer = 1;
         [Min(1)] public int maximumLevelsBelowPlayer = 4;
-        [Min(1)] public int maximumLevelsAbovePlayer = 20;
+        [Min(1)] public int maximumLevelsAbovePlayer = 5;
         [Tooltip("Upper-level probability uses Higher Level Chance and the existing daily increase. Otherwise roll 1-4 levels below the player, clamped to level 1.")]
         [Header("Legacy level roll (used only when relative levels are disabled)")]
         [Min(1)] public int minimumLevel = 1;

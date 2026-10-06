@@ -255,7 +255,7 @@ namespace MiningSimulator.Ores
             SynchronizeMainMenuMusic();
 
             if (audioData == null || dayNightSystem == null || ambienceSource == null ||
-                mainMenuMusicActive || shopThemeActive || coinRainAmbienceActive ||
+                mainMenuMusicActive || shopThemeActive || coinRainAmbienceActive || runeAmbienceActive ||
                 lavaWorldAmbienceActive || worldAmbienceTransition != null ||
                 ambienceFadedForPeriodChange ||
                 !ambienceSource.isPlaying || audioData.AmbienceFadeDuration <= 0f)

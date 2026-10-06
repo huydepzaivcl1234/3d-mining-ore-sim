@@ -8,18 +8,22 @@ namespace MiningSimulator.Ores
     {
         [SerializeField] private MiningPlayerStatsData data;
         public MiningPlayerStatsData Data => data;
+        private RuneUpgradeProgress runeUpgrades;
+        public RuneUpgradeProgress RuneUpgrades => runeUpgrades ??= new RuneUpgradeProgress(
+            Resources.Load<RuneUpgradeData>("RuneUpgradeData"),
+            Application.isPlaying ? PlayerPrefs.GetString(RuneUpgradeProgress.SaveKey, "") : null);
         public float Armor => DefenseAtLevel(data != null ? data.armor : 0f,
-            data != null ? data.armorPerLevel : 0f);
+            data != null ? data.armorPerLevel : 0f) + RuneUpgrades.Bonus(RuneStat.Armor);
         public float MagicResistance => DefenseAtLevel(data != null ? data.magicResistance : 0f,
-            data != null ? data.magicResistancePerLevel : 0f);
+            data != null ? data.magicResistancePerLevel : 0f) + RuneUpgrades.Bonus(RuneStat.MagicResistance);
         private float DefenseAtLevel(float baseline, float growth) => (float)System.Math.Min(float.MaxValue,
             (double)CombatDamage.NonNegative(baseline) + (double)CombatDamage.NonNegative(growth) * (Level - 1));
         private MiningItemSystem itemEffects;
         private float DamagePotionMultiplier => itemEffects != null ? itemEffects.PlayerDamageMultiplier : 1f;
         private float AttackSpeedPotionMultiplier => itemEffects != null ? itemEffects.PlayerAttackSpeedMultiplier : 1f;
-        public float MaxHealth => (data != null ? Mathf.Max(1, data.maxHealth + Mathf.Max(0, data.healthPerLevel) * (Level - 1)) : 100) * (1f + CardHealthPercent * .01f) + CardHealth;
-        public float Damage => ((data != null ? Mathf.Max(0, data.damage + Mathf.Max(0, data.damagePerLevel) * (Level - 1)) : 1) * (1f + CardDamagePercent * .01f) + CardDamage) * DamagePotionMultiplier;
-        public float AttackSpeed => Mathf.Max(.1f, ((data != null ? data.attackSpeed : 1f) * (1f + CardAttackSpeedPercent * .01f) + CardAttackSpeed) * AttackSpeedPotionMultiplier);
+        public float MaxHealth => ((data != null ? Mathf.Max(1, data.maxHealth + Mathf.Max(0, data.healthPerLevel) * (Level - 1)) : 100) * (1f + CardHealthPercent * .01f) + CardHealth) * (1f + RuneUpgrades.Bonus(RuneStat.Health) * .01f);
+        public float Damage => ((data != null ? Mathf.Max(0, data.damage + Mathf.Max(0, data.damagePerLevel) * (Level - 1)) : 1) * (1f + CardDamagePercent * .01f) + CardDamage) * DamagePotionMultiplier * (1f + RuneUpgrades.Bonus(RuneStat.Damage) * .01f);
+        public float AttackSpeed => Mathf.Max(.1f, ((data != null ? data.attackSpeed : 1f) * (1f + CardAttackSpeedPercent * .01f) + CardAttackSpeed) * AttackSpeedPotionMultiplier * (1f + RuneUpgrades.Bonus(RuneStat.AttackSpeed) * .01f));
         // Retain old flat bonuses for v2 saves; new cards add percentage points.
         public float CardDamagePercent { get; private set; }
         public float CardHealthPercent { get; private set; }
@@ -153,9 +157,11 @@ namespace MiningSimulator.Ores
         public static void ResetSavedProgress()
         {
             PlayerPrefs.DeleteKey(ProgressSaveKey);
+            PlayerPrefs.DeleteKey(RuneUpgradeProgress.SaveKey);
             foreach (var player in FindObjectsByType<MiningPlayerStats>(FindObjectsInactive.Include, FindObjectsSortMode.None))
             {
                 var defaults = player.Data;
+                player.RuneUpgrades.Reset();
                 player.CardDamage = player.CardHealth = player.CardAttackSpeed = 0f;
                 player.CardDamagePercent = player.CardHealthPercent = player.CardAttackSpeedPercent = 0f;
                 player.CardRegenReductionPercent = player.CardHealingPercent = 0f;

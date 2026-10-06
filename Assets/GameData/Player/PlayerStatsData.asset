@@ -35,6 +35,12 @@ MonoBehaviour:
   regenAmount: 1
   regenInterval: 10
   respawnSeconds: 10
+  armor: 1
+  magicResistance: 1
+  armorPerLevel: 2
+  magicResistancePerLevel: 1
+  resistanceScale: 100
+  attackDamageType: 0
   damagePopup:
     enabled: 1
     duration: 0.85
