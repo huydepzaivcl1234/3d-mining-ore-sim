@@ -349,6 +349,11 @@ MonoBehaviour:
     displayName: 
     chance: 35
     minimumPlayerLevel: 1
+  - prefab: {fileID: 6569428935759115125, guid: c00d46f0db867e34183fab59c9141426, type: 3}
+    icon: {fileID: 21300000, guid: 4bebccb0a69183b43ac6c40615742c48, type: 3}
+    displayName: 
+    chance: 15
+    minimumPlayerLevel: 10
   additionalRoster: {fileID: 11400000, guid: b075239a392bde7418912362c97c5756, type: 2}
   miningSurface: {fileID: 1293138316}
   minimumSpawnDistance: 4

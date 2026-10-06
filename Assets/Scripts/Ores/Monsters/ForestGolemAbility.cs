@@ -21,10 +21,12 @@ namespace MiningSimulator.Ores
         [Min(0)] public float burnDamagePerTick = 5f;
         [Min(.1f)] public float burnTickSeconds = 1f;
         [Min(0)] public float burnSeconds = 5f;
+        [Header("Boss-only pulse and regeneration")]
+        public ForestGolemBossSettings bossSkills = new();
     }
 
     /// <summary>One travelling ground front per slam; three successful player hits prime a charge.</summary>
-    public sealed class ForestGolemAbility : MonoBehaviour
+    public sealed partial class ForestGolemAbility : MonoBehaviour
     {
         private MushroomMonster owner;
         private Animator animator;
@@ -65,6 +67,7 @@ namespace MiningSimulator.Ores
                 }
             }
             radius = baseRadius + Mathf.Max(0, Settings.waveExtraRadius) * scale;
+            NotifyBossSlam(hitScale);
             elapsed = previousRadius = 0; wave = true;
             if (Settings.impactPrefab != null)
             {
@@ -94,6 +97,7 @@ namespace MiningSimulator.Ores
         public void Tick(float delta, bool canStartCharge)
         {
             if (Settings == null || !Settings.enabled) { Cancel(); return; }
+            TickBossSkills(Mathf.Max(0, delta));
             if (wave)
             {
                 elapsed += Mathf.Max(0, delta);
@@ -175,6 +179,7 @@ namespace MiningSimulator.Ores
         public void Cancel()
         {
             wave = chargePending = IsCharging = false; playerHits = 0; chargeVictim = null; struck.Clear();
+            ResetBossSkills();
             HideWave();
         }
         private void HideWave()

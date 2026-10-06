@@ -70,11 +70,21 @@ MonoBehaviour:
       burnDamagePerTick: 0.1
       burnTickSeconds: 0.1
       burnSeconds: 2
+      bossSkills:
+        enabled: 1
+        slamsToPulse: 3
+        pulseSeconds: 3
+        pulseTickSeconds: 1
+        pulseRadius: 5
+        pulseHeight: 2.5
+        playerMaxHealthDamagePercent: 2
+        regenerationSeconds: 10
+        regenerationMaxHealthPercent: 1
   combatSettingsVersion: 1
   boss:
     enabled: 1
     chancePercent: 5
-    minimumPlayerLevel: 10
+    minimumPlayerLevel: 1
     sizeIncreasePercent: 35
     healthMultiplier: 3
     damageMultiplier: 1.5
