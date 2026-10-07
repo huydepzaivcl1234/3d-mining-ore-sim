@@ -64,21 +64,6 @@ public partial class PlayerCombatInput : MonoBehaviour
     [SerializeField] private Vector3 hitOriginOffset = new Vector3(0f, 1f, 0f);
     [SerializeField] private LayerMask targetLayers = ~0;
 
-    [SerializeField] private ParticleSystem slashDownVfx;
-    [SerializeField] private ParticleSystem slashUpVfx;
-
-    [System.Serializable]
-    private struct SlashVfxCue
-    {
-        public ParticleSystem effect;
-        [Min(0f)] public float delay;
-    }
-
-    [Header("Additional slash VFX (add as many scene effects as needed)")]
-    [SerializeField] private List<SlashVfxCue> slashDownEffects = new List<SlashVfxCue>();
-    [SerializeField] private List<SlashVfxCue> slashUpEffects = new List<SlashVfxCue>();
-
-
     private bool wasAttacking;
     private bool queuedAttack;
     private int queuedAttackStateHash;
@@ -98,7 +83,6 @@ public partial class PlayerCombatInput : MonoBehaviour
     private Vector3 StrikeForward => Vector3.ProjectOnPlane(transform.forward, Vector3.up).normalized;
     private bool hitApplied;
     private readonly HashSet<MiningCharacterHealth> hitTargets = new HashSet<MiningCharacterHealth>();
-    private GameObject thirdSlashInstance;
     [Header("Free-flow footwork (camera remains independent)")]
     [SerializeField] private bool freeFlowEnabled = true;
     [Range(0f, 1f), SerializeField] private float movingBodyWeight = 0.9f;
@@ -155,7 +139,7 @@ public partial class PlayerCombatInput : MonoBehaviour
     private void OnDisable()
     {
         UnbindLocomotionAnimation();
-        EndThirdSlash();
+        EndSwordTrail();
         StopAllCoroutines();
         ResetFootwork();
         toggleCombat?.Disable();
@@ -173,6 +157,7 @@ public partial class PlayerCombatInput : MonoBehaviour
 
     private void LateUpdate()
     {
+        UpdateSwordTrail();
         UpdateFootwork();
         if (!CanUseGameplay())
         {
@@ -208,6 +193,7 @@ public partial class PlayerCombatInput : MonoBehaviour
     }
     private void OnDestroy()
     {
+        swordTrail?.Dispose();
         toggleCombat?.Dispose();
         attack?.Dispose();
         autoAim?.Dispose();
@@ -345,6 +331,7 @@ public partial class PlayerCombatInput : MonoBehaviour
 
     public void SetCombatMode(bool enabled)
     {
+        if (!enabled) EndSwordTrail();
         bool changed = combatMode != enabled;
         combatMode = enabled;
         if (!enabled) { ClearAim(); ResetFootwork(); ClearLocomotionAnimation(false); queuedAttack = false; queuedAttackStateHash = 0; }
@@ -393,7 +380,7 @@ public partial class PlayerCombatInput : MonoBehaviour
         lastAttackStateHash = active ? state.shortNameHash : 0;
         if (!active)
         {
-            EndThirdSlash();
+            EndSwordTrail();
             if (movement != null && !softAimActive) movement.ExternalFacing = IsShiftLocked;
             returningFromAttack = false;
             queuedAttack = false;
@@ -414,7 +401,6 @@ public partial class PlayerCombatInput : MonoBehaviour
     public void OnSpecialAttackHit() => OnSwordStrikeThird();
     public void OnSwordStrikeThird()
     {
-        EndThirdSlash();
         ApplyAnimationHit(ThirdAttackState, true);
     }
 
@@ -427,6 +413,7 @@ public partial class PlayerCombatInput : MonoBehaviour
         bool next = animator.IsInTransition(layer) &&
             animator.GetNextAnimatorStateInfo(layer).shortNameHash == expectedState;
         if (!current && !next) return;
+        FinishSwordTrail();
         hitApplied = true;
         float multiplier = expectedState == ThirdAttackState && Stats != null
             ? 1f + Mathf.Max(0f, Stats.thirdAttackDamageBonusPercent) * .01f : 1f;

@@ -10,21 +10,20 @@ public sealed class FreeFlowCombatTests
     private const string ControllerPath = "Assets/GameData/Player/Animations/Player controller.controller";
 
     [Test]
-    public void ThirdStrikeUsesContactEventAfterDownwardSlashStarts()
+    public void ThirdStrikeUsesContactEventAfterSwordTrailStarts()
     {
         var controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(ControllerPath);
         var state = controller.layers.Single(l => l.name == "combat layer").stateMachine.states
             .Single(s => s.state.name == "Special Attack").state;
         var clip = (AnimationClip)state.motion;
         var contact = clip.events.Single(e => e.functionName == "OnSpecialAttackHit");
-        var slash = clip.events.Single(e => e.functionName == "OnSpecialSlashStart");
+        var slash = clip.events.Single(e => e.functionName == "OnSpecialSwordTrailStart");
         Assert.That(contact.time, Is.GreaterThan(slash.time));
         Assert.That(clip.events.Any(e => e.functionName == "OnSwordStrikeDown"), Is.False);
         var data = AssetDatabase.LoadAssetAtPath<MiningSimulator.Ores.MiningPlayerStatsData>(
             "Assets/GameData/Player/PlayerStatsData.asset");
-        Assert.That(data.thirdAttackSlashVfxPrefab, Is.Not.Null);
-        Assert.That(data.thirdAttackSlashVfxPrefab.GetComponent<ParticleSystem>().main.simulationSpace,
-            Is.EqualTo(ParticleSystemSimulationSpace.World));
+        Assert.That(data.swordTrail.material, Is.Not.Null);
+        Assert.That(data.attackImpactVfxPrefab, Is.Not.Null);
     }
 
     [Test]

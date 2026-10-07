@@ -57,9 +57,8 @@ namespace MiningSimulator.Ores
         [Range(0, 1)] public float sheathWeaponSfxVolume = 0.7f;
         [Tooltip("Spawned only on an enemy actually damaged by the sword.")]
         public GameObject attackImpactVfxPrefab;
-        [Tooltip("World-space downward slash for attack 3. Prefab root position/rotation define its offset relative to the player.")]
-        public GameObject thirdAttackSlashVfxPrefab;
-        [Min(0.1f)] public float thirdAttackSlashLifetime = 2f;
+        [Header("Short sword trail (mesh, no particles)")]
+        public SwordTrailSettings swordTrail = new();
         [Tooltip("Extra damage on the third strike only, in percent (1.25 = +1.25%).")]
         [Min(0f)] public float thirdAttackDamageBonusPercent = 1.25f;
         [Min(0.1f)] public float impactVfxLifetime = 2f;

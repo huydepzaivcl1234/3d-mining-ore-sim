@@ -167,4 +167,13 @@ public class EquipmentSystem : MonoBehaviour
         rotation = Quaternion.LookRotation(sweep.normalized, blade);
         return true;
     }
+
+    public bool TryGetBladeSegment(out Vector3 bladeBase, out Vector3 tip)
+    {
+        bladeBase = tip = Vector3.zero;
+        if (!IsDrawn) return false;
+        bladeBase = currentWeapon.transform.TransformPoint(bladeBaseLocal);
+        tip = currentWeapon.transform.TransformPoint(bladeTipLocal);
+        return true;
+    }
 }

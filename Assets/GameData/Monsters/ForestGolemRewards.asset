@@ -84,7 +84,7 @@ MonoBehaviour:
   boss:
     enabled: 1
     chancePercent: 5
-    minimumPlayerLevel: 1
+    minimumPlayerLevel: 25
     sizeIncreasePercent: 35
     healthMultiplier: 3
     damageMultiplier: 1.5
@@ -93,7 +93,7 @@ MonoBehaviour:
     rewardOverride: {fileID: 11400000}
     effectColor: {r: 1, g: 0.2, b: 0.06, a: 1}
     combatSeconds: 120
-    skill: 2
+    skill: 0
     healTriggerHealthPercent: 20
     healMaxHealthPercent: 50
     healSeconds: 5

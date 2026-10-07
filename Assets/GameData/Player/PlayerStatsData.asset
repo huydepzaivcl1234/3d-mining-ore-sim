@@ -68,8 +68,13 @@ MonoBehaviour:
   sheathWeaponSfx: {fileID: 8300000, guid: c08cd1c5feca2434f9f92f67ee4beab6, type: 3}
   sheathWeaponSfxVolume: 1
   attackImpactVfxPrefab: {fileID: 1035977224672214417, guid: 057aa477789506a44bd206e9c5acad19, type: 3}
-  thirdAttackSlashVfxPrefab: {fileID: 6492071967887182164, guid: 1721b8a39ecfb7847a69ae43168ef016, type: 3}
-  thirdAttackSlashLifetime: 2.5
+  swordTrail:
+    enabled: 1
+    material: {fileID: 2100000, guid: 77417673324341cbb8cb67093253b934, type: 2}
+    lifetime: 0.12
+    followThroughSeconds: 0.06
+    bladeFraction: 0.65
+    color: {r: 0.75, g: 0.9, b: 1, a: 0.65}
   thirdAttackDamageBonusPercent: 100
   impactVfxLifetime: 2
   damage: 1

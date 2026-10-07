@@ -57,7 +57,7 @@ ModelImporter:
       curves: []
       events:
       - time: 0.3953319
-        functionName: OnSpecialSlashStart
+        functionName: OnSpecialSwordTrailStart
         data: 
         objectReferenceParameter: {instanceID: 0}
         floatParameter: 0
