@@ -64,7 +64,7 @@ namespace MiningSimulator.Ores
             Mathf.Min(randomMoneyMinimum, randomMoneyMaximum));
         public float RandomMoneyMaximum => Mathf.Max(RandomMoneyMinimum,
             Mathf.Max(randomMoneyMinimum, randomMoneyMaximum));
-        public bool IsValid => !string.IsNullOrWhiteSpace(QuestId) && TargetAmount > 0;
+        public bool IsValid => objective == MiningQuestObjective.Rebirth && !string.IsNullOrWhiteSpace(QuestId) && TargetAmount > 0;
 
         public string GetLocalizedName()
         {
@@ -114,12 +114,6 @@ namespace MiningSimulator.Ores
         [SerializeField] private string saveKey = "MiningSimulator.Quests.v1";
         [SerializeField] private List<MiningQuestDefinition> quests = new()
         {
-            new MiningQuestDefinition("daily_mine_500", MiningQuestPeriod.Daily,
-                MiningQuestObjective.MineOre, 500, "Mine 500 ores today",
-                "Đào 500 quặng hôm nay", MiningQuestRewardType.Money, 1000f),
-            new MiningQuestDefinition("daily_buy_3_npc", MiningQuestPeriod.Daily,
-                MiningQuestObjective.PurchaseNpc, 3, "Hire 3 miners today",
-                "Mua thêm 3 NPC hôm nay", MiningQuestRewardType.RandomMoney, 0f, 750f, 1500f),
             new MiningQuestDefinition("weekly_rebirth_1", MiningQuestPeriod.Weekly,
                 MiningQuestObjective.Rebirth, 1, "Rebirth once this week",
                 "Rebirth 1 lần trong tuần", MiningQuestRewardType.Money, 5000f)

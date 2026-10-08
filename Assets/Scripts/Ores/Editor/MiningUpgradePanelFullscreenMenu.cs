@@ -19,14 +19,8 @@ namespace MiningSimulator.Ores.Editor
         private static readonly string[] CardNames =
         {
             "Money Reward Upgrade",
-            "Rare Ore Upgrade",
-            "Ore Damage Upgrade",
-            "Ore Spawn Speed Upgrade",
-            "NPC Move Speed Upgrade",
-            "NPC Capacity Upgrade",
             "Lucky Block Reward Upgrade",
             "Lucky Block Drop Chance Upgrade",
-            "NPC Experience Upgrade",
             "Item Drop Chance Upgrade"
         };
 

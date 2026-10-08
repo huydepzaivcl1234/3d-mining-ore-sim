@@ -1,0 +1,174 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5ce228d6dde5489e959cc89554e9ce6d, type: 3}
+  m_Name: ForestGolemRewards
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MonsterRewardData
+  combat:
+    maxHealth: 80
+    regenAmount: 0
+    regenInterval: 5
+    attackSpeed: 0.75
+    attackState: Hammer
+    secondAttackState: Hit
+    secondHitMoment: 0.54
+    secondAreaRadius: 1.6
+    secondAreaOffset: {x: 0.3, y: 1.71}
+    attackTurnSpeed: 720
+    trackingEndFraction: 0.85
+    chaseTurnSpeed: 240
+    animationBlendSeconds: 0.15
+    moveSpeed: 1.3
+    detectionRange: 6
+    attackRange: 2.1
+    attackArc: 120
+    damage: 20
+    attackCooldown: 2
+    hitMoment: 0.5
+    hitShape: 1
+    areaRadius: 1.6
+    areaForwardOffset: 1.61
+    areaSideOffset: -0.02
+    hitHeight: 2.5
+    warningColor: {r: 1, g: 0.08, b: 0.02, a: 0.65}
+    warningShader: {fileID: 4800000, guid: b0d2120fa98d498498f08fd811238915, type: 3}
+    deathDelay: 2
+    chaseRepathSeconds: 0.4
+    chaseStandDirections: 16
+    chaseStandRangeFraction: 0.75
+    chaseStandMaximumRangeFraction: 0.95
+    projectile: {fileID: 0}
+    fireState: Fire
+    rangedRange: 8
+    releaseMoment: 0.45
+    projectileSpeed: 8
+    projectileTurnDegreesPerSecond: 540
+    projectileRadius: 0.12
+    projectileLifetime: 8
+    projectileCollisionLayers:
+      serializedVersion: 2
+      m_Bits: 4294967295
+    forestGolem:
+      enabled: 1
+      waveExtraRadius: 2
+      waveSeconds: 0.65
+      waveWidth: 0.12
+      waveColor: {r: 0.5, g: 1, b: 0.18, a: 0.85}
+      waveMaterial: {fileID: 2100000, guid: fe549de0158ef184e9865f6a2138e14a, type: 2}
+      impactPrefab: {fileID: 114000, guid: 4d04fa637bc246e58e8899ab19745f2f, type: 3}
+      hitsToCharge: 3
+      chargeState: ChargeUp
+      chargeReleaseMoment: 1
+      burnDamagePerTick: 0.1
+      burnTickSeconds: 0.1
+      burnSeconds: 2
+      bossSkills:
+        enabled: 1
+        slamsToPulse: 3
+        pulseSeconds: 3
+        pulseTickSeconds: 1
+        pulseRadius: 5
+        pulseHeight: 2.5
+        playerMaxHealthDamagePercent: 2
+        regenerationSeconds: 10
+        regenerationMaxHealthPercent: 1
+  combatSettingsVersion: 1
+  boss:
+    enabled: 1
+    chancePercent: 5
+    minimumPlayerLevel: 25
+    sizeIncreasePercent: 35
+    healthMultiplier: 3
+    damageMultiplier: 1.5
+    goldMultiplier: 5
+    experienceMultiplier: 3
+    rewardOverride: {fileID: 11400000}
+    effectColor: {r: 1, g: 0.2, b: 0.06, a: 1}
+    combatSeconds: 120
+    skill: 0
+    healTriggerHealthPercent: 20
+    healMaxHealthPercent: 50
+    healSeconds: 5
+    slowEveryStrikes: 3
+    slowRadius: 5
+    slowPercent: 30
+    slowSeconds: 3
+    hasteDamageThresholdPercent: 5
+    hasteAttackSpeedPercent: 100
+    hasteStacks: 0
+  combatSeconds: 0
+  dissolveSeconds: 2
+  dissolveColor: {r: 1, g: 0.6, b: 0.1, a: 1}
+  dissolveShader: {fileID: 4800000, guid: 02996892a2aa58c4c8c817f73d56d9bf, type: 3}
+  usePlayerRelativeLevels: 1
+  minimumLevelsBelowPlayer: 1
+  maximumLevelsBelowPlayer: 4
+  maximumLevelsAbovePlayer: 5
+  minimumLevel: 1
+  addPlayerLevelAtSpawn: 0
+  playerLevelContribution: 1
+  higherLevelChance: 0.35
+  higherLevelIncreasePerDayPercent: 0.01
+  maximumHigherLevelChancePercent: 50
+  statGrowthPerLevel: 0.75
+  goldGrowthPerLevel: 0.75
+  randomStatMultiplier: {x: 0.9, y: 1.1}
+  experience: 35
+  gold: 75
+  armor: 3
+  magicResistance: 3
+  armorPerLevel: 3
+  magicResistancePerLevel: 2
+  resistanceScale: 100
+  attackDamageType: 0
+  burnDamagePerTick: 0
+  burnTickSeconds: 0.1
+  burnDurationSeconds: 0
+  lifeStealPercent: 0
+  healingBonusPercent: 0
+  drops:
+  - item: {fileID: 11400000, guid: 6556e39ad099f9f4aafb234d4eec3f75, type: 2}
+    chancePercent: 10
+    minimumAmount: 1
+    maximumAmount: 1
+    icon: {fileID: 21300000, guid: b15fd69cba1745d883c50d76ef368102, type: 3}
+  - item: {fileID: 11400000, guid: d4439c8d4fb6e8c4cb8932645ca7aa8b, type: 2}
+    chancePercent: 10
+    minimumAmount: 1
+    maximumAmount: 1
+    icon: {fileID: 21300000, guid: c26ae78dbb2856e994d61e87f0479213, type: 3}
+  - item: {fileID: 11400000, guid: c1a7e2ced9de9bf42b9f38b6cf7528e1, type: 2}
+    chancePercent: 10
+    minimumAmount: 1
+    maximumAmount: 1
+    icon: {fileID: 21300000, guid: d37bf89ecc3967faa5e72f980158a324, type: 3}
+  - item: {fileID: 11400000, guid: f18a9bc3efc342d4b64dde59a7745142, type: 2}
+    chancePercent: 1
+    minimumAmount: 1
+    maximumAmount: 1
+    icon: {fileID: 21300000, guid: a4d44f5cb6e14a2f8d3d78eea1b7c4f0, type: 3}
+  - item: {fileID: 11400000, guid: 5b9bf846fe04437294a6e85553ab11da, type: 2}
+    chancePercent: 10
+    minimumAmount: 1
+    maximumAmount: 1
+    icon: {fileID: 668051623, guid: 2d91f35370402ca4eaf80ba95f600b29, type: 3}
+  - item: {fileID: 11400000, guid: 220ddadd20ec4e0cad3b5309aa9ce575, type: 2}
+    chancePercent: 10
+    minimumAmount: 1
+    maximumAmount: 1
+    icon: {fileID: 665014490, guid: 9a4c94d0e91b7c74b8cb3f6d32b74e38, type: 3}
+  iconSize: 0.45
+  launchUpSpeed: 4
+  launchOutSpeed: 2
+  groundWaitSeconds: 0.6
+  attractionRadius: 30
+  attractionSpeed: 2
+  attractionAcceleration: 3

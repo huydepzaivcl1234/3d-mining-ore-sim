@@ -1,0 +1,66 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: febb97c165bce494cad8a53905ec1037, type: 3}
+  m_Name: RuneUpgradeData
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.RuneUpgradeData
+  tracks:
+  - stat: 0
+    labelKey: RUNE_ATTACK_SPEED
+    artwork: {fileID: 3286163911610860551, guid: 782d7aebd14cfcc4a861ed37887234cd, type: 3}
+    progressColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+    maximumRank: 11
+    bonusPerRank: 5
+    firstGemCost: 10
+    costGrowth: 1.5
+  - stat: 1
+    labelKey: RUNE_DAMAGE
+    artwork: {fileID: 3286163911610860551, guid: 222679685d292a94991867e1b8884cc7, type: 3}
+    progressColor: {r: 1, g: 0, b: 0, a: 1}
+    maximumRank: 11
+    bonusPerRank: 5
+    firstGemCost: 10
+    costGrowth: 1.5
+  - stat: 2
+    labelKey: RUNE_HEALTH
+    artwork: {fileID: 3286163911610860551, guid: a7547f410d7df2c4b8f555679160de82, type: 3}
+    progressColor: {r: 0, g: 1, b: 0, a: 1}
+    maximumRank: 11
+    bonusPerRank: 5
+    firstGemCost: 10
+    costGrowth: 1.5
+  - stat: 3
+    labelKey: RUNE_MR
+    artwork: {fileID: 3286163911610860551, guid: b4afb45e29dc0b5438a423ff2c5e4deb, type: 3}
+    progressColor: {r: 1, g: 0.5, b: 0, a: 1}
+    maximumRank: 11
+    bonusPerRank: 5
+    firstGemCost: 10
+    costGrowth: 1.5
+  - stat: 4
+    labelKey: RUNE_ARMOR
+    artwork: {fileID: 3286163911610860551, guid: 79d82ef76d8d1794f8336e9f148d6812, type: 3}
+    progressColor: {r: 0.75, g: 0.75, b: 0.75, a: 1}
+    maximumRank: 11
+    bonusPerRank: 5
+    firstGemCost: 10
+    costGrowth: 1.5
+  ambience: {fileID: 8300000, guid: eace74d809a0af24eae240309a6f1d13, type: 3}
+  purchaseSfx: {fileID: 8300000, guid: c062f16ffb3abca46b7717172158c05e, type: 3}
+  radius: 4
+  revealDistance: 8
+  fadeSeconds: 0.3
+  zoneOffset: {x: 0, y: 0, z: 0}
+  panelOffset: {x: 0, y: 3, z: 0}
+  panelForwardOffset: 2.5
+  nearbyStepHeight: 0.45
+  canvasScale: 0.0025
+  boundaryMaterial: {fileID: 2100000, guid: dcf5985064862fe459d2f96cfbf73951, type: 2}

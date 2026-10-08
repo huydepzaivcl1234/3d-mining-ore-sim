@@ -6,9 +6,10 @@ public partial class PlayerCombatInput
     private MiningItemSystem equipmentItems;
     private void DamageTarget(MiningCharacterHealth target, Vector3 point, float damageMultiplier = 1f)
     {
-        if (!Application.isPlaying || Damage <= 0 || target == null || target.Health <= 0f) return;
+        if (!Application.isPlaying || Damage <= 0 || target == null || target.Health <= 0f ||
+            target.GetComponentInParent<TreasureChest>() != null) return;
         float dealt = target.DealDamage(Damage * damageMultiplier,
-            Stats != null ? Stats.attackDamageType : CombatDamageType.Physical);
+            Stats != null ? Stats.attackDamageType : CombatDamageType.Physical, gameObject);
         if (dealt <= 0f) return;
         if (target.GetComponent<MushroomMonster>() != null && Stats != null)
             MiningDamagePopup.Show(dealt, point, Stats.damagePopup);
@@ -18,7 +19,7 @@ public partial class PlayerCombatInput
         {
             if (ownHealth != null && ownHealth.Health > 0f)
                 ownHealth.Heal(dealt * bonuses.LifeStealFraction);
-            target.ApplyBurn(bonuses.burnDamagePerTick, bonuses.burnTickSeconds, bonuses.burnDurationSeconds);
+            target.ApplyBurn(bonuses.burnDamagePerTick, bonuses.burnTickSeconds, bonuses.burnDurationSeconds, gameObject);
         }
         var impactPrefab = Stats != null ? Stats.attackImpactVfxPrefab : null;
         if (impactPrefab == null) return;

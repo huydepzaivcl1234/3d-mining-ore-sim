@@ -1,0 +1,227 @@
+using System;
+using UnityEngine;
+
+namespace MiningSimulator.Ores
+{
+    /// <summary>Designer-owned configuration for mining NPCs only.</summary>
+    [CreateAssetMenu(fileName = "NpcData", menuName = "Mining Simulator/Game Data/NPC")]
+    public sealed class NpcData : ScriptableObject
+    {
+        [Header("Purchase And Spawn")]
+        [Min(0), SerializeField] private int purchaseCost = 25;
+        [Tooltip("Percentage added to the next miner price after each successful purchase. 0 keeps a fixed price.")]
+        [Min(0f), SerializeField] private float purchaseCostIncreasePercent = 10f;
+        [Min(0f), SerializeField] private float rebirthPurchaseCostIncreasePercent = 10f;
+        [Header("Miner health display")]
+        [SerializeField] private GameObject minerHealthBarPrefab;
+        [SerializeField] private Vector3 minerHealthBarOffset = new(0f, 2.1f, 0f);
+        [Min(0.01f), SerializeField] private float minerHealthBarScale = .6f;
+        public GameObject MinerHealthBarPrefab => minerHealthBarPrefab;
+        public Vector3 MinerHealthBarOffset => minerHealthBarOffset;
+        public float MinerHealthBarScale => minerHealthBarScale;
+        public float RebirthPurchaseCostIncreasePercent => Mathf.Max(0f, rebirthPurchaseCostIncreasePercent);
+        [Min(0), SerializeField] private int startingMaximumMiners = 3;
+        [Min(0f), SerializeField] private float spawnSpread = 1.25f;
+        [SerializeField] private float spawnHeightOffset = 0.9f;
+        [Min(1), SerializeField] private int spawnAttempts = 12;
+
+        [Header("Monster attacks")]
+        [Min(1f), SerializeField] private float minerHealth = 20f;
+        [Min(0.1f), SerializeField] private float knockoutSeconds = 10f;
+        public float MinerHealth => Mathf.Max(1f, minerHealth);
+        public float KnockoutSeconds => Mathf.Max(0.1f, knockoutSeconds);
+
+        [Header("Movement And Mining")]
+        [Min(0.1f), SerializeField] private float moveSpeed = 3.5f;
+        [Min(0f), SerializeField] private float turnSpeed = 720f;
+        [Min(0.1f), SerializeField] private float miningRange = 1.8f;
+        [Min(0.01f), SerializeField] private float stoppingDistance = 0.12f;
+        [Min(0.1f), SerializeField] private float movementAcceleration = 18f;
+        [Min(0.1f), SerializeField] private float brakingAcceleration = 28f;
+        [Min(0f), SerializeField] private float targetSwitchDistanceAdvantage = 0.25f;
+        [Min(0f), SerializeField] private float targetSwitchCooldown = 0.75f;
+        [Min(0f), SerializeField] private float standSlotSpacingPadding = 0.12f;
+        [Min(1), SerializeField] private int miningPower = 6;
+        [Min(1), SerializeField] private int damagePerHit = 2;
+        [Min(0.05f), SerializeField] private float secondsPerHit = 0.65f;
+        [Min(0.05f), SerializeField] private float targetRefreshInterval = 0.35f;
+
+        [Header("Level And Experience")]
+        [Min(1), SerializeField] private int maximumLevel = 100;
+        [Min(1), SerializeField] private int startingExperienceRequirement = 10;
+        [Min(1f), SerializeField] private float experienceRequirementGrowth = 1.2f;
+        [Min(1), SerializeField] private int miningPowerPerLevel = 1;
+
+        [Header("Ore Sight")]
+        [Min(0.05f), SerializeField] private float oreSightProbeRadius = 0.35f;
+        [Min(0.1f), SerializeField] private float oreSightDistance = 2.2f;
+        [Min(0f), SerializeField] private float oreSightOriginHeight = 0.7f;
+
+        [Header("Collision")]
+        [Min(0.05f), SerializeField] private float colliderRadius = 0.4f;
+        [Min(0.1f), SerializeField] private float colliderHeight = 1.8f;
+        [Min(0.01f), SerializeField] private float mass = 1f;
+        [SerializeField] private LayerMask collisionLayers = ~0;
+        [SerializeField] private bool ignoreNpcPhysicalCollisions = true;
+
+        [Header("Rendering")]
+        [Tooltip("Forces every renderer on the miner model and tool to cast realtime shadows.")]
+        [SerializeField] private bool castShadows = true;
+        [Tooltip("Lets the miner model and tool receive shadows from the environment.")]
+        [SerializeField] private bool receiveShadows = true;
+
+        [Header("Dynamic Obstacle Response")]
+        [Min(0.05f), SerializeField] private float obstacleProbeRadius = 0.32f;
+        [Min(0.1f), SerializeField] private float obstacleProbeDistance = 1.25f;
+        [Min(0f), SerializeField] private float obstacleAvoidanceStrength = 1.35f;
+        [Tooltip("Distance used to check whether a possible route around several ores is clear.")]
+        [Min(0.1f), SerializeField] private float detourProbeDistance = 2.8f;
+        [Tooltip("Base angle used to test side, wide-side, and reverse detour directions.")]
+        [Range(15f, 85f), SerializeField] private float detourAngle = 55f;
+        [Tooltip("Minimum clear distance before a side direction is accepted. If none is clear, the NPC reverses.")]
+        [Min(0.05f), SerializeField] private float detourMinimumClearance = 0.85f;
+        [Tooltip("Keeps a chosen route stable long enough to move around the obstacle without left-right jitter.")]
+        [Min(0.05f), SerializeField] private float detourDirectionHoldTime = 0.65f;
+        [Min(0.1f), SerializeField] private float npcSeparationRadius = 1.05f;
+        [Min(0f), SerializeField] private float npcSeparationStrength = 1.2f;
+        [Min(0.1f), SerializeField] private float npcSeparationResponsiveness = 8f;
+        [Min(0.1f), SerializeField] private float stuckTimeout = 1.25f;
+        [Min(0.001f), SerializeField] private float stuckProgressDistance = 0.08f;
+        [Min(0.1f), SerializeField] private float ignoredTargetDuration = 1.5f;
+        [Header("Navigation recovery and crowd flow")]
+        [Min(.1f), SerializeField] private float pendingPathTimeout = 5f;
+        [Tooltip("Long route checks are staggered; the motor still checks every physics step.")]
+        [Min(.02f), SerializeField] private float routeValidationInterval = .2f;
+        [Min(.1f), SerializeField] private float recoveryRadius = 2f;
+        [Min(1), SerializeField] private int waitingRings = 4;
+        [Min(.1f), SerializeField] private float crowdTimeHorizon = 1.5f;
+        [Min(.1f), SerializeField] private float crowdNeighborDistance = 5f;
+        [Min(.1f), SerializeField] private float crowdSideHoldTime = .65f;
+        [Min(.1f), SerializeField] private float crowdYieldDuration = 3f;
+        [Min(.1f), SerializeField] private float crowdAccessTimeout = 15f;
+        public float PendingPathTimeout => Mathf.Max(.1f, pendingPathTimeout);
+        public float RouteValidationInterval => Mathf.Max(.02f, routeValidationInterval);
+        public float RecoveryRadius => Mathf.Max(.1f, recoveryRadius);
+        public int WaitingRings => Mathf.Clamp(waitingRings, 1, 16);
+        public float CrowdTimeHorizon => Mathf.Max(.1f, crowdTimeHorizon);
+        public float CrowdNeighborDistance => Mathf.Max(.1f, crowdNeighborDistance);
+        public float CrowdSideHoldTime => Mathf.Max(.1f, crowdSideHoldTime);
+        public float CrowdYieldDuration => Mathf.Max(.1f, crowdYieldDuration);
+        public float CrowdAccessTimeout => Mathf.Max(.1f, crowdAccessTimeout);
+                             
+        public int PurchaseCost => purchaseCost;
+        public float PurchaseCostIncreasePercent => Mathf.Max(0f, purchaseCostIncreasePercent);
+
+        public int GetPurchaseCost(int previousPurchases, int rebirths = 0)
+        {
+            if (purchaseCost <= 0) return 0;
+            double cost = purchaseCost * Math.Pow(1d + PurchaseCostIncreasePercent / 100d,
+                Mathf.Max(0, previousPurchases)) * Math.Pow(
+                1d + RebirthPurchaseCostIncreasePercent / 100d, Mathf.Max(0, rebirths));
+            // Round only the final price, and saturate before converting to int.
+            return (int)Math.Min(int.MaxValue, Math.Ceiling(cost));
+        }
+        public int StartingMaximumMiners => startingMaximumMiners;
+        public float SpawnSpread => spawnSpread;
+        public float SpawnHeightOffset => spawnHeightOffset;
+        public int SpawnAttempts => spawnAttempts;
+        public float MoveSpeed => moveSpeed;
+        public float TurnSpeed => turnSpeed;
+        public float MiningRange => miningRange;
+        public float StoppingDistance => stoppingDistance;
+        public float MovementAcceleration => movementAcceleration;
+        public float BrakingAcceleration => brakingAcceleration;
+        public float TargetSwitchDistanceAdvantage => targetSwitchDistanceAdvantage;
+        public float TargetSwitchCooldown => targetSwitchCooldown;
+        public float StandSlotSpacingPadding => standSlotSpacingPadding;
+        public int MiningPower => miningPower;
+        public int DamagePerHit => damagePerHit;
+        public float SecondsPerHit => secondsPerHit;
+        public float TargetRefreshInterval => targetRefreshInterval;
+        public int MaximumLevel => maximumLevel;
+        public int StartingExperienceRequirement => startingExperienceRequirement;
+        public float ExperienceRequirementGrowth => experienceRequirementGrowth;
+        public int MiningPowerPerLevel => miningPowerPerLevel;
+        public float OreSightProbeRadius => oreSightProbeRadius;
+        public float OreSightDistance => oreSightDistance;
+        public float OreSightOriginHeight => oreSightOriginHeight;
+        public float ColliderRadius => colliderRadius;
+        public float ColliderHeight => colliderHeight;
+        public float Mass => mass;
+        public LayerMask CollisionLayers => collisionLayers;
+        public bool IgnoreNpcPhysicalCollisions => ignoreNpcPhysicalCollisions;
+        public bool CastShadows => castShadows;
+        public bool ReceiveShadows => receiveShadows;
+        public float ObstacleProbeRadius => obstacleProbeRadius;
+        public float ObstacleProbeDistance => obstacleProbeDistance;
+        public float ObstacleAvoidanceStrength => obstacleAvoidanceStrength;
+        public float DetourProbeDistance => detourProbeDistance;
+        public float DetourAngle => detourAngle;
+        public float DetourMinimumClearance => detourMinimumClearance;
+        public float DetourDirectionHoldTime => detourDirectionHoldTime;
+        public float NpcSeparationRadius => npcSeparationRadius;
+        public float NpcSeparationStrength => npcSeparationStrength;
+        public float NpcSeparationResponsiveness => npcSeparationResponsiveness;
+        public float StuckTimeout => stuckTimeout;
+        public float StuckProgressDistance => stuckProgressDistance;
+        public float IgnoredTargetDuration => ignoredTargetDuration;
+       
+       
+
+        public int GetExperienceRequirement(int level)
+        {
+            int safeLevel = Mathf.Max(1, level);
+            double requirement = startingExperienceRequirement *
+                                 Math.Pow(experienceRequirementGrowth, safeLevel - 1);
+            return (int)Math.Min(int.MaxValue, Math.Ceiling(requirement));
+        }
+
+        private void OnValidate()
+        {
+            purchaseCost = Mathf.Max(0, purchaseCost);
+            purchaseCostIncreasePercent = Mathf.Max(0f, purchaseCostIncreasePercent);
+            startingMaximumMiners = Mathf.Max(0, startingMaximumMiners);
+            spawnSpread = Mathf.Max(0f, spawnSpread);
+            spawnAttempts = Mathf.Max(1, spawnAttempts);
+            moveSpeed = Mathf.Max(0.1f, moveSpeed);
+            turnSpeed = Mathf.Max(0f, turnSpeed);
+            miningRange = Mathf.Max(0.1f, miningRange);
+            stoppingDistance = Mathf.Max(0.01f, stoppingDistance);
+            movementAcceleration = Mathf.Max(0.1f, movementAcceleration);
+            brakingAcceleration = Mathf.Max(0.1f, brakingAcceleration);
+            targetSwitchDistanceAdvantage = Mathf.Max(0f, targetSwitchDistanceAdvantage);
+            targetSwitchCooldown = Mathf.Max(0f, targetSwitchCooldown);
+            standSlotSpacingPadding = Mathf.Max(0f, standSlotSpacingPadding);
+            miningPower = Mathf.Max(1, miningPower);
+            damagePerHit = Mathf.Max(1, damagePerHit);
+            secondsPerHit = Mathf.Max(0.05f, secondsPerHit);
+            targetRefreshInterval = Mathf.Max(0.05f, targetRefreshInterval);
+            maximumLevel = Mathf.Max(1, maximumLevel);
+            startingExperienceRequirement = Mathf.Max(1, startingExperienceRequirement);
+            experienceRequirementGrowth = Mathf.Max(1f, experienceRequirementGrowth);
+            miningPowerPerLevel = Mathf.Max(1, miningPowerPerLevel);
+            oreSightProbeRadius = Mathf.Max(0.05f, oreSightProbeRadius);
+            oreSightDistance = Mathf.Max(miningRange, oreSightDistance);
+            oreSightOriginHeight = Mathf.Max(0f, oreSightOriginHeight);
+            colliderRadius = Mathf.Max(0.05f, colliderRadius);
+            colliderHeight = Mathf.Max(colliderRadius * 2f, colliderHeight);
+            mass = Mathf.Max(0.01f, mass);
+            obstacleProbeRadius = Mathf.Max(0.05f, obstacleProbeRadius);
+            obstacleProbeDistance = Mathf.Max(0.1f, obstacleProbeDistance);
+            obstacleAvoidanceStrength = Mathf.Max(0f, obstacleAvoidanceStrength);
+            detourProbeDistance = Mathf.Max(obstacleProbeDistance, detourProbeDistance);
+            detourAngle = Mathf.Clamp(detourAngle, 15f, 85f);
+            detourMinimumClearance = Mathf.Clamp(detourMinimumClearance, 0.05f,
+                detourProbeDistance);
+            detourDirectionHoldTime = Mathf.Max(0.05f, detourDirectionHoldTime);
+            npcSeparationRadius = Mathf.Max(colliderRadius * 2f, npcSeparationRadius);
+            npcSeparationStrength = Mathf.Max(0f, npcSeparationStrength);
+            npcSeparationResponsiveness = Mathf.Max(0.1f, npcSeparationResponsiveness);
+            stuckTimeout = Mathf.Max(0.1f, stuckTimeout);
+            stuckProgressDistance = Mathf.Max(0.001f, stuckProgressDistance);
+            ignoredTargetDuration = Mathf.Max(0.1f, ignoredTargetDuration);
+            
+            
+        }
+    }
+}

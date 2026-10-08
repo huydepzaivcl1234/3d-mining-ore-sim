@@ -80,7 +80,8 @@ public partial class PlayerCombatInput
         if (monster == null || !monster.isActiveAndEnabled || monster.Health == null || monster.Health.Health <= 0f)
             return false;
         var collider = monster.GetComponent<Collider>();
-        if (!IsColliderInRange(collider, LungeAcquireRange, out _)) return false;
+        float range = LungeAcquireRange + (lungeTracking && monster == stepTarget ? Mathf.Max(0f, lungeTrackingDistance) : 0f);
+        if (!IsColliderInRange(collider, range, out _)) return false;
         Vector3 origin = transform.TransformPoint(HitOriginOffset);
         Vector3 delta = collider.ClosestPoint(origin) - origin;
         if (Vector3.Angle(StrikeForward, Vector3.ProjectOnPlane(delta, Vector3.up)) > maximumStepAngle) return false;

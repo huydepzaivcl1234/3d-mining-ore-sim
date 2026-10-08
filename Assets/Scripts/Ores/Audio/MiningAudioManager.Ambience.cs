@@ -54,12 +54,7 @@ namespace MiningSimulator.Ores
             bool isNight = dayNightSystem != null &&
                 dayNightSystem.CurrentPeriod == MiningTimePeriod.Night;
             StopAmbiencePlaylist();
-            if (lavaWorldAmbienceActive && EnsureClipLoaded(audioData.LavaWorldAmbience))
-            {
-                PlayAmbienceClip(audioData.LavaWorldAmbience, fadeIn);
-                ambienceSource.loop = true;
-                return;
-            }
+
             AudioClip ambience = isNight
                 ? audioData.GetRandomNightAmbience(currentPlaylistAmbience)
                 : audioData.GetRandomMorningAmbience(currentPlaylistAmbience);

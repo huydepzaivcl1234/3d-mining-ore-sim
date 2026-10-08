@@ -1,0 +1,7 @@
+# Rune scroll presentation
+
+RuneStation now reuses the five existing RuneUpgradeRow objects inside a runtime Viewport/Content container, instead of displaying all five side-by-side. RuneUpgradeScrollRect owns snapped mouse-wheel/scrollbar navigation and unscaled smoothing, following the existing upgrade carousel behavior. At most three rows are visible and raycastable; first row is full opacity, later rows fade and shrink slightly. Top-row hover enlarges it. The existing row buttons retain purchase listeners, localization, Gem costs and eleven progress cells.
+
+RuneUpgradeData exposes visibleRows, scrollSeconds, lowerRowOpacity and scrollCanvasScale alongside existing barSize and panelSpacing. Defaults are 3 rows, 0.18 seconds, 0.75 opacity decay, 0.005 world scale. Parent/model scale is compensated so scaling the shrine does not resize the UI. Bonus font is larger; viewport has a dark contrast background.
+
+Validation: Unity compilation succeeded; isolated copy of the actual unpacked scene rune handles wheel input while timeScale=0, clamps to last row, uses alpha [1,.75,.5625,0,0], and applies top-row hover scale 1.025. Repeated initialization leaves one viewport, not duplicates. GraphicRaycaster is present. Rendered preview checked all three rows, labels and progress cells. A preview cleanup warning about releasing a camera RenderTexture was fixed in the temporary capture harness, not runtime code. No full Play session, purchase or reset was performed. SampleScene is excluded and not saved.

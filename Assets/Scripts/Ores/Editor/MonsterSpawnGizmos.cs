@@ -17,7 +17,7 @@ namespace MiningSimulator.Editor
             var surface = settings.FindProperty("miningSurface").objectReferenceValue as NavMeshSurface;
             if (surface == null)
             {
-                var builder = Object.FindFirstObjectByType<MiningNavMeshBuilder>();
+                var builder = Object.FindFirstObjectByType<WorldNavigationBootstrap>();
                 if (builder != null) surface = builder.GetComponent<NavMeshSurface>();
             }
             if (surface == null || surface.collectObjects != CollectObjects.Volume) return;

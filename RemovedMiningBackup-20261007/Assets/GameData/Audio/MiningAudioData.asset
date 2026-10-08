@@ -1,0 +1,57 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a92bc5e212884308943410de13a33ff6, type: 3}
+  m_Name: MiningAudioData
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningAudioData
+  backgroundMusic: {fileID: 8300000, guid: 88324ae033f921f46b8b9b68a4f06c67, type: 3}
+  shopMusic: {fileID: 8300000, guid: 7d28c9f5614f7294dba1f3d603ad48a2, type: 3}
+  playMusicOnStart: 1
+  loopMusic: 1
+  musicVolume: 0.05
+  musicMixerGroup: {fileID: 0}
+  morningAmbience: {fileID: 8300000, guid: 8f4807570f294534ae0d678339307aa1, type: 3}
+  additionalMorningAmbiences:
+  - {fileID: 8300000, guid: 9a1d8a42638ce4a40bd954823f777eee, type: 3}
+  morningAmbiencePauseRange: {x: 2, y: 5}
+  nightAmbience: {fileID: 8300000, guid: c4d34d8d0d95414e8b5e6a853d0dca6d, type: 3}
+  additionalNightAmbiences:
+  - {fileID: 8300000, guid: eace74d809a0af24eae240309a6f1d13, type: 3}
+  nightAmbiencePauseRange: {x: 2, y: 5}
+  sunriseRoosterSfx: {fileID: 8300000, guid: 4caad48eb5424c0f9bb4cc6172f006fd, type: 3}
+  coinRainAmbience: {fileID: 8300000, guid: 256f376d46cc5504985640d35469ad3a, type: 3}
+  lavaWorldAmbience: {fileID: 8300000, guid: 0e29b736f757ee04880aaab37a51f83f, type: 3}
+  lavaWorldAmbienceVolume: 0.005
+  lavaPortalWhooshSfx: {fileID: 8300000, guid: 75ecae3a5c183ef4e9a32742313386ad, type: 3}
+  lavaPortalImpactSfx: {fileID: 8300000, guid: 0be390704418597499f913e81cfb2f72, type: 3}
+  stalkedCatchSfx: {fileID: 8300000, guid: a7fcd3cb2495843408b8bf42b797a897, type: 3}
+  stalkedJumpscareSfx: {fileID: 8300000, guid: f3c811ecf0fea6a4a8f2585e63c37933, type: 3}
+  ambienceVolume: 0.45
+  ambienceFadeDuration: 2.5
+  oreHitSfx: {fileID: 8300000, guid: 37b621765db9a9a41b987b6dbcaeeb8e, type: 3}
+  oreBreakSfx: {fileID: 8300000, guid: 7e9ae525bc06a984cab34bcad20ca10a, type: 3}
+  npcPurchasedSfx: {fileID: 8300000, guid: c062f16ffb3abca46b7717172158c05e, type: 3}
+  upgradePurchasedSfx: {fileID: 8300000, guid: c062f16ffb3abca46b7717172158c05e, type: 3}
+  levelUpSfx: {fileID: 8300000, guid: 2bb7fc75a2a230749bf1420d3a056191, type: 3}
+  rebirthSfx: {fileID: 0}
+  monsterDropSfx: {fileID: 8300000, guid: d3d65f11176076946863f253030c757f, type: 3}
+  monsterLootSfx: {fileID: 8300000, guid: c69a862dde12f444da21e16558b7dd07, type: 3}
+  buttonClickSfx: {fileID: 8300000, guid: c827175ac1520f24193f96c9f3a3f753, type: 3}
+  panelOpenSfx: {fileID: 0}
+  panelCloseSfx: {fileID: 0}
+  wheelSpinSfx: {fileID: 8300000, guid: bc9b89f6417d1b645a585b7e48a470aa, type: 3}
+  wheelRewardSfx: {fileID: 8300000, guid: 87edb7399c8fc8c47b310b9b9b877617, type: 3}
+  sfxVolume: 0.8
+  sfxMixerGroup: {fileID: 0}
+  minimumPitch: 0.96
+  maximumPitch: 1.04
+  miningSfxCooldown: 0.05
+  muteAudioOnLostFocus: 1

@@ -20,7 +20,6 @@ namespace MiningSimulator.Ores
             if (landed || data == null || (data.landingLayers.value & (1 << collision.gameObject.layer)) == 0) return;
             // Enemies, players and ore are not a landing surface.
             if (collision.collider.GetComponentInParent<MiningCharacterHealth>() != null ||
-                collision.collider.GetComponentInParent<Ore>() != null ||
                 collision.collider.GetComponentInParent<MiningWorldCard>() != null) return;
             for (int i = 0; i < collision.contactCount; i++)
             {

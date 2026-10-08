@@ -45,6 +45,17 @@ namespace MiningSimulator.Ores
         [Min(4)] public int chaseStandDirections = 16;
         [Range(.1f, .95f)] public float chaseStandRangeFraction = .75f;
         [Range(.1f, 1f)] public float chaseStandMaximumRangeFraction = .95f;
+        [Header("A* movement and obstacle avoidance")]
+        [Min(.05f)] public float targetScanSeconds = .25f;
+        [Min(0f)] public float targetMemorySeconds = 2f;
+        [Min(0f)] public float detectionHysteresis = 1f;
+        [Min(.05f)] public float targetRepathDistance = .75f;
+        [Min(.05f)] public float waypointTolerance = .2f;
+        [Min(.1f)] public float avoidanceLookAhead = 1.2f;
+        [Min(.05f)] public float avoidanceHoldSeconds = .5f;
+        [Min(.1f)] public float stuckRepathSeconds = 1.2f;
+        [Min(.5f)] public float pathRequestTimeout = 5f;
+        public LayerMask navigationObstacleLayers = ~0;
         [Header("Ranged attack (optional)")]
         public HomingMonsterProjectile projectile;
         public string fireState = "Fire";

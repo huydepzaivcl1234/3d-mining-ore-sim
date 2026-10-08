@@ -73,8 +73,6 @@ namespace MiningSimulator.Ores.Editor
             MiningQuestSystem questSystem = wallet.GetComponent<MiningQuestSystem>() ??
                                             Undo.AddComponent<MiningQuestSystem>(wallet.gameObject);
             WireQuestSystem(questSystem, data, wallet,
-                Object.FindFirstObjectByType<OreSpawner>(FindObjectsInactive.Include),
-                Object.FindFirstObjectByType<NpcShop>(FindObjectsInactive.Include),
                 Object.FindFirstObjectByType<MiningRebirthSystem>(FindObjectsInactive.Include));
             ConfigureCanvasGroup(panelRoot.gameObject);
             WireQuestPanel(panel, data, questSystem,
@@ -87,14 +85,12 @@ namespace MiningSimulator.Ores.Editor
         }
 
         private static void WireQuestSystem(MiningQuestSystem system, MiningQuestData data,
-            PlayerWallet wallet, OreSpawner oreSpawner, NpcShop npcShop,
+            PlayerWallet wallet,
             MiningRebirthSystem rebirthSystem)
         {
             var serialized = new SerializedObject(system);
             SetReference(serialized, "data", data);
             SetReference(serialized, "wallet", wallet);
-            SetReference(serialized, "oreSpawner", oreSpawner);
-            SetReference(serialized, "npcShop", npcShop);
             SetReference(serialized, "rebirthSystem", rebirthSystem);
             serialized.ApplyModifiedProperties();
             EditorUtility.SetDirty(system);

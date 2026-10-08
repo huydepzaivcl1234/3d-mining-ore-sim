@@ -34,8 +34,6 @@ namespace MiningSimulator.Ores
         [Header("References")]
         [SerializeField] private MiningQuestData data;
         [SerializeField] private PlayerWallet wallet;
-        [SerializeField] private OreSpawner oreSpawner;
-        [SerializeField] private NpcShop npcShop;
         [SerializeField] private MiningRebirthSystem rebirthSystem;
 
         private readonly Dictionary<string, RuntimeQuestState> states = new();
@@ -189,15 +187,9 @@ namespace MiningSimulator.Ores
             QuestsChanged?.Invoke();
         }
 
-        private void HandleOreRewardGranted(Ore ore, float reward)
-        {
-            if (ore != null) AddProgress(MiningQuestObjective.MineOre, 1);
-        }
 
-        private void HandleNpcPurchased(MiningNpc npc)
-        {
-            if (npc != null) AddProgress(MiningQuestObjective.PurchaseNpc, 1);
-        }
+
+
 
         private void HandleRebirthCompleted(int completedCount)
         {
@@ -315,23 +307,17 @@ namespace MiningSimulator.Ores
         private void Subscribe()
         {
             Unsubscribe();
-            if (oreSpawner != null) oreSpawner.OreRewardGranted += HandleOreRewardGranted;
-            if (npcShop != null) npcShop.NpcPurchased += HandleNpcPurchased;
             if (rebirthSystem != null) rebirthSystem.RebirthCompleted += HandleRebirthCompleted;
         }
 
         private void Unsubscribe()
         {
-            if (oreSpawner != null) oreSpawner.OreRewardGranted -= HandleOreRewardGranted;
-            if (npcShop != null) npcShop.NpcPurchased -= HandleNpcPurchased;
             if (rebirthSystem != null) rebirthSystem.RebirthCompleted -= HandleRebirthCompleted;
         }
 
         private void ResolveReferences()
         {
             wallet ??= FindFirstObjectByType<PlayerWallet>(FindObjectsInactive.Include);
-            oreSpawner ??= FindFirstObjectByType<OreSpawner>(FindObjectsInactive.Include);
-            npcShop ??= FindFirstObjectByType<NpcShop>(FindObjectsInactive.Include);
             rebirthSystem ??= FindFirstObjectByType<MiningRebirthSystem>(
                 FindObjectsInactive.Include);
         }

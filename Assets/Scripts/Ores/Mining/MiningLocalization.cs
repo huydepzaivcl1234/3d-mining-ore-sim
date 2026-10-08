@@ -180,14 +180,8 @@ namespace MiningSimulator.Ores
             return type switch
             {
                 MiningUpgradeType.MoneyReward => Text("Increase money earned", "Tăng tiền nhận được thêm"),
-                MiningUpgradeType.RareOreSpawn => Text("Increase rare ore chance", "Tăng tỉ lệ quặng hiếm"),
-                MiningUpgradeType.OreDamage => Text("Increase ore damage", "Tăng sát thương lên quặng"),
-                MiningUpgradeType.OreSpawnSpeed => Text("Increase ore spawn speed", "Tăng tốc độ spawn quặng"),
-                MiningUpgradeType.NpcMoveSpeed => Text("Increase NPC move speed", "Tăng tốc độ di chuyển NPC"),
-                MiningUpgradeType.NpcCapacity => Text("Increase miner capacity", "Tăng giới hạn thợ mỏ"),
                 MiningUpgradeType.LuckyBlockReward => Text("Increase Lucky Block money", "Tăng tiền Lucky Block"),
                 MiningUpgradeType.LuckyBlockDropChance => Text("Increase Lucky Block chance", "Tăng tỉ lệ Lucky Block"),
-                MiningUpgradeType.NpcExperience => Text("Increase NPC experience", "Tăng kinh nghiệm NPC"),
                 MiningUpgradeType.ItemDropChance => Text("Increase item drop chance", "Tăng tỉ lệ rơi vật phẩm"),
                 MiningUpgradeType.RegenIntervalReduction => Text("Reduce regeneration interval", "Giảm thời gian hồi máu"),
                 MiningUpgradeType.HealingEffectiveness => Text("Increase healing effectiveness", "Tăng hiệu quả hồi máu"),

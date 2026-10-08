@@ -35,8 +35,9 @@ namespace MiningSimulator.Ores
         [Tooltip("Additional species. Authored scene entries take precedence if the prefab already exists.")]
         [SerializeField] private MonsterSpawnRoster additionalRoster;
         [SerializeField] private NavMeshSurface miningSurface;
-        [Min(0.5f), SerializeField] private float minimumSpawnDistance = 4f;
-        [Min(0.5f), SerializeField] private float maximumSpawnDistance = 7f;
+        // Retain old scene fields for serialization; chest GameData now owns the ring.
+        [HideInInspector, SerializeField] private float minimumSpawnDistance = 4f;
+        [HideInInspector, SerializeField] private float maximumSpawnDistance = 7f;
         [Min(0f), SerializeField] private float minimumPlayerDistance = 3f;
         [Header("Daily encounters")]
         [SerializeField] private DayNightSystem dayNight;
@@ -49,22 +50,25 @@ namespace MiningSimulator.Ores
         public string DailyEventLabel => CurrentDailyEvent == DailyEncounterEvent.NightOnly
             ? MiningLocalization.TextKey("DAILY_EVENT_NIGHT_ONLY", "Day off - monsters arrive at night")
             : MiningLocalization.TextKey("DAILY_EVENT_BOSS", "Boss invasion");
-        [Min(0), SerializeField] private int minimumPerDay = 3;
-        [Min(0), SerializeField] private int maximumPerDay = 12;
+        [HideInInspector, SerializeField] private int minimumPerDay = 3;
+        [HideInInspector, SerializeField] private int maximumPerDay = 12;
         [Tooltip("Extra daily monsters per current day number. 1 means roll + current day.")]
-        [Min(0), SerializeField] private int extraMonstersPerDayNumber = 1;
+        [HideInInspector, SerializeField] private int extraMonstersPerDayNumber = 1;
         [Tooltip("Total daily cap across every species, including boss variants.")]
-        [Min(1), SerializeField] private int dailyMonsterCap = 50;
+        [HideInInspector, SerializeField] private int dailyMonsterCap = 50;
         [Range(1, 12), SerializeField] private int maximumPerWave = 3;
         [Range(0.01f, 0.99f), SerializeField] private float largerWaveRelativeWeight = 0.35f;
         [SerializeField] private bool showDailyForecast = true;
-        [Min(0), SerializeField] private int maximumAlive = 6;
+        [HideInInspector, SerializeField] private int maximumAlive = 6;
+        public const int MaximumLivingMonsters = 50;
         [Min(0.1f), SerializeField] private float minimumSpacing = 2f;
         [SerializeField] private LayerMask groundLayers = ~0;
         [SerializeField] private MiningCharacterHealth player;
         [SerializeField] private PlayerWallet wallet;
         [SerializeField] private MiningItemSystem inventory;
         [SerializeField] private MiningUpgradeSystem upgradeSystem;
+        [SerializeField] private CurrencyRewardPopup moneyPopupPrefab;
+        [SerializeField] private MiningUiData moneyPopupUiData;
         [Header("Monster unlock notifications")]
         [SerializeField] private bool showUnlockNotifications = true;
         [SerializeField] private MiningUnlockNotifier unlockNotifier;
@@ -75,7 +79,6 @@ namespace MiningSimulator.Ores
         private int lastKnownPlayerLevel;
         private readonly HashSet<MushroomMonster> announcedSpecies = new();
         private readonly HashSet<MushroomMonster> announcedBosses = new();
-        private OreSpawner oreSpawner;
         private MiningAudioManager audioManager;
         private readonly List<MushroomMonster> alive = new();
         private readonly Dictionary<MushroomMonster, MonsterSpawnEntry> liveSpecies = new();
@@ -123,8 +126,8 @@ namespace MiningSimulator.Ores
         }
         private bool TryGetMineSurface(out NavMeshSurface surface)
         {
-            if (miningSurface == null && MiningNavMeshBuilder.Instance != null)
-                miningSurface = MiningNavMeshBuilder.Instance.GetComponent<NavMeshSurface>();
+            if (miningSurface == null && WorldNavigationBootstrap.Instance != null)
+                miningSurface = WorldNavigationBootstrap.Instance.GetComponent<NavMeshSurface>();
             surface = miningSurface;
             // Use the authored mining bake, never a separate monster rectangle.
             return surface != null && surface.isActiveAndEnabled && surface.navMeshData != null &&
@@ -134,76 +137,86 @@ namespace MiningSimulator.Ores
         private static NavMeshQueryFilter MineFilter(NavMeshSurface surface) =>
             new NavMeshQueryFilter { agentTypeID = surface.agentTypeID, areaMask = NavMesh.AllAreas };
 
-        public bool IsInsideMine(Vector3 point)
+public bool IsInsideMine(Vector3 point)
         {
-            if (!TryGetMineSurface(out NavMeshSurface surface)) return false;
-            Vector3 local = surface.transform.InverseTransformPoint(point) - surface.center;
-            if (Mathf.Abs(local.x) > surface.size.x * 0.5f ||
-                Mathf.Abs(local.z) > surface.size.z * 0.5f) return false;
-            return NavMesh.SamplePosition(point, out _, 0.6f, MineFilter(surface));
+            if (miningSurface == null && WorldNavigationBootstrap.Instance != null)
+                miningSurface = WorldNavigationBootstrap.Instance.GetComponent<NavMeshSurface>();
+            if (miningSurface == null) return true;
+            Vector3 local = miningSurface.transform.InverseTransformPoint(point) - miningSurface.center;
+            return Mathf.Abs(local.x) <= miningSurface.size.x * .5f &&
+                Mathf.Abs(local.z) <= miningSurface.size.z * .5f;
         }
 
-        public bool TryGetMineEntryPoint(Vector3 origin, out Vector3 point)
+public bool TryGetMineEntryPoint(Vector3 origin, out Vector3 point)
         {
             point = origin;
-            if (!TryGetMineSurface(out NavMeshSurface surface) ||
-                !NavMesh.SamplePosition(origin, out NavMeshHit nearest,
-                    Mathf.Max(minimumSpawnDistance, maximumSpawnDistance) + 4f, MineFilter(surface))) return false;
-            // Aim slightly inside the bake, not exactly at its unwalkable border.
-            Vector3 inward = Vector3.ProjectOnPlane(surface.transform.TransformPoint(surface.center) - nearest.position, Vector3.up).normalized;
-            if (!NavMesh.SamplePosition(nearest.position + inward, out NavMeshHit entry, 1.2f, MineFilter(surface))) return false;
-            point = entry.position;
-            return true;
+            var grid = WorldNavigationGrid.Instance;
+            if (grid == null || !grid.HasBaked) return false;
+            if (miningSurface == null && WorldNavigationBootstrap.Instance != null)
+                miningSurface = WorldNavigationBootstrap.Instance.GetComponent<NavMeshSurface>();
+            if (miningSurface == null) return grid.TryProject(origin, grid.StandProjectionRadius, out point);
+            Vector3 local = miningSurface.transform.InverseTransformPoint(origin) - miningSurface.center;
+            local.x = Mathf.Clamp(local.x, -miningSurface.size.x * .45f, miningSurface.size.x * .45f);
+            local.z = Mathf.Clamp(local.z, -miningSurface.size.z * .45f, miningSurface.size.z * .45f);
+            return grid.TryProject(miningSurface.transform.TransformPoint(local + miningSurface.center),
+                grid.StandProjectionRadius, out point);
         }
 
-        private bool TryGetSpawnCandidate(out Vector3 position)
+private bool TryGetSpawnCandidate(out Vector3 position)
         {
             position = default;
-            if (!TryGetMineSurface(out NavMeshSurface surface)) return false;
-            Vector3 half = surface.size * 0.5f;
-            // Sample the perimeter of the existing bake volume by side length.
-            float side = UnityEngine.Random.Range(0f, 2f * (surface.size.x + surface.size.z));
-            Vector3 rim, outward;
-            if ((side -= surface.size.x) < 0f)
-            { rim = new Vector3(UnityEngine.Random.Range(-half.x, half.x), 0f, half.z); outward = Vector3.forward; }
-            else if ((side -= surface.size.x) < 0f)
-            { rim = new Vector3(UnityEngine.Random.Range(-half.x, half.x), 0f, -half.z); outward = Vector3.back; }
-            else if ((side -= surface.size.z) < 0f)
-            { rim = new Vector3(half.x, 0f, UnityEngine.Random.Range(-half.z, half.z)); outward = Vector3.right; }
-            else
-            { rim = new Vector3(-half.x, 0f, UnityEngine.Random.Range(-half.z, half.z)); outward = Vector3.left; }
-            float min = Mathf.Max(0.5f, minimumSpawnDistance);
-            float max = Mathf.Max(min, maximumSpawnDistance);
-            Vector3 boundary = surface.transform.TransformPoint(surface.center + rim);
-            // Ground queries start above the bake floor rather than its volume center.
-            boundary.y = surface.transform.position.y;
-            position = boundary + Vector3.ProjectOnPlane(surface.transform.TransformDirection(outward), Vector3.up).normalized * UnityEngine.Random.Range(min, max);
+            var chest = TreasureChest.Active;
+            var grid = WorldNavigationGrid.Instance;
+            if (chest == null || !chest.IsAlive || chest.Data == null ||
+                grid == null || !grid.isActiveAndEnabled || !grid.HasBaked) return false;
+            var data = chest.Data;
+            float min = Mathf.Max(.5f, data.monsterSpawnMinimumDistance);
+            float max = Mathf.Max(min, data.monsterSpawnMaximumDistance);
+            float radius = Mathf.Sqrt(UnityEngine.Random.Range(min * min, max * max));
+            float angle = UnityEngine.Random.Range(0f, Mathf.PI * 2f);
+            position = chest.transform.position + new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * radius;
             return true;
         }
 
-        private bool IsValidSpawnDistance(Vector3 position)
+private bool IsValidSpawnDistance(Vector3 position)
         {
-            if (!TryGetMineSurface(out NavMeshSurface surface) ||
-                !NavMesh.SamplePosition(position, out NavMeshHit nearest,
-                    Mathf.Max(minimumSpawnDistance, maximumSpawnDistance) + 2f, MineFilter(surface))) return false;
-            float distance = Vector3.ProjectOnPlane(position - nearest.position, Vector3.up).magnitude;
-            return distance >= Mathf.Max(0.5f, minimumSpawnDistance) &&
-                distance <= Mathf.Max(minimumSpawnDistance, maximumSpawnDistance);
+            var chest = TreasureChest.Active;
+            var grid = WorldNavigationGrid.Instance;
+            if (chest == null || chest.Data == null || grid == null ||
+                !grid.isActiveAndEnabled || !grid.HasBaked || !grid.Contains(position)) return false;
+            Vector3 offset = position - chest.transform.position;
+            offset.y = 0f;
+            float min = Mathf.Max(.5f, chest.Data.monsterSpawnMinimumDistance);
+            float max = Mathf.Max(min, chest.Data.monsterSpawnMaximumDistance);
+            return offset.sqrMagnitude >= min * min && offset.sqrMagnitude <= max * max;
         }
 
-        public bool TryGetMiningApproachPoint(Vector3 origin, out Vector3 point)
+
+public bool TryGetPatrolPoint(Vector3 origin,out Vector3 point)
         {
-            point = origin;
-            if (oreSpawner == null || !oreSpawner.TryGetClosestActiveOre(origin, out Ore ore)) return false;
-            Vector3 surface = ore.GetClosestSurfacePoint(origin);
-            Vector3 away = Vector3.ProjectOnPlane(origin - ore.transform.position, Vector3.up);
-            if (away.sqrMagnitude < 0.01f) away = Vector3.forward;
-            // Approach the mine, never the center of its solid ore collider.
-            point = surface + away.normalized * 1.5f;
-            return true;
+            point=origin;
+            var grid=WorldNavigationGrid.Instance;var terrain=Terrain.activeTerrain;
+            if(grid==null || !grid.HasBaked || terrain==null)return false;
+            Vector3 start=terrain.transform.position,size=terrain.terrainData.size;
+            for(int attempt=0;attempt<12;attempt++)
+            {
+                var candidate=start+new Vector3(UnityEngine.Random.Range(size.x*.1f,size.x*.9f),0,UnityEngine.Random.Range(size.z*.1f,size.z*.9f));
+                if(grid.TryProject(candidate,grid.StandProjectionRadius,out point))return true;
+            }
+            return false;
         }
+
+
         private void Start()
         {
+            if(WorldNavigationGrid.Instance==null) gameObject.AddComponent<WorldNavigationGrid>();
+            var chestData=Resources.Load<TreasureChestData>("TreasureChestData");
+            if(TreasureChest.Active==null && chestData!=null && chestData.prefab!=null)
+            {
+                Vector3 point=chestData.spawnPosition;
+                if(Terrain.activeTerrain!=null)point.y=Terrain.activeTerrain.SampleHeight(point)+Terrain.activeTerrain.transform.position.y;
+                Instantiate(chestData.prefab,point,Quaternion.identity);
+            }
             additionalRoster ??= Resources.Load<MonsterSpawnRoster>("MonsterSpawnRoster");
             if (additionalRoster != null)
                 foreach (var entry in additionalRoster.Entries)
@@ -222,7 +235,6 @@ namespace MiningSimulator.Ores
             if (wallet == null) wallet = FindAnyObjectByType<PlayerWallet>();
             if (inventory == null) inventory = FindAnyObjectByType<MiningItemSystem>();
             if (upgradeSystem == null) upgradeSystem = FindAnyObjectByType<MiningUpgradeSystem>();
-            oreSpawner = FindAnyObjectByType<OreSpawner>();
             audioManager = FindAnyObjectByType<MiningAudioManager>();
             if (dayNight == null) dayNight = FindAnyObjectByType<DayNightSystem>();
             BuildDailySchedule();
@@ -235,7 +247,7 @@ namespace MiningSimulator.Ores
         }
         private void OnEnable()
         {
-            // Start runs only once. Recreate Ground monsters after a return from Lava.
+            // Start runs once; refresh scheduling after re-enabling the zone.
             if (!started) return;
             CheckMonsterUnlocks();
             if (dayNight != null && scheduledDay != dayNight.DayNumber) BuildDailySchedule();
@@ -257,9 +269,9 @@ namespace MiningSimulator.Ores
             {
                 float previousMoney = wallet.CurrentMoney;
                 wallet.AddMoney(money);
-                if (oreSpawner == null) oreSpawner = FindAnyObjectByType<OreSpawner>();
-                if (oreSpawner != null)
-                    oreSpawner.ShowMoneyRewardPopup(wallet.CurrentMoney - previousMoney, origin);
+                float awarded = wallet.CurrentMoney - previousMoney;
+                if (awarded > 0f && moneyPopupPrefab != null && moneyPopupUiData != null)
+                    Instantiate(moneyPopupPrefab).Initialize(awarded, origin, moneyPopupUiData);
             }
             if (data.drops == null) return;
             foreach (var drop in data.drops)
@@ -280,21 +292,19 @@ namespace MiningSimulator.Ores
             if (dayNight == null || !dayNight.isActiveAndEnabled) return;
             if (scheduledDay != dayNight.DayNumber) BuildDailySchedule();
             AnnounceDailyEvent();
+            if (TreasureChest.Active == null || !TreasureChest.Active.IsAlive) return;
             if (dayNight.CurrentPeriod != SpawnPeriod)
             {
                 // Night-only waves are deferred during the day, not discarded.
-                if (SpawnPeriod == MiningTimePeriod.Day) SkipWavesBefore(1f);
                 return;
             }
             float progress = dayNight.CurrentPeriodProgress;
-            // Expired slots are not merged into a huge catch-up wave after a world swap.
-            while (nextWave + 1 < waves.Count && progress >= waves[nextWave + 1].Progress)
-                SkipCurrentWave();
+            // A blocked spawn or full field defers this wave; it must not consume the daily budget.
             if (nextWave >= waves.Count || progress < waves[nextWave].Progress ||
                 Time.time < nextSpawnRetry) return;
             nextSpawnRetry = Time.time + 1f;
             SpawnWave wave = waves[nextWave];
-            while (wave.Completed < wave.Members.Count && alive.Count < maximumAlive)
+            while (wave.Completed < wave.Members.Count && alive.Count < MaximumLivingMonsters)
             {
                 DailyMonsterForecast entry = wave.Members[wave.Completed];
                 if (!CanSpawnSpecies(entry.Entry))
@@ -375,7 +385,7 @@ namespace MiningSimulator.Ores
 
         private int RollWaveSize(int remaining)
         {
-            int limit = Mathf.Min(Mathf.Clamp(maximumPerWave, 1, 12), Mathf.Max(1, maximumAlive), remaining);
+            int limit = Mathf.Min(Mathf.Clamp(maximumPerWave, 1, 12), MaximumLivingMonsters, remaining);
             float ratio = Mathf.Clamp(largerWaveRelativeWeight, 0.01f, 0.99f);
             float total = 0f, weight = 1f;
             for (int i = 1; i <= limit; i++) { total += weight; weight *= ratio; }
@@ -399,10 +409,8 @@ namespace MiningSimulator.Ores
             if (forcedDailyEvent.HasValue) CurrentDailyEvent = forcedDailyEvent.Value;
             forcedDailyEvent = null;
             dailyAnnouncementPending = CurrentDailyEvent != DailyEncounterEvent.Normal;
-            int min = Mathf.Clamp(minimumPerDay, 0, 256);
-            int rolled = UnityEngine.Random.Range(min, Mathf.Clamp(maximumPerDay, min, 256) + 1);
             bool invasion = CurrentDailyEvent == DailyEncounterEvent.BossInvasion;
-            int remaining = invasion ? 1 : CalculateDailyMonsterCount(rolled, scheduledDay);
+            int remaining = CalculateDailyMonsterCount(0, scheduledDay);
             while (remaining > 0)
             {
                 var wave = new SpawnWave();
@@ -420,8 +428,10 @@ namespace MiningSimulator.Ores
                 if (wave.Members.Count > 0) waves.Add(wave);
             }
             float start = dayNight.CurrentPeriod == SpawnPeriod ? dayNight.CurrentPeriodProgress : 0f;
+            // The first wave is due immediately; later waves are spread through the period.
+            // In particular, Day 1 must not look empty for half of the daytime.
             for (int i = 0; i < waves.Count; i++)
-                waves[i].Progress = Mathf.Lerp(start, 1f, (i + 1f) / (waves.Count + 1f));
+                waves[i].Progress = Mathf.Lerp(start, 1f, i / (float)waves.Count);
             ForecastChanged?.Invoke();
         }
 
@@ -459,9 +469,8 @@ namespace MiningSimulator.Ores
 
         public int CalculateDailyMonsterCount(int rolled, int day)
         {
-            long total = (long)Mathf.Max(0, rolled) +
-                (long)Mathf.Max(1, day) * Mathf.Max(0, extraMonstersPerDayNumber);
-            return (int)Math.Min(Mathf.Max(1, dailyMonsterCap), total);
+            // Keep the legacy signature for callers; the quota is now exactly the day number.
+            return Mathf.Clamp(day, 1, MaximumLivingMonsters);
         }
         private void SkipWavesBefore(float progress)
         {
@@ -485,7 +494,8 @@ namespace MiningSimulator.Ores
         }
         private bool SpawnOne(MonsterSpawnEntry entry, bool forceBoss = false, bool invasion = false)
         {
-            if (!CanSpawnSpecies(entry)) return false;
+            alive.RemoveAll(RemoveInactiveMonster);
+            if (LivingCountOnField() >= MaximumLivingMonsters || !CanSpawnSpecies(entry)) return false;
             MushroomMonster prefab = entry.prefab;
             var bossSettings = prefab.RewardData != null ? prefab.RewardData.boss : null;
             var tuning = MiningGameplayTuning.Current;
@@ -549,10 +559,8 @@ namespace MiningSimulator.Ores
                 Collider surface = hit.collider;
                 if (surface == null || hit.normal.y < 0.7f ||
                     surface.GetComponentInParent<MiningCharacterHealth>() != null ||
-                    surface.GetComponentInParent<Ore>() != null ||
                     surface.GetComponentInParent<MiningChest>() != null ||
                     surface.GetComponentInParent<LuckyBlock>() != null ||
-                    surface.GetComponentInParent<MiningNpc>() != null ||
                     surface is CharacterController) continue;
 
                 bool terrain = surface is TerrainCollider;
@@ -565,5 +573,45 @@ namespace MiningSimulator.Ores
             ground = best >= 0 ? groundHits[best] : default;
             return best >= 0;
         }
-    }
+
+        private static int LivingCountOnField()
+        {
+            int count = 0;
+            // Spawn-time only; multiple enabled spawners share the same hard field cap.
+            foreach (var zone in FindObjectsByType<MonsterSpawnZone>(FindObjectsSortMode.None))
+                foreach (var monster in zone.alive)
+                    if (monster != null && !monster.IsDespawning && monster.Health != null && monster.Health.Health > 0f)
+                        count++;
+            return count;
+        }
+    
+
+public static void ResetLoadedEncounters()
+        {
+            foreach (var zone in FindObjectsByType<MonsterSpawnZone>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (zone.started) zone.ResetEncounter();
+                else zone.scheduledDay = -1;
+            }
+        }
+
+
+public void ResetEncounter()
+        {
+            // Reset can return to the same day: day-number comparison alone misses it.
+            foreach (var monster in alive)
+                if (monster != null)
+                {
+                    monster.gameObject.SetActive(false);
+                    Destroy(monster.gameObject);
+                }
+            alive.Clear();
+            liveSpecies.Clear();
+            announcedSpecies.Clear();
+            announcedBosses.Clear();
+            forcedDailyEvent = null;
+            lastKnownPlayerLevel = playerStats != null ? playerStats.Level : 1;
+            BuildDailySchedule();
+        }
+}
 }

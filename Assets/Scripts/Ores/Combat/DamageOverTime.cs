@@ -12,6 +12,7 @@ namespace MiningSimulator.Ores
         private float elapsed;
 
         public bool IsActive => remaining > 0f;
+        public float DamagePerSecond => IsActive && interval > 0f ? damagePerTick / interval : 0f;
 
         public void Apply(float damage, float tickSeconds, float duration)
         {

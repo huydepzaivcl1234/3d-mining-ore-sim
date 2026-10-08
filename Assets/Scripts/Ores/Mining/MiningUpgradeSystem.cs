@@ -12,21 +12,14 @@ namespace MiningSimulator.Ores
         [SerializeField] private MiningItemSystem itemSystem;
 
         [SerializeField, Min(0)] private int moneyRewardStacks;
-        [SerializeField, Min(0)] private int rareOreSpawnStacks;
-        [SerializeField, Min(0)] private int oreDamageStacks;
-        [SerializeField, Min(0)] private int oreSpawnSpeedStacks;
-        [SerializeField, Min(0)] private int npcMoveSpeedStacks;
-        [SerializeField, Min(0)] private int npcCapacityStacks;
         [SerializeField, Min(0)] private int luckyBlockRewardStacks;
         [SerializeField, Min(0)] private int luckyBlockDropChanceStacks;
-        [SerializeField, Min(0)] private int npcExperienceStacks;
         [SerializeField, Min(0)] private int itemDropChanceStacks;
         [SerializeField, Min(0)] private int regenIntervalReductionStacks;
         [SerializeField, Min(0)] private int healingEffectivenessStacks;
 
         private float permanentMoneyMultiplier = 1f;
         private float permanentExperienceMultiplier = 1f;
-        private float permanentMiningStrengthMultiplier = 1f;
         private float achievementMoneyMultiplier = 1f;
         private float achievementExperienceMultiplier = 1f;
 
@@ -36,7 +29,6 @@ namespace MiningSimulator.Ores
         public float PermanentMoneyMultiplier => permanentMoneyMultiplier * achievementMoneyMultiplier;
         public float PermanentExperienceMultiplier =>
             permanentExperienceMultiplier * achievementExperienceMultiplier;
-        public float PermanentMiningStrengthMultiplier => permanentMiningStrengthMultiplier;
         public float AchievementMoneyMultiplier => achievementMoneyMultiplier;
         public float AchievementExperienceMultiplier => achievementExperienceMultiplier;
 
@@ -54,14 +46,8 @@ namespace MiningSimulator.Ores
             return type switch
             {
                 MiningUpgradeType.MoneyReward => moneyRewardStacks,
-                MiningUpgradeType.RareOreSpawn => rareOreSpawnStacks,
-                MiningUpgradeType.OreDamage => oreDamageStacks,
-                MiningUpgradeType.OreSpawnSpeed => oreSpawnSpeedStacks,
-                MiningUpgradeType.NpcMoveSpeed => npcMoveSpeedStacks,
-                MiningUpgradeType.NpcCapacity => npcCapacityStacks,
                 MiningUpgradeType.LuckyBlockReward => luckyBlockRewardStacks,
                 MiningUpgradeType.LuckyBlockDropChance => luckyBlockDropChanceStacks,
-                MiningUpgradeType.NpcExperience => npcExperienceStacks,
                 MiningUpgradeType.ItemDropChance => itemDropChanceStacks,
                 MiningUpgradeType.RegenIntervalReduction => regenIntervalReductionStacks,
                 MiningUpgradeType.HealingEffectiveness => healingEffectivenessStacks,
@@ -103,29 +89,11 @@ namespace MiningSimulator.Ores
                 case MiningUpgradeType.MoneyReward:
                     moneyRewardStacks++;
                     break;
-                case MiningUpgradeType.RareOreSpawn:
-                    rareOreSpawnStacks++;
-                    break;
-                case MiningUpgradeType.OreDamage:
-                    oreDamageStacks++;
-                    break;
-                case MiningUpgradeType.OreSpawnSpeed:
-                    oreSpawnSpeedStacks++;
-                    break;
-                case MiningUpgradeType.NpcMoveSpeed:
-                    npcMoveSpeedStacks++;
-                    break;
-                case MiningUpgradeType.NpcCapacity:
-                    npcCapacityStacks++;
-                    break;
                 case MiningUpgradeType.LuckyBlockReward:
                     luckyBlockRewardStacks++;
                     break;
                 case MiningUpgradeType.LuckyBlockDropChance:
                     luckyBlockDropChanceStacks++;
-                    break;
-                case MiningUpgradeType.NpcExperience:
-                    npcExperienceStacks++;
                     break;
                 case MiningUpgradeType.ItemDropChance:
                     itemDropChanceStacks++;
@@ -151,14 +119,14 @@ namespace MiningSimulator.Ores
             }
 
             MiningUpgradeDefinition definition = upgradeData.GetDefinition(type);
+            if (definition == null) return 1f;
             // Compounding the reduction keeps intervals positive, even at high upgrade levels.
             if (type == MiningUpgradeType.RegenIntervalReduction)
                 return Mathf.Pow(1f - Mathf.Clamp(definition.PercentPerStack, 0f, 100f) * 0.01f,
                     GetStacks(type));
+            if (definition == null) return 1f;
             float multiplier = 1f + definition.PercentPerStack * GetStacks(type) * 0.01f;
-            return type == MiningUpgradeType.OreDamage
-                ? multiplier * PermanentMiningStrengthMultiplier
-                : multiplier;
+            return multiplier;
         }
 
         public float GetAddedPercent(MiningUpgradeType type)
@@ -174,20 +142,14 @@ namespace MiningSimulator.Ores
                 : 0f;
         }
 
-        public float CalculateMiningReward(int baseReward)
-            => CalculateMonsterMoneyReward(baseReward);
 
-        // Shared economy rules for ore and monster money; do not round scaled loot.
+
+
         public float CalculateMonsterMoneyReward(float baseReward)
         {
-            if (baseReward <= 0)
-            {
-                return 0f;
-            }
-
+            if (baseReward <= 0f) return 0f;
             return baseReward * GetMultiplier(MiningUpgradeType.MoneyReward) *
-                   PermanentMoneyMultiplier *
-                   (itemSystem != null ? itemSystem.MoneyRewardMultiplier : 1f);
+                PermanentMoneyMultiplier * (itemSystem != null ? itemSystem.MoneyRewardMultiplier : 1f);
         }
 
         public float CalculateLuckyBlockReward(int baseReward)
@@ -217,15 +179,12 @@ namespace MiningSimulator.Ores
         public float CalculatePlayerExperienceReward(float baseExperience)
         {
             if (baseExperience <= 0f) return 0f;
-            return baseExperience * GetMultiplier(MiningUpgradeType.NpcExperience) *
+            return baseExperience *
                 PermanentExperienceMultiplier;
         }
 
         /// <summary>Permanent, Rebirth-granted multiplier applied to every NPC mining hit.</summary>
-        public void SetPermanentMiningStrengthMultiplier(float multiplier)
-        {
-            permanentMiningStrengthMultiplier = Mathf.Max(1f, multiplier);
-        }
+
 
         /// <summary>Applies the cumulative permanent rewards earned from achievements.</summary>
         public void SetAchievementRewardMultipliers(float moneyMultiplier,
@@ -239,14 +198,8 @@ namespace MiningSimulator.Ores
         public void ResetAllUpgrades()
         {
             moneyRewardStacks = 0;
-            rareOreSpawnStacks = 0;
-            oreDamageStacks = 0;
-            oreSpawnSpeedStacks = 0;
-            npcMoveSpeedStacks = 0;
-            npcCapacityStacks = 0;
             luckyBlockRewardStacks = 0;
             luckyBlockDropChanceStacks = 0;
-            npcExperienceStacks = 0;
             itemDropChanceStacks = 0;
             regenIntervalReductionStacks = 0;
             healingEffectivenessStacks = 0;
@@ -261,20 +214,10 @@ namespace MiningSimulator.Ores
             }
 
             moneyRewardStacks = Mathf.Clamp(moneyRewardStacks, 0, upgradeData.MoneyReward.MaximumStacks);
-            rareOreSpawnStacks = Mathf.Clamp(rareOreSpawnStacks, 0, upgradeData.RareOreSpawn.MaximumStacks);
-            oreDamageStacks = Mathf.Clamp(oreDamageStacks, 0, upgradeData.OreDamage.MaximumStacks);
-            oreSpawnSpeedStacks = Mathf.Clamp(oreSpawnSpeedStacks, 0,
-                upgradeData.OreSpawnSpeed.MaximumStacks);
-            npcMoveSpeedStacks = Mathf.Clamp(npcMoveSpeedStacks, 0,
-                upgradeData.NpcMoveSpeed.MaximumStacks);
-            npcCapacityStacks = Mathf.Clamp(npcCapacityStacks, 0,
-                upgradeData.NpcCapacity.MaximumStacks);
             luckyBlockRewardStacks = Mathf.Clamp(luckyBlockRewardStacks, 0,
                 upgradeData.LuckyBlockReward.MaximumStacks);
             luckyBlockDropChanceStacks = Mathf.Clamp(luckyBlockDropChanceStacks, 0,
                 upgradeData.LuckyBlockDropChance.MaximumStacks);
-            npcExperienceStacks = Mathf.Clamp(npcExperienceStacks, 0,
-                upgradeData.NpcExperience.MaximumStacks);
             itemDropChanceStacks = Mathf.Clamp(itemDropChanceStacks, 0,
                 upgradeData.ItemDropChance.MaximumStacks);
             regenIntervalReductionStacks = Mathf.Clamp(regenIntervalReductionStacks, 0,

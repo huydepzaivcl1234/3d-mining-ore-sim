@@ -10,9 +10,6 @@ namespace MiningSimulator.Ores
         [SerializeField] private PlayerWallet wallet;
         [SerializeField] private MiningUpgradeSystem upgradeSystem;
         [SerializeField] private MiningRebirthData rebirthData;
-        [SerializeField] private NpcProgressionSystem npcProgressionSystem;
-        [SerializeField] private OreSpawner oreSpawner;
-        [SerializeField] private NpcShop npcShop;
         [SerializeField] private MiningItemSystem itemSystem;
         [SerializeField] private MiningAchievementSystem achievementSystem;
         [SerializeField] private MiningQuestSystem questSystem;
@@ -27,12 +24,6 @@ namespace MiningSimulator.Ores
             : 1f;
         public float NextMoneyMultiplier => rebirthData != null
             ? rebirthData.GetMoneyMultiplier(completedRebirths + 1)
-            : 1f;
-        public float PermanentMiningStrengthMultiplier => rebirthData != null
-            ? rebirthData.GetMiningStrengthMultiplier(completedRebirths)
-            : 1f;
-        public float NextMiningStrengthMultiplier => rebirthData != null
-            ? rebirthData.GetMiningStrengthMultiplier(completedRebirths + 1)
             : 1f;
         // Rebirth's permanent boost now applies to both money and NPC experience, at the
         // same multiplier value.
@@ -82,11 +73,7 @@ namespace MiningSimulator.Ores
             SaveProgress();
             ApplyPermanentBoost();
             upgradeSystem?.ResetAllUpgrades();
-            npcProgressionSystem?.ResetProgression();
-            oreSpawner?.RemoveOresAboveMiningPower(npcProgressionSystem != null
-                ? npcProgressionSystem.CurrentMiningPower
-                : 0);
-            npcShop?.ResetAllNpcs();
+
             MiningComputerStation.ResetAllLoadedStations();
             wallet.ResetMoney();
             RebirthCompleted?.Invoke(completedRebirths);
@@ -101,6 +88,8 @@ namespace MiningSimulator.Ores
             MiningPlayerStats.ResetSavedProgress();
             upgradeSystem?.ResetAutoUpgrade();
             DayNightSystem.ResetSavedClock();
+            TreasureChest.ResetSavedProgress();
+            MonsterSpawnZone.ResetLoadedEncounters();
             completedRebirths = 0;
             PlayerPrefs.DeleteKey("MiningSimulator.SaveExists.v1");
             if (rebirthData != null)
@@ -110,11 +99,7 @@ namespace MiningSimulator.Ores
             }
 
             upgradeSystem?.ResetAllUpgrades();
-            npcProgressionSystem?.ResetProgression();
-            oreSpawner?.RemoveOresAboveMiningPower(npcProgressionSystem != null
-                ? npcProgressionSystem.CurrentMiningPower
-                : 0);
-            npcShop?.ResetAllNpcs();
+
             itemSystem?.ResetAllData();
             achievementSystem?.ResetAllData();
             questSystem?.ResetAllData();
@@ -147,24 +132,13 @@ namespace MiningSimulator.Ores
         {
             upgradeSystem?.SetPermanentMoneyMultiplier(PermanentMoneyMultiplier);
             upgradeSystem?.SetPermanentExperienceMultiplier(PermanentExperienceMultiplier);
-            upgradeSystem?.SetPermanentMiningStrengthMultiplier(PermanentMiningStrengthMultiplier);
         }
 
         private void FindResetTargetsIfMissing()
         {
-            if (npcProgressionSystem == null)
-            {
-                npcProgressionSystem = FindFirstObjectByType<NpcProgressionSystem>(
-                    FindObjectsInactive.Include);
-            }
-            if (oreSpawner == null)
-            {
-                oreSpawner = FindFirstObjectByType<OreSpawner>(FindObjectsInactive.Include);
-            }
-            if (npcShop == null)
-            {
-                npcShop = FindFirstObjectByType<NpcShop>(FindObjectsInactive.Include);
-            }
+
+
+
             if (itemSystem == null)
             {
                 itemSystem = FindFirstObjectByType<MiningItemSystem>(FindObjectsInactive.Include);

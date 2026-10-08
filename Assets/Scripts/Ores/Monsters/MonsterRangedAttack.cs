@@ -34,8 +34,7 @@ namespace MiningSimulator.Ores
             for (int i = 0; i < count; i++)
             {
                 Transform obstacle = sightHits[i].transform;
-                if (obstacle.IsChildOf(transform) || obstacle.IsChildOf(victim) ||
-                    obstacle.GetComponentInParent<Ore>() != null) continue;
+                if (obstacle.IsChildOf(transform) || obstacle.IsChildOf(victim)) continue;
                 return false;
             }
             return true;

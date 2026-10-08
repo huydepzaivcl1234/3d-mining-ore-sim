@@ -18,10 +18,10 @@ namespace MiningSimulator.Ores
         [SerializeField] private Vector3 promptOffset = new(0f, 1.7f, 0f);
         [Tooltip("First entries appear first. Unlisted card types follow their hierarchy order.")]
         [SerializeField] private MiningUpgradeType[] upgradeOrder = {
-            MiningUpgradeType.MoneyReward, MiningUpgradeType.OreDamage, MiningUpgradeType.RareOreSpawn,
-            MiningUpgradeType.OreSpawnSpeed, MiningUpgradeType.NpcMoveSpeed, MiningUpgradeType.NpcCapacity,
+            MiningUpgradeType.MoneyReward, 
+            
             MiningUpgradeType.LuckyBlockReward, MiningUpgradeType.LuckyBlockDropChance,
-            MiningUpgradeType.NpcExperience, MiningUpgradeType.ItemDropChance };
+            MiningUpgradeType.ItemDropChance };
         public MiningUpgradeType[] UpgradeOrder => upgradeOrder;
         private MiningUpgradePanel presenter;
         private MiningUiPanelCoordinator coordinator;
@@ -51,7 +51,7 @@ namespace MiningSimulator.Ores
             var stats = FindFirstObjectByType<MiningPlayerStats>();
             if (player == null && stats != null) player = stats.transform;
             if (player != null) playerHealth = player.GetComponent<MiningCharacterHealth>();
-            if (MiningNavMeshBuilder.Instance != null) mine = MiningNavMeshBuilder.Instance.GetComponent<Unity.AI.Navigation.NavMeshSurface>();
+            if (WorldNavigationBootstrap.Instance != null) mine = WorldNavigationBootstrap.Instance.GetComponent<Unity.AI.Navigation.NavMeshSurface>();
             view = Camera.main;
             if (worldRoot == null) worldRoot = CreateCanvas("Upgrade World Canvas", new Vector2(1920f, 1080f), out panelGroup);
             else panelGroup = worldRoot.GetComponent<CanvasGroup>();

@@ -14,14 +14,12 @@ namespace MiningSimulator.Ores
         [SerializeField] private LuckyBlockData data;
         [SerializeField] private PlayerWallet wallet;
         [SerializeField] private MiningUpgradeSystem upgradeSystem;
-        [SerializeField] private OreSpawnData oreSpawnData;
+        [SerializeField] private WorldSpawnAreaData oreSpawnData;
         [SerializeField] private Transform spawnAreaOrigin;
         [SerializeField] private Transform droppedBlockParent;
         [SerializeField] private MiningUiData uiData;
-        [SerializeField] private OreRewardPopup rewardPopupPrefab;
+        [SerializeField] private CurrencyRewardPopup rewardPopupPrefab;
         [SerializeField] private GameObject healthBarPrefab;
-        [Tooltip("Gates Lucky Block variants by the shared mining power. Auto-found in Awake when left empty.")]
-        [SerializeField] private NpcProgressionSystem progressionSystem;
         [Tooltip("Receives rare Lucky Block reward shake. Auto-found in Awake when left empty.")]
         [SerializeField] private MiningOrbitCamera orbitCamera;
 
@@ -47,11 +45,7 @@ namespace MiningSimulator.Ores
                     FindObjectsInactive.Include);
             }
 
-            if (progressionSystem == null)
-            {
-                progressionSystem = FindFirstObjectByType<NpcProgressionSystem>(
-                    FindObjectsInactive.Include);
-            }
+
 
             if (orbitCamera == null)
             {
@@ -60,48 +54,10 @@ namespace MiningSimulator.Ores
             }
         }
 
-        public bool TryReserveClosestBlock(MiningNpc miner, Vector3 origin, int miningPower,
-            LuckyBlock excludedBlock, out LuckyBlock reservedBlock, out int slotIndex)
-        {
-            LuckyBlock closest = null;
-            float closestSqrDistance = float.PositiveInfinity;
-            foreach (LuckyBlock block in activeBlocks)
-            {
-                if (block == null || block == excludedBlock ||
-                    !block.CanAcceptMiner(miner, miningPower) || miner.IsNavigationTargetCoolingDown(block))
-                {
-                    continue;
-                }
 
-                float sqrDistance = block.SqrDistanceToSurface(origin);
-                if (sqrDistance >= closestSqrDistance)
-                {
-                    continue;
-                }
-
-                closest = block;
-                closestSqrDistance = sqrDistance;
-            }
-
-            if (closest != null && closest.TryReserveMiner(miner, miningPower, out slotIndex))
-            {
-                reservedBlock = closest;
-                return true;
-            }
-
-            reservedBlock = null;
-            slotIndex = -1;
-            return false;
-        }
 
         /// <summary>Reserves one specific active block for a player-issued NPC command.</summary>
-        public bool TryReserveBlock(MiningNpc miner, LuckyBlock block, int miningPower,
-            out int slotIndex)
-        {
-            slotIndex = -1;
-            return block != null && activeBlocks.Contains(block) &&
-                   block.TryReserveMiner(miner, miningPower, out slotIndex);
-        }
+
 
         private void OnEnable()
         {
@@ -278,19 +234,10 @@ namespace MiningSimulator.Ores
 
         private bool IsSelectableVariant(LuckyBlockVariantData variant)
         {
-            return variant.Model != null && HasSufficientPower(variant.MiningPowerRequired);
+            return variant.Model != null;
         }
 
-        /// <summary>
-        /// True when the shared mining power (from <see cref="NpcProgressionSystem"/>) meets
-        /// the variant's required power, so under-powered Lucky Blocks never enter the drop
-        /// roll. When no progression system is assigned or found, every power requirement
-        /// passes so existing scenes keep dropping exactly as before.
-        /// </summary>
-        private bool HasSufficientPower(int requiredPower)
-        {
-            return progressionSystem == null || progressionSystem.CurrentMiningPower >= requiredPower;
-        }
+
 
         private bool TryChooseLandingPosition(LuckyBlockVariantData variant,
             out Vector3 landingPosition)
@@ -340,8 +287,7 @@ namespace MiningSimulator.Ores
             {
                 Collider candidate = overlapResults[i];
                 if (candidate != null &&
-                    (candidate.GetComponentInParent<Ore>() != null ||
-                     candidate.GetComponentInParent<LuckyBlock>() != null))
+                    candidate.GetComponentInParent<LuckyBlock>() != null)
                 {
                     return true;
                 }
@@ -628,7 +574,7 @@ namespace MiningSimulator.Ores
             }
 
             Vector3 position = block.GetWorldTopCenter();
-            OreRewardPopup popup = Instantiate(rewardPopupPrefab, position, Quaternion.identity);
+            CurrencyRewardPopup popup = Instantiate(rewardPopupPrefab, position, Quaternion.identity);
             popup.Initialize(amount, position, uiData);
         }
 

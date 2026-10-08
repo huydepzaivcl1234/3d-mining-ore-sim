@@ -326,10 +326,9 @@ namespace MiningSimulator.Ores
             {
                 int count = rebirthSystem != null ? rebirthSystem.CompletedRebirths : 0;
                 float multiplier = rebirthSystem != null ? rebirthSystem.PermanentMoneyMultiplier : 1f;
-                float strength = rebirthSystem != null ? rebirthSystem.PermanentMiningStrengthMultiplier : 1f;
                 boostLabel.text = string.Format(MiningLocalization.Text(
-                    "REBIRTH {0}  •  x{1:0.00} MONEY & XP  •  x{2:0.00} STRENGTH", boostFormat),
-                    count, multiplier, strength);
+                    "REBIRTH {0}  •  x{1:0.00} MONEY & XP", boostFormat),
+                    count, multiplier);
             }
             if (warningLabel != null)
             {
@@ -339,10 +338,9 @@ namespace MiningSimulator.Ores
             if (nextBoostLabel != null)
             {
                 float nextMultiplier = rebirthSystem != null ? rebirthSystem.NextMoneyMultiplier : 1f;
-                float nextStrength = rebirthSystem != null ? rebirthSystem.NextMiningStrengthMultiplier : 1f;
                 nextBoostLabel.text = string.Format(MiningLocalization.Text(
-                    "Permanent boost after Rebirth: x{0:0.00} money & XP • x{1:0.00} strength",
-                    nextBoostFormat), nextMultiplier, nextStrength);
+                    "Permanent boost after Rebirth: x{0:0.00} money & XP",
+                    nextBoostFormat), nextMultiplier);
             }
             if (confirmButton != null)
             {

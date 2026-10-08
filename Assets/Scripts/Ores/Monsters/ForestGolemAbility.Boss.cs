@@ -105,7 +105,7 @@ namespace MiningSimulator.Ores
         {
             if (bossPulseVisual == null) return;
             Vector3 point = transform.position;
-            if (MiningNavGrid.Instance != null && MiningNavGrid.Instance.TryGetGroundPoint(point, out Vector3 ground))
+            if (WorldNavigationGrid.Instance != null && WorldNavigationGrid.Instance.TryGetGroundPoint(point, out Vector3 ground))
                 point = ground;
             else
             {

@@ -33,7 +33,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private Collider hitCollider;
         [Header("Overhead presentation")]
         [SerializeField] private MicroBar healthBarPrefab;
-        [SerializeField] private OreRewardPopup moneyPopupPrefab;
+        [SerializeField] private CurrencyRewardPopup moneyPopupPrefab;
         [SerializeField] private MiningUiData moneyPopupUiData;
         [SerializeField] private Vector3 overheadOffset = new Vector3(0f, .3f, 0f);
         [Min(.01f), SerializeField] private float healthBarWorldScale = .65f;
@@ -45,9 +45,6 @@ namespace MiningSimulator.Ores
         [SerializeField] private AudioClip itemRollTickSfx;
         [Min(1), SerializeField] private int hitsToBreak = 5;
         [Header("NPC mining")]
-        [Min(1), SerializeField] private int npcMiningPowerRequired = 1;
-        [Min(1), SerializeField] private int maximumMiningNpcs = 3;
-        [Min(.01f), SerializeField] private float npcDamageMultiplier = 1f;
         [Min(0f), SerializeField] private float npcMaxVerticalTargetDistance = 8f;
         [SerializeField] private Vector3 lidOpenEuler = new Vector3(-95f, 0f, 0f);
         [Min(0.01f), SerializeField] private float lockBreakSeconds = .2f;
@@ -78,7 +75,6 @@ namespace MiningSimulator.Ores
         private Vector3 lastChestTop;
         private MeshRenderer chestBodyRenderer;
         private MeshRenderer chestLidRenderer;
-        private MiningNavMeshObstacle navigationObstacle;
         private bool capturedModelState;
         private int remainingHits;
         private bool opening;
@@ -92,10 +88,8 @@ namespace MiningSimulator.Ores
         private float nextRollSfxTime;
         private static AudioSource sharedChestAudioSource;
         private static readonly List<MiningChest> ActiveChests = new();
-        private readonly HashSet<MiningNpc> reservedMiners = new();
         private readonly List<(MeshRenderer renderer, Material[] originals, Material[] copies,
             Color[] colors)> fadeMaterials = new();
-        private float npcDamageRemainder;
         private Color fadeTextColor;
         private Color fadeIconColor;
 
@@ -103,43 +97,13 @@ namespace MiningSimulator.Ores
         public bool CanMine => isActiveAndEnabled && !opening && !rewardPending && remainingHits > 0;
         public int RemainingHits => remainingHits;
 
-        public static bool TryReserveClosest(MiningNpc miner, Vector3 position, int miningPower,
-            MiningChest excluded, out MiningChest selected)
-        {
-            selected = null;
-            float closest = float.PositiveInfinity;
-            foreach (MiningChest chest in ActiveChests)
-            {
-                if (chest == null || chest == excluded || !chest.CanAcceptMiner(miner, miningPower) ||
-                    miner.IsNavigationTargetCoolingDown(chest) ||
-                    Mathf.Abs(chest.transform.position.y - position.y) > chest.npcMaxVerticalTargetDistance)
-                    continue;
-                float distance = chest.SqrDistanceToSurface(position);
-                if (distance >= closest) continue;
-                selected = chest;
-                closest = distance;
-            }
-            return selected != null && selected.TryReserveMiner(miner, miningPower);
-        }
 
-        public bool CanAcceptMiner(MiningNpc miner, int miningPower)
-        {
-            reservedMiners.RemoveWhere(candidate => candidate == null);
-            return miner != null && CanMine && miningPower >= npcMiningPowerRequired &&
-                (reservedMiners.Contains(miner) || reservedMiners.Count < maximumMiningNpcs);
-        }
 
-        public bool TryReserveMiner(MiningNpc miner, int miningPower)
-        {
-            if (!CanAcceptMiner(miner, miningPower)) return false;
-            reservedMiners.Add(miner);
-            return true;
-        }
 
-        public void ReleaseMiner(MiningNpc miner)
-        {
-            if (miner != null) reservedMiners.Remove(miner);
-        }
+
+
+
+
 
         public Vector3 GetWorldTopCenter() => GetChestTop();
 
@@ -171,7 +135,7 @@ namespace MiningSimulator.Ores
 
         private void OnEnable()
         {
-            if (Application.isPlaying) MiningGridObstacle.Ensure(this);
+            if (Application.isPlaying) WorldNavigationObstacle.Ensure(this);
             if (Application.isPlaying && gameObject.scene.IsValid() && !ActiveChests.Contains(this))
                 ActiveChests.Add(this);
         }
@@ -238,8 +202,6 @@ namespace MiningSimulator.Ores
             CaptureModelState();
             StopAllCoroutines();
             ResetFadeVisuals();
-            reservedMiners.Clear();
-            npcDamageRemainder = 0f;
             wallet = targetWallet;
             itemSystem = targetItemSystem;
             release = returnToSpawner;
@@ -286,10 +248,6 @@ namespace MiningSimulator.Ores
             for (int index = 0; index < chestColliders.Length; index++)
                 if (chestColliders[index] != null)
                     chestColliders[index].enabled = initialColliderStates[index];
-            navigationObstacle ??= GetComponent<MiningNavMeshObstacle>();
-            navigationObstacle ??= gameObject.AddComponent<MiningNavMeshObstacle>();
-            navigationObstacle.enabled = true;
-            navigationObstacle.EnableCircularCarving();
             lastChestTop = GetChestTop();
         }
 
@@ -300,14 +258,7 @@ namespace MiningSimulator.Ores
             return ApplyHit(1);
         }
 
-        public bool ApplyNpcDamage(float damage)
-        {
-            if (!CanMine || damage <= 0f) return false;
-            float accumulated = damage * npcDamageMultiplier + npcDamageRemainder;
-            int hits = Mathf.FloorToInt(Mathf.Min(accumulated, remainingHits));
-            npcDamageRemainder = hits >= remainingHits ? 0f : accumulated - hits;
-            return hits <= 0 || ApplyHit(hits);
-        }
+
 
         private bool ApplyHit(int hits)
         {
@@ -317,12 +268,10 @@ namespace MiningSimulator.Ores
             hitPunch?.Play();
             if (remainingHits <= 0)
             {
-                reservedMiners.Clear();
                 opening = true;
                 lastChestTop = GetChestTop();
                 foreach (Collider chestCollider in chestColliders)
                     if (chestCollider != null) chestCollider.enabled = false;
-                if (navigationObstacle != null) navigationObstacle.enabled = false;
                 if (healthBar != null) healthBar.gameObject.SetActive(false);
                 PlayChestSfx(lockBreakSfx);
                 StartCoroutine(OpenAndReward());
@@ -382,7 +331,7 @@ namespace MiningSimulator.Ores
                 if (moneyPopupPrefab != null && moneyPopupUiData != null)
                 {
                     Vector3 top = GetChestTop();
-                    OreRewardPopup popup = Instantiate(moneyPopupPrefab, top, Quaternion.identity);
+                    CurrencyRewardPopup popup = Instantiate(moneyPopupPrefab, top, Quaternion.identity);
                     popup.Initialize(amount, top, moneyPopupUiData);
                 }
                 else ShowText($"+{MiningMoneyFormatter.Format(amount)}", true);
@@ -725,7 +674,6 @@ namespace MiningSimulator.Ores
         private void OnDisable()
         {
             ActiveChests.Remove(this);
-            reservedMiners.Clear();
             StopAllCoroutines();
             ResetFadeVisuals();
             opening = rewardPending = false;
@@ -734,9 +682,6 @@ namespace MiningSimulator.Ores
         private void OnValidate()
         {
             hitsToBreak = Mathf.Max(1, hitsToBreak);
-            npcMiningPowerRequired = Mathf.Max(1, npcMiningPowerRequired);
-            maximumMiningNpcs = Mathf.Max(1, maximumMiningNpcs);
-            npcDamageMultiplier = Mathf.Max(.01f, npcDamageMultiplier);
             npcMaxVerticalTargetDistance = Mathf.Max(0f, npcMaxVerticalTargetDistance);
             fadeOutSeconds = Mathf.Max(0f, fadeOutSeconds);
             minimumMoneyPercent = Mathf.Clamp(minimumMoneyPercent, 0f, 100f);

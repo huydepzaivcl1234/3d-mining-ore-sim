@@ -14,6 +14,7 @@ public partial class PlayerCombatInput
             if (!CombatHitQuery.TryContact(collider, transform, origin, StrikeForward,
                 HitHalfHeight, AttackRange, Mathf.Min(30f, AttackAngle),
                 out var target, out var point, out float distance)) continue;
+            if (target.GetComponentInParent<TreasureChest>() != null) continue;
             if (distance < closestDistance)
             {
                 closest = target;
@@ -32,7 +33,7 @@ public partial class PlayerCombatInput
         {
             if (!CombatHitQuery.TryContact(collider, transform, origin, StrikeForward,
                 HitHalfHeight, AttackRange, AttackAngle, out var target, out var point, out _) ||
-                !hitTargets.Add(target)) continue;
+                target.GetComponentInParent<TreasureChest>() != null || !hitTargets.Add(target)) continue;
             DamageTarget(target, point, damageMultiplier);
         }
     }

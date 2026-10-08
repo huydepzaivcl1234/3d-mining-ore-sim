@@ -9,7 +9,7 @@ namespace MiningSimulator.Ores
     {
         public const string DefaultGemSaveKey = "MiningSimulator.Gems.v1";
 
-        [Header("Click Mining")]
+        [Header("Loot interaction")]
         [SerializeField] private LayerMask clickableLayers = ~0;
         [Min(0.1f), SerializeField] private float clickMaximumDistance = 500f;
 

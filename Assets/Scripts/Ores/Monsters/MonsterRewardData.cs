@@ -65,8 +65,11 @@ namespace MiningSimulator.Ores
         public bool usePlayerRelativeLevels = true;
         [Min(1)] public int minimumLevelsBelowPlayer = 1;
         [Min(1)] public int maximumLevelsBelowPlayer = 4;
-        [Min(1)] public int maximumLevelsAbovePlayer = 5;
-        [Tooltip("Upper-level probability uses Higher Level Chance and the existing daily increase. Otherwise roll 1-4 levels below the player, clamped to level 1.")]
+        [Min(1)] public int maximumLevelsAbovePlayer = 1;
+        [Tooltip("Relative spawn weights, normalized together. At player level 1, weaker rolls clamp to level 1. Daily growth applies only to the legacy roll below.")]
+        [Range(0f, 1f)] public float weakerLevelWeight = .2f;
+        [Range(0f, 1f)] public float equalLevelWeight = .7f;
+        [Range(0f, 1f)] public float strongerLevelWeight = .1f;
         [Header("Legacy level roll (used only when relative levels are disabled)")]
         [Min(1)] public int minimumLevel = 1;
         [Tooltip("Optional legacy rule. Off keeps level 1 possible regardless of player level.")]
@@ -98,17 +101,23 @@ namespace MiningSimulator.Ores
 
             sample = float.IsNaN(sample) ? 0f : Mathf.Clamp01(sample);
             int player = Mathf.Max(1, playerLevel);
-            double higherChance = HigherLevelProbability(dayNumber);
-            double lowerChance = 1d - higherChance;
+            double lowerWeight = LevelWeight(weakerLevelWeight);
+            double equalWeight = LevelWeight(equalLevelWeight);
+            double higherWeight = LevelWeight(strongerLevelWeight);
+            double total = lowerWeight + equalWeight + higherWeight;
+            if (total <= 0d) return player;
+            double lowerChance = lowerWeight / total;
+            double higherChance = higherWeight / total;
+            double equalEnd = (lowerWeight + equalWeight) / total;
             long level;
-            if (higherChance > 0d && sample >= lowerChance)
+            if (higherChance > 0d && sample >= equalEnd)
             {
                 int maximum = Mathf.Max(1, maximumLevelsAbovePlayer);
-                double t = (sample - lowerChance) / higherChance;
+                double t = (sample - equalEnd) / higherChance;
                 long offset = 1L + System.Math.Min(maximum - 1L, (long)System.Math.Floor(t * maximum));
                 level = player + offset;
             }
-            else
+            else if (lowerChance > 0d && sample < lowerChance)
             {
                 int minimum = Mathf.Max(1, Mathf.Min(minimumLevelsBelowPlayer, maximumLevelsBelowPlayer));
                 int maximum = Mathf.Max(minimum, Mathf.Max(minimumLevelsBelowPlayer, maximumLevelsBelowPlayer));
@@ -117,8 +126,11 @@ namespace MiningSimulator.Ores
                 long offset = minimum + System.Math.Min(count - 1L, (long)System.Math.Floor(t * count));
                 level = player - offset;
             }
+            else return player;
             return (int)System.Math.Max(1L, System.Math.Min(int.MaxValue, level));
         }
+        private static double LevelWeight(float value) =>
+            float.IsNaN(value) || float.IsInfinity(value) ? 0d : Mathf.Clamp01(value);
         public int RollLevel(float sample, int dayNumber)
         {
             double chance = HigherLevelProbability(dayNumber);

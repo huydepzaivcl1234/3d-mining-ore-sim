@@ -1,0 +1,298 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5a5169af41056ce673962c822974ce9c, type: 3}
+  m_Name: MiningUiData
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningUiData
+  referenceResolution: {x: 1920, y: 1080}
+  matchWidthOrHeight: 0.5
+  canvasSortingOrder: 100
+  openUpgradePanelOnPlay: 0
+  shopPanelPosition: {x: 24, y: -24}
+  shopPanelSize: {x: 330, y: 320}
+  shopTextSize: {x: 294, y: 32}
+  shopStatTextSize: {x: 240, y: 32}
+  moneyTextPosition: {x: 70, y: -70}
+  npcCountTextPosition: {x: 70, y: -116}
+  buyButtonPosition: {x: 18, y: -158}
+  buyButtonSize: {x: 294, y: 54}
+  statusTextPosition: {x: 18, y: -220}
+  moneyFontSize: 26
+  npcCountFontSize: 21
+  buyButtonFontSize: 22
+  statusFontSize: 17
+  shopPanelColor: {r: 0.07, g: 0.06, b: 0.04, a: 0.95}
+  shopTextColor: {r: 1, g: 1, b: 1, a: 1}
+  statusTextColor: {r: 1, g: 0.85, b: 0.35, a: 1}
+  buyButtonColor: {r: 1, g: 0.72, b: 0.19, a: 1}
+  buyButtonTextColor: {r: 0.06, g: 0.04, b: 0.02, a: 1}
+  hudIconSize: {x: 42, y: 42}
+  moneyIconPosition: {x: 16, y: -62}
+  npcIconPosition: {x: 16, y: -108}
+  buyButtonIconPosition: {x: 8, y: -6}
+  openUpgradeIconPosition: {x: 8, y: -2}
+  hudIconFontSize: 22
+  hudIconPadding: 8
+  moneyIconColor: {r: 1, g: 0.8, b: 0.25, a: 1}
+  npcIconColor: {r: 0.8, g: 0.5, b: 0.2, a: 1}
+  upgradeIconColor: {r: 1, g: 0.72, b: 0.19, a: 1}
+  iconSymbolColor: {r: 1, g: 1, b: 1, a: 1}
+  moneyIconSprite: {fileID: 62247565, guid: 4f7ca63df9f4a0e4db24cfd637f9b2d2, type: 3}
+  npcIconSprite: {fileID: 451636688, guid: bf740a43e6c32ad4fb5f99f2aa91a9a0, type: 3}
+  buyNpcIconSprite: {fileID: 451636688, guid: bf740a43e6c32ad4fb5f99f2aa91a9a0, type: 3}
+  openUpgradeIconSprite: {fileID: 0}
+  moneyIconFallback: $
+  npcIconFallback: N
+  buyNpcIconFallback: +
+  openUpgradeIconFallback: UP
+  gemHudPosition: {x: -24, y: -24}
+  gemHudSize: {x: 250, y: 64}
+  gemIconPosition: {x: 12, y: -11}
+  gemIconSize: {x: 42, y: 42}
+  gemTextPosition: {x: 64, y: -12}
+  gemTextSize: {x: 170, y: 40}
+  gemFontSize: 25
+  gemHudColor: {r: 0.06, g: 0.08, b: 0.05, a: 0.95}
+  gemTextColor: {r: 1, g: 1, b: 1, a: 1}
+  gemIconColor: {r: 0.18, g: 0.75, b: 0.5, a: 1}
+  gemIconSprite: {fileID: 21300000, guid: af4dd62c5913938a141c87c80c21e325, type: 3}
+  gemIconFallback: G
+  upgradeCardIconSize: {x: 86, y: 86}
+  upgradeCardIconPosition: {x: 22, y: -25}
+  upgradeCardIconPadding: 1
+  moneyRewardIconSprite: {fileID: 21300000, guid: 8f0be4d69f2c4bed9d87f2300af36e8e, type: 3}
+  rareOreIconSprite: {fileID: 21300000, guid: 3de4b9cc4f6346bf8b55e7c1ca9bc0ad, type: 3}
+  oreDamageIconSprite: {fileID: 21300000, guid: bd3453b0181f4bb08c8b2a42e54e0957, type: 3}
+  oreSpawnSpeedIconSprite: {fileID: 21300000, guid: 79e259b7491d4a8f83a46b760a2690f1, type: 3}
+  npcMoveSpeedIconSprite: {fileID: 21300000, guid: 91682228e8024b459ce2f36dbd1ef34a, type: 3}
+  npcCapacityIconSprite: {fileID: 451636688, guid: bf740a43e6c32ad4fb5f99f2aa91a9a0, type: 3}
+  luckyBlockRewardIconSprite: {fileID: 21300000, guid: 646e8b94a79b4c0491703aa4a7f4eff3, type: 3}
+  luckyBlockDropChanceIconSprite: {fileID: 21300000, guid: e1507aa5451b4cd3b50808c42bdf9e41, type: 3}
+  moneyRewardIconFallback: $
+  rareOreIconFallback: R
+  oreDamageIconFallback: '!'
+  oreSpawnSpeedIconFallback: S
+  npcMoveSpeedIconFallback: '>>'
+  npcCapacityIconFallback: +1
+  luckyBlockRewardIconFallback: L$
+  luckyBlockDropChanceIconFallback: L%
+  npcExperienceIconSprite: {fileID: 21300000, guid: 7c995e6e67c1621b7e2318c398c8c331, type: 3}
+  npcExperienceIconFallback: XP
+  itemDropChanceIconSprite: {fileID: 21300000, guid: ed19d011a7066314c5a6d50465747200, type: 3}
+  itemDropChanceIconFallback: I%
+  npcProgressHudPosition: {x: 370, y: -24}
+  npcProgressHudSize: {x: 380, y: 170}
+  npcProgressHeaderIconPosition: {x: 10, y: -4}
+  npcProgressHeaderIconSize: {x: 42, y: 42}
+  npcProgressTitleMargin: {x: 58, y: 0, z: 14, w: 0}
+  npcProgressTextPosition: {x: 18, y: -14}
+  npcProgressTextSize: {x: 344, y: 30}
+  npcPowerTextPosition: {x: 18, y: -50}
+  npcPowerTextSize: {x: 344, y: 30}
+  npcExperienceBarPosition: {x: 18, y: -94}
+  npcExperienceBarSize: {x: 344, y: 28}
+  npcExperienceTextPosition: {x: 18, y: -126}
+  npcExperienceTextSize: {x: 344, y: 24}
+  npcProgressTitleFontSize: 21
+  npcProgressInfoFontSize: 17
+  npcExperienceBarAnimationSpeed: 2.5
+  npcProgressPanelColor: {r: 0.08, g: 0.07, b: 0.05, a: 0.95}
+  npcExperienceBarColor: {r: 0.12, g: 0.9, b: 0.22, a: 1}
+  npcExperienceBarBackgroundColor: {r: 0.18, g: 0.22, b: 0.24, a: 1}
+  smoothButtonAnimationEnabled: 1
+  buttonHoverScale: 1.035
+  buttonHoverPunchScale: 1.075
+  buttonPressedScale: 0.96
+  buttonClickBounceScale: 1.08
+  buttonHoverPunchDuration: 0.08
+  buttonHoverSettleDuration: 0.1
+  buttonPressDuration: 0.06
+  buttonClickBounceDuration: 0.09
+  buttonClickSettleDuration: 0.12
+  audioMenuButtonPosition: {x: -24, y: -214}
+  audioMenuButtonSize: {x: 180, y: 48}
+  audioPanelSize: {x: 560, y: 420}
+  audioHeaderSize: {x: 560, y: 74}
+  audioSliderSize: {x: 300, y: 28}
+  audioFirstRowPosition: {x: 42, y: -118}
+  audioRowSpacing: 86
+  audioLabelSize: {x: 130, y: 34}
+  audioValueSize: {x: 72, y: 34}
+  audioColumnSpacing: 12
+  audioHandleExtraSize: 8
+  audioCloseButtonPosition: {x: 510, y: -10}
+  audioCloseButtonSize: {x: 48, y: 48}
+  audioTitleFontSize: 30
+  audioLabelFontSize: 22
+  audioPanelColor: {r: 0.08, g: 0.07, b: 0.05, a: 0.96}
+  audioHeaderColor: {r: 0.55, g: 0.35, b: 0.15, a: 1}
+  audioSliderColor: {r: 1, g: 0.72, b: 0.19, a: 1}
+  audioSliderBackgroundColor: {r: 0.15, g: 0.13, b: 0.1, a: 1}
+  resetDataButtonPosition: {x: 130, y: -354}
+  resetDataButtonSize: {x: 300, y: 46}
+  resetDataFontSize: 19
+  resetDataConfirmationDuration: 3
+  resetDataButtonColor: {r: 0.85, g: 0.15, b: 0.05, a: 1}
+  resetDataArmedColor: {r: 1, g: 0.2, b: 0.05, a: 1}
+  languageButtonPosition: {x: 20, y: -354}
+  languageButtonSize: {x: 100, y: 46}
+  languageButtonFontSize: 14
+  languageButtonColor: {r: 0.55, g: 0.35, b: 0.15, a: 1}
+  inventoryMenuButtonPosition: {x: -24, y: -278}
+  inventoryMenuButtonSize: {x: 180, y: 48}
+  inventoryPanelSize: {x: 960, y: 960}
+  inventoryHeaderSize: {x: 960, y: 72}
+  inventoryCloseButtonPosition: {x: 896, y: -12}
+  inventoryCloseButtonSize: {x: 48, y: 48}
+  inventoryFirstSlotPosition: {x: 40, y: -536}
+  inventorySlotSize: {x: 102, y: 88}
+  inventorySlotSpacing: {x: 111, y: 98}
+  inventoryItemFontSize: 13
+  inventoryCountFontSize: 17
+  inventoryPanelColor: {r: 0.2, g: 0.22, b: 0.24, a: 0.98}
+  inventoryHeaderColor: {r: 0.12, g: 0.14, b: 0.16, a: 1}
+  inventorySlotColor: {r: 0.52, g: 0.52, b: 0.52, a: 1}
+  giftWheelPanelSize: {x: 720, y: 620}
+  giftWheelHeaderSize: {x: 720, y: 72}
+  giftWheelSize: {x: 360, y: 360}
+  giftWheelRewardSize: {x: 150, y: 58}
+  giftWheelRewardRadius: 142
+  giftWheelSpinButtonSize: {x: 260, y: 56}
+  giftWheelPanelColor: {r: 0.06, g: 0.05, b: 0.04, a: 0.98}
+  giftWheelHeaderColor: {r: 0.55, g: 0.35, b: 0.15, a: 1}
+  giftWheelSpinButtonColor: {r: 1, g: 0.72, b: 0.19, a: 1}
+  giftRewardPopupSize: {x: 560, y: 150}
+  giftRewardPopupStartScale: 0.55
+  giftRewardPopupPunchScale: 1.12
+  giftRewardPopupPopDuration: 0.22
+  giftRewardPopupSettleDuration: 0.12
+  giftRewardPopupHoldDuration: 1.1
+  giftRewardPopupFadeDuration: 0.25
+  giftRewardPopupColor: {r: 0.35, g: 0.22, b: 0.08, a: 0.98}
+  giftRewardPopupTextColor: {r: 1, g: 0.85, b: 0.3, a: 1}
+  effectToastPosition: {x: 0, y: -190}
+  effectToastSize: {x: 660, y: 150}
+  effectToastFontSize: 19
+  effectToastColor: {r: 0.07, g: 0.06, b: 0.04, a: 0.95}
+  effectToastSlotSize: {x: 78, y: 78}
+  effectToastSlotSpacing: 10
+  effectToastIconPadding: 7
+  effectToastTimerFontSize: 24
+  effectToastPercentFontSize: 20
+  effectToastSlotColor: {r: 0.1, g: 0.08, b: 0.06, a: 0.96}
+  panelTransitionDuration: 0.28
+  panelSlideExtraDistance: 100
+  shopSlideDirection: {x: -1, y: 0}
+  rebirthHudSlideDirection: {x: 0, y: 1}
+  audioMenuSlideDirection: {x: 1, y: 0}
+  inventoryMenuSlideDirection: {x: 1, y: 0}
+  npcProgressHudSlideDirection: {x: 0, y: 1}
+  gemHudSlideDirection: {x: 1, y: 0}
+  shopMenuButtonSlideDirection: {x: 1, y: 0}
+  modalSlideDirection: {x: 0, y: -1}
+  modalBackdropBlocksClicks: 1
+  modalBackdropColor: {r: 0, g: 0, b: 0, a: 0.6}
+  modalBackdropFadeDuration: 0.2
+  shopTitle: "KHU \u0110\xC0O QU\u1EB6NG"
+  shopHeaderSize: {x: 330, y: 54}
+  shopTitleFontSize: 21
+  shopHeaderColor: {r: 0.55, g: 0.35, b: 0.15, a: 1}
+  rewardPopupFormat: +{0}
+  rewardPopupPreviewAmount: 100
+  rewardPopupWorldOffset: {x: 0, y: 0.35, z: 0}
+  rewardPopupDuration: 1.1
+  rewardPopupRiseDistance: 1.2
+  rewardPopupWorldScale: 0.18
+  rewardPopupStartScale: 0.55
+  rewardPopupPopScale: 1.18
+  rewardPopupPopDuration: 0.18
+  rewardPopupSettleDuration: 0.12
+  rewardPopupFadeStart: 0.55
+  rewardPopupFontSize: 50
+  rewardPopupColor: {r: 1, g: 0.8, b: 0.25, a: 1}
+  rewardPopupOutlineColor: {r: 0.08, g: 0.04, b: 0.01, a: 1}
+  rewardPopupOutlineWidth: 0.2
+  rewardPopupIconLocalPosition: {x: 0, y: 0, z: -0.02}
+  rewardPopupIconScale: 0.5
+  rewardPopupIconColor: {r: 1, g: 1, b: 1, a: 1}
+  oreUnlockToastFormat: "\u0110\xE3 m\u1EDF kh\xF3a qu\u1EB7ng: {0}!"
+  luckyBlockUnlockToastFormat: "\u0110\xE3 m\u1EDF kh\xF3a Lucky Block: {0}!"
+  unlockToastPosition: {x: 0, y: -140}
+  unlockToastSize: {x: 460, y: 64}
+  unlockToastFontSize: 24
+  unlockToastHoldDuration: 2.2
+  unlockToastFadeDuration: 0.25
+  unlockToastBackgroundColor: {r: 0.07, g: 0.06, b: 0.04, a: 0.95}
+  unlockToastTextColor: {r: 1, g: 0.85, b: 0.35, a: 1}
+  upgradePanelFullscreen: 1
+  upgradeCardColumns: 2
+  upgradeCardColumnSpacing: 920
+  panelSize: {x: 1920, y: 1080}
+  headerSize: {x: 1920, y: 82}
+  cardSize: {x: 820, y: 136}
+  firstCardPosition: {x: 90, y: -110}
+  cardSpacing: 154
+  closeButtonSize: {x: 58, y: 58}
+  closeButtonPosition: {x: 1848, y: -12}
+  backButtonSize: {x: 220, y: 54}
+  backButtonPosition: {x: 850, y: -990}
+  expandedUpgradePanelMinimumHeight: 1080
+  expandedUpgradeBackButtonY: -878
+  experienceUpgradePanelMinimumHeight: 1080
+  experienceUpgradeBackButtonY: -978
+  openButtonSize: {x: 294, y: 46}
+  openButtonPosition: {x: 18, y: -266}
+  outlineThickness: 4
+  titleFontSize: 32
+  cardFontSize: 22
+  navigationFontSize: 20
+  cardTextMargin: {x: 132, y: 0, z: 24, w: 0}
+  panelColor: {r: 0.08, g: 0.07, b: 0.05, a: 0.96}
+  headerColor: {r: 0.55, g: 0.35, b: 0.15, a: 1}
+  outlineColor: {r: 0.24, g: 0.18, b: 0.12, a: 1}
+  cardColor: {r: 0.12, g: 0.1, b: 0.08, a: 0.92}
+  cardTextColor: {r: 0.96, g: 0.93, b: 0.88, a: 1}
+  closeButtonColor: {r: 1, g: 0.27, b: 0.13, a: 1}
+  navigationButtonColor: {r: 0.8, g: 0.5, b: 0.2, a: 1}
+  titleTextColor: {r: 0.96, g: 0.93, b: 0.88, a: 1}
+  upgradeUnavailableAlpha: 0.42
+  rebirthHudPosition: {x: -24, y: -24}
+  rebirthHudSize: {x: 380, y: 172}
+  rebirthHudHeaderSize: {x: 380, y: 50}
+  rebirthBoostPosition: {x: 20, y: -56}
+  rebirthBoostSize: {x: 340, y: 24}
+  rebirthProgressPosition: {x: 20, y: -84}
+  rebirthProgressSize: {x: 340, y: 28}
+  rebirthOpenButtonPosition: {x: 20, y: -126}
+  rebirthOpenButtonSize: {x: 340, y: 34}
+  rebirthTitleFontSize: 23
+  rebirthInfoFontSize: 17
+  rebirthModalSize: {x: 620, y: 480}
+  rebirthModalHeaderSize: {x: 620, y: 78}
+  rebirthWarningPosition: {x: 45, y: -112}
+  rebirthWarningSize: {x: 530, y: 150}
+  rebirthNextBoostPosition: {x: 45, y: -270}
+  rebirthNextBoostSize: {x: 530, y: 50}
+  rebirthConfirmButtonPosition: {x: 55, y: -382}
+  rebirthCancelButtonPosition: {x: 325, y: -382}
+  rebirthModalButtonSize: {x: 240, y: 58}
+  rebirthWarningFontSize: 26
+  rebirthModalTextFontSize: 22
+  rebirthHudColor: {r: 0.08, g: 0.07, b: 0.05, a: 0.96}
+  rebirthHeaderColor: {r: 1, g: 0.27, b: 0.13, a: 1}
+  rebirthProgressColor: {r: 0.12, g: 0.92, b: 0.18, a: 1}
+  rebirthProgressGhostColor: {r: 0.55, g: 1, b: 0.58, a: 1}
+  rebirthConfirmColor: {r: 0.12, g: 0.95, b: 0.16, a: 1}
+  rebirthCancelColor: {r: 1, g: 0.12, b: 0.18, a: 1}
+  rebirthFlashColor: {r: 1, g: 1, b: 1, a: 1}
+  rebirthFlashFadeInDuration: 0.18
+  rebirthFlashHoldDuration: 0.08
+  rebirthFlashFadeOutDuration: 0.35

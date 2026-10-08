@@ -6,6 +6,7 @@ public partial class PlayerCombatInput
     private void ResetFootwork()
     {
         stepTarget = null;
+        lungeTracking = false;
         lungeProgress = lungePlannedDistance = lungeTravelRemaining = 0f;
         lungeDirection = Vector3.zero;
         if (movement != null)
@@ -41,10 +42,15 @@ public partial class PlayerCombatInput
         animator.SetLayerWeight(footworkLayer, weight);
         movement.CombatMoveMultiplier = active ? Mathf.Lerp(1f, strikeMovementMultiplier, weight) : 1f;
         movement.CombatStepVelocity = Vector3.zero;
-        // Acquire only once per strike. Travel has its own short envelope rather
-        // than waiting for a long attack clip, but damage still uses AttackRange.
-        if (active && IsLungeTargetValid(stepTarget) && phase >= stepStartPhase && phase < contact &&
-            lungeProgress < 1f && lungeTravelRemaining > 0f && Time.deltaTime > 0f)
+        bool lunging = active && state.shortNameHash == LungeAttackState && !hitApplied && phase < contact;
+        if (lungeTracking && (!lunging || !IsLungeTargetValid(stepTarget)))
+        {
+            // Cancellation is terminal for this strike: don't resume across a wall or a dead target.
+            lungeTracking = false;
+            lungeTravelRemaining = 0f;
+            StopSoftAim();
+        }
+        if (lungeTracking && phase >= stepStartPhase && Time.deltaTime > 0f)
         {
             var targetCollider = stepTarget.GetComponent<Collider>();
             Vector3 origin = transform.TransformPoint(HitOriginOffset);
@@ -52,18 +58,22 @@ public partial class PlayerCombatInput
             float previous = lungeProgress;
             lungeProgress = Mathf.Clamp01(lungeProgress + Time.deltaTime * AttackSpeed / Mathf.Max(0.01f, lungeSeconds));
             float travel = CombatLungeMotion.TravelBetween(previous, lungeProgress, lungePlannedDistance);
-            travel = Mathf.Min(Mathf.Min(travel, Mathf.Max(0f, lungeMaximumSpeed) * Time.deltaTime),
-                Mathf.Min(lungeTravelRemaining, Mathf.Max(0f, toTarget.magnitude - LungeStopDistance)));
-            if (toTarget.sqrMagnitude > 0.0001f)
-                lungeDirection = Vector3.Slerp(lungeDirection, toTarget.normalized,
-                    1f - Mathf.Exp(-Time.deltaTime / Mathf.Max(0.01f, lungeDirectionSmoothSeconds))).normalized;
-            // Shift lock retains manual facing; do not pull the player sideways.
-            Vector3 direction = IsShiftLocked ? StrikeForward : lungeDirection;
-            if (Vector3.Angle(StrikeForward, toTarget) <= maximumStepAngle)
+            // After the short launch envelope, use the remaining budget to close a moving gap.
+            if (previous >= 1f)
+                travel = Mathf.Max(0f, toTarget.magnitude - LungeStopDistance) *
+                    (1f - Mathf.Exp(-Time.deltaTime / Mathf.Max(.01f, lungeDirectionSmoothSeconds)));
+            Vector3 step = CombatLungeMotion.TrackStep(toTarget, LungeStopDistance, travel,
+                lungeTravelRemaining, lungeMaximumSpeed, Time.deltaTime);
+            if (toTarget.sqrMagnitude > .0001f)
             {
-                movement.CombatStepVelocity = direction * (travel / Time.deltaTime);
-                lungeTravelRemaining -= travel;
+                lungeDirection = toTarget.normalized;
+                movement.ExternalFacing = true;
+                transform.rotation = Quaternion.RotateTowards(transform.rotation,
+                    Quaternion.LookRotation(lungeDirection), aimTurnSpeed * Time.deltaTime);
             }
+            // The existing CharacterController remains the only motor and resolves solid collisions.
+            movement.CombatStepVelocity = step / Time.deltaTime;
+            lungeTravelRemaining = Mathf.Max(0f, lungeTravelRemaining - step.magnitude);
         }
     }
 }

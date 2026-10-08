@@ -221,7 +221,7 @@ namespace MiningSimulator.Ores
                 ? ResolveFollowCameraPosition(desiredPosition, RuneStation.PlayerDeltaTime)
                 : ResolveCameraPosition(desiredPosition);
             controlledCamera.transform.SetPositionAndRotation(position, rotation);
-            if (IsShiftLocked && followTarget != null)
+            if (IsShiftLocked && followTarget != null && (combatInput == null || !combatInput.IsTrackingLunge))
             {
                 float facing = Mathf.SmoothDampAngle(followTarget.eulerAngles.y, rotation.eulerAngles.y,
                     ref shiftFacingVelocity, shiftFacingSmoothSeconds, shiftFacingMaximumSpeed, RuneStation.PlayerDeltaTime);
@@ -778,10 +778,8 @@ namespace MiningSimulator.Ores
             // Gameplay objects can have static colliders (CharacterController monsters and
             // chest MeshColliders). They are not walls and must not cause zoom pulses.
             return candidate.attachedRigidbody == null &&
-                   candidate.GetComponentInParent<Ore>() == null &&
                    candidate.GetComponentInParent<MushroomMonster>() == null &&
                    candidate.GetComponentInParent<MiningChest>() == null &&
-                   candidate.GetComponentInParent<MiningNpc>() == null &&
                    candidate.GetComponentInParent<LuckyBlock>() == null;
         }
 

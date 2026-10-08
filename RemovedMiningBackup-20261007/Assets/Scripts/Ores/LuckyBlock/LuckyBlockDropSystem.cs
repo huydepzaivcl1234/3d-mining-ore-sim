@@ -1,0 +1,640 @@
+using System.Collections;
+using System.Collections.Generic;
+using Microlight.MicroBar;
+using TMPro;
+using UnityEngine;
+
+namespace MiningSimulator.Ores
+{
+    /// <summary>Drops pooled Lucky Blocks into unoccupied positions inside the ore spawn area.</summary>
+    [DisallowMultipleComponent]
+    public sealed class LuckyBlockDropSystem : MonoBehaviour
+    {
+        [Header("References")]
+        [SerializeField] private LuckyBlockData data;
+        [SerializeField] private PlayerWallet wallet;
+        [SerializeField] private MiningUpgradeSystem upgradeSystem;
+        [SerializeField] private OreSpawnData oreSpawnData;
+        [SerializeField] private Transform spawnAreaOrigin;
+        [SerializeField] private Transform droppedBlockParent;
+        [SerializeField] private MiningUiData uiData;
+        [SerializeField] private OreRewardPopup rewardPopupPrefab;
+        [SerializeField] private GameObject healthBarPrefab;
+        [Tooltip("Gates Lucky Block variants by the shared mining power. Auto-found in Awake when left empty.")]
+        [SerializeField] private NpcProgressionSystem progressionSystem;
+        [Tooltip("Receives rare Lucky Block reward shake. Auto-found in Awake when left empty.")]
+        [SerializeField] private MiningOrbitCamera orbitCamera;
+
+        private readonly HashSet<LuckyBlock> activeBlocks = new();
+        private readonly Dictionary<LuckyBlockVariantData, Queue<LuckyBlock>> pools = new();
+        private readonly HashSet<LuckyBlock> pooledBlocks = new();
+        private readonly Queue<LuckyBlockVariantData> guaranteedVariantQueue = new();
+        private readonly Collider[] overlapResults = new Collider[64];
+        private Coroutine dropRoutine;
+
+        private const float AuthoredModelWorldSize = 2.1507f;
+
+        public int ActiveCount => activeBlocks.Count;
+        public int PooledCount => pooledBlocks.Count;
+        public LuckyBlockData Data => data;
+        public event System.Action<LuckyBlock, float> LuckyBlockRewardGranted;
+
+        private void Awake()
+        {
+            if (upgradeSystem == null)
+            {
+                upgradeSystem = FindFirstObjectByType<MiningUpgradeSystem>(
+                    FindObjectsInactive.Include);
+            }
+
+            if (progressionSystem == null)
+            {
+                progressionSystem = FindFirstObjectByType<NpcProgressionSystem>(
+                    FindObjectsInactive.Include);
+            }
+
+            if (orbitCamera == null)
+            {
+                orbitCamera = FindFirstObjectByType<MiningOrbitCamera>(
+                    FindObjectsInactive.Include);
+            }
+        }
+
+        public bool TryReserveClosestBlock(MiningNpc miner, Vector3 origin, int miningPower,
+            LuckyBlock excludedBlock, out LuckyBlock reservedBlock, out int slotIndex)
+        {
+            LuckyBlock closest = null;
+            float closestSqrDistance = float.PositiveInfinity;
+            foreach (LuckyBlock block in activeBlocks)
+            {
+                if (block == null || block == excludedBlock ||
+                    !block.CanAcceptMiner(miner, miningPower) || miner.IsNavigationTargetCoolingDown(block))
+                {
+                    continue;
+                }
+
+                float sqrDistance = block.SqrDistanceToSurface(origin);
+                if (sqrDistance >= closestSqrDistance)
+                {
+                    continue;
+                }
+
+                closest = block;
+                closestSqrDistance = sqrDistance;
+            }
+
+            if (closest != null && closest.TryReserveMiner(miner, miningPower, out slotIndex))
+            {
+                reservedBlock = closest;
+                return true;
+            }
+
+            reservedBlock = null;
+            slotIndex = -1;
+            return false;
+        }
+
+        /// <summary>Reserves one specific active block for a player-issued NPC command.</summary>
+        public bool TryReserveBlock(MiningNpc miner, LuckyBlock block, int miningPower,
+            out int slotIndex)
+        {
+            slotIndex = -1;
+            return block != null && activeBlocks.Contains(block) &&
+                   block.TryReserveMiner(miner, miningPower, out slotIndex);
+        }
+
+        private void OnEnable()
+        {
+            EnsureDropRoutine();
+        }
+
+        private void Start()
+        {
+            // Setup tools can assign references after OnEnable has already run.
+            EnsureDropRoutine();
+        }
+
+        private void EnsureDropRoutine()
+        {
+            if (dropRoutine == null && data != null && oreSpawnData != null &&
+                spawnAreaOrigin != null)
+            {
+                dropRoutine = StartCoroutine(DropLoop());
+            }
+        }
+
+        private void OnDisable()
+        {
+            if (dropRoutine != null)
+            {
+                StopCoroutine(dropRoutine);
+                dropRoutine = null;
+            }
+
+            if (activeBlocks.Count == 0)
+            {
+                return;
+            }
+
+            var remaining = new List<LuckyBlock>(activeBlocks);
+            foreach (LuckyBlock block in remaining)
+            {
+                ReturnToPool(block);
+            }
+            activeBlocks.Clear();
+        }
+
+        private IEnumerator DropLoop()
+        {
+            WaitForSeconds dropInterval = new(data.DropCheckIntervalSeconds);
+            while (enabled)
+            {
+                yield return dropInterval;
+                if (activeBlocks.Count >= data.MaximumActiveBlocks)
+                {
+                    continue;
+                }
+
+                if (guaranteedVariantQueue.Count > 0)
+                {
+                    // A power-unlocked variant is waiting for a free slot — skip the random
+                    // chance gate below so it drops the moment room opens up instead of
+                    // waiting on a lucky roll that might not come for a while.
+                    TryDropOne();
+                    continue;
+                }
+
+                float chanceMultiplier = upgradeSystem != null
+                    ? upgradeSystem.GetMultiplier(MiningUpgradeType.LuckyBlockDropChance)
+                    : 1f;
+                float chance = Mathf.Clamp(data.DropChancePerCheckPercent * chanceMultiplier,
+                    0f, 100f);
+                if (chance <= 0f || (chance < 100f && Random.value >= chance * 0.01f))
+                {
+                    continue;
+                }
+
+                TryDropOne();
+            }
+        }
+
+        /// <summary>
+        /// Queues a specific Lucky Block variant so the very next drop (right now if there's
+        /// room, otherwise as soon as a slot frees up) uses it instead of the normal weighted
+        /// roll. Used to guarantee a freshly power-unlocked variant is the first one to drop,
+        /// even if <see cref="data"/>'s active-block slots are full at the moment it unlocks.
+        /// </summary>
+        public bool SpawnGuaranteedLuckyBlock(LuckyBlockVariantData variant)
+        {
+            if (variant == null || variant.Model == null)
+            {
+                return false;
+            }
+
+            guaranteedVariantQueue.Enqueue(variant);
+            return TryDropOne();
+        }
+
+        [ContextMenu("Drop Lucky Block Now")]
+        public bool TryDropOne()
+        {
+            return TryDropOne(null);
+        }
+
+        /// <summary>
+        /// Drops a Lucky Block. Pass a specific variant to force that exact type outright
+        /// (bypassing the guaranteed-variant queue); pass null to drain the queue first — see
+        /// <see cref="SpawnGuaranteedLuckyBlock"/> — and fall back to the normal weighted roll
+        /// only once the queue is empty.
+        /// </summary>
+        public bool TryDropOne(LuckyBlockVariantData forcedVariant)
+        {
+            if (data == null || wallet == null || oreSpawnData == null || spawnAreaOrigin == null ||
+                activeBlocks.Count >= data.MaximumActiveBlocks)
+            {
+                return false;
+            }
+
+            bool useQueuedVariant = forcedVariant == null && guaranteedVariantQueue.Count > 0;
+            LuckyBlockVariantData variant = forcedVariant != null
+                ? forcedVariant
+                : useQueuedVariant ? guaranteedVariantQueue.Peek() : ChooseVariant();
+            if (variant == null || variant.Model == null ||
+                !TryChooseLandingPosition(variant, out Vector3 landingPosition))
+            {
+                return false;
+            }
+
+            LuckyBlock block = TakeFromPool(variant) ?? CreateBlock(variant);
+            if (block == null)
+            {
+                return false;
+            }
+
+            // Only consume the queued entry once the block is actually about to drop — a
+            // failed landing-position search or pool/create failure above leaves it queued
+            // so it's retried on a later tick instead of being silently lost.
+            if (useQueuedVariant)
+            {
+                guaranteedVariantQueue.Dequeue();
+            }
+
+            float sizeMultiplier = data.BlockSize * variant.SizeMultiplier;
+            float worldSize = AuthoredModelWorldSize * sizeMultiplier;
+            float minimumAngle = Mathf.Min(data.RandomYRotationMinimum, data.RandomYRotationMaximum);
+            float maximumAngle = Mathf.Max(data.RandomYRotationMinimum, data.RandomYRotationMaximum);
+            block.transform.SetPositionAndRotation(
+                landingPosition + Vector3.up * data.DropHeight,
+                Quaternion.identity);
+            block.transform.localScale = Vector3.one;
+            DisableNestedVisualPhysics(block.transform);
+            block.RestoreAuthoredVisualTransform();
+            NormalizeVisualAndCollider(block, worldSize);
+            block.transform.rotation = Quaternion.Euler(0f,
+                Random.Range(minimumAngle, maximumAngle), 0f);
+            block.gameObject.SetActive(true);
+            float minimumSpin = Mathf.Min(data.FallingSpinRange.x, data.FallingSpinRange.y);
+            float maximumSpin = Mathf.Max(data.FallingSpinRange.x, data.FallingSpinRange.y);
+            block.Initialize(variant, data, wallet, block.transform.GetChild(0),
+                Random.Range(minimumSpin, maximumSpin), upgradeSystem);
+            Subscribe(block);
+            activeBlocks.Add(block);
+            return true;
+        }
+
+        private LuckyBlockVariantData ChooseVariant()
+        {
+            return PercentageChanceSelector.Choose(
+                data.Variants,
+                GetVariantChancePercent,
+                IsSelectableVariant,
+                Random.value);
+        }
+
+        private static float GetVariantChancePercent(LuckyBlockVariantData variant)
+        {
+            return variant.SelectionChancePercent;
+        }
+
+        private bool IsSelectableVariant(LuckyBlockVariantData variant)
+        {
+            return variant.Model != null && HasSufficientPower(variant.MiningPowerRequired);
+        }
+
+        /// <summary>
+        /// True when the shared mining power (from <see cref="NpcProgressionSystem"/>) meets
+        /// the variant's required power, so under-powered Lucky Blocks never enter the drop
+        /// roll. When no progression system is assigned or found, every power requirement
+        /// passes so existing scenes keep dropping exactly as before.
+        /// </summary>
+        private bool HasSufficientPower(int requiredPower)
+        {
+            return progressionSystem == null || progressionSystem.CurrentMiningPower >= requiredPower;
+        }
+
+        private bool TryChooseLandingPosition(LuckyBlockVariantData variant,
+            out Vector3 landingPosition)
+        {
+            Vector3 areaSize = oreSpawnData.AreaSize;
+            float worldSize = data.BlockSize * variant.SizeMultiplier * AuthoredModelWorldSize;
+            float checkRadius = worldSize * 0.5f + data.PlacementClearance;
+            for (int attempt = 0; attempt < data.PositionAttemptsPerDrop; attempt++)
+            {
+                Vector3 local = oreSpawnData.AreaCenter + new Vector3(
+                    Random.Range(-areaSize.x * 0.5f, areaSize.x * 0.5f),
+                    Random.Range(-areaSize.y * 0.5f, areaSize.y * 0.5f),
+                    Random.Range(-areaSize.z * 0.5f, areaSize.z * 0.5f));
+                Vector3 candidate = spawnAreaOrigin.TransformPoint(local);
+                if (oreSpawnData.AlignToGround)
+                {
+                    Vector3 rayOrigin = candidate + Vector3.up * oreSpawnData.GroundRayStartHeight;
+                    if (!Physics.Raycast(rayOrigin, Vector3.down, out RaycastHit hit,
+                        oreSpawnData.GroundRayDistance, oreSpawnData.GroundLayers,
+                        QueryTriggerInteraction.Ignore))
+                    {
+                        continue;
+                    }
+
+                    candidate = hit.point;
+                }
+
+                candidate.y += oreSpawnData.HeightOffset;
+                if (OverlapsMineable(candidate + Vector3.up * checkRadius, checkRadius))
+                {
+                    continue;
+                }
+
+                landingPosition = candidate;
+                return true;
+            }
+
+            landingPosition = default;
+            return false;
+        }
+
+        private bool OverlapsMineable(Vector3 center, float radius)
+        {
+            int count = Physics.OverlapSphereNonAlloc(center, radius, overlapResults, ~0,
+                QueryTriggerInteraction.Ignore);
+            for (int i = 0; i < count; i++)
+            {
+                Collider candidate = overlapResults[i];
+                if (candidate != null &&
+                    (candidate.GetComponentInParent<Ore>() != null ||
+                     candidate.GetComponentInParent<LuckyBlock>() != null))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private LuckyBlock CreateBlock(LuckyBlockVariantData variant)
+        {
+            GameObject root = new(variant.DisplayName);
+            root.transform.SetParent(droppedBlockParent != null ? droppedBlockParent : transform, false);
+            root.SetActive(false);
+            GameObject visual = Instantiate(variant.Model, root.transform);
+            visual.name = "Model";
+            DisableNestedVisualPhysics(root.transform);
+
+            BoxCollider targetCollider = root.AddComponent<BoxCollider>();
+            Rigidbody body = root.AddComponent<Rigidbody>();
+            body.interpolation = RigidbodyInterpolation.Interpolate;
+            body.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+            body.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+            LuckyBlock block = root.AddComponent<LuckyBlock>();
+            block.ConfigureVisualRoot(visual.transform);
+            AddHealthBar(root, block);
+            AddCountdownLabel(root, block);
+            return block;
+        }
+
+        private static void DisableNestedVisualPhysics(Transform root)
+        {
+            if (root == null || root.childCount == 0)
+            {
+                return;
+            }
+
+            Transform visual = root.GetChild(0);
+            Collider[] nestedColliders = visual.GetComponentsInChildren<Collider>(true);
+            foreach (Collider nestedCollider in nestedColliders)
+            {
+                if (nestedCollider == null)
+                {
+                    continue;
+                }
+
+                nestedCollider.enabled = false;
+            }
+
+            Rigidbody[] nestedBodies = visual.GetComponentsInChildren<Rigidbody>(true);
+            foreach (Rigidbody nestedBody in nestedBodies)
+            {
+                if (nestedBody == null)
+                {
+                    continue;
+                }
+
+                nestedBody.detectCollisions = false;
+                nestedBody.isKinematic = true;
+            }
+        }
+
+        private void AddHealthBar(GameObject root, LuckyBlock block)
+        {
+            if (healthBarPrefab == null)
+            {
+                return;
+            }
+
+            GameObject barObject = Instantiate(healthBarPrefab, root.transform);
+            barObject.name = "Lucky Block Health Bar";
+            MicroBar bar = barObject.GetComponent<MicroBar>();
+            LuckyBlockHealthBar binding = barObject.AddComponent<LuckyBlockHealthBar>();
+            binding.Configure(block, bar, barObject.transform);
+        }
+
+        /// <summary>
+        /// Builds its own small world-space TextMeshPro label at runtime (no prefab needed)
+        /// showing time left until the block despawns, positioned above the health bar.
+        /// </summary>
+        private void AddCountdownLabel(GameObject root, LuckyBlock block)
+        {
+            GameObject labelObject = new("Lucky Block Countdown");
+            labelObject.transform.SetParent(root.transform, false);
+            TextMeshPro label = labelObject.AddComponent<TextMeshPro>();
+            label.alignment = TextAlignmentOptions.Center;
+            label.fontStyle = FontStyles.Bold;
+            label.fontSize = data != null ? data.CountdownLabelFontSize : 6f;
+            label.color = data != null ? data.CountdownLabelColor : new Color(1f, 0.92f, 0.35f, 1f);
+            label.enableWordWrapping = false;
+            label.text = string.Empty;
+            RectTransform labelRect = labelObject.GetComponent<RectTransform>();
+            if (labelRect != null)
+            {
+                labelRect.sizeDelta = new Vector2(3f, 1f);
+            }
+
+            LuckyBlockCountdownLabel binding = labelObject.AddComponent<LuckyBlockCountdownLabel>();
+            binding.Configure(block, label);
+        }
+
+        private static void NormalizeVisualAndCollider(LuckyBlock block, float targetWorldSize)
+        {
+            Transform root = block.transform;
+            Transform visual = root.childCount > 0 ? root.GetChild(0) : null;
+            BoxCollider targetCollider = block.GetComponent<BoxCollider>();
+            if (visual == null || targetCollider == null)
+            {
+                return;
+            }
+
+            Renderer[] renderers = visual.GetComponentsInChildren<Renderer>(true);
+            if (!TryGetLocalRendererBounds(root, renderers, out Bounds localBounds))
+            {
+                targetCollider.center = new Vector3(0f, targetWorldSize * 0.5f, 0f);
+                targetCollider.size = Vector3.one * targetWorldSize;
+                return;
+            }
+
+            float currentSize = Mathf.Max(localBounds.size.x,
+                Mathf.Max(localBounds.size.y, localBounds.size.z));
+            if (currentSize > Mathf.Epsilon)
+            {
+                visual.localScale *= targetWorldSize / currentSize;
+            }
+
+            if (TryGetLocalRendererBounds(root, renderers, out localBounds))
+            {
+                visual.localPosition += new Vector3(-localBounds.center.x, -localBounds.min.y,
+                    -localBounds.center.z);
+            }
+
+            if (TryGetLocalRendererBounds(root, renderers, out localBounds))
+            {
+                Vector3 colliderSize = localBounds.size;
+                targetCollider.center = new Vector3(0f, colliderSize.y * 0.5f, 0f);
+                targetCollider.size = colliderSize;
+            }
+        }
+
+        private static bool TryGetLocalRendererBounds(Transform root, Renderer[] renderers,
+            out Bounds localBounds)
+        {
+            bool hasBounds = false;
+            localBounds = default;
+            foreach (Renderer renderer in renderers)
+            {
+                if (renderer == null)
+                {
+                    continue;
+                }
+
+                Bounds rendererBounds = renderer.localBounds;
+                Vector3 minimum = rendererBounds.min;
+                Vector3 maximum = rendererBounds.max;
+                for (int x = 0; x <= 1; x++)
+                {
+                    for (int y = 0; y <= 1; y++)
+                    {
+                        for (int z = 0; z <= 1; z++)
+                        {
+                            Vector3 rendererCorner = new(
+                                x == 0 ? minimum.x : maximum.x,
+                                y == 0 ? minimum.y : maximum.y,
+                                z == 0 ? minimum.z : maximum.z);
+                            Vector3 localCorner = root.InverseTransformPoint(
+                                renderer.transform.TransformPoint(rendererCorner));
+                            if (!hasBounds)
+                            {
+                                localBounds = new Bounds(localCorner, Vector3.zero);
+                                hasBounds = true;
+                            }
+                            else
+                            {
+                                localBounds.Encapsulate(localCorner);
+                            }
+                        }
+                    }
+                }
+            }
+
+            return hasBounds;
+        }
+
+        private LuckyBlock TakeFromPool(LuckyBlockVariantData variant)
+        {
+            if (!pools.TryGetValue(variant, out Queue<LuckyBlock> pool))
+            {
+                return null;
+            }
+
+            while (pool.Count > 0)
+            {
+                LuckyBlock block = pool.Dequeue();
+                if (block == null)
+                {
+                    continue;
+                }
+
+                pooledBlocks.Remove(block);
+                block.transform.SetParent(droppedBlockParent != null ? droppedBlockParent : transform,
+                    false);
+                return block;
+            }
+
+            return null;
+        }
+
+        private void ReturnToPool(LuckyBlock block)
+        {
+            if (block == null)
+            {
+                return;
+            }
+
+            Unsubscribe(block);
+            activeBlocks.Remove(block);
+
+            if (pooledBlocks.Contains(block))
+            {
+                return;
+            }
+
+            LuckyBlockVariantData variant = block.Variant;
+            int maximumPooledBlocks = data != null ? data.MaximumPooledBlocks : 0;
+            if (variant == null || maximumPooledBlocks <= 0 ||
+                pooledBlocks.Count >= maximumPooledBlocks)
+            {
+                pooledBlocks.Remove(block);
+                Destroy(block.gameObject);
+                return;
+            }
+
+            if (!pooledBlocks.Add(block))
+            {
+                return;
+            }
+
+            block.gameObject.SetActive(false);
+            block.transform.SetParent(droppedBlockParent != null ? droppedBlockParent : transform,
+                false);
+            if (!pools.TryGetValue(variant, out Queue<LuckyBlock> pool))
+            {
+                pool = new Queue<LuckyBlock>();
+                pools.Add(variant, pool);
+            }
+            pool.Enqueue(block);
+        }
+
+        private void Subscribe(LuckyBlock block)
+        {
+            block.RewardGranted -= HandleRewardGranted;
+            block.RewardGranted += HandleRewardGranted;
+            block.Broken -= HandleBlockFinished;
+            block.Broken += HandleBlockFinished;
+            block.Expired -= HandleBlockFinished;
+            block.Expired += HandleBlockFinished;
+        }
+
+        private void Unsubscribe(LuckyBlock block)
+        {
+            block.RewardGranted -= HandleRewardGranted;
+            block.Broken -= HandleBlockFinished;
+            block.Expired -= HandleBlockFinished;
+        }
+
+        private void HandleRewardGranted(LuckyBlock block, float amount)
+        {
+            if (block == null)
+            {
+                return;
+            }
+
+            LuckyBlockRewardGranted?.Invoke(block, amount);
+            if (data != null && data.ShouldShakeCamera(block.Type))
+            {
+                orbitCamera ??= FindFirstObjectByType<MiningOrbitCamera>(
+                    FindObjectsInactive.Include);
+                orbitCamera?.PlayRewardShake(data.GetCameraShakeStrength(block.Type),
+                    data.RareShakeDuration, data.RareShakeFrequency);
+            }
+            if (amount <= 0f || rewardPopupPrefab == null || uiData == null)
+            {
+                return;
+            }
+
+            Vector3 position = block.GetWorldTopCenter();
+            OreRewardPopup popup = Instantiate(rewardPopupPrefab, position, Quaternion.identity);
+            popup.Initialize(amount, position, uiData);
+        }
+
+        private void HandleBlockFinished(LuckyBlock block)
+        {
+            ReturnToPool(block);
+        }
+    }
+}

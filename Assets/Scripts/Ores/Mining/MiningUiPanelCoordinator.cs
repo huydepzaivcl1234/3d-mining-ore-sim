@@ -394,7 +394,6 @@ namespace MiningSimulator.Ores
             return root.GetComponentInChildren<MiningMainMenu>(true) != null ||
                 root.GetComponentInChildren<JuicyPlaySelection>(true) != null ||
                 root.GetComponentInChildren<WanderingTraderPanel>(true) != null ||
-                root.GetComponentInChildren<MiningPortalPreviewPanel>(true) != null ||
                 root.name.Contains("Transition") || root.name == "Rebirth Flash";
         }
         private void SetAdditionalHudVisible(bool visible, bool immediate)
@@ -491,8 +490,6 @@ namespace MiningSimulator.Ores
             }
             foreach (var health in FindObjectsByType<MiningCharacterHealth>(FindObjectsSortMode.None))
                 HideWorldBar(health.HealthBar);
-            foreach (var oreBar in FindObjectsByType<OreHealthBar>(FindObjectsSortMode.None))
-                HideWorldBar(oreBar.VisualRoot);
         }
         private void HideWorldBar(Transform root)
         {

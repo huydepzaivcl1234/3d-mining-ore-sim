@@ -33,6 +33,7 @@ public partial class PlayerCombatInput : MonoBehaviour
     [SerializeField] private string drawWeaponParameter = "DrawWeapon";
     [SerializeField] private string sheathWeaponParameter = "SheathWeapon";
     public bool IsCombatMode => combatMode;
+    public bool IsTrackingLunge => lungeTracking;
     [HideInInspector, Min(0.1f), SerializeField] private float aimRange = 15f; // Legacy; targeting now uses AttackRange.
     [Min(0f), SerializeField] private float aimTurnSpeed = 720f;
     [Header("Soft aim while attacking (does not control the camera)")]
@@ -100,6 +101,8 @@ public partial class PlayerCombatInput : MonoBehaviour
     [Range(0.1f, 1f), SerializeField] private float lungeReachSafety = 0.5f;
     [Range(0.1f, 1f), SerializeField] private float lungeStopRangeFraction = 0.6f;
     [Min(0.01f), SerializeField] private float lungeDirectionSmoothSeconds = 0.04f;
+    [Tooltip("Extra travel budget for following the selected moving enemy before contact. Does not increase damage range.")]
+    [Min(0f), SerializeField] private float lungeTrackingDistance = .75f;
     [SerializeField] private LayerMask lungeBlockingLayers = ~0;
     [Range(0f, 180f), SerializeField] private float maximumStepAngle = 60f;
     [Range(0f, 1f), SerializeField] private float stepStartPhase = 0.1f;
@@ -125,6 +128,7 @@ public partial class PlayerCombatInput : MonoBehaviour
     private float lungePlannedDistance;
     private float lungeTravelRemaining;
     private Vector3 lungeDirection;
+    private bool lungeTracking;
     public float LungeAcquireRange => AttackRange + Mathf.Min(
         Mathf.Min(Mathf.Max(0f, lungeExtraRange), Mathf.Max(0f, strikeStepDistance)),
         Mathf.Max(0f, lungeMaximumSpeed) * Mathf.Max(0.01f, lungeSeconds) / AttackSpeed * lungeReachSafety);
@@ -164,6 +168,8 @@ public partial class PlayerCombatInput : MonoBehaviour
             ClearAim();
             return;
         }
+        // Footwork owns facing during the lunge; ordinary soft aim and camera lock must not fight it.
+        if (lungeTracking) return;
         if (IsShiftLocked) { StopSoftAim(); return; }
         if (aimedMonster != null && !IsAimValid(aimedMonster)) aimedMonster = null;
         int layer = animator != null ? animator.GetLayerIndex(CombatLayerName) : -1;
@@ -287,7 +293,9 @@ public partial class PlayerCombatInput : MonoBehaviour
         if (opening && lungeTravelRemaining > 0.01f &&
             animator.HasState(layer, LungeAttackState)) index = -2;
         // Only the actual lunge opener travels. Turn/combo retain normal damage range.
-        if (index != -2) lungeTravelRemaining = 0f;
+        lungeTracking = index == -2;
+        if (!lungeTracking) lungeTravelRemaining = 0f;
+        else lungeTravelRemaining += Mathf.Max(0f, lungeTrackingDistance);
         ClearLocomotionAnimation(false);
         BeginSoftAim();
         animator.ResetTrigger("attack");
@@ -415,6 +423,13 @@ public partial class PlayerCombatInput : MonoBehaviour
         if (!current && !next) return;
         FinishSwordTrail();
         hitApplied = true;
+        if (expectedState == LungeAttackState)
+        {
+            lungeTracking = false;
+            lungeTravelRemaining = 0f;
+            if (movement != null) movement.CombatStepVelocity = Vector3.zero;
+            StopSoftAim();
+        }
         float multiplier = expectedState == ThirdAttackState && Stats != null
             ? 1f + Mathf.Max(0f, Stats.thirdAttackDamageBonusPercent) * .01f : 1f;
         if (sweep) ApplySweepHit(multiplier);

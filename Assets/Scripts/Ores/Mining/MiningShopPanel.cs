@@ -48,7 +48,7 @@ namespace MiningSimulator.Ores
             }
 
             public void Refresh(MiningShopProduct product, PlayerWallet wallet,
-                MiningItemSystem itemSystem, MiningCosmeticSystem cosmeticSystem, bool shopBusy)
+                MiningItemSystem itemSystem, bool shopBusy)
             {
                 bool valid = product != null && product.IsValid;
                 root?.SetActive(valid);
@@ -73,7 +73,7 @@ namespace MiningSimulator.Ores
                 // product's Grape label and description.
                 SetTextByObjectName("Item Name", product.DisplayName);
                 SetTextByObjectName("Item Description", product.Description);
-                if (amountLabel != null) amountLabel.text = product.IsCosmetic ? MiningLocalization.Text("SKIN") : $"x{product.ItemAmount}";
+                if (amountLabel != null) amountLabel.text = $"x{product.ItemAmount}";
                 if (priceLabel != null)
                 {
                     priceLabel.text = $"{MiningMoneyFormatter.Format(product.GemCost)} GEM";
@@ -83,24 +83,17 @@ namespace MiningSimulator.Ores
                     buyLabel.text = MiningLocalization.Text("BUY");
                 }
 
-                bool owned = product.IsCosmetic && cosmeticSystem != null && cosmeticSystem.IsOwned(product.Cosmetic);
-                bool hasSpace = product.IsCosmetic ? cosmeticSystem != null : itemSystem != null && itemSystem.CanAddItem(product.Item, product.ItemAmount);
+                bool hasSpace = itemSystem != null && itemSystem.CanAddItem(product.Item, product.ItemAmount);
                 bool affordable = wallet != null && wallet.CurrentGems >= product.GemCost;
                 bool available = !shopBusy && hasSpace && affordable;
-                if (buyLabel != null && owned) buyLabel.text = MiningLocalization.Text("EQUIPPED");
-                if (buyButton != null) buyButton.interactable = available && !owned;
+                if (buyButton != null) buyButton.interactable = available;
                 // Keep the product art and information at full opacity. Fading the entire row
                 // made TMP text and detailed icons look blurred in Play Mode whenever the
                 // player lacked Gems. The disabled Buy button already communicates availability.
                 if (canvasGroup != null) canvasGroup.alpha = 1f;
             }
 
-            public void RefreshCosmeticText(MiningShopProduct product)
-            {
-                if (product == null || !product.IsCosmetic) return;
-                SetTextByObjectName("Item Name", product.DisplayName);
-                SetTextByObjectName("Item Description", product.Description);
-            }
+
 
             private void SetTextByObjectName(string objectName, string value)
             {
@@ -170,7 +163,6 @@ namespace MiningSimulator.Ores
         [SerializeField] private MiningItemSystem itemSystem;
         [SerializeField] private MiningUiPanelCoordinator panelCoordinator;
         [SerializeField] private MiningAudioManager audioManager;
-        private MiningCosmeticSystem cosmeticSystem;
 
         [Header("Panel")]
         [SerializeField] private RectTransform panelRoot;
@@ -220,8 +212,6 @@ namespace MiningSimulator.Ores
         private void Awake()
         {
             RepairUnsupportedUiGlyphs();
-            cosmeticSystem = GetComponent<MiningCosmeticSystem>();
-            if (cosmeticSystem == null) cosmeticSystem = gameObject.AddComponent<MiningCosmeticSystem>();
             RegisterBaseHud();
             panelRoot?.gameObject.SetActive(false);
         }
@@ -252,7 +242,6 @@ namespace MiningSimulator.Ores
             productViews ??= new List<ShopProductView>();
             EnsureProductViews();
             StabilizeProductScroll();
-            RegisterCosmetics();
             gameData ??= wallet != null ? wallet.GameData : null;
             RegisterBaseHud();
             RemoveListeners();
@@ -289,21 +278,7 @@ namespace MiningSimulator.Ores
             }
         }
 
-        private void LateUpdate()
-        {
-            // Other UI updates may occur after Refresh. Reapply the configured
-            // cosmetic label at the end of each visible Shop frame.
-            if (panelRoot == null || !panelRoot.gameObject.activeInHierarchy || data == null) return;
-            int count = Mathf.Min(productViews.Count, data.Products.Count);
-            for (int index = 0; index < count; index++)
-            {
-                MiningShopProduct product = data.Products[index];
-                if (product != null && product.IsCosmetic)
-                {
-                    productViews[index]?.RefreshCosmeticText(product);
-                }
-            }
-        }
+
 
         private void OnDisable()
         {
@@ -385,21 +360,14 @@ namespace MiningSimulator.Ores
                                         productIndex < data.Products.Count
                 ? data.Products[productIndex]
                 : null;
-            if (product == null || !product.IsValid || wallet == null || (!product.IsCosmetic && itemSystem == null))
+            if (product == null || !product.IsValid || wallet == null || itemSystem == null)
             {
                 status = ShopStatus.MissingProduct;
                 Refresh();
                 return;
             }
-            if (product.IsCosmetic && cosmeticSystem != null && cosmeticSystem.IsOwned(product.Cosmetic))
-            {
-                cosmeticSystem.Equip(product.Cosmetic);
-                status = ShopStatus.Purchased;
-                purchasedItemName = product.DisplayName;
-                Refresh();
-                return;
-            }
-            if (!product.IsCosmetic && !itemSystem.CanAddItem(product.Item, product.ItemAmount))
+
+            if (!itemSystem.CanAddItem(product.Item, product.ItemAmount))
             {
                 status = ShopStatus.InventoryFull;
                 Refresh();
@@ -411,17 +379,8 @@ namespace MiningSimulator.Ores
                 Refresh();
                 return;
             }
-            if (product.IsCosmetic)
-            {
-                if (cosmeticSystem == null || !cosmeticSystem.TryPurchaseAndEquip(product.Cosmetic))
-                {
-                    wallet.AddGems(product.GemCost);
-                    status = ShopStatus.MissingProduct;
-                    Refresh();
-                    return;
-                }
-            }
-            else if (!itemSystem.TryAddItem(product.Item, product.ItemAmount))
+
+            if (!itemSystem.TryAddItem(product.Item, product.ItemAmount))
             {
                 wallet.AddGems(product.GemCost);
                 status = ShopStatus.InventoryFull;
@@ -658,7 +617,7 @@ namespace MiningSimulator.Ores
                 MiningShopProduct product = data != null && index < data.Products.Count
                     ? data.Products[index]
                     : null;
-                productViews[index]?.Refresh(product, wallet, itemSystem, cosmeticSystem, spinning);
+                productViews[index]?.Refresh(product, wallet, itemSystem, spinning);
             }
         }
 
@@ -713,12 +672,7 @@ namespace MiningSimulator.Ores
             return null;
         }
 
-        private void RegisterCosmetics()
-        {
-            if (data == null || cosmeticSystem == null) return;
-            foreach (MiningShopProduct product in data.Products)
-                if (product != null && product.Cosmetic != null) cosmeticSystem.Register(product.Cosmetic);
-        }
+
 
         private void RefreshSpinLabels()
         {

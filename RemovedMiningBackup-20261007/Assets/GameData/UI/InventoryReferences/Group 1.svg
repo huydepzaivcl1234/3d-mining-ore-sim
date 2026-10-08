@@ -1,0 +1,11 @@
+<svg width="105" height="96" viewBox="0 0 105 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Native vector shapes: Unity Vector Graphics does not support the exported bitmap patterns. -->
+  <rect x="28" y="25" width="49" height="71" fill="#000000"/>
+  <g fill="#898989" stroke="#F5F5F5" stroke-width="1">
+    <rect x="0.5" y="67.5" width="18" height="18"/>
+    <rect x="43.5" y="0.5" width="18" height="18"/>
+    <rect x="86.5" y="67.5" width="18" height="18"/>
+    <rect x="86.5" y="30.5" width="18" height="18"/>
+    <rect x="0.5" y="30.5" width="18" height="18"/>
+  </g>
+</svg>

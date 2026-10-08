@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d8f1402b73084f33b8415df7ae65c944, type: 3}
+  m_Name: MiningGameData
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningGameData
+  clickableLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  clickMaximumDistance: 500
+  currencyCountUnitsPerSecond: 25
+  currencyCountMaximumDuration: 1.25
+  startingGems: 0
+  gemSaveKey: MiningSimulator.Gems.v1
+  cameraFocusPoint: {x: 0, y: 0, z: 0}
+  cameraDistance: 18
+  cameraYaw: 45
+  cameraPitch: 38
+  cameraMinimumPitch: -85
+  cameraMaximumPitch: 85
+  cameraMoveSpeed: 10
+  cameraFastMoveMultiplier: 2
+  cameraRotationDegreesPerPixel: 0.2
+  cameraKeyboardRotationSpeed: 90
+  cameraMousePanSpeed: 0.5
+  cameraZoomSpeed: 0.5
+  cameraMinimumDistance: 4
+  cameraMaximumDistance: 45
+  cameraMaximumRotationSpeed: 180
+  cameraRotationSmoothSeconds: 0.06
+  cameraRotationBlurStrength: 0.06
+  cameraRotationBlurClamp: 0.015

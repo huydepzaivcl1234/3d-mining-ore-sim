@@ -130,7 +130,6 @@ namespace MiningSimulator.Ores
                 if (!Physics.Raycast(origin, Vector3.down, out RaycastHit hit, groundProbeDistance,
                     groundLayers, QueryTriggerInteraction.Ignore)) continue;
                 if (hit.collider.GetComponentInParent<MiningChest>() != null ||
-                    hit.collider.GetComponentInParent<Ore>() != null ||
                     hit.collider.GetComponentInParent<LuckyBlock>() != null) continue;
 
                 int count = Physics.OverlapBoxNonAlloc(

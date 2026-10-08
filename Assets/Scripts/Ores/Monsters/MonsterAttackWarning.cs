@@ -38,7 +38,7 @@ namespace MiningSimulator.Ores
             for (int i = 0; i < count; i++)
             {
                 var hit = groundHits[i];
-                if (hit.transform.IsChildOf(owner) || hit.collider.GetComponentInParent<MiningCharacterHealth>() != null || hit.collider.GetComponentInParent<MiningNpc>() != null || hit.normal.y < .6f) continue;
+                if (hit.transform.IsChildOf(owner) || hit.collider.GetComponentInParent<MiningCharacterHealth>() != null || hit.normal.y < .6f) continue;
                 if (hit.distance < distance) { distance = hit.distance; center.y = hit.point.y; }
             }
             disk.transform.SetPositionAndRotation(center + Vector3.up * .035f, Quaternion.Euler(90f, 0f, 0f));

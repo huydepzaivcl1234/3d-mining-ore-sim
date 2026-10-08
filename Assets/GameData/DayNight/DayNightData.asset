@@ -104,22 +104,6 @@ MonoBehaviour:
   coinRainFogColor: {r: 0.35, g: 0.38, b: 0.42, a: 1}
   coinRainAmbientColor: {r: 0.42, g: 0.44, b: 0.47, a: 1}
   coinRainParticlesPerSecond: 193
-  stalkedEventEnabled: 1
-  stalkedEventChanceAtSceneStartPercent: 5
-  stalkedWarningSeconds: 6
-  stalkedCornerFlickersPerSecond: 7
-  stalkedCreatureSprintSpeed: 22
-  stalkedCaptureDistance: 1
-  stalkedJumpscareChancePercent: 1
-  stalkedJumpscareSeconds: 1.5
-  stalkedJumpscareImages:
-  - {fileID: 21300000, guid: 8dcf46e4a67a45e8b2ea91235e83cbf9, type: 3}
-  stalkedToastPosition: {x: 0, y: -220}
-  stalkedToastSize: {x: 420, y: 100}
-  stalkedToastColor: {r: 0.16, g: 0, b: 0.01, a: 0.94}
-  stalkedTitleColor: {r: 1, g: 0.16, b: 0.08, a: 1}
-  stalkedTextColor: {r: 1, g: 0.76, b: 0.72, a: 1}
-  stalkedCornerColor: {r: 0.82, g: 0.01, b: 0.01, a: 0.050980393}
   controlCinematicPostProcessing: 1
   useAcesTonemapping: 1
   dayBloomIntensity: 0.18
@@ -137,26 +121,3 @@ MonoBehaviour:
   dayVignetteIntensity: 0.12
   nightVignetteIntensity: 0.2
   vignetteSmoothness: 0.55
-  lightStone: {fileID: 11400000, guid: 60b3200fc7d6b3149bc117a7a0eda15b, type: 2}
-  lightStoneChancePerSpawnPercent: 1
-  maximumActiveLightStones: 2
-  darkStone: {fileID: 11400000, guid: 00d2f60055fd85843869890c15e2ff21, type: 2}
-  darkStoneChancePerSpawnPercent: 1
-  maximumActiveDarkStones: 2
-  lightStoneAuraColor: {r: 1, g: 0.82, b: 0.25, a: 1}
-  darkStoneAuraColor: {r: 0.012, g: 0.018, b: 0.026, a: 0.9}
-  auraLightIntensity: 0.5
-  auraLightRange: 1
-  auraPulseSpeed: 2
-  auraPulseAmount: 0.001
-  lightHaloOuterColor: {r: 1, g: 0.62, b: 0.12, a: 0.55}
-  lightHaloScale: 1
-  lightHaloOpacity: 0.42
-  darkAuraOuterColor: {r: 0.035, g: 0.055, b: 0.065, a: 0.72}
-  darkAuraScale: 1.48
-  darkAuraOpacity: 0.58
-  darkAuraFlowSpeed: 0.32
-  darkAuraRotationDegreesPerSecond: 7
-  auraParticlesPerSecond: 7
-  auraParticleLifetime: 1.4
-  auraParticleSize: 0.12

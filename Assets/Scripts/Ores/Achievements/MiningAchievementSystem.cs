@@ -32,9 +32,6 @@ namespace MiningSimulator.Ores
         [Header("References")]
         [SerializeField] private MiningAchievementData achievementData;
         [SerializeField] private PlayerWallet wallet;
-        [SerializeField] private OreSpawner oreSpawner;
-        [SerializeField] private NpcShop npcShop;
-        [SerializeField] private NpcProgressionSystem progressionSystem;
         [SerializeField] private MiningRebirthSystem rebirthSystem;
         [SerializeField] private MiningUpgradeSystem upgradeSystem;
         [SerializeField] private MiningUnlockNotifier unlockNotifier;
@@ -57,26 +54,14 @@ namespace MiningSimulator.Ores
             ResolveReferences();
             InitializeState();
 
-            if (oreSpawner != null)
-            {
-                oreSpawner.OreRewardGranted -= HandleOreRewardGranted;
-                oreSpawner.OreRewardGranted += HandleOreRewardGranted;
-            }
+
             if (wallet != null)
             {
                 wallet.MoneySpent -= HandleMoneySpent;
                 wallet.MoneySpent += HandleMoneySpent;
             }
-            if (npcShop != null)
-            {
-                npcShop.NpcCountChanged -= HandleNpcCountChanged;
-                npcShop.NpcCountChanged += HandleNpcCountChanged;
-            }
-            if (progressionSystem != null)
-            {
-                progressionSystem.LevelChanged -= HandleLevelChanged;
-                progressionSystem.LevelChanged += HandleLevelChanged;
-            }
+
+
             if (rebirthSystem != null)
             {
                 rebirthSystem.RebirthCompleted -= HandleRebirthCompleted;
@@ -95,22 +80,13 @@ namespace MiningSimulator.Ores
 
         private void OnDisable()
         {
-            if (oreSpawner != null)
-            {
-                oreSpawner.OreRewardGranted -= HandleOreRewardGranted;
-            }
+
             if (wallet != null)
             {
                 wallet.MoneySpent -= HandleMoneySpent;
             }
-            if (npcShop != null)
-            {
-                npcShop.NpcCountChanged -= HandleNpcCountChanged;
-            }
-            if (progressionSystem != null)
-            {
-                progressionSystem.LevelChanged -= HandleLevelChanged;
-            }
+
+
             if (rebirthSystem != null)
             {
                 rebirthSystem.RebirthCompleted -= HandleRebirthCompleted;
@@ -146,42 +122,9 @@ namespace MiningSimulator.Ores
             ProgressChanged?.Invoke();
         }
 
-        private void HandleOreRewardGranted(Ore ore, float reward)
-        {
-            if (ore == null || ore.Data == null || achievementData == null)
-            {
-                return;
-            }
 
-            bool changed = false;
-            foreach (MiningAchievementDefinition achievement in achievementData.Achievements)
-            {
-                if (achievement == null || achievement.Trigger != MiningAchievementTrigger.MinedOreKind ||
-                    achievement.OreKind != ore.Data.Kind || IsCompleted(achievement.AchievementId))
-                {
-                    continue;
-                }
 
-                changed |= AddProgress(achievement, 1, true);
-            }
 
-            if (changed)
-            {
-                SaveProgress();
-                ProgressChanged?.Invoke();
-            }
-        }
-
-        private void HandleNpcCountChanged(int count)
-        {
-            bool changed = SetGoalProgress(MiningAchievementTrigger.ConcurrentNpcCount,
-                Math.Max(0, count), true);
-            if (changed)
-            {
-                SaveProgress();
-                ProgressChanged?.Invoke();
-            }
-        }
 
         private void HandleMoneySpent(float amount)
         {
@@ -213,10 +156,7 @@ namespace MiningSimulator.Ores
             }
         }
 
-        private void HandleLevelChanged(int level)
-        {
-            RefreshOreUnlockGoals(true);
-        }
+
 
         private void HandleRebirthCompleted(int count)
         {
@@ -237,11 +177,9 @@ namespace MiningSimulator.Ores
             }
 
             bool changed = false;
-            changed |= SetGoalProgress(MiningAchievementTrigger.ConcurrentNpcCount,
-                npcShop != null ? npcShop.PurchasedCount : 0, announceUnlocks);
+
             changed |= SetGoalProgress(MiningAchievementTrigger.RebirthCount,
                 rebirthSystem != null ? rebirthSystem.CompletedRebirths : 0, announceUnlocks);
-            changed |= RefreshOreUnlockGoals(announceUnlocks, false);
             if (changed)
             {
                 SaveProgress();
@@ -249,61 +187,11 @@ namespace MiningSimulator.Ores
             }
         }
 
-        private void RefreshOreUnlockGoals(bool announceUnlocks)
-        {
-            if (RefreshOreUnlockGoals(announceUnlocks, true))
-            {
-                SaveProgress();
-                ProgressChanged?.Invoke();
-            }
-        }
 
-        private bool RefreshOreUnlockGoals(bool announceUnlocks, bool applyImmediately)
-        {
-            if (achievementData == null)
-            {
-                return false;
-            }
 
-            bool changed = false;
-            foreach (MiningAchievementDefinition achievement in achievementData.Achievements)
-            {
-                if (achievement == null ||
-                    achievement.Trigger != MiningAchievementTrigger.AllConfiguredOresUnlocked ||
-                    IsCompleted(achievement.AchievementId))
-                {
-                    continue;
-                }
 
-                long unlockedCount = CountUnlockedRequiredOres(achievement);
-                changed |= SetProgress(achievement, unlockedCount, announceUnlocks);
-            }
 
-            if (changed && applyImmediately)
-            {
-                ApplyPermanentRewards();
-            }
-            return changed;
-        }
 
-        private long CountUnlockedRequiredOres(MiningAchievementDefinition achievement)
-        {
-            if (progressionSystem == null)
-            {
-                return 0;
-            }
-
-            int power = progressionSystem.CurrentMiningPower;
-            var unlockedKinds = new HashSet<OreKind>();
-            foreach (OreData ore in achievement.RequiredOres)
-            {
-                if (ore != null && ore.MiningPowerRequired <= power)
-                {
-                    unlockedKinds.Add(ore.Kind);
-                }
-            }
-            return unlockedKinds.Count;
-        }
 
         private bool SetGoalProgress(MiningAchievementTrigger trigger, long value,
             bool announceUnlocks)
@@ -521,19 +409,9 @@ namespace MiningSimulator.Ores
             {
                 wallet = FindFirstObjectByType<PlayerWallet>(FindObjectsInactive.Include);
             }
-            if (oreSpawner == null)
-            {
-                oreSpawner = FindFirstObjectByType<OreSpawner>(FindObjectsInactive.Include);
-            }
-            if (npcShop == null)
-            {
-                npcShop = FindFirstObjectByType<NpcShop>(FindObjectsInactive.Include);
-            }
-            if (progressionSystem == null)
-            {
-                progressionSystem = FindFirstObjectByType<NpcProgressionSystem>(
-                    FindObjectsInactive.Include);
-            }
+
+
+
             if (rebirthSystem == null)
             {
                 rebirthSystem = FindFirstObjectByType<MiningRebirthSystem>(

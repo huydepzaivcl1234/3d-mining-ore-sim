@@ -45,7 +45,7 @@ namespace MiningSimulator.Ores
                 // Reuse the authored view. Never regenerate its graphics, text sizes or icon offsets.
                 foreach (var item in content.GetComponentsInChildren<JuicyUpgradeItem>(true))
                 {
-                    if (IsCardUpgrade(item.UpgradeType)) continue;
+                    if (IsCardUpgrade(item.UpgradeType) || system == null || system.UpgradeData.GetDefinition(item.UpgradeType) == null) { item.gameObject.SetActive(false); continue; }
                     item.BindCard(system, wallet);
                     cards.Add(new Card { Item = item, Rect = (RectTransform)item.transform,
                         Group = item.GetComponent<CanvasGroup>(), Hover = item.GetComponent<MiningUpgradeCardHover>() });
@@ -72,8 +72,8 @@ namespace MiningSimulator.Ores
             // An ordered list is optional: newly added buttons are appended in their authored hierarchy order.
             var sorted = new List<JuicyUpgradeItem>();
             if (order != null) foreach (var type in order)
-                foreach (var item in items) if (!IsCardUpgrade(type) && item.UpgradeType == type && !sorted.Contains(item)) sorted.Add(item);
-            foreach (var item in items) if (!IsCardUpgrade(item.UpgradeType) && !sorted.Contains(item)) sorted.Add(item);
+                foreach (var item in items) if (!IsCardUpgrade(type) && system.UpgradeData.GetDefinition(type) != null && item.UpgradeType == type && !sorted.Contains(item)) sorted.Add(item);
+            foreach (var item in items) if (!IsCardUpgrade(item.UpgradeType) && system.UpgradeData.GetDefinition(item.UpgradeType) != null && !sorted.Contains(item)) sorted.Add(item);
             foreach (Transform child in transform) child.gameObject.SetActive(false);
             foreach (var behaviour in GetComponents<Behaviour>())
                 if (behaviour != null && behaviour != this && behaviour is not CanvasGroup) behaviour.enabled = false;

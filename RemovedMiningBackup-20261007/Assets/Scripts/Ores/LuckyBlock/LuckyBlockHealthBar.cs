@@ -1,0 +1,166 @@
+using Microlight.MicroBar;
+using TMPro;
+using UnityEngine;
+
+namespace MiningSimulator.Ores
+{
+    /// <summary>Connects a Lucky Block's durability to the existing world-space MicroBar style.</summary>
+    [DisallowMultipleComponent]
+    public sealed class LuckyBlockHealthBar : MonoBehaviour
+    {
+        [SerializeField] private LuckyBlock luckyBlock;
+        [SerializeField] private MicroBar healthBar;
+        [SerializeField] private TextMeshPro healthText;
+        [SerializeField] private Transform visualRoot;
+        [SerializeField] private Camera targetCamera;
+        [Min(0f), SerializeField] private float hideAfterHitSeconds = 3f;
+        private Renderer[] displayRenderers;
+        private int lastDurability = -1;
+        private float visibleUntil = -1f;
+        private void SetVisible(bool visible)
+        {
+            if (displayRenderers == null)
+                displayRenderers = (visualRoot != null ? visualRoot : transform).GetComponentsInChildren<Renderer>(true);
+            foreach (var r in displayRenderers) if (r != null) r.enabled = visible;
+        }
+
+        private int initializedMaximum;
+        private bool initialized;
+
+        public void Configure(LuckyBlock targetBlock, MicroBar targetBar, Transform targetVisualRoot)
+        {
+            luckyBlock = targetBlock;
+            healthBar = targetBar;
+            visualRoot = targetVisualRoot;
+        }
+
+        private void Awake()
+        {
+            luckyBlock ??= GetComponentInParent<LuckyBlock>();
+            healthBar ??= GetComponent<MicroBar>();
+            healthText ??= GetComponentInChildren<TextMeshPro>(true);
+            visualRoot ??= transform;
+            targetCamera ??= Camera.main;
+        }
+
+        private void OnEnable()
+        {
+            lastDurability = -1;
+            visibleUntil = -1f;
+            SetVisible(false);
+            if (luckyBlock == null)
+            {
+                return;
+            }
+
+            luckyBlock.DurabilityChanged -= HandleDurabilityChanged;
+            luckyBlock.DurabilityChanged += HandleDurabilityChanged;
+            RefreshFromBlock();
+        }
+
+        private void LateUpdate()
+        {
+            if (visibleUntil >= 0f && Time.time >= visibleUntil)
+            {
+                SetVisible(false);
+                visibleUntil = -1f;
+            }
+            LuckyBlockData settings = luckyBlock != null ? luckyBlock.Settings : null;
+            if (settings == null || visualRoot == null)
+            {
+                return;
+            }
+
+            visualRoot.position = luckyBlock.GetWorldTopCenter() + settings.HealthBarWorldOffset;
+            SetWorldScale(settings.HealthBarScale);
+            targetCamera ??= Camera.main;
+            if (targetCamera != null)
+            {
+                visualRoot.rotation = Quaternion.LookRotation(
+                    visualRoot.position - targetCamera.transform.position,
+                    targetCamera.transform.up);
+            }
+        }
+
+        private void OnDisable()
+        {
+            if (luckyBlock != null)
+            {
+                luckyBlock.DurabilityChanged -= HandleDurabilityChanged;
+            }
+        }
+
+        private void RefreshFromBlock()
+        {
+            if (luckyBlock == null || luckyBlock.MaximumDurability <= 0)
+            {
+                return;
+            }
+
+            HandleDurabilityChanged(luckyBlock.CurrentDurability, luckyBlock.MaximumDurability);
+        }
+
+        private void HandleDurabilityChanged(int current, int maximum)
+        {
+            if (lastDurability >= 0 && current < lastDurability)
+            {
+                visibleUntil = Time.time + hideAfterHitSeconds;
+                SetVisible(true);
+            }
+            lastDurability = current;
+            RefreshHealthText(current, maximum);
+            if (healthBar == null || maximum <= 0)
+            {
+                return;
+            }
+
+            if (!initialized)
+            {
+                initializedMaximum = Mathf.Max(1, maximum);
+                healthBar.Initialize(initializedMaximum);
+                initialized = true;
+            }
+            else if (initializedMaximum != maximum)
+            {
+                initializedMaximum = Mathf.Max(1, maximum);
+                healthBar.SetNewMaxHP(initializedMaximum, true);
+            }
+
+            healthBar.UpdateBar(Mathf.Clamp(current, 0, initializedMaximum), true);
+        }
+
+        private void RefreshHealthText(int current, int maximum)
+        {
+            if (healthText == null)
+            {
+                return;
+            }
+
+            int safeMaximum = Mathf.Max(0, maximum);
+            int safeCurrent = Mathf.Clamp(current, 0, safeMaximum);
+            healthText.text = $"{MiningMoneyFormatter.Format(safeCurrent)} / " +
+                              MiningMoneyFormatter.Format(safeMaximum);
+        }
+
+        private void SetWorldScale(float uniformScale)
+        {
+            Transform parent = visualRoot.parent;
+            if (parent == null)
+            {
+                visualRoot.localScale = Vector3.one * uniformScale;
+                return;
+            }
+
+            Vector3 parentScale = parent.lossyScale;
+            visualRoot.localScale = new Vector3(
+                SafeDivide(uniformScale, parentScale.x),
+                SafeDivide(uniformScale, parentScale.y),
+                SafeDivide(uniformScale, parentScale.z));
+        }
+
+        private static float SafeDivide(float value, float divisor)
+        {
+            return Mathf.Abs(divisor) > Mathf.Epsilon ? value / divisor : value;
+        }
+    }
+}

@@ -20,7 +20,6 @@ namespace MiningSimulator.Ores
         private MushroomMonster owner;
         private Transform victim;
         private MiningCharacterHealth victimHealth;
-        private MiningNpc victimMiner;
         private float age;
         private bool launched, resolved;
 
@@ -35,7 +34,6 @@ namespace MiningSimulator.Ores
             data = attacker != null ? attacker.CombatData : null;
             victim = target;
             victimHealth = target != null ? target.GetComponent<MiningCharacterHealth>() : null;
-            victimMiner = target != null ? target.GetComponent<MiningNpc>() : null;
             age = 0f;
             resolved = false;
             launched = true;
@@ -52,8 +50,7 @@ namespace MiningSimulator.Ores
             if (resolved) return true;
             age += seconds;
             if (owner == null || owner.IsDespawning || victim == null || age >= lifetime ||
-                victimHealth != null && victimHealth.Health <= 0f ||
-                victimMiner != null && victimMiner.IsDead)
+                victimHealth != null && victimHealth.Health <= 0f)
             { Resolve(false); return true; }
             Vector3 aim = AimPoint(victim) - transform.position;
             if (aim.sqrMagnitude > .001f)
@@ -67,8 +64,7 @@ namespace MiningSimulator.Ores
             for (int i = 0; i < count; i++)
             {
                 Transform obstacle = hits[i].transform;
-                if (obstacle.IsChildOf(owner.transform) || obstacle.IsChildOf(transform) ||
-                    obstacle.GetComponentInParent<Ore>() != null) continue;
+                if (obstacle.IsChildOf(owner.transform) || obstacle.IsChildOf(transform)) continue;
                 if (hits[i].distance < nearestDistance)
                 { nearest = hits[i]; nearestDistance = hits[i].distance; }
             }
@@ -90,7 +86,7 @@ namespace MiningSimulator.Ores
         {
             if (resolved) return;
             resolved = true;
-            if (impact && owner != null) owner.ApplyProjectileHit(victimHealth, victimMiner);
+            if (impact && owner != null) owner.ApplyProjectileHit(victimHealth);
         }
     }
 }

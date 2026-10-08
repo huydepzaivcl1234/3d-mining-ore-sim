@@ -6,14 +6,15 @@ namespace MiningSimulator.Ores
     public enum MiningUpgradeType
     {
         MoneyReward = 0,
-        RareOreSpawn = 1,
-        OreDamage = 2,
-        OreSpawnSpeed = 3,
-        NpcMoveSpeed = 4,
-        NpcCapacity = 5,
+        // Reserved IDs keep old serialized data readable. These entries cannot be purchased.
+        [Obsolete("Removed mining upgrade")] RetiredRareOreSpawn = 1,
+        [Obsolete("Removed mining upgrade")] RetiredOreDamage = 2,
+        [Obsolete("Removed mining upgrade")] RetiredOreSpawnSpeed = 3,
+        [Obsolete("Removed miner upgrade")] RetiredNpcMoveSpeed = 4,
+        [Obsolete("Removed miner upgrade")] RetiredNpcCapacity = 5,
+        [Obsolete("Removed miner upgrade")] RetiredNpcExperience = 8,
         LuckyBlockReward = 6,
         LuckyBlockDropChance = 7,
-        NpcExperience = 8,
         ItemDropChance = 9,
         RegenIntervalReduction = 10,
         HealingEffectiveness = 11
@@ -94,10 +95,10 @@ namespace MiningSimulator.Ores
         [Min(0.05f), SerializeField] private float autoUpgradeInterval = 0.5f;
         [SerializeField] private string autoUpgradeSaveKey = "MiningSimulator.AutoUpgrade.v1";
         [SerializeField] private MiningUpgradeType[] autoUpgradeOrder = {
-            MiningUpgradeType.MoneyReward, MiningUpgradeType.OreDamage, MiningUpgradeType.RareOreSpawn,
-            MiningUpgradeType.OreSpawnSpeed, MiningUpgradeType.NpcMoveSpeed, MiningUpgradeType.NpcCapacity,
+            MiningUpgradeType.MoneyReward, 
+            
             MiningUpgradeType.LuckyBlockReward, MiningUpgradeType.LuckyBlockDropChance,
-            MiningUpgradeType.NpcExperience, MiningUpgradeType.ItemDropChance };
+            MiningUpgradeType.ItemDropChance };
         public float AutoUpgradeGemCost => Mathf.Max(0f, autoUpgradeGemCost);
         public float AutoUpgradeInterval => Mathf.Max(0.05f, autoUpgradeInterval);
         public string AutoUpgradeSaveKey => autoUpgradeSaveKey;
@@ -106,25 +107,10 @@ namespace MiningSimulator.Ores
         [SerializeField] private MiningUpgradeDefinition moneyReward =
             new("Tăng tiền nhận được", 1f);
 
-        [Header("Rare Ore Spawn")]
-        [SerializeField] private MiningUpgradeDefinition rareOreSpawn =
-            new("Tăng tỉ lệ quặng hiếm", 0.5f);
 
-        [Header("Ore Damage")]
-        [SerializeField] private MiningUpgradeDefinition oreDamage =
-            new("Tăng sát thương lên quặng", 1f);
 
-        [Header("Ore Spawn Speed")]
-        [SerializeField] private MiningUpgradeDefinition oreSpawnSpeed =
-            new("Tăng tốc độ spawn quặng", 1f);
 
-        [Header("NPC Move Speed")]
-        [SerializeField] private MiningUpgradeDefinition npcMoveSpeed =
-            new("Tăng tốc độ di chuyển NPC", 1f);
 
-        [Header("NPC Capacity")]
-        [SerializeField] private MiningUpgradeDefinition npcCapacity =
-            new("Tăng giới hạn thợ mỏ", 1f, 25, 50, 1.75f);
 
         [Header("Lucky Block Reward")]
         [SerializeField] private MiningUpgradeDefinition luckyBlockReward =
@@ -134,9 +120,6 @@ namespace MiningSimulator.Ores
         [SerializeField] private MiningUpgradeDefinition luckyBlockDropChance =
             new("Tăng tỉ lệ Lucky Block", 1f);
 
-        [Header("NPC Experience")]
-        [SerializeField] private MiningUpgradeDefinition npcExperience =
-            new("Tăng kinh nghiệm NPC", 1f);
 
         [Header("Item Drop Chance")]
         [SerializeField] private MiningUpgradeDefinition itemDropChance =
@@ -153,17 +136,10 @@ namespace MiningSimulator.Ores
             new MiningUpgradeDefinition("Giảm thời gian hồi máu", 1f);
         public MiningUpgradeDefinition HealingEffectiveness => healingEffectiveness ??=
             new MiningUpgradeDefinition("Tăng hiệu quả hồi máu", 1f);
-        public MiningUpgradeDefinition RareOreSpawn => rareOreSpawn;
-        public MiningUpgradeDefinition OreDamage => oreDamage;
-        public MiningUpgradeDefinition OreSpawnSpeed => oreSpawnSpeed;
-        public MiningUpgradeDefinition NpcMoveSpeed => npcMoveSpeed;
-        public MiningUpgradeDefinition NpcCapacity => npcCapacity;
         public MiningUpgradeDefinition LuckyBlockReward => luckyBlockReward ??=
             new MiningUpgradeDefinition("Tăng tiền Lucky Block", 1f);
         public MiningUpgradeDefinition LuckyBlockDropChance => luckyBlockDropChance ??=
             new MiningUpgradeDefinition("Tăng tỉ lệ Lucky Block", 1f);
-        public MiningUpgradeDefinition NpcExperience => npcExperience ??=
-            new MiningUpgradeDefinition("Tăng kinh nghiệm NPC", 1f);
         public MiningUpgradeDefinition ItemDropChance => itemDropChance ??=
             new MiningUpgradeDefinition("Tăng tỉ lệ rơi vật phẩm", 1f);
 
@@ -172,32 +148,20 @@ namespace MiningSimulator.Ores
             return type switch
             {
                 MiningUpgradeType.MoneyReward => moneyReward,
-                MiningUpgradeType.RareOreSpawn => rareOreSpawn,
-                MiningUpgradeType.OreDamage => oreDamage,
-                MiningUpgradeType.OreSpawnSpeed => oreSpawnSpeed,
-                MiningUpgradeType.NpcMoveSpeed => npcMoveSpeed,
-                MiningUpgradeType.NpcCapacity => npcCapacity,
                 MiningUpgradeType.LuckyBlockReward => LuckyBlockReward,
                 MiningUpgradeType.LuckyBlockDropChance => LuckyBlockDropChance,
-                MiningUpgradeType.NpcExperience => NpcExperience,
                 MiningUpgradeType.ItemDropChance => ItemDropChance,
                 MiningUpgradeType.RegenIntervalReduction => RegenIntervalReduction,
                 MiningUpgradeType.HealingEffectiveness => HealingEffectiveness,
-                _ => moneyReward
+                _ => null
             };
         }
 
         private void OnValidate()
         {
             moneyReward?.Validate();
-            rareOreSpawn?.Validate();
-            oreDamage?.Validate();
-            oreSpawnSpeed?.Validate();
-            npcMoveSpeed?.Validate();
-            npcCapacity?.Validate();
             LuckyBlockReward.Validate();
             LuckyBlockDropChance.Validate();
-            NpcExperience.Validate();
             ItemDropChance.Validate();
             RegenIntervalReduction.Validate();
             HealingEffectiveness.Validate();

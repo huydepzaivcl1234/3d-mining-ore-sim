@@ -18,12 +18,10 @@ namespace MiningSimulator.Ores
         [SerializeField] private Vector2 shopTextSize = new(294f, 32f);
         [SerializeField] private Vector2 shopStatTextSize = new(240f, 32f);
         [SerializeField] private Vector2 moneyTextPosition = new(70f, -70f);
-        [SerializeField] private Vector2 npcCountTextPosition = new(70f, -116f);
         [SerializeField] private Vector2 buyButtonPosition = new(18f, -158f);
         [SerializeField] private Vector2 buyButtonSize = new(294f, 54f);
         [SerializeField] private Vector2 statusTextPosition = new(18f, -220f);
         [Min(1f), SerializeField] private float moneyFontSize = 26f;
-        [Min(1f), SerializeField] private float npcCountFontSize = 21f;
         [Min(1f), SerializeField] private float buyButtonFontSize = 22f;
         [Min(1f), SerializeField] private float statusFontSize = 17f;
         [SerializeField] private Color shopPanelColor = new(0.07f, 0.06f, 0.04f, 0.95f);
@@ -35,22 +33,16 @@ namespace MiningSimulator.Ores
         [Header("HUD Icons")]
         [SerializeField] private Vector2 hudIconSize = new(42f, 42f);
         [SerializeField] private Vector2 moneyIconPosition = new(16f, -62f);
-        [SerializeField] private Vector2 npcIconPosition = new(16f, -108f);
         [SerializeField] private Vector2 buyButtonIconPosition = new(8f, -6f);
         [SerializeField] private Vector2 openUpgradeIconPosition = new(8f, -2f);
         [Min(1f), SerializeField] private float hudIconFontSize = 22f;
         [Min(0f), SerializeField] private float hudIconPadding = 8f;
         [SerializeField] private Color moneyIconColor = new(1f, 0.80f, 0.25f, 1f);
-        [SerializeField] private Color npcIconColor = new(0.80f, 0.50f, 0.20f, 1f);
         [SerializeField] private Color upgradeIconColor = new(1f, 0.72f, 0.19f, 1f);
         [SerializeField] private Color iconSymbolColor = Color.white;
         [SerializeField] private Sprite moneyIconSprite;
-        [SerializeField] private Sprite npcIconSprite;
-        [SerializeField] private Sprite buyNpcIconSprite;
         [SerializeField] private Sprite openUpgradeIconSprite;
         [SerializeField] private string moneyIconFallback = "$";
-        [SerializeField] private string npcIconFallback = "N";
-        [SerializeField] private string buyNpcIconFallback = "+";
         [SerializeField] private string openUpgradeIconFallback = "UP";
 
         [Header("Gem HUD")]
@@ -72,46 +64,14 @@ namespace MiningSimulator.Ores
         [SerializeField] private Vector2 upgradeCardIconPosition = new(22f, -25f);
         [Min(0f), SerializeField] private float upgradeCardIconPadding = 1f;
         [SerializeField] private Sprite moneyRewardIconSprite;
-        [SerializeField] private Sprite rareOreIconSprite;
-        [SerializeField] private Sprite oreDamageIconSprite;
-        [SerializeField] private Sprite oreSpawnSpeedIconSprite;
-        [SerializeField] private Sprite npcMoveSpeedIconSprite;
-        [SerializeField] private Sprite npcCapacityIconSprite;
         [SerializeField] private Sprite luckyBlockRewardIconSprite;
         [SerializeField] private Sprite luckyBlockDropChanceIconSprite;
         [SerializeField] private string moneyRewardIconFallback = "$";
-        [SerializeField] private string rareOreIconFallback = "R";
-        [SerializeField] private string oreDamageIconFallback = "!";
-        [SerializeField] private string oreSpawnSpeedIconFallback = "S";
-        [SerializeField] private string npcMoveSpeedIconFallback = ">>";
-        [SerializeField] private string npcCapacityIconFallback = "+1";
         [SerializeField] private string luckyBlockRewardIconFallback = "L$";
         [SerializeField] private string luckyBlockDropChanceIconFallback = "L%";
-        [SerializeField] private Sprite npcExperienceIconSprite;
-        [SerializeField] private string npcExperienceIconFallback = "XP";
         [SerializeField] private Sprite itemDropChanceIconSprite;
         [SerializeField] private string itemDropChanceIconFallback = "I%";
 
-        [Header("NPC Progress HUD")]
-        [SerializeField] private Vector2 npcProgressHudPosition = new(370f, -24f);
-        [SerializeField] private Vector2 npcProgressHudSize = new(380f, 170f);
-        [SerializeField] private Vector2 npcProgressHeaderIconPosition = new(10f, -4f);
-        [SerializeField] private Vector2 npcProgressHeaderIconSize = new(42f, 42f);
-        [SerializeField] private Vector4 npcProgressTitleMargin = new(58f, 0f, 14f, 0f);
-        [SerializeField] private Vector2 npcProgressTextPosition = new(18f, -14f);
-        [SerializeField] private Vector2 npcProgressTextSize = new(344f, 30f);
-        [SerializeField] private Vector2 npcPowerTextPosition = new(18f, -50f);
-        [SerializeField] private Vector2 npcPowerTextSize = new(344f, 30f);
-        [SerializeField] private Vector2 npcExperienceBarPosition = new(18f, -94f);
-        [SerializeField] private Vector2 npcExperienceBarSize = new(344f, 28f);
-        [SerializeField] private Vector2 npcExperienceTextPosition = new(18f, -126f);
-        [SerializeField] private Vector2 npcExperienceTextSize = new(344f, 24f);
-        [Min(1f), SerializeField] private float npcProgressTitleFontSize = 21f;
-        [Min(1f), SerializeField] private float npcProgressInfoFontSize = 17f;
-        [Min(0.01f), SerializeField] private float npcExperienceBarAnimationSpeed = 2.5f;
-        [SerializeField] private Color npcProgressPanelColor = new(0.08f, 0.07f, 0.05f, 0.95f);
-        [SerializeField] private Color npcExperienceBarColor = new(0.12f, 0.9f, 0.22f, 1f);
-        [SerializeField] private Color npcExperienceBarBackgroundColor = new(0.18f, 0.22f, 0.24f, 1f);
 
         [Header("Smooth Button Animation")]
         [SerializeField] private bool smoothButtonAnimationEnabled = true;
@@ -223,7 +183,7 @@ namespace MiningSimulator.Ores
         [Header("Panel Slide Animation")]
         [Min(0.01f), SerializeField] private float panelTransitionDuration = 0.28f;
         [Min(0f), SerializeField] private float panelSlideExtraDistance = 80f;
-        [Tooltip("Direction used when the NPC shop leaves the screen.")]
+        [Tooltip("Direction used when the currency HUD leaves the screen.")]
         [SerializeField] private Vector2 shopSlideDirection = Vector2.left;
         [Tooltip("Direction used when the Rebirth HUD leaves the screen.")]
         [SerializeField] private Vector2 rebirthHudSlideDirection = Vector2.up;
@@ -231,8 +191,6 @@ namespace MiningSimulator.Ores
         [SerializeField] private Vector2 audioMenuSlideDirection = Vector2.right;
         [Tooltip("Direction used when the inventory menu button leaves the screen.")]
         [SerializeField] private Vector2 inventoryMenuSlideDirection = Vector2.right;
-        [Tooltip("Direction used when the NPC Progress HUD leaves the screen.")]
-        [SerializeField] private Vector2 npcProgressHudSlideDirection = Vector2.up;
         [Tooltip("Direction used when the Gem HUD leaves the screen.")]
         [SerializeField] private Vector2 gemHudSlideDirection = Vector2.up;
         [Tooltip("Direction used when the Shop menu button leaves the screen.")]
@@ -252,7 +210,7 @@ namespace MiningSimulator.Ores
         [Min(1f), SerializeField] private float shopTitleFontSize = 21f;
         [SerializeField] private Color shopHeaderColor = new(0.55f, 0.35f, 0.15f, 1f);
 
-        [Header("Ore Reward Popup")]
+        [Header("Currency Reward Popup")]
         [SerializeField] private string rewardPopupFormat = "+{0}";
         [Min(0), SerializeField] private int rewardPopupPreviewAmount = 100;
         [SerializeField] private Vector3 rewardPopupWorldOffset = new(0f, 0.35f, 0f);
@@ -276,7 +234,6 @@ namespace MiningSimulator.Ores
         [SerializeField] private Color rewardPopupIconColor = Color.white;
 
         [Header("Unlock Toast")]
-        [SerializeField] private string oreUnlockToastFormat = "Đã mở khóa quặng: {0}!";
         [SerializeField] private string luckyBlockUnlockToastFormat = "Đã mở khóa Lucky Block: {0}!";
         [SerializeField] private Vector2 unlockToastPosition = new(0f, -140f);
         [SerializeField] private Vector2 unlockToastSize = new(460f, 64f);
@@ -377,12 +334,10 @@ namespace MiningSimulator.Ores
         public Vector2 ShopTextSize => shopTextSize;
         public Vector2 ShopStatTextSize => shopStatTextSize;
         public Vector2 MoneyTextPosition => moneyTextPosition;
-        public Vector2 NpcCountTextPosition => npcCountTextPosition;
         public Vector2 BuyButtonPosition => buyButtonPosition;
         public Vector2 BuyButtonSize => buyButtonSize;
         public Vector2 StatusTextPosition => statusTextPosition;
         public float MoneyFontSize => moneyFontSize;
-        public float NpcCountFontSize => npcCountFontSize;
         public float BuyButtonFontSize => buyButtonFontSize;
         public float StatusFontSize => statusFontSize;
         public Color ShopPanelColor => shopPanelColor;
@@ -392,22 +347,16 @@ namespace MiningSimulator.Ores
         public Color BuyButtonTextColor => buyButtonTextColor;
         public Vector2 HudIconSize => hudIconSize;
         public Vector2 MoneyIconPosition => moneyIconPosition;
-        public Vector2 NpcIconPosition => npcIconPosition;
         public Vector2 BuyButtonIconPosition => buyButtonIconPosition;
         public Vector2 OpenUpgradeIconPosition => openUpgradeIconPosition;
         public float HudIconFontSize => hudIconFontSize;
         public float HudIconPadding => hudIconPadding;
         public Color MoneyIconColor => moneyIconColor;
-        public Color NpcIconColor => npcIconColor;
         public Color UpgradeIconColor => upgradeIconColor;
         public Color IconSymbolColor => iconSymbolColor;
         public Sprite MoneyIconSprite => moneyIconSprite;
-        public Sprite NpcIconSprite => npcIconSprite;
-        public Sprite BuyNpcIconSprite => buyNpcIconSprite;
         public Sprite OpenUpgradeIconSprite => openUpgradeIconSprite;
         public string MoneyIconFallback => moneyIconFallback;
-        public string NpcIconFallback => npcIconFallback;
-        public string BuyNpcIconFallback => buyNpcIconFallback;
         public string OpenUpgradeIconFallback => openUpgradeIconFallback;
         public Vector2 GemHudPosition => gemHudPosition;
         public Vector2 GemHudSize => gemHudSize;
@@ -427,48 +376,16 @@ namespace MiningSimulator.Ores
         public Vector2 UpgradeCardIconPosition => upgradeCardIconPosition;
         public float UpgradeCardIconPadding => upgradeCardIconPadding;
         public Sprite MoneyRewardIconSprite => moneyRewardIconSprite;
-        public Sprite RareOreIconSprite => rareOreIconSprite;
-        public Sprite OreDamageIconSprite => oreDamageIconSprite;
-        public Sprite OreSpawnSpeedIconSprite => oreSpawnSpeedIconSprite;
-        public Sprite NpcMoveSpeedIconSprite => npcMoveSpeedIconSprite;
-        public Sprite NpcCapacityIconSprite => npcCapacityIconSprite;
         public Sprite LuckyBlockRewardIconSprite => luckyBlockRewardIconSprite;
         public Sprite LuckyBlockDropChanceIconSprite => luckyBlockDropChanceIconSprite;
-        public Sprite NpcExperienceIconSprite => npcExperienceIconSprite;
         public Sprite ItemDropChanceIconSprite => itemDropChanceIconSprite;
         public string MoneyRewardIconFallback => moneyRewardIconFallback;
-        public string RareOreIconFallback => rareOreIconFallback;
-        public string OreDamageIconFallback => oreDamageIconFallback;
-        public string OreSpawnSpeedIconFallback => oreSpawnSpeedIconFallback;
-        public string NpcMoveSpeedIconFallback => npcMoveSpeedIconFallback;
-        public string NpcCapacityIconFallback => npcCapacityIconFallback;
         public string LuckyBlockRewardIconFallback => string.IsNullOrWhiteSpace(
             luckyBlockRewardIconFallback) ? "L$" : luckyBlockRewardIconFallback;
         public string LuckyBlockDropChanceIconFallback => string.IsNullOrWhiteSpace(
             luckyBlockDropChanceIconFallback) ? "L%" : luckyBlockDropChanceIconFallback;
-        public string NpcExperienceIconFallback => string.IsNullOrWhiteSpace(
-            npcExperienceIconFallback) ? "XP" : npcExperienceIconFallback;
         public string ItemDropChanceIconFallback => string.IsNullOrWhiteSpace(
             itemDropChanceIconFallback) ? "I%" : itemDropChanceIconFallback;
-        public Vector2 NpcProgressHudPosition => npcProgressHudPosition;
-        public Vector2 NpcProgressHudSize => npcProgressHudSize;
-        public Vector2 NpcProgressHeaderIconPosition => npcProgressHeaderIconPosition;
-        public Vector2 NpcProgressHeaderIconSize => npcProgressHeaderIconSize;
-        public Vector4 NpcProgressTitleMargin => npcProgressTitleMargin;
-        public Vector2 NpcProgressTextPosition => npcProgressTextPosition;
-        public Vector2 NpcProgressTextSize => npcProgressTextSize;
-        public Vector2 NpcPowerTextPosition => npcPowerTextPosition;
-        public Vector2 NpcPowerTextSize => npcPowerTextSize;
-        public Vector2 NpcExperienceBarPosition => npcExperienceBarPosition;
-        public Vector2 NpcExperienceBarSize => npcExperienceBarSize;
-        public Vector2 NpcExperienceTextPosition => npcExperienceTextPosition;
-        public Vector2 NpcExperienceTextSize => npcExperienceTextSize;
-        public float NpcProgressTitleFontSize => npcProgressTitleFontSize;
-        public float NpcProgressInfoFontSize => npcProgressInfoFontSize;
-        public float NpcExperienceBarAnimationSpeed => npcExperienceBarAnimationSpeed;
-        public Color NpcProgressPanelColor => npcProgressPanelColor;
-        public Color NpcExperienceBarColor => npcExperienceBarColor;
-        public Color NpcExperienceBarBackgroundColor => npcExperienceBarBackgroundColor;
         public bool SmoothButtonAnimationEnabled => smoothButtonAnimationEnabled;
         public float ButtonHoverScale => buttonHoverScale;
         public float ButtonHoverPunchScale => buttonHoverPunchScale;
@@ -565,7 +482,6 @@ namespace MiningSimulator.Ores
         public Vector2 RebirthHudSlideDirection => rebirthHudSlideDirection;
         public Vector2 AudioMenuSlideDirection => audioMenuSlideDirection;
         public Vector2 InventoryMenuSlideDirection => inventoryMenuSlideDirection;
-        public Vector2 NpcProgressHudSlideDirection => npcProgressHudSlideDirection;
         public Vector2 GemHudSlideDirection => gemHudSlideDirection;
         public Vector2 ShopMenuButtonSlideDirection => shopMenuButtonSlideDirection;
         public Vector2 ModalSlideDirection => modalSlideDirection;
@@ -594,7 +510,6 @@ namespace MiningSimulator.Ores
         public Vector3 RewardPopupIconLocalPosition => rewardPopupIconLocalPosition;
         public float RewardPopupIconScale => rewardPopupIconScale;
         public Color RewardPopupIconColor => rewardPopupIconColor;
-        public string OreUnlockToastFormat => oreUnlockToastFormat;
         public string LuckyBlockUnlockToastFormat => luckyBlockUnlockToastFormat;
         public Vector2 UnlockToastPosition => unlockToastPosition;
         public Vector2 UnlockToastSize => unlockToastSize;
@@ -708,21 +623,6 @@ namespace MiningSimulator.Ores
             upgradeCardIconSize.x = Mathf.Max(1f, upgradeCardIconSize.x);
             upgradeCardIconSize.y = Mathf.Max(1f, upgradeCardIconSize.y);
             upgradeCardIconPadding = Mathf.Max(0f, upgradeCardIconPadding);
-            npcProgressHudSize.x = Mathf.Max(1f, npcProgressHudSize.x);
-            npcProgressHudSize.y = Mathf.Max(1f, npcProgressHudSize.y);
-            npcProgressHeaderIconSize.x = Mathf.Max(1f, npcProgressHeaderIconSize.x);
-            npcProgressHeaderIconSize.y = Mathf.Max(1f, npcProgressHeaderIconSize.y);
-            npcProgressTextSize.x = Mathf.Max(1f, npcProgressTextSize.x);
-            npcProgressTextSize.y = Mathf.Max(1f, npcProgressTextSize.y);
-            npcPowerTextSize.x = Mathf.Max(1f, npcPowerTextSize.x);
-            npcPowerTextSize.y = Mathf.Max(1f, npcPowerTextSize.y);
-            npcExperienceBarSize.x = Mathf.Max(1f, npcExperienceBarSize.x);
-            npcExperienceBarSize.y = Mathf.Max(1f, npcExperienceBarSize.y);
-            npcExperienceTextSize.x = Mathf.Max(1f, npcExperienceTextSize.x);
-            npcExperienceTextSize.y = Mathf.Max(1f, npcExperienceTextSize.y);
-            npcProgressTitleFontSize = Mathf.Max(1f, npcProgressTitleFontSize);
-            npcProgressInfoFontSize = Mathf.Max(1f, npcProgressInfoFontSize);
-            npcExperienceBarAnimationSpeed = Mathf.Max(0.01f, npcExperienceBarAnimationSpeed);
             buttonHoverScale = Mathf.Max(1f, buttonHoverScale);
             buttonHoverPunchScale = Mathf.Max(buttonHoverScale, buttonHoverPunchScale);
             buttonPressedScale = Mathf.Clamp(buttonPressedScale, 0.5f, 1f);

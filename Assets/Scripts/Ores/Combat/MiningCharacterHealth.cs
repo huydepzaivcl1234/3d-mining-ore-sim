@@ -41,6 +41,8 @@ namespace MiningSimulator.Ores
         private MiningEquipmentBonuses EquipmentBonuses => equipmentItems != null ? equipmentItems.EquipmentBonuses : null;
         private readonly DamageOverTime burn = new DamageOverTime();
         private System.Action<float> burnDamage;
+        private GameObject burnSource;
+        public GameObject LastDamageSource { get; private set; }
         public float Health => health;
         public Transform HealthBar => healthBar;
         private MushroomMonster combatOwner;
@@ -69,6 +71,20 @@ namespace MiningSimulator.Ores
             if (microBar != null) microBar.Initialize(MaxHealth);
             Refresh(true);
         }
+
+public void ConfigureMaximumHealth(float value, bool preserveDamage = true)
+        {
+            float oldMax = MaxHealth;
+            bool alive = health > 0f;
+            spawnedMaxHealth = Mathf.Max(1f, value);
+            initializedMaxHealth = MaxHealth;
+            health = alive ? Mathf.Clamp(preserveDamage ? health + MaxHealth - oldMax : MaxHealth, 0f, MaxHealth) : 0f;
+            if (microBar != null) microBar.Initialize(MaxHealth);
+            Refresh(true);
+        }
+        public void ConfigureRegeneration(float amount, float interval)
+        { regenAmount = Mathf.Max(0f, amount); regenInterval = Mathf.Max(.1f, interval); regenTimer = 0f; }
+
         public float RegenAmount => Mathf.Max(0f, Stats != null ? Stats.regenAmount : MonsterCombat != null ? MonsterCombat.regenAmount : regenAmount);
         public float RegenInterval => Mathf.Max(0.1f,
             (Stats != null ? Stats.regenInterval : MonsterCombat != null ? MonsterCombat.regenInterval : regenInterval) *
@@ -85,6 +101,7 @@ namespace MiningSimulator.Ores
         private float initializedMaxHealth;
         public void Respawn()
         {
+            LastDamageSource = null;
             health = MaxHealth;
             regenTimer = 0f;
             ClearBurn();
@@ -99,11 +116,14 @@ namespace MiningSimulator.Ores
         // The actual health removed drives life steal; overkill never heals the attacker.
         public float DealDamage(float amount) => DealDamage(amount, CombatDamageType.Physical);
 
-        public float DealDamage(float amount, CombatDamageType type)
+        public float DealDamage(float amount, CombatDamageType type) => DealDamage(amount, type, null);
+
+        public float DealDamage(float amount, CombatDamageType type, GameObject source)
         {
             amount = CombatDamage.Resolve(amount, type, Armor, MagicResistance, ResistanceScale);
             if (!damageEnabled || amount <= 0f || health <= 0f) return 0f;
             float dealt = Mathf.Min(health, amount);
+            LastDamageSource = source;
             health = Mathf.Max(0f, health - amount);
             Refresh(false, UpdateAnim.Damage);
             Damaged?.Invoke();
@@ -119,14 +139,20 @@ namespace MiningSimulator.Ores
 
         // Repeated hits refresh the duration; only the strongest DPS remains active.
         public void ApplyBurn(float damagePerTick, float tickSeconds, float duration)
+            => ApplyBurn(damagePerTick, tickSeconds, duration, null);
+
+        public void ApplyBurn(float damagePerTick, float tickSeconds, float duration, GameObject source)
         {
             if (health <= 0f || damagePerTick <= 0f || tickSeconds <= 0f || duration <= 0f) return;
+            if (!burn.IsActive || damagePerTick / Mathf.Max(.1f, tickSeconds) >= burn.DamagePerSecond)
+                burnSource = source;
             burn.Apply(damagePerTick, tickSeconds, duration);
         }
 
         private void ClearBurn()
         {
             burn.Clear();
+            burnSource = null;
         }
 
         public void Heal(float amount)
@@ -257,6 +283,6 @@ namespace MiningSimulator.Ores
         }
 
         private void OnValidate() => maxHealth = Mathf.Max(1f, maxHealth);
-        private void ApplyBurnDamage(float amount) => DealDamage(amount, CombatDamageType.Magic);
+        private void ApplyBurnDamage(float amount) => DealDamage(amount, CombatDamageType.Magic, burnSource);
     }
 }

@@ -1,0 +1,9 @@
+# Remove locomotion Turn and unused clones
+
+Removed automatic stationary camera-turn and movement-reversal animation routing. The normal motor now owns rotation without Turn slowdown. Forward Walk/Run and locked directional Speed blend are unchanged. Removed six locomotion Turn state names from upper/footwork controller layers (ten state instances). Lunge, turn attack, ordinary attacks and Special Attack remain. Old imported clip event receiver OnLocomotionTurnComplete remains a harmless no-op for compatibility; clips and GUIDs are not deleted.
+
+Hierarchy inspection found five Impact(Clone) roots and one Attack 3 Downward Slash(Clone) root in stopped SampleScene at approximately (14000,10000,14000). They were not playing, had no external serialized component references, and were disconnected from prefab instances. These were removed as a single Unity Undo operation. Scene was already dirty before cleanup and has not been saved automatically, preserving the user's other unsaved authoring. Save the scene to persist cleanup; Undo can recover the removed objects in the current Editor session.
+
+Added play-mode guards to damage and slash feedback callbacks, so edit-mode animation/test invocation cannot spawn gameplay impact/slash clones. Necessary scene objects and runtime spawn/pool/preview objects are not broadly deleted.
+
+Validation used an isolated current-player clone, not the authored scene or saved progression. Passed: forward Walk/Run (8 combinations), side/back cadence (12 normal/slow Walk/Run combinations), both locked camera rotations without Turn, unlocked reversal without slowdown, side-to-forward transition, and disable cleanup. The clone emits the known SheathWeapon receiver warning because presentation components are stripped. Temporary diagnostic scene/probe were removed after checking. Final edit-mode check confirmed no remaining root clones and no objects spawned by slash callbacks; only turn attack remains in the controller.

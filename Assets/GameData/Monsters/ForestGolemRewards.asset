@@ -45,6 +45,18 @@ MonoBehaviour:
     chaseStandDirections: 16
     chaseStandRangeFraction: 0.75
     chaseStandMaximumRangeFraction: 0.95
+    targetScanSeconds: 0.25
+    targetMemorySeconds: 2
+    detectionHysteresis: 1
+    targetRepathDistance: 0.75
+    waypointTolerance: 0.2
+    avoidanceLookAhead: 1.2
+    avoidanceHoldSeconds: 0.5
+    stuckRepathSeconds: 1.2
+    pathRequestTimeout: 5
+    navigationObstacleLayers:
+      serializedVersion: 2
+      m_Bits: 4294967295
     projectile: {fileID: 0}
     fireState: Fire
     rangedRange: 8
@@ -111,7 +123,10 @@ MonoBehaviour:
   usePlayerRelativeLevels: 1
   minimumLevelsBelowPlayer: 1
   maximumLevelsBelowPlayer: 4
-  maximumLevelsAbovePlayer: 5
+  maximumLevelsAbovePlayer: 1
+  weakerLevelWeight: 0.2
+  equalLevelWeight: 0.7
+  strongerLevelWeight: 0.1
   minimumLevel: 1
   addPlayerLevelAtSpawn: 0
   playerLevelContribution: 1

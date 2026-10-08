@@ -23,7 +23,6 @@ namespace MiningSimulator.Ores
         [SerializeField] private MiningMainMenu mainMenu;
         [SerializeField] private MiningRebirthSystem rebirthSystem;
         [SerializeField] private PlayerWallet wallet;
-        [SerializeField] private NpcProgressionSystem progressionSystem;
 
         [Header("Authored UI")]
         [SerializeField] private RectTransform playButtonRect;
@@ -255,7 +254,7 @@ namespace MiningSimulator.Ores
             {
                 if (hasSaveData)
                 {
-                    int level = progressionSystem != null ? progressionSystem.CurrentLevel : 1;
+                    int level = FindFirstObjectByType<MiningPlayerStats>()?.Level ?? 1;
                     float gems = wallet != null ? wallet.CurrentGems : 0f;
                     string english = $"LEVEL {level}  |  {MiningMoneyFormatter.Format(gems)} GEMS";
                     string vietnamese = $"CẤP {level}  |  {MiningMoneyFormatter.Format(gems)} NGỌC";
@@ -289,7 +288,6 @@ namespace MiningSimulator.Ores
                    PlayerPrefs.HasKey(QuestSaveKey) ||
                    PlayerPrefs.HasKey(AchievementSaveKey) ||
                    (rebirthSystem != null && rebirthSystem.CompletedRebirths > 0) ||
-                   (progressionSystem != null && progressionSystem.CurrentLevel > 1) ||
                    (wallet != null && wallet.CurrentGems > 0f);
         }
 
@@ -298,8 +296,7 @@ namespace MiningSimulator.Ores
             mainMenu ??= GetComponent<MiningMainMenu>();
             rebirthSystem ??= FindFirstObjectByType<MiningRebirthSystem>(FindObjectsInactive.Include);
             wallet ??= FindFirstObjectByType<PlayerWallet>(FindObjectsInactive.Include);
-            progressionSystem ??= FindFirstObjectByType<NpcProgressionSystem>(
-                FindObjectsInactive.Include);
+
         }
 
         private void HideImmediately()

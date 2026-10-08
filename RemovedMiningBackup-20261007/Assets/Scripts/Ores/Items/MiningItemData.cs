@@ -1,0 +1,285 @@
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace MiningSimulator.Ores
+{
+    public enum MiningItemRarity
+    {
+        Common = 0,
+        Uncommon = 1,
+        Rare = 2,
+        Epic = 3,
+        Legendary = 4
+    }
+
+    public enum MiningItemEffectType
+    {
+        NpcDamage = 0,
+        MoneyReward = 1,
+        NpcMoveSpeed = 2,
+        MiningSpeed = 3,
+        OreLuckyCritical = 4,
+        EventChance = 5,
+        PlayerAttackSpeed = 6,
+        PlayerExperience = 7,
+        PlayerDamage = 8
+    }
+
+    public enum MiningItemUseType
+    {
+        TimedEffect = 0,
+        GiftBox = 1,
+        Equipment = 2
+    }
+
+    public enum MiningGiftRewardType
+    {
+        Money = 0,
+        Item = 1
+    }
+
+    [Serializable]
+    public sealed class MiningGiftReward
+    {
+        [SerializeField] private MiningGiftRewardType rewardType;
+        [Min(0f), SerializeField] private float chancePercent = 1f;
+        [Min(0f), SerializeField] private float moneyAmount = 1000f;
+        [SerializeField] private MiningItemData item;
+        [Min(1), SerializeField] private int itemAmount = 1;
+        [SerializeField] private Color wheelColor = Color.white;
+
+        public MiningGiftRewardType RewardType => rewardType;
+        public float ChancePercent => chancePercent;
+        public float MoneyAmount => moneyAmount;
+        public MiningItemData Item => item;
+        public int ItemAmount => Mathf.Max(1, itemAmount);
+        public Color WheelColor => wheelColor;
+
+        public bool IsValid => chancePercent > 0f &&
+                               (rewardType == MiningGiftRewardType.Money
+                                   ? moneyAmount > 0f
+                                   : item != null && itemAmount > 0);
+
+        public string GetDisplayName()
+        {
+            return rewardType == MiningGiftRewardType.Money
+                ? string.Format(MiningLocalization.Text("{0} GOLD"),
+                    MiningMoneyFormatter.Format(moneyAmount))
+                : item != null ? $"{item.DisplayName} x{ItemAmount}" : string.Empty;
+        }
+    }
+
+    /// <summary>Designer-owned identity, drop selection and timed effect for one consumable.</summary>
+    [CreateAssetMenu(fileName = "MiningItem", menuName = "Mining Simulator/Game Data/Item")]
+    public sealed class MiningItemData : ScriptableObject
+    {
+        [Header("Identity")]
+        [SerializeField] private string itemId = "item";
+        [SerializeField] private string displayName = "Vật phẩm";
+        [TextArea, SerializeField] private string description;
+        [SerializeField] private MiningItemRarity rarity = MiningItemRarity.Common;
+
+        [Header("Presentation")]
+        [Tooltip("Optional world prefab or FBX. Leave empty to use the colored fallback model.")]
+        [SerializeField] private GameObject worldModel;
+        [Tooltip("Optional inventory icon. A text symbol is shown when this is empty.")]
+        [SerializeField] private Sprite inventoryIcon;
+        [SerializeField] private string iconFallback = "?";
+        [SerializeField] private Color fallbackColor = Color.white;
+        [Min(0.01f), SerializeField] private float worldScale = 0.42f;
+        [SerializeField] private Vector3 modelLocalPosition;
+        [SerializeField] private Vector3 modelLocalEulerAngles;
+
+        [Header("Drop And Stack")]
+        [Tooltip("Relative chance inside the item table after a successful source drop roll.")]
+        [Range(0f, 100f), SerializeField] private float selectionChancePercent = 33.33f;
+        [Range(1, 64), SerializeField] private int maximumStack = 64;
+
+        [Header("Wandering Trader Shop")]
+        [Tooltip("Allow this item to appear in random Buy offers.")]
+        [SerializeField] private bool traderCanBuy = true;
+        [Tooltip("Allow this item to appear on the Sell page when the player owns it.")]
+        [SerializeField] private bool traderCanSell = true;
+        [Tooltip("Smallest item quantity that can appear in one offer.")]
+        [Range(1, 64), SerializeField] private int traderMinimumOfferAmount = 1;
+        [Tooltip("Largest item quantity that can appear in one offer.")]
+        [Range(1, 64), SerializeField] private int traderMaximumOfferAmount = 3;
+
+        [Header("Trader Buy Price - Coin Bundle Total")]
+        [Tooltip("Minimum Coin price for the complete bundle. Quantity does not multiply this value.")]
+        [Min(0f), SerializeField] private float traderBuyValue = 4000f;
+        [Tooltip("Maximum Coin price for the complete bundle. Quantity does not multiply this value.")]
+        [Min(0f), SerializeField] private float traderCoinBuyMaximum = 5000f;
+
+        [Header("Trader Buy Price - Gems Per Item")]
+        [Tooltip("Minimum Gem price per item. The rolled value is multiplied by the offer quantity.")]
+        [Min(0f), SerializeField] private float traderGemBuyValue = 4f;
+        [Tooltip("Maximum Gem price per item. The rolled value is multiplied by the offer quantity.")]
+        [Min(0f), SerializeField] private float traderGemBuyMaximum = 5f;
+
+        [Header("Trader Sell Reward - Gems Per Item")]
+        [Tooltip("Minimum Gems received per item sold.")]
+        [Min(0f), SerializeField] private float traderSellValue = 2f;
+        [Tooltip("Maximum Gems received per item sold.")]
+        [Min(0f), SerializeField] private float traderGemSellMaximum = 3f;
+
+        [Header("Use")]
+        [SerializeField] private MiningItemUseType useType = MiningItemUseType.TimedEffect;
+
+        [Header("Necklace equipment / pedestal price")]
+        [SerializeField] private MiningEquipmentBonuses equipmentBonuses = new();
+        [Min(0f), SerializeField] private float equipmentGemPrice = 10f;
+        public bool IsEquipment => useType == MiningItemUseType.Equipment;
+        public MiningEquipmentBonuses EquipmentBonuses => IsEquipment ? equipmentBonuses : null;
+        public float EquipmentGemPrice => Mathf.Max(0f, equipmentGemPrice);
+
+        [Header("Timed Effect")]
+        [SerializeField] private MiningItemEffectType effectType;
+        [Min(0f), SerializeField] private float effectPercent = 25f;
+        [Tooltip("Only for Ore/Lucky critical effects: chance per mining hit. Critical damage gains Effect Percent on top of normal damage.")]
+        [Range(0f, 100f), SerializeField] private float criticalChancePercent = 15f;
+        [Min(0.1f), SerializeField] private float effectDurationSeconds = 30f;
+
+        [Header("Gift Box")]
+        [Tooltip("Relative reward chances. Values are normalized automatically and do not need to total 100.")]
+        [SerializeField] private List<MiningGiftReward> giftRewards = new();
+        [Min(0.1f), SerializeField] private float giftSpinDurationSeconds = 3.5f;
+        [Range(1, 12), SerializeField] private int giftSpinRotations = 6;
+
+        public string ItemId => itemId;
+        public string DisplayName => MiningLocalization.GetItemName(itemId, displayName);
+        public string Description => MiningLocalization.GetItemDescription(itemId, description);
+        public MiningItemRarity Rarity => rarity;
+        public GameObject WorldModel => worldModel;
+        public Sprite InventoryIcon => inventoryIcon;
+        public string IconFallback => iconFallback;
+        public Color FallbackColor => fallbackColor;
+        public float WorldScale => worldScale;
+        public Vector3 ModelLocalPosition => modelLocalPosition;
+        public Vector3 ModelLocalEulerAngles => modelLocalEulerAngles;
+        public float SelectionChancePercent => selectionChancePercent;
+        public int MaximumStack => IsEquipment ? 1 : maximumStack;
+        public bool TraderCanBuy => traderCanBuy;
+        public bool TraderCanSell => traderCanSell;
+        public int TraderMinimumOfferAmount => traderMinimumOfferAmount;
+        public int TraderMaximumOfferAmount => traderMaximumOfferAmount;
+        public float TraderBuyValue => traderBuyValue;
+        public float TraderCoinBuyMaximum => traderCoinBuyMaximum;
+        public float TraderGemBuyValue => traderGemBuyValue;
+        public float TraderGemBuyMaximum => traderGemBuyMaximum;
+        public float TraderSellValue => traderSellValue;
+        public float TraderGemSellMaximum => traderGemSellMaximum;
+        public MiningItemUseType UseType => useType;
+        public MiningItemEffectType EffectType => effectType;
+        public float EffectPercent => effectPercent;
+        public float CriticalChancePercent => criticalChancePercent;
+        public float EffectDurationSeconds => effectDurationSeconds;
+        public IReadOnlyList<MiningGiftReward> GiftRewards => giftRewards;
+        public float GiftSpinDurationSeconds => giftSpinDurationSeconds;
+        public int GiftSpinRotations => giftSpinRotations;
+
+        public string EffectName => MiningLocalization.GetEffectName(effectType, false);
+        public string ShortEffectName => MiningLocalization.GetEffectName(effectType, true);
+
+        public string GetEffectSummary()
+        {
+            if (IsEquipment) return equipmentBonuses.Summary();
+            if (effectType == MiningItemEffectType.OreLuckyCritical)
+                return $"{EffectName} {criticalChancePercent:0.##}% / +{effectPercent:0.##}% / {effectDurationSeconds:0.#}s";
+            return $"{EffectName} +{effectPercent:0.##}% / {effectDurationSeconds:0.#}s";
+        }
+
+        public string GetInventorySummary()
+        {
+            if (IsEquipment) return equipmentBonuses.Summary();
+            return useType == MiningItemUseType.GiftBox
+                ? MiningLocalization.Text("OPEN TO SPIN")
+                : effectType == MiningItemEffectType.OreLuckyCritical
+                ? $"{ShortEffectName} {criticalChancePercent:0.##}% / +{effectPercent:0.##}%"
+                : $"{ShortEffectName} +{effectPercent:0.##}%";
+        }
+
+        public bool TryRollGiftReward(out int rewardIndex, out MiningGiftReward reward)
+        {
+            rewardIndex = -1;
+            reward = null;
+            float total = 0f;
+            foreach (MiningGiftReward candidate in giftRewards)
+            {
+                if (candidate != null && candidate.IsValid)
+                {
+                    total += candidate.ChancePercent;
+                }
+            }
+            if (total <= 0f)
+            {
+                return false;
+            }
+
+            float roll = UnityEngine.Random.value * total;
+            for (int index = 0; index < giftRewards.Count; index++)
+            {
+                MiningGiftReward candidate = giftRewards[index];
+                if (candidate == null || !candidate.IsValid)
+                {
+                    continue;
+                }
+                roll -= candidate.ChancePercent;
+                if (roll <= 0f)
+                {
+                    rewardIndex = index;
+                    reward = candidate;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public float GetGiftRewardDisplayPercent(MiningGiftReward reward)
+        {
+            if (reward == null || !reward.IsValid)
+            {
+                return 0f;
+            }
+            float total = 0f;
+            foreach (MiningGiftReward candidate in giftRewards)
+            {
+                if (candidate != null && candidate.IsValid)
+                {
+                    total += candidate.ChancePercent;
+                }
+            }
+            return total > 0f ? reward.ChancePercent / total * 100f : 0f;
+        }
+
+        private void OnValidate()
+        {
+            if (string.IsNullOrWhiteSpace(itemId))
+            {
+                itemId = name;
+            }
+            if (string.IsNullOrWhiteSpace(displayName))
+            {
+                displayName = name;
+            }
+            maximumStack = Mathf.Clamp(maximumStack, 1, 64);
+            traderMinimumOfferAmount = Mathf.Clamp(traderMinimumOfferAmount, 1, 64);
+            traderMaximumOfferAmount = Mathf.Clamp(
+                traderMaximumOfferAmount, traderMinimumOfferAmount, 64);
+            traderBuyValue = Mathf.Max(0f, traderBuyValue);
+            traderCoinBuyMaximum = Mathf.Max(traderBuyValue, traderCoinBuyMaximum);
+            traderGemBuyValue = Mathf.Max(0f, traderGemBuyValue);
+            traderGemBuyMaximum = Mathf.Max(traderGemBuyValue, traderGemBuyMaximum);
+            traderSellValue = Mathf.Max(0f, traderSellValue);
+            traderGemSellMaximum = Mathf.Max(traderSellValue, traderGemSellMaximum);
+            selectionChancePercent = Mathf.Clamp(selectionChancePercent, 0f, 100f);
+            effectPercent = Mathf.Max(0f, effectPercent);
+            effectDurationSeconds = Mathf.Max(0.1f, effectDurationSeconds);
+            giftSpinDurationSeconds = Mathf.Max(0.1f, giftSpinDurationSeconds);
+            giftSpinRotations = Mathf.Clamp(giftSpinRotations, 1, 12);
+            worldScale = Mathf.Max(0.01f, worldScale);
+        }
+    }
+}

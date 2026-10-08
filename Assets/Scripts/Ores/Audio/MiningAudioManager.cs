@@ -15,9 +15,6 @@ namespace MiningSimulator.Ores
 
         [Header("References")]
         [SerializeField] private MiningAudioData audioData;
-        [SerializeField] private OreSpawner oreSpawner;
-        [SerializeField] private NpcShop npcShop;
-        [SerializeField] private NpcProgressionSystem progressionSystem;
         [SerializeField] private MiningUpgradeSystem upgradeSystem;
         [SerializeField] private MiningUpgradePanel upgradePanel;
         [SerializeField] private MiningRebirthSystem rebirthSystem;
@@ -42,7 +39,6 @@ namespace MiningSimulator.Ores
         private bool shopThemeActive;
         private bool mainMenuMusicActive;
         private bool coinRainAmbienceActive;
-        private bool lavaWorldAmbienceActive;
         private bool ambienceFadedForPeriodChange;
         private MiningMainMenu mainMenu;
         private Tween ambienceFade;
@@ -104,18 +100,9 @@ namespace MiningSimulator.Ores
 
         private void FindReferencesIfMissing()
         {
-            if (oreSpawner == null)
-            {
-                oreSpawner = FindFirstObjectByType<OreSpawner>(FindObjectsInactive.Include);
-            }
-            if (npcShop == null)
-            {
-                npcShop = FindFirstObjectByType<NpcShop>(FindObjectsInactive.Include);
-            }
-            if (progressionSystem == null)
-            {
-                progressionSystem = FindFirstObjectByType<NpcProgressionSystem>(FindObjectsInactive.Include);
-            }
+
+
+
             if (upgradeSystem == null)
             {
                 upgradeSystem = FindFirstObjectByType<MiningUpgradeSystem>(FindObjectsInactive.Include);
@@ -159,23 +146,11 @@ namespace MiningSimulator.Ores
                 movementAudioOwners.Add(movement);
                 RegisterWorldSfxSource(movement.MovementAudioSource);
             }
-            if (oreSpawner != null)
-            {
-                oreSpawner.OreRewardGranted -= HandleOreRewardGranted;
-                oreSpawner.OreRewardGranted += HandleOreRewardGranted;
-            }
 
-            if (npcShop != null)
-            {
-                npcShop.NpcPurchased -= HandleNpcPurchased;
-                npcShop.NpcPurchased += HandleNpcPurchased;
-            }
 
-            if (progressionSystem != null)
-            {
-                progressionSystem.LevelChanged -= HandleLevelUp;
-                progressionSystem.LevelChanged += HandleLevelUp;
-            }
+
+
+
 
             if (upgradeSystem != null)
             {
@@ -256,7 +231,7 @@ namespace MiningSimulator.Ores
 
             if (audioData == null || dayNightSystem == null || ambienceSource == null ||
                 mainMenuMusicActive || shopThemeActive || coinRainAmbienceActive || runeAmbienceActive ||
-                lavaWorldAmbienceActive || worldAmbienceTransition != null ||
+                worldAmbienceTransition != null ||
                 ambienceFadedForPeriodChange ||
                 !ambienceSource.isPlaying || audioData.AmbienceFadeDuration <= 0f)
             {
@@ -283,20 +258,11 @@ namespace MiningSimulator.Ores
             externalSfxSources.Clear();
             StopWorldAmbienceSwitch();
             StopAmbiencePlaylist();
-            if (oreSpawner != null)
-            {
-                oreSpawner.OreRewardGranted -= HandleOreRewardGranted;
-            }
 
-            if (npcShop != null)
-            {
-                npcShop.NpcPurchased -= HandleNpcPurchased;
-            }
 
-            if (progressionSystem != null)
-            {
-                progressionSystem.LevelChanged -= HandleLevelUp;
-            }
+
+
+
 
             if (upgradeSystem != null)
             {
@@ -448,48 +414,13 @@ namespace MiningSimulator.Ores
             }
         }
 
-        public void PlayPortalWhooshSfx()
-        {
-            if (audioData != null) PlaySfx(audioData.LavaPortalWhooshSfx);
-        }
 
-        public void PlayPortalImpactSfx()
-        {
-            if (audioData != null) PlaySfx(audioData.LavaPortalImpactSfx);
-        }
 
-        /// <summary>Switches the single managed ambience channel between Lava and Ground.</summary>
-        public void SetLavaWorldAmbience(bool active)
-        {
-            if (lavaWorldAmbienceActive == active) return;
-            lavaWorldAmbienceActive = active;
-            StopWorldAmbienceSwitch();
-            if (audioData == null || ambienceSource == null || musicMuted ||
-                mainMenuMusicActive || shopThemeActive || coinRainAmbienceActive) return;
-            StopAmbiencePlaylist();
-            StopAmbienceFade();
-            if (ambienceSource.isPlaying && audioData.AmbienceFadeDuration > 0f)
-                worldAmbienceTransition = StartCoroutine(FadeOutAndSwitchWorldAmbience());
-            else PlayWorldAmbience(true);
-        }
 
-        private IEnumerator FadeOutAndSwitchWorldAmbience()
-        {
-            float duration = Mathf.Max(0.01f, audioData.AmbienceFadeDuration * 0.5f);
-            float start = ambienceSource.volume;
-            float elapsed = 0f;
-            while (elapsed < duration)
-            {
-                elapsed += Time.unscaledDeltaTime;
-                float t = Mathf.Clamp01(elapsed / duration);
-                ambienceSource.volume = Mathf.Lerp(start, 0f, t * t * (3f - 2f * t));
-                yield return null;
-            }
-            ambienceSource.Stop();
-            worldAmbienceTransition = null;
-            if (!musicMuted && !mainMenuMusicActive && !shopThemeActive && !coinRainAmbienceActive)
-                PlayWorldAmbience(true);
-        }
+
+
+
+
 
         private void StopWorldAmbienceSwitch()
         {
@@ -598,9 +529,7 @@ namespace MiningSimulator.Ores
 
         private float GetMusicVolume() => audioData.MusicVolume * masterVolume * musicVolume;
 
-        private float GetAmbienceVolume() => audioData.AmbienceVolume * masterVolume * musicVolume *
-            (lavaWorldAmbienceActive && audioData.LavaWorldAmbience != null
-                ? audioData.LavaWorldAmbienceVolume : 1f);
+        private float GetAmbienceVolume() => audioData.AmbienceVolume * masterVolume * musicVolume;
 
         private void StopAudioFades()
         {

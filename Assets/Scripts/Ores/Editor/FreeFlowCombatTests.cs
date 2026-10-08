@@ -128,6 +128,27 @@ public sealed class FreeFlowCombatTests
     }
 
     [Test]
+    public void LungeTrackingFollowsMovingTargetWithoutOvershoot()
+    {
+        Vector3 player = Vector3.zero;
+        Vector3 target = new Vector3(0, 0, 2);
+        float budget = 2f;
+        for (int i = 0; i < 30; i++)
+        {
+            target.x += .01f;
+            var step = CombatLungeMotion.TrackStep(target - player, 1f, .12f, budget, 9f, 1f / 60f);
+            Assert.That(step.magnitude, Is.LessThanOrEqualTo(.15f));
+            player += step; budget -= step.magnitude;
+            Assert.That(Vector3.Distance(player, target), Is.GreaterThanOrEqualTo(.9999f));
+        }
+        Assert.That(player.x, Is.GreaterThan(0f));
+        Assert.That(Vector3.Distance(player, target), Is.EqualTo(1f).Within(.001f));
+        Assert.That(CombatLungeMotion.TrackStep(Vector3.forward * 3, 1, 1, 0, 9, .02f), Is.EqualTo(Vector3.zero));
+        Assert.That(CombatLungeMotion.TrackStep(Vector3.forward * .5f, 1, 1, 1, 9, .02f), Is.EqualTo(Vector3.zero));
+        Assert.That(CombatLungeMotion.TrackStep(Vector3.forward * 3, 1, 1, 1, 9, 0), Is.EqualTo(Vector3.zero));
+    }
+
+    [Test]
     public void ExtendedLungeRangeDoesNotExtendDamageRange()
     {
         var player = new GameObject("Lunge range test player");

@@ -67,29 +67,53 @@ public sealed class ArmorAndRelativeLevelTests
     }
 
     [Test]
-    public void RelativeLevelsKeepConfiguredBoundsAndDailyProbability()
+    public void RelativeLevelsUseTwentySeventyTenWithoutDailyInflation()
     {
         var data = ScriptableObject.CreateInstance<MonsterRewardData>();
         try
         {
-            int earlyHigher = 0, lateHigher = 0;
+            int earlyHigher = 0, lateHigher = 0, equal = 0, weaker = 0, firstLevelHigher = 0;
             for (int i = 0; i < 10000; i++)
             {
                 float sample = (i + .5f) / 10000f;
                 int early = data.RollSpawnLevel(sample, 30, 1);
                 int late = data.RollSpawnLevel(sample, 30, 10000);
-                Assert.That(early, Is.InRange(26, 50));
-                Assert.That(late, Is.InRange(26, 50));
-                Assert.That(early, Is.Not.EqualTo(30));
+                Assert.That(early, Is.InRange(26, 31));
+                Assert.That(late, Is.EqualTo(early));
+                if (early == 30) equal++;
+                if (early < 30) weaker++;
                 if (early > 30) earlyHigher++;
                 if (late > 30) lateHigher++;
-                Assert.That(data.RollSpawnLevel(sample, 1, 1), Is.InRange(1, 21));
+                int first = data.RollSpawnLevel(sample, 1, 1);
+                Assert.That(first, Is.InRange(1, 2));
+                if (first > 1) firstLevelHigher++;
             }
-            Assert.That(earlyHigher, Is.EqualTo(3500));
-            Assert.That(lateHigher, Is.EqualTo(5000));
+            Assert.That(weaker, Is.EqualTo(2000));
+            Assert.That(equal, Is.EqualTo(7000));
+            Assert.That(earlyHigher, Is.EqualTo(1000));
+            Assert.That(lateHigher, Is.EqualTo(1000));
+            Assert.That(firstLevelHigher, Is.EqualTo(1000));
             Assert.That(data.RollSpawnLevel(0, 30, 1), Is.EqualTo(29));
-            Assert.That(data.RollSpawnLevel(1, 30, 1), Is.EqualTo(50));
+            Assert.That(data.RollSpawnLevel(1, 30, 1), Is.EqualTo(31));
             Assert.That(data.RollSpawnLevel(1, int.MaxValue, 1), Is.EqualTo(int.MaxValue));
+        }
+        finally { Object.DestroyImmediate(data); }
+    }
+
+    [Test] public void RelativeWeightsAndOffsetsRemainDesignerConfigurable()
+    {
+        var data = ScriptableObject.CreateInstance<MonsterRewardData>();
+        try
+        {
+            data.weakerLevelWeight = data.equalLevelWeight = data.strongerLevelWeight = 0;
+            Assert.That(data.RollSpawnLevel(1, 10, 1), Is.EqualTo(10));
+            data.strongerLevelWeight = 1;
+            data.maximumLevelsAbovePlayer = 3;
+            Assert.That(data.RollSpawnLevel(1, 10, 1), Is.EqualTo(13));
+            data.strongerLevelWeight = float.NaN;
+            Assert.That(data.RollSpawnLevel(float.NaN, 10, 1), Is.EqualTo(10));
+            data.usePlayerRelativeLevels = false;
+            Assert.That(data.RollSpawnLevel(.75f, 10, 1), Is.EqualTo(data.RollLevel(.75f, 1)));
         }
         finally { Object.DestroyImmediate(data); }
     }

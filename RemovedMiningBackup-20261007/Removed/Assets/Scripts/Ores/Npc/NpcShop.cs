@@ -1,0 +1,257 @@
+using System;
+using System.Collections;
+using UnityEngine;
+
+namespace MiningSimulator.Ores
+{
+    /// <summary>Spends player money and spawns configured mining NPCs.</summary>
+    [DisallowMultipleComponent]
+    public sealed class NpcShop : MonoBehaviour
+    {
+        private const string PurchasedCountSaveKey = "MiningSimulator.NpcCount.v1";
+        private const string TotalPurchasesSaveKey = "MiningSimulator.NpcPurchases.v1";
+
+        [SerializeField] private PlayerWallet wallet;
+        [SerializeField] private OreSpawner oreSpawner;
+        [SerializeField] private MiningNpc npcPrefab;
+        [SerializeField] private Transform spawnPoint;
+        [SerializeField] private NpcData npcData;
+        [SerializeField] private NpcProgressionSystem progressionSystem;
+        [SerializeField] private MiningUpgradeSystem upgradeSystem;
+        [SerializeField] private LuckyBlockDropSystem luckyBlockSystem;
+        [SerializeField] private MiningRebirthSystem rebirthSystem;
+
+        [Header("Wandering Trader")]
+        [Tooltip("Optional civilian prefab used by the wandering trader. Leave empty to reuse the miner humanoid.")]
+        [SerializeField] private GameObject wanderingTraderModelPrefab;
+        [Tooltip("Optional controller used for the trader's idle and walk animation.")]
+        [SerializeField] private RuntimeAnimatorController wanderingTraderAnimatorController;
+
+        private int purchasedCount;
+        private int totalPurchases;
+        private bool restoring;
+        private int restoreGeneration;
+        private int remainingRestores;
+        private bool started;
+        private Coroutine restoreRoutine;
+
+        public int NpcCost => npcData != null ? npcData.GetPurchaseCost(purchasedCount,
+            rebirthSystem != null ? rebirthSystem.CompletedRebirths : 0) : 0;
+        public int TotalPurchases => totalPurchases;
+        public int PurchasedCount => purchasedCount;
+        public NpcData NpcData => npcData;
+        /// <summary>Humanoid source reused by the runtime-only wandering trader.</summary>
+        public MiningNpc NpcPrefab => npcPrefab;
+        public GameObject WanderingTraderModelPrefab => wanderingTraderModelPrefab;
+        public RuntimeAnimatorController WanderingTraderAnimatorController =>
+            wanderingTraderAnimatorController;
+        public int MaximumMiners
+        {
+            get
+            {
+                int baseCapacity = npcData != null ? npcData.StartingMaximumMiners : 0;
+                if (upgradeSystem == null || upgradeSystem.UpgradeData == null)
+                {
+                    return baseCapacity;
+                }
+
+                MiningUpgradeDefinition definition =
+                    upgradeSystem.UpgradeData.GetDefinition(MiningUpgradeType.NpcCapacity);
+                long addedCapacity = (long)Mathf.Max(0, Mathf.RoundToInt(definition.ValuePerStack)) *
+                                     upgradeSystem.GetStacks(MiningUpgradeType.NpcCapacity);
+                return (int)Math.Min(int.MaxValue, baseCapacity + addedCapacity);
+            }
+        }
+        public bool CanBuy => !restoring && npcData != null && wallet != null && wallet.CurrentMoney >= NpcCost &&
+                              oreSpawner != null && npcPrefab != null && purchasedCount < MaximumMiners;
+        public event Action<int> NpcCountChanged;
+        public event Action<MiningNpc> NpcPurchased;
+
+        public void SetOreSpawner(OreSpawner targetSpawner)
+        {
+            if (targetSpawner != null) oreSpawner = targetSpawner;
+        }
+
+        private void Awake()
+        {
+            rebirthSystem ??= FindFirstObjectByType<MiningRebirthSystem>(FindObjectsInactive.Include);
+            // Old saves have only the living miner count. Preserve it as the initial price tier.
+            totalPurchases = Mathf.Max(0, PlayerPrefs.GetInt(TotalPurchasesSaveKey,
+                PlayerPrefs.GetInt(PurchasedCountSaveKey, 0)));
+            FindLuckyBlockSystemIfMissing();
+            FindProgressionSystemIfMissing();
+            WanderingTraderSystem.EnsureRuntime(this);
+        }
+
+        private void Start()
+        {
+            started = true;
+            remainingRestores = Mathf.Clamp(PlayerPrefs.GetInt(PurchasedCountSaveKey, 0), 0, MaximumMiners);
+            restoreRoutine = StartCoroutine(RestoreWhenReady());
+        }
+        private IEnumerator RestoreWhenReady()
+        {
+            restoring = true;
+            int generation = restoreGeneration;
+            while (generation == restoreGeneration && remainingRestores > 0)
+            {
+                if (!isActiveAndEnabled || !MiningNavigation.PathfindingAvailable || !TrySpawnNpc(out _))
+                { yield return new WaitForSeconds(.5f); continue; }
+                remainingRestores--;
+                yield return null;
+            }
+            restoreRoutine = null; restoring = false; NpcCountChanged?.Invoke(purchasedCount);
+        }
+
+        private void OnEnable()
+        {
+            if (started && remainingRestores > 0 && restoreRoutine == null)
+                restoreRoutine = StartCoroutine(RestoreWhenReady());
+            if (upgradeSystem != null)
+            {
+                upgradeSystem.UpgradesChanged -= HandleUpgradesChanged;
+                upgradeSystem.UpgradesChanged += HandleUpgradesChanged;
+            }
+        }
+
+        private void OnDisable()
+        {
+            if (restoreRoutine != null) { StopCoroutine(restoreRoutine); restoreRoutine = null; }
+            if (upgradeSystem != null)
+            {
+                upgradeSystem.UpgradesChanged -= HandleUpgradesChanged;
+            }
+        }
+
+        public bool TryBuyNpc()
+        {
+            if (!CanBuy || wallet == null || oreSpawner == null || npcPrefab == null ||
+                npcData == null)
+            {
+                return false;
+            }
+
+            int chargedCost = NpcCost;
+            if (!wallet.TrySpend(chargedCost))
+            {
+                return false;
+            }
+
+            if (!TrySpawnNpc(out MiningNpc npc))
+            {
+                wallet.AddMoney(chargedCost);
+                return false;
+            }
+
+            if (totalPurchases < int.MaxValue) totalPurchases++;
+            SavePurchasedCount();
+            NpcCountChanged?.Invoke(purchasedCount);
+            NpcPurchased?.Invoke(npc);
+            return true;
+        }
+
+        /// <summary>Removes every spawned miner and restores the shop count.</summary>
+        public void ResetAllNpcs()
+        {
+            restoreGeneration++; remainingRestores = 0; restoring = false;
+            if (restoreRoutine != null) { StopCoroutine(restoreRoutine); restoreRoutine = null; }
+            MiningNpc[] npcs = FindObjectsByType<MiningNpc>(FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+            foreach (MiningNpc npc in npcs)
+            {
+                if (npc == null || !npc.gameObject.scene.IsValid())
+                {
+                    continue;
+                }
+
+                // OnDisable releases the reserved ore before the object is destroyed.
+                npc.gameObject.SetActive(false);
+                Destroy(npc.gameObject);
+            }
+
+            purchasedCount = 0;
+            totalPurchases = 0;
+            PlayerPrefs.DeleteKey(PurchasedCountSaveKey);
+            PlayerPrefs.DeleteKey(TotalPurchasesSaveKey);
+            PlayerPrefs.Save();
+            NpcCountChanged?.Invoke(purchasedCount);
+        }
+
+        public bool TryRemoveNpc(MiningNpc npc)
+        {
+            if (npc == null || !npc.gameObject.scene.IsValid() || purchasedCount <= 0) return false;
+            npc.gameObject.SetActive(false);
+            Destroy(npc.gameObject);
+            purchasedCount = Mathf.Max(0, purchasedCount - 1);
+            SavePurchasedCount();
+            NpcCountChanged?.Invoke(purchasedCount);
+            return true;
+        }
+
+        private void HandleUpgradesChanged()
+        {
+            NpcCountChanged?.Invoke(purchasedCount);
+        }
+
+
+        private bool TrySpawnNpc(out MiningNpc npc)
+        {
+            npc = null;
+            if (oreSpawner == null || npcPrefab == null || npcData == null ||
+                purchasedCount >= MaximumMiners)
+            {
+                return false;
+            }
+
+            Vector3 origin = spawnPoint != null ? spawnPoint.position : transform.position;
+            if (!TryFindAvailableSpawnPosition(origin, out Vector3 position))
+            {
+                return false;
+            }
+
+            npc = Instantiate(npcPrefab, position, Quaternion.identity);
+            if (npc == null)
+            {
+                return false;
+            }
+
+            npc.name = $"Mining NPC {purchasedCount + 1}";
+            FindLuckyBlockSystemIfMissing();
+            FindProgressionSystemIfMissing();
+            npc.Initialize(oreSpawner, npcData, luckyBlockSystem, progressionSystem);
+            npc.SetOwningShop(this);
+            purchasedCount++;
+            return true;
+        }
+
+        private void SavePurchasedCount()
+        {
+            PlayerPrefs.SetInt(PurchasedCountSaveKey, Mathf.Max(0, purchasedCount + remainingRestores));
+            PlayerPrefs.SetInt(TotalPurchasesSaveKey, totalPurchases);
+            PlayerPrefs.Save();
+        }
+
+        private bool TryFindAvailableSpawnPosition(Vector3 origin, out Vector3 position)
+        {
+            return MiningPlacement.TryMinerSpawn(origin, npcPrefab, npcData, out position);
+        }
+
+        private void FindLuckyBlockSystemIfMissing()
+        {
+            if (luckyBlockSystem == null)
+            {
+                luckyBlockSystem = FindFirstObjectByType<LuckyBlockDropSystem>(
+                    FindObjectsInactive.Include);
+            }
+        }
+
+        private void FindProgressionSystemIfMissing()
+        {
+            if (progressionSystem == null)
+            {
+                progressionSystem = FindFirstObjectByType<NpcProgressionSystem>(
+                    FindObjectsInactive.Include);
+            }
+        }
+    }
+}

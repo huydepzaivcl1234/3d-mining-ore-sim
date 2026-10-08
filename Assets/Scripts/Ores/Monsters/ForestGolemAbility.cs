@@ -53,7 +53,7 @@ namespace MiningSimulator.Ores
             if (Settings == null || !Settings.enabled) return;
             struck.Clear(); center = point; scale = hitScale; height = hitHeight;
             visualCenter = center;
-            if (MiningNavGrid.Instance != null && MiningNavGrid.Instance.TryGetGroundPoint(center, out Vector3 ground))
+            if (WorldNavigationGrid.Instance != null && WorldNavigationGrid.Instance.TryGetGroundPoint(center, out Vector3 ground))
                 visualCenter = ground;
             else
             {
@@ -105,15 +105,9 @@ namespace MiningSimulator.Ores
                 float current = radius * progress;
                 if (player != null && player.Health > 0 && !struck.Contains(player) && CrossesFront(player.transform, playerCollider, current))
                 {
-                    struck.Add(player); owner.ApplyProjectileHit(player, null);
+                    struck.Add(player); owner.ApplyProjectileHit(player);
                 }
-                for (int i = MiningNpc.Miners.Count - 1; i >= 0; i--)
-                {
-                    var miner = MiningNpc.Miners[i];
-                    if (miner == null || !miner.isActiveAndEnabled || miner.IsDead || struck.Contains(miner)) continue;
-                    if (!CrossesFront(miner.transform, miner.GetComponent<Collider>(), current)) continue;
-                    struck.Add(miner); owner.ApplyProjectileHit(null, miner);
-                }
+
                 if (grassImpact != null)
                 {
                     grassImpact.transform.SetPositionAndRotation(visualCenter, Quaternion.identity);

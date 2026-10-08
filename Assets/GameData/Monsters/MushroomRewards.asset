@@ -45,6 +45,18 @@ MonoBehaviour:
     chaseStandDirections: 16
     chaseStandRangeFraction: 0.75
     chaseStandMaximumRangeFraction: 0.95
+    targetScanSeconds: 0.25
+    targetMemorySeconds: 2
+    detectionHysteresis: 1
+    targetRepathDistance: 0.75
+    waypointTolerance: 0.2
+    avoidanceLookAhead: 1.2
+    avoidanceHoldSeconds: 0.5
+    stuckRepathSeconds: 1.2
+    pathRequestTimeout: 5
+    navigationObstacleLayers:
+      serializedVersion: 2
+      m_Bits: 4294967295
     projectile: {fileID: 0}
     fireState: Fire
     rangedRange: 8
@@ -56,6 +68,30 @@ MonoBehaviour:
     projectileCollisionLayers:
       serializedVersion: 2
       m_Bits: 4294967295
+    forestGolem:
+      enabled: 0
+      waveExtraRadius: 1.2
+      waveSeconds: 0.65
+      waveWidth: 0.12
+      waveColor: {r: 0.5, g: 1, b: 0.18, a: 0.85}
+      waveMaterial: {fileID: 0}
+      impactPrefab: {fileID: 0}
+      hitsToCharge: 3
+      chargeState: ChargeUp
+      chargeReleaseMoment: 1
+      burnDamagePerTick: 5
+      burnTickSeconds: 1
+      burnSeconds: 5
+      bossSkills:
+        enabled: 0
+        slamsToPulse: 3
+        pulseSeconds: 3
+        pulseTickSeconds: 1
+        pulseRadius: 3.6
+        pulseHeight: 2.5
+        playerMaxHealthDamagePercent: 1
+        regenerationSeconds: 10
+        regenerationMaxHealthPercent: 1
   combatSettingsVersion: 1
   boss:
     enabled: 1
@@ -87,7 +123,10 @@ MonoBehaviour:
   usePlayerRelativeLevels: 1
   minimumLevelsBelowPlayer: 1
   maximumLevelsBelowPlayer: 4
-  maximumLevelsAbovePlayer: 5
+  maximumLevelsAbovePlayer: 1
+  weakerLevelWeight: 0.2
+  equalLevelWeight: 0.7
+  strongerLevelWeight: 0.1
   minimumLevel: 1
   addPlayerLevelAtSpawn: 0
   playerLevelContribution: 1

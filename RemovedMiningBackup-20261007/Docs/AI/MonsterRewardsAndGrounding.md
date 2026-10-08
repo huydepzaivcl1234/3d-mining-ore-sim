@@ -1,0 +1,13 @@
+# Monster rewards, icon drops and ground alignment
+
+Mushroom prefab now references `Assets/GameData/Monsters/MushroomRewards.asset`. Defaults: 25 Player XP, 50 gold, independent 25% chance of one Apple. Change XP, gold, item entries, quantity ranges, chances, optional icon override and launch/attraction settings in this asset. Duplicate the asset for other monster reward tables. Empty icon override uses the item's inventory icon.
+
+MonsterSpawnZone resolves its Player, Wallet and MiningItemSystem once at startup (explicit assigned references take priority). Each MushroomMonster pays once from its death callback, before the corpse is destroyed. XP goes to Player stats, not shared NPC progression; gold goes through PlayerWallet.AddMoney. Drop chances are independent, not relative weights: 0 never drops, 100 always drops.
+
+Items spawn as world-space icon billboards independent of the corpse. They launch upward/outward, fall, rest, then accelerate toward a living Player within Attraction Radius. Inventory is only modified when the icon reaches the Player. Full inventory/dead Player/missing receiver leaves the item in the world instead of deleting it. No expiry is added. This is a single-player reward flow, not attacker attribution or multiplayer authority.
+
+Player XP carries over on level-up; XP requirement is multiplied by experienceRequirementGrowth. Growth 1 is supported without a per-level loop. Changing level does not increase damage/speed automatically. XP/level save persistence is not added.
+
+Grounding evidence: spawn formerly added a fixed 0.05m Y offset, and the Mushroom Visual prefab has another 0.066333264m offset. Capsule center/height and visual feet were not reconciled. The revised spawn uses actual scaled capsule dimensions for clearance, places the capsule bottom at the raycast ground, evaluates the initial animation, bakes the visual mesh and offsets only the visual so its lowest vertex contacts that ground. Animator/controller assets are not rewritten. This corrects initial placement; it is not terrain-following foot IK. Ground Layers should exclude canopy/rooftops if those must not be spawn surfaces. Nonuniformly scaled/rotated spawn roots and unusually padded or non-foot low mesh vertices need Play Mode inspection.
+
+Validation: runtime/Editor source compilation with Roslyn against project Unity references and ZIP integrity checks. No Unity Editor/Play Mode or desktop-control test was performed. Test flat and sloped spawn positions, idle/walk/death transitions, one reward per death, drop chances 0/100, XP overflow across multiple levels, full inventory, dead Player, and collection after freeing inventory space. Scene is deliberately excluded from the ZIP.

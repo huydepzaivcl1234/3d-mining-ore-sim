@@ -1,0 +1,68 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 51b548cd8ba845eda8b49e8e841f327c, type: 3}
+  m_Name: NpcData
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.NpcData
+  purchaseCost: 25
+  purchaseCostIncreasePercent: 10
+  rebirthPurchaseCostIncreasePercent: 10
+  minerHealthBarPrefab: {fileID: 4657497537876699430, guid: f09c815911c7deb4bb326b017c1c7f29, type: 3}
+  minerHealthBarOffset: {x: 0, y: 2.1, z: 0}
+  minerHealthBarScale: 0.6
+  startingMaximumMiners: 1
+  spawnSpread: 1.25
+  spawnHeightOffset: 0.9
+  spawnAttempts: 12
+  minerHealth: 20
+  knockoutSeconds: 10
+  moveSpeed: 3
+  turnSpeed: 720
+  miningRange: 1
+  stoppingDistance: 0.12
+  movementAcceleration: 18
+  brakingAcceleration: 35
+  targetSwitchDistanceAdvantage: 0.25
+  targetSwitchCooldown: 0.75
+  standSlotSpacingPadding: 0.12
+  miningPower: 6
+  damagePerHit: 2
+  secondsPerHit: 0.63
+  targetRefreshInterval: 0.35
+  maximumLevel: 100
+  startingExperienceRequirement: 100
+  experienceRequirementGrowth: 1.2
+  miningPowerPerLevel: 1
+  oreSightProbeRadius: 0.35
+  oreSightDistance: 2.2
+  oreSightOriginHeight: 0.7
+  colliderRadius: 0.5
+  colliderHeight: 1.8
+  mass: 1
+  collisionLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  ignoreNpcPhysicalCollisions: 1
+  castShadows: 1
+  receiveShadows: 1
+  obstacleProbeRadius: 0.32
+  obstacleProbeDistance: 1.25
+  obstacleAvoidanceStrength: 1.35
+  detourProbeDistance: 2.8
+  detourAngle: 55
+  detourMinimumClearance: 0.85
+  detourDirectionHoldTime: 0.65
+  npcSeparationRadius: 1.05
+  npcSeparationStrength: 1.2
+  npcSeparationResponsiveness: 8
+  stuckTimeout: 1.25
+  stuckProgressDistance: 0.08
+  ignoredTargetDuration: 1.5

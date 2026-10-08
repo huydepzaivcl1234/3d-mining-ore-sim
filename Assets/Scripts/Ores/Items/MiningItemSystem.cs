@@ -63,7 +63,6 @@ namespace MiningSimulator.Ores
 
         [Header("References")]
         [SerializeField] private MiningItemDatabase database;
-        [SerializeField] private OreSpawner oreSpawner;
         [SerializeField] private LuckyBlockDropSystem luckyBlockSystem;
         [SerializeField] private MiningUpgradeSystem upgradeSystem;
         [SerializeField] private Transform droppedItemParent;
@@ -449,14 +448,7 @@ namespace MiningSimulator.Ores
             return available;
         }
 
-        private void HandleOreRewardGranted(Ore ore, float reward)
-        {
-            if (ore != null && database != null && database.TryRoll(false,
-                GetItemDropChanceBonus(), out MiningItemData item))
-            {
-                SpawnWorldItem(item, ore.GetWorldTopCenter());
-            }
-        }
+
 
         private void HandleLuckyBlockRewardGranted(LuckyBlock block, float reward)
         {
@@ -488,11 +480,7 @@ namespace MiningSimulator.Ores
 
         private void Subscribe()
         {
-            if (oreSpawner != null)
-            {
-                oreSpawner.OreRewardGranted -= HandleOreRewardGranted;
-                oreSpawner.OreRewardGranted += HandleOreRewardGranted;
-            }
+
             if (luckyBlockSystem != null)
             {
                 luckyBlockSystem.LuckyBlockRewardGranted -= HandleLuckyBlockRewardGranted;
@@ -502,10 +490,7 @@ namespace MiningSimulator.Ores
 
         private void Unsubscribe()
         {
-            if (oreSpawner != null)
-            {
-                oreSpawner.OreRewardGranted -= HandleOreRewardGranted;
-            }
+
             if (luckyBlockSystem != null)
             {
                 luckyBlockSystem.LuckyBlockRewardGranted -= HandleLuckyBlockRewardGranted;
@@ -514,10 +499,7 @@ namespace MiningSimulator.Ores
 
         private void FindReferencesIfMissing()
         {
-            if (oreSpawner == null)
-            {
-                oreSpawner = FindFirstObjectByType<OreSpawner>(FindObjectsInactive.Include);
-            }
+
             if (luckyBlockSystem == null)
             {
                 luckyBlockSystem = FindFirstObjectByType<LuckyBlockDropSystem>(

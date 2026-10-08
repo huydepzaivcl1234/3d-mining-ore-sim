@@ -19,7 +19,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private MiningComputerData data;
 
         [Header("Existing Project References")]
-        [SerializeField] private OreRewardPopup rewardPopupPrefab;
+        [SerializeField] private CurrencyRewardPopup rewardPopupPrefab;
         [SerializeField] private MiningUiData uiData;
 
         private PlayerWallet wallet;
@@ -65,7 +65,7 @@ namespace MiningSimulator.Ores
         private int PurchaseCost => data != null ? data.PurchaseCost : 0;
 
         public void ConfigureIfMissing(MiningComputerData computerData,
-            OreRewardPopup popupPrefab, MiningUiData miningUiData)
+            CurrencyRewardPopup popupPrefab, MiningUiData miningUiData)
         {
             if (data == null)
             {
@@ -516,7 +516,7 @@ namespace MiningSimulator.Ores
 
             Bounds bounds = CalculateWorldBounds();
             Vector3 position = new(bounds.center.x, bounds.max.y, bounds.center.z);
-            OreRewardPopup popup = Instantiate(rewardPopupPrefab, position, Quaternion.identity);
+            CurrencyRewardPopup popup = Instantiate(rewardPopupPrefab, position, Quaternion.identity);
             popup.Initialize(reward, position, uiData);
         }
 
@@ -644,7 +644,7 @@ namespace MiningSimulator.Ores
                 return 0f;
             }
             return upgradeSystem != null
-                ? upgradeSystem.CalculateMiningReward(baseCoins)
+                ? upgradeSystem.CalculateMonsterMoneyReward(baseCoins)
                 : baseCoins;
         }
 

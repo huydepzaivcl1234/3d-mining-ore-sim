@@ -1,0 +1,90 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa78fdd0c9f81744a9442bc7fafe7d34, type: 3}
+  m_Name: TreasureChestData
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.TreasureChestData
+  prefab: {fileID: 4847413832431611547, guid: a1422f104e9c7414d945c8af5b4bc6c8, type: 3}
+  spawnPosition: {x: 0, y: 0, z: 8}
+  ticksPerSecond: 0.2
+  goldPerTick: 5
+  goldPerLevel: 2
+  baseHealth: 300
+  healthPerLevel: 50
+  experiencePerTick: 1
+  killExperienceMultiplier: 1
+  experienceForFirstLevel: 10
+  experienceGrowth: 1.25
+  maximumLevel: 100
+  openingSeconds: 0.6
+  closingSeconds: 0.6
+  openHoldSeconds: 0.6
+  openAnimation: {fileID: 2402999244122608455, guid: 053d0eca00d449abb23b0dd14b4eba69, type: 3}
+  closeAnimation: {fileID: 375438690819389288, guid: 053d0eca00d449abb23b0dd14b4eba69, type: 3}
+  lidOpenEuler: {x: -95, y: 0, z: 0}
+  playerInterceptRange: 3
+  playerInterceptDot: 0.2
+  moneyIcon: {fileID: 62247565, guid: 4f7ca63df9f4a0e4db24cfd637f9b2d2, type: 3}
+  moneyPopupFontSize: 38
+  moneyPopupIconSize: 44
+  moneyPopupLifetime: 1.5
+  moneyPopupScale: 1.6
+  moneyPopupPopSeconds: 0.25
+  moneyPopupRise: 65
+  showScreenStats: 1
+  screenStatsOffset: {x: 24, y: 0}
+  screenStatsScale: 1
+  statsWorldOffset: {x: -2.6, y: 1.8, z: 0}
+  statsWorldScale: 0.006
+  statsNearDistance: 4
+  statsHideDistance: 6
+  openPunchStrength: 0.12
+  hitPunchStrength: 0.08
+  punchSeconds: 0.35
+  barBackground: {fileID: 3286163911610860551, guid: db956362bcb88514d9734e38783cc1ef, type: 3}
+  healthFill: {fileID: 3286163911610860551, guid: 2ff17913a3fe824429903adcd6f1195a, type: 3}
+  experienceFill: {fileID: 3286163911610860551, guid: 7049f1ed107867042b7a08081ccc6a02, type: 3}
+  barHighlight: {fileID: 3286163911610860551, guid: 5c88e570820b3f14f8880b483f2325a3, type: 3}
+  monsterSpawnMinimumDistance: 12
+  monsterSpawnMaximumDistance: 16
+  repairCost: 100
+  repairButtonSprite: {fileID: 3286163911610860551, guid: 6d9cd5cd0f477744c845b42c96b51fa5, type: 3}
+  repairButtonOffset: {x: 0, y: -135}
+  openSfx: {fileID: 8300000, guid: 074b323928eb80a48aa07bdb39fd5dfb, type: 3}
+  closeSfx: {fileID: 8300000, guid: d04fd1e8cab81b24eb47edb3171e8616, type: 3}
+  payoutSfx: {fileID: 8300000, guid: c062f16ffb3abca46b7717172158c05e, type: 3}
+  hitSfx: {fileID: 8300000, guid: ba137dd840868be4ba729d4d80b49649, type: 3}
+  breakSfx: {fileID: 8300000, guid: 58b42f4346b5cbb4ba370d31c0f88bc9, type: 3}
+  repairSfx: {fileID: 8300000, guid: 87edb7399c8fc8c47b310b9b9b877617, type: 3}
+  sfxVolume: 0.7
+  openVolume: 1
+  closeVolume: 1
+  payoutVolume: 1
+  hitVolume: 1
+  breakVolume: 1
+  repairVolume: 1
+  sfxPitch: 1
+  sfxNearDistance: 2
+  sfxFarDistance: 25
+  hitSfxCooldown: 0.12
+  damagedModel: {fileID: 919132149155446097, guid: 014b991e998b4523b2bd04f61c874f55, type: 3}
+  breakEffect: {fileID: 1002, guid: 5548dd5ee62b40bc923b055f7f6f6107, type: 3}
+  damagedModelOffset: {x: 0, y: 0, z: 0}
+  damagedModelEuler: {x: 0, y: 0, z: 0}
+  damagedModelScale: 1
+  breakEffectOffset: {x: 0, y: 0.7, z: 0}
+  panelFrame: {fileID: 3286163911610860551, guid: 0a12f9fab5530014aad7ece2ffaf8adb, type: 3}
+  font: {fileID: 11400000, guid: 46e4afa4556d21e4e83de82013091b2b, type: 2}
+  panelOffset: {x: 0, y: 3.0695417, z: 0}
+  panelWorldScale: 0.006
+  panelNearDistance: 12
+  panelHideDistance: 30
+  panelTransitionSeconds: 0.25

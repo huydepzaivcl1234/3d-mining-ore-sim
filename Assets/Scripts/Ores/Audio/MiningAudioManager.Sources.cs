@@ -159,15 +159,9 @@ namespace MiningSimulator.Ores
             }
             EnsureClipLoaded(audioData.SunriseRoosterSfx);
             EnsureClipLoaded(audioData.CoinRainAmbience);
-            EnsureClipLoaded(audioData.LavaWorldAmbience);
-            EnsureClipLoaded(audioData.LavaPortalWhooshSfx);
-            EnsureClipLoaded(audioData.LavaPortalImpactSfx);
-            EnsureClipLoaded(audioData.StalkedCatchSfx);
-            EnsureClipLoaded(audioData.StalkedJumpscareSfx);
             EnsureClipLoaded(audioData.OreHitSfx);
             EnsureClipLoaded(audioData.OreBreakSfx);
             EnsureClipLoaded(audioData.ButtonClickSfx);
-            EnsureClipLoaded(audioData.NpcPurchasedSfx);
             EnsureClipLoaded(audioData.UpgradePurchasedSfx);
             EnsureClipLoaded(audioData.LevelUpSfx);
             EnsureClipLoaded(audioData.RebirthSfx);
