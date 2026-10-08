@@ -29,3 +29,11 @@ MonoBehaviour:
     chance: 25
     minimumPlayerLevel: 1
   dailyEvents: {fileID: 11400000, guid: 32ce514a15289e74daf52256f326ba6d, type: 2}
+  nightThief:
+    prefab: {fileID: 1490377826062534078, guid: 378693c5c3244e64d8033fad728b49bf, type: 3}
+    icon: {fileID: 0}
+    displayName: Mushnight
+    chance: 100
+    minimumPlayerLevel: 1
+  thievesPerNight: 1
+  nightThiefStartProgress: 0.05

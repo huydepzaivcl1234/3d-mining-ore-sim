@@ -90,6 +90,8 @@ namespace MiningSimulator.Ores
         private readonly List<DailyMonsterForecast> forecast = new();
         private readonly List<SpawnWave> waves = new();
         private int scheduledDay = -1, nextWave;
+        private int thiefDay = -1, spawnedThieves;
+        private float nextThiefRetry;
         private float nextSpawnRetry;
         private MonsterDailyForecastHud forecastHud;
         private sealed class SpawnWave
@@ -293,6 +295,7 @@ public bool TryGetPatrolPoint(Vector3 origin,out Vector3 point)
             if (scheduledDay != dayNight.DayNumber) BuildDailySchedule();
             AnnounceDailyEvent();
             if (TreasureChest.Active == null || !TreasureChest.Active.IsAlive) return;
+            TickNightThieves();
             if (dayNight.CurrentPeriod != SpawnPeriod)
             {
                 // Night-only waves are deferred during the day, not discarded.
@@ -353,6 +356,18 @@ public bool TryGetPatrolPoint(Vector3 origin,out Vector3 point)
                     unlockNotifier.ShowToast(string.Format(MiningLocalization.Text("MONSTER_BOSS_UNLOCKED",
                         "Đã mở khóa boss: {0} (Lv. {1})!"), name, bossRequired));
             }
+        }
+
+        private void TickNightThieves()
+        {
+            if (additionalRoster == null || additionalRoster.nightThief == null ||
+                dayNight.CurrentPeriod != MiningTimePeriod.Night || RuneStation.PlayerUsesRuneTime) return;
+            if (thiefDay != dayNight.DayNumber)
+            { thiefDay = dayNight.DayNumber; spawnedThieves = 0; nextThiefRetry = 0f; }
+            if (spawnedThieves >= additionalRoster.thievesPerNight ||
+                dayNight.CurrentPeriodProgress < additionalRoster.nightThiefStartProgress || Time.time < nextThiefRetry) return;
+            nextThiefRetry = Time.time + 1f;
+            if (SpawnOne(additionalRoster.nightThief)) spawnedThieves++;
         }
 
         public bool CanSpawnSpecies(MonsterSpawnEntry entry)
@@ -610,6 +625,7 @@ public void ResetEncounter()
             announcedSpecies.Clear();
             announcedBosses.Clear();
             forcedDailyEvent = null;
+            thiefDay = -1; spawnedThieves = 0; nextThiefRetry = 0f;
             lastKnownPlayerLevel = playerStats != null ? playerStats.Level : 1;
             BuildDailySchedule();
         }

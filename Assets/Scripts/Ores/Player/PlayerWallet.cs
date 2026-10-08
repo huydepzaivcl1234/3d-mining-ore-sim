@@ -72,6 +72,17 @@ namespace MiningSimulator.Ores
             return true;
         }
 
+        /// <summary>Theft changes the balance, but is not a purchase/quest MoneySpent event.</summary>
+        public float TakeStolenMoney(float requested)
+        {
+            if (float.IsNaN(requested) || float.IsInfinity(requested) || requested <= 0f) return 0f;
+            float taken = Mathf.Min(requested, currentMoney);
+            if (taken <= 0f) return 0f;
+            currentMoney -= taken;
+            MoneyChanged?.Invoke(currentMoney);
+            return taken;
+        }
+
         public void SetMoney(float amount)
         {
             float safeAmount = Mathf.Max(0f, amount);

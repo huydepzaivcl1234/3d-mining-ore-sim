@@ -67,7 +67,5 @@ namespace MiningSimulator.Ores
         [Min(.01f)] public float projectileRadius = .12f;
         [Min(.1f)] public float projectileLifetime = 8f;
         public LayerMask projectileCollisionLayers = ~0;
-        [Header("Forest Golem (optional)")]
-        public ForestGolemSettings forestGolem = new();
     }
 }

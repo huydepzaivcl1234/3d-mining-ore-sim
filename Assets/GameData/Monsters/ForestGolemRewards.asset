@@ -9,9 +9,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5ce228d6dde5489e959cc89554e9ce6d, type: 3}
+  m_Script: {fileID: 11500000, guid: 5a4fd69e9f540b34aafe798d63383c1a, type: 3}
   m_Name: ForestGolemRewards
-  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MonsterRewardData
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.ForestGolemData
   combat:
     maxHealth: 80
     regenAmount: 0
@@ -68,30 +68,6 @@ MonoBehaviour:
     projectileCollisionLayers:
       serializedVersion: 2
       m_Bits: 4294967295
-    forestGolem:
-      enabled: 1
-      waveExtraRadius: 2
-      waveSeconds: 0.65
-      waveWidth: 0.12
-      waveColor: {r: 0.5, g: 1, b: 0.18, a: 0.85}
-      waveMaterial: {fileID: 2100000, guid: fe549de0158ef184e9865f6a2138e14a, type: 2}
-      impactPrefab: {fileID: 114000, guid: 4d04fa637bc246e58e8899ab19745f2f, type: 3}
-      hitsToCharge: 3
-      chargeState: ChargeUp
-      chargeReleaseMoment: 1
-      burnDamagePerTick: 0.1
-      burnTickSeconds: 0.1
-      burnSeconds: 2
-      bossSkills:
-        enabled: 1
-        slamsToPulse: 3
-        pulseSeconds: 3
-        pulseTickSeconds: 1
-        pulseRadius: 5
-        pulseHeight: 2.5
-        playerMaxHealthDamagePercent: 2
-        regenerationSeconds: 10
-        regenerationMaxHealthPercent: 1
   combatSettingsVersion: 1
   boss:
     enabled: 1
@@ -187,3 +163,27 @@ MonoBehaviour:
   attractionRadius: 30
   attractionSpeed: 2
   attractionAcceleration: 3
+  forestGolem:
+    enabled: 1
+    waveExtraRadius: 2
+    waveSeconds: 0.65
+    waveWidth: 0.12
+    waveColor: {r: 0.5, g: 1, b: 0.18, a: 0.85}
+    waveMaterial: {fileID: 2100000, guid: fe549de0158ef184e9865f6a2138e14a, type: 2}
+    impactPrefab: {fileID: 114000, guid: 4d04fa637bc246e58e8899ab19745f2f, type: 3}
+    hitsToCharge: 3
+    chargeState: ChargeUp
+    chargeReleaseMoment: 1
+    burnDamagePerTick: 0.1
+    burnTickSeconds: 0.1
+    burnSeconds: 2
+    bossSkills:
+      enabled: 1
+      slamsToPulse: 3
+      pulseSeconds: 3
+      pulseTickSeconds: 1
+      pulseRadius: 5
+      pulseHeight: 2.5
+      playerMaxHealthDamagePercent: 2
+      regenerationSeconds: 10
+      regenerationMaxHealthPercent: 1

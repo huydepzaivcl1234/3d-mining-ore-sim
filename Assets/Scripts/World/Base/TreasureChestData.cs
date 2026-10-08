@@ -29,16 +29,16 @@ public Vector3 lidOpenEuler = new Vector3(-95,0,0);
         [Min(.01f)] public float moneyPopupScale = 1.6f;
         [Min(.01f)] public float moneyPopupPopSeconds = .25f;
         [Min(0f)] public float moneyPopupRise = 65f;
-        [Header("Nearby world-space chest stats")]
-        [InspectorName("Show World Stats")]
+        // Legacy separate-panel settings retained only for serialized compatibility.
+        [HideInInspector]
         public bool showScreenStats = true;
         [HideInInspector] public Vector2 screenStatsOffset = new Vector2(24, 0); // Legacy screen pixels, not world metres.
-        [InspectorName("Stats Size Multiplier")]
+        [HideInInspector]
         [Min(.1f)] public float screenStatsScale = 1f;
-        [Tooltip("Camera-relative metres: negative X places stats to the left of the chest.")]
+        [HideInInspector]
         public Vector3 statsWorldOffset = new Vector3(-2.6f, 1.8f, 0f);
-        [Min(.001f)] public float statsWorldScale = .006f;
-        [Min(0f)] public float statsNearDistance = 4f, statsHideDistance = 6f;
+        [HideInInspector] public float statsWorldScale = .006f;
+        [HideInInspector] public float statsNearDistance = 4f, statsHideDistance = 6f;
         [Header("Visual-only centred punch")]
         [Range(0f, .5f)] public float openPunchStrength = .12f, hitPunchStrength = .08f;
         [Min(.01f)] public float punchSeconds = .35f;
@@ -46,6 +46,8 @@ public Vector3 lidOpenEuler = new Vector3(-95,0,0);
 
         [Header("Chest HP / XP artwork")]
         public Sprite barBackground, healthFill, experienceFill, barHighlight;
+        [Header("Combined chest status artwork")]
+        public Sprite compactPanelFrame, chestStatusIcon, levelBadge;
         [Header("Monster spawn ring (metres from chest)")]
         [Min(.5f)] public float monsterSpawnMinimumDistance = 12f;
         [Min(.5f)] public float monsterSpawnMaximumDistance = 16f;
@@ -72,7 +74,8 @@ public Sprite panelFrame;
         public TMPro.TMP_FontAsset font;
         public Vector3 panelOffset = new Vector3(0,2.5f,0);
         [Min(.001f)] public float panelWorldScale = .006f;
-        [Min(0)] public float panelNearDistance = 12f, panelHideDistance = 30f;
+        [Tooltip("Player proximity in metres: show inside Near, hide outside Hide.")]
+        [Min(0)] public float panelNearDistance = 4f, panelHideDistance = 6f;
         [Min(.01f)] public float panelTransitionSeconds = .25f;
         public float MaxHealth(int level) => baseHealth + healthPerLevel * Mathf.Max(0,level-1);
         public float Gold(int level) => goldPerTick + goldPerLevel * Mathf.Max(0,level-1);

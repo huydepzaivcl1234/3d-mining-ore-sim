@@ -2,7 +2,7 @@ using MiningSimulator.Ores;
 using UnityEditor;
 using UnityEngine;
 
-[CustomEditor(typeof(MonsterRewardData))]
+[CustomEditor(typeof(MonsterRewardData), true)]
 public sealed class MonsterRewardDataEditor : Editor
 {
     private void OnEnable()

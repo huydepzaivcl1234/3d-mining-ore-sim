@@ -46,8 +46,8 @@ namespace MiningSimulator.Ores
         [Tooltip("Optional override. Otherwise use the item's inventory icon.")]
         public Sprite icon;
     }
-    [CreateAssetMenu(menuName = "Mining Simulator/Game Data/Monster Rewards")]
-    public sealed class MonsterRewardData : ScriptableObject
+    /// <summary>Common stats/rewards only. Author a concrete species GameData from the Monsters menu.</summary>
+    public class MonsterRewardData : ScriptableObject
     {
         [Tooltip("Species combat loadout. Null only for legacy assets not yet migrated.")]
         public MonsterCombatSettings combat = new MonsterCombatSettings();

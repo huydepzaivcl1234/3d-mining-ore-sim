@@ -5,7 +5,7 @@ public partial class PlayerCombatInput
 {
     private bool IsAimValid(MushroomMonster monster)
     {
-        if (monster == null || !monster.isActiveAndEnabled || monster.Health == null ||
+        if (monster == null || !monster.isActiveAndEnabled || !monster.IsTargetVisible || monster.Health == null ||
             monster.Health.Health <= 0f) return false;
         return IsAimColliderInRange(monster.GetComponent<Collider>(), out _);
     }
@@ -41,7 +41,7 @@ public partial class PlayerCombatInput
         {
             var collider = softAimHits[i];
             var monster = collider.GetComponentInParent<MushroomMonster>();
-            if (monster == null || !monster.isActiveAndEnabled || monster.Health == null ||
+            if (monster == null || !monster.isActiveAndEnabled || !monster.IsTargetVisible || monster.Health == null ||
                 monster.Health.Health <= 0f || !IsColliderInRange(collider, range, out float candidate) ||
                 forLunge && !IsLungeTargetValid(monster)) continue;
             if (candidate < distance) { distance = candidate; nearest = monster; }
@@ -51,7 +51,7 @@ public partial class PlayerCombatInput
         if (count == softAimHits.Length)
             foreach (var monster in MushroomMonster.Monsters)
             {
-                if (monster == null || !monster.isActiveAndEnabled || monster.Health == null || monster.Health.Health <= 0f ||
+                if (monster == null || !monster.isActiveAndEnabled || !monster.IsTargetVisible || monster.Health == null || monster.Health.Health <= 0f ||
                     forLunge && !IsLungeTargetValid(monster) || !IsColliderInRange(monster.GetComponent<Collider>(), range,
                         out float candidate) || candidate >= distance) continue;
                 distance = candidate;
@@ -77,7 +77,7 @@ public partial class PlayerCombatInput
 
     private bool IsLungeTargetValid(MushroomMonster monster)
     {
-        if (monster == null || !monster.isActiveAndEnabled || monster.Health == null || monster.Health.Health <= 0f)
+        if (monster == null || !monster.isActiveAndEnabled || !monster.IsTargetVisible || monster.Health == null || monster.Health.Health <= 0f)
             return false;
         var collider = monster.GetComponent<Collider>();
         float range = LungeAcquireRange + (lungeTracking && monster == stepTarget ? Mathf.Max(0f, lungeTrackingDistance) : 0f);

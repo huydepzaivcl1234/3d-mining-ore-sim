@@ -53,6 +53,9 @@ MonoBehaviour:
   healthFill: {fileID: 3286163911610860551, guid: 2ff17913a3fe824429903adcd6f1195a, type: 3}
   experienceFill: {fileID: 3286163911610860551, guid: 7049f1ed107867042b7a08081ccc6a02, type: 3}
   barHighlight: {fileID: 3286163911610860551, guid: 5c88e570820b3f14f8880b483f2325a3, type: 3}
+  compactPanelFrame: {fileID: 3286163911610860551, guid: 78907bf1ed619cf4cb8b8313ef1a5e96, type: 3}
+  chestStatusIcon: {fileID: 3286163911610860551, guid: 19f0b32b79efe2a49811001bdb39a432, type: 3}
+  levelBadge: {fileID: 3286163911610860551, guid: b3c6291d0c750554fb5ad278a02342e7, type: 3}
   monsterSpawnMinimumDistance: 12
   monsterSpawnMaximumDistance: 16
   repairCost: 100
@@ -64,7 +67,6 @@ MonoBehaviour:
   hitSfx: {fileID: 8300000, guid: ba137dd840868be4ba729d4d80b49649, type: 3}
   breakSfx: {fileID: 8300000, guid: 58b42f4346b5cbb4ba370d31c0f88bc9, type: 3}
   repairSfx: {fileID: 8300000, guid: 87edb7399c8fc8c47b310b9b9b877617, type: 3}
-  sfxVolume: 0.7
   openVolume: 1
   closeVolume: 1
   payoutVolume: 1
@@ -72,6 +74,7 @@ MonoBehaviour:
   breakVolume: 1
   repairVolume: 1
   sfxPitch: 1
+  sfxVolume: 0.7
   sfxNearDistance: 2
   sfxFarDistance: 25
   hitSfxCooldown: 0.12
@@ -85,6 +88,6 @@ MonoBehaviour:
   font: {fileID: 11400000, guid: 46e4afa4556d21e4e83de82013091b2b, type: 2}
   panelOffset: {x: 0, y: 3.0695417, z: 0}
   panelWorldScale: 0.006
-  panelNearDistance: 12
-  panelHideDistance: 30
+  panelNearDistance: 4
+  panelHideDistance: 6
   panelTransitionSeconds: 0.25

@@ -19,21 +19,17 @@ private UnityEngine.UI.Image hp, xp;
         private TextMeshProUGUI moneyText;
         private RectTransform moneyPopup;
         private UnityEngine.UI.Image moneyIcon;
-        private RectTransform screenStats;
-        private TextMeshProUGUI screenStatsText;
-        private Canvas statsCanvas;
-        private CanvasGroup statsGroup;
-        private bool statsNearby;
-        private float statsVisibility;
+        private TextMeshProUGUI levelText, incomeText, armorText, resistanceText;
+        private RectTransform footer;
         
 private Transform player;
         private float moneyAge=10f;
         
 private Camera viewer;
         private CanvasGroup canvasGroup;
-        private bool nearby = true;
+        private bool nearby;
         
-private float visibility=1f;
+private float visibility;
 public void Bind(TreasureChest owner)
         {
             if(chest!=null){chest.Changed-=Refresh;chest.Paid-=ShowMoney;}
@@ -41,7 +37,6 @@ public void Bind(TreasureChest owner)
             chest=owner;
             if(panel==null)Build();
             if(repairPanel==null)BuildRepairButton();
-            if(screenStats==null)BuildScreenStats();
             BindRepairWallet();
             chest.Changed+=Refresh;chest.Paid+=ShowMoney;
             MiningLocalization.LanguageChanged+=Refresh;
@@ -67,20 +62,25 @@ public void Bind(TreasureChest owner)
         }
 private void Build()
         {
-            panel = Rect("Treasure Chest HP XP", transform, new Vector2(530, 154), Vector2.zero);
+            panel = Rect("Treasure Chest Status", transform, new Vector2(530, 144), Vector2.zero);
             var canvas = panel.gameObject.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.WorldSpace;
             canvas.additionalShaderChannels = AdditionalCanvasShaderChannels.TexCoord1 | AdditionalCanvasShaderChannels.TexCoord2;
             canvasGroup = panel.gameObject.AddComponent<CanvasGroup>();
             canvasGroup.interactable = canvasGroup.blocksRaycasts = false;
+            canvasGroup.alpha = 0f;
             var frame = Image("Panel frame", panel, panel.sizeDelta, Vector2.zero, Color.white);
-            frame.sprite = chest.Data.panelFrame;
-            title = Label("Level", new Vector2(490, 60), new Vector2(0, 47), 40);
-            if (title.gameObject.activeInHierarchy)
-            {
-                title.outlineColor = Color.black;
-                title.outlineWidth = .18f;
-            }
+            frame.sprite = chest.Data.compactPanelFrame != null ? chest.Data.compactPanelFrame : chest.Data.panelFrame;
+            var chestIcon = Image("Chest icon", panel, new Vector2(24, 24), new Vector2(-232, 49), Color.white);
+            chestIcon.sprite = chest.Data.chestStatusIcon;
+            chestIcon.preserveAspect = true;
+            chestIcon.enabled = chestIcon.sprite != null;
+            title = Label("Chest name", new Vector2(330, 32), new Vector2(-45, 49), 24);
+            title.alignment = TextAlignmentOptions.MidlineLeft;
+            var badge = Image("Level badge", panel, new Vector2(62, 26), new Vector2(213, 49), Color.white);
+            badge.sprite = chest.Data.levelBadge;
+            levelText = Label("Level", new Vector2(60, 26), new Vector2(213, 49), 18);
+            levelText.color = new Color(.45f, .83f, 1f);
             moneyPopup = Rect("Gold payout", panel, new Vector2(320, 50), new Vector2(0, 108));
             moneyIcon = Image("Coin icon", moneyPopup, Vector2.one * chest.Data.moneyPopupIconSize, Vector2.zero, Color.clear);
             moneyIcon.sprite = chest.Data.moneyIcon;
@@ -90,12 +90,38 @@ private void Build()
             moneyText.rectTransform.pivot = new Vector2(0, .5f);
             moneyText.alignment = TextAlignmentOptions.MidlineLeft;
             moneyText.color = new Color(1, .85f, .15f, 0);
-            hp = Bar("HP", 9, new Color(.9f, .035f, .05f));
-            xp = Bar("XP", -31, new Color(.08f, .8f, .58f));
+            hp = Bar("HP", 15, new Color(.9f, .035f, .05f));
+            xp = Bar("XP", -9, new Color(.08f, .8f, .58f));
+            ((RectTransform)hp.transform.parent).sizeDelta = new Vector2(494, 22);
+            hp.rectTransform.sizeDelta = new Vector2(486, 18);
+            ((RectTransform)xp.transform.parent).sizeDelta = new Vector2(494, 10);
+            xp.rectTransform.sizeDelta = new Vector2(486, 6);
             hpHighlight = Highlight("HP highlight", hp.transform.parent);
             xpHighlight = Highlight("XP highlight", xp.transform.parent);
-            hpText = Label("HP value", new Vector2(480, 26), new Vector2(0, 9), 17);
-            xpText = Label("XP value", new Vector2(480, 26), new Vector2(0, -31), 17);
+            hpText = Label("HP value", new Vector2(480, 22), new Vector2(0, 15), 17);
+            Image("Footer divider", panel, new Vector2(494, 1), new Vector2(0, -25), new Color(.6f, .44f, .15f, .3f));
+            footer = Rect("Chest stats", panel, new Vector2(494, 28), new Vector2(0, -46));
+            var coin = Image("Income coin", footer, new Vector2(18, 18), new Vector2(-235, 0), Color.white);
+            coin.sprite = chest.Data.moneyIcon;
+            coin.preserveAspect = true;
+            coin.enabled = coin.sprite != null;
+            incomeText = FooterLabel("Income", 94, -174, new Color(1f, .77f, .16f));
+            armorText = FooterLabel("Armor", 120, -49, new Color(.69f, .83f, 1f));
+            resistanceText = FooterLabel("Magic resistance", 114, 81, new Color(.8f, .66f, 1f));
+            xpText = FooterLabel("XP value", 95, 199, new Color(.12f, .86f, .63f));
+            xpText.alignment = TextAlignmentOptions.MidlineRight;
+        }
+
+        private TextMeshProUGUI FooterLabel(string name, float width, float x, Color color)
+        {
+            var label = Label(name, new Vector2(width, 26), new Vector2(x, 0), 16);
+            label.rectTransform.SetParent(footer, false);
+            label.alignment = TextAlignmentOptions.MidlineLeft;
+            label.color = color;
+            label.enableAutoSizing = true;
+            label.fontSizeMin = 11;
+            label.fontSizeMax = 16;
+            return label;
         }
 private UnityEngine.UI.Image Bar(string name, float y, Color color)
         {
@@ -131,26 +157,25 @@ private void Refresh()
             {
                 repairPanel.gameObject.SetActive(broken);
             }
-            title.text = string.Format(MiningLocalization.TextKey("BASE_CHEST_LEVEL", "Level {0}"), chest.Level);
+            title.text = MiningLocalization.TextKey("BASE_CHEST_NAME", "CHEST");
+            levelText.text = string.Format(MiningLocalization.TextKey("BASE_CHEST_LEVEL_SHORT", "LV. {0}"), chest.Level);
             float health = Mathf.Clamp01(chest.Health.Health / Mathf.Max(1f, chest.Health.MaxHealth));
             float experience = Mathf.Clamp01(chest.Experience / Mathf.Max(1f, chest.ExperienceRequired));
             UpdateBar(hp, health);
             UpdateBar(xp, experience);
             UpdateHighlight(hpHighlight, health);
             UpdateHighlight(xpHighlight, experience);
-            hpText.text = $"HP: {Mathf.CeilToInt(chest.Health.Health)} / {Mathf.CeilToInt(chest.Health.MaxHealth)}";
-            xpText.text = string.Format(MiningLocalization.TextKey("BASE_CHEST_XP_PROGRESS", "Level XP: {0:0.##} / {1:0.##} XP ({2:0}%)"), chest.Experience, chest.ExperienceRequired, experience * 100f);
-            if (screenStatsText != null)
-                screenStatsText.text = string.Format(MiningLocalization.TextKey("BASE_CHEST_STATS",
-                    "CHEST · LEVEL {0}\nHP {1:0} / {2:0}\nXP {3:0.##} / {4:0.##}\nGold +{5:0.##} / {6:0.##}s\nArmor {7:0.##} · MR {8:0.##}"),
-                    chest.Level, chest.Health.Health, chest.Health.MaxHealth, chest.Experience,
-                    chest.ExperienceRequired, chest.Data.Gold(chest.Level), 1f / Mathf.Max(.01f, chest.Data.ticksPerSecond),
-                    chest.Health.Armor, chest.Health.MagicResistance).Replace("\\n", "\n");
+            hpText.text = $"{Mathf.CeilToInt(chest.Health.Health)} / {Mathf.CeilToInt(chest.Health.MaxHealth)} HP";
+            xpText.text = $"{experience * 100f:0}% XP";
+            incomeText.text = string.Format(MiningLocalization.TextKey("BASE_CHEST_INCOME", "+{0:0.##}/{1:0.##}s"),
+                chest.Data.Gold(chest.Level), 1f / Mathf.Max(.01f, chest.Data.ticksPerSecond));
+            armorText.text = string.Format(MiningLocalization.TextKey("BASE_CHEST_ARMOR", "Armor: {0:0.##}"), chest.Health.Armor);
+            resistanceText.text = string.Format(MiningLocalization.TextKey("BASE_CHEST_MR", "MR: {0:0.##}"), chest.Health.MagicResistance);
         }
 
 private void UpdateHighlight(UnityEngine.UI.Image image, float progress)
         {
-            image.enabled = image.sprite != null && progress > 0f;
+            image.enabled = false; // Compact bars use clean rounded ends instead of oversized caps.
             image.rectTransform.anchoredPosition = new Vector2(-243f + Mathf.Max(5f, progress * 486f - 5f), 0f);
         }
 
@@ -186,14 +211,20 @@ private void LateUpdate()
             moneyIcon.color = new Color(1, 1, 1, moneyIcon.sprite != null ? alpha : 0);
             moneyPopup.anchoredPosition = new Vector2(0, 108 + d.moneyPopupRise * (1f - Mathf.Pow(1f - progress, 2f)));
             float distance = Vector3.Distance(transform.position, player != null ? player.position : viewer.transform.position);
-            UpdateWorldStats(distance, Time.unscaledDeltaTime);
+            UpdateHealthPanel(distance, Time.unscaledDeltaTime);
+        }
+
+        private void UpdateHealthPanel(float distance, float deltaTime)
+        {
+            var d = chest.Data;
             // Upgrade Panel's eased fade, 12% minimum scale and downward slide.
             // Separate open/close thresholds prevent flickering at the boundary.
             if (distance <= d.panelNearDistance) nearby = true;
             else if (distance >= Mathf.Max(d.panelNearDistance + .01f, d.panelHideDistance)) nearby = false;
             visibility = Mathf.MoveTowards(visibility, nearby ? 1f : 0f,
-                Time.unscaledDeltaTime / Mathf.Max(.01f, d.panelTransitionSeconds));
+                deltaTime / Mathf.Max(.01f, d.panelTransitionSeconds));
             float eased = Mathf.SmoothStep(0, 1, visibility);
+            panel.gameObject.SetActive(eased > 0f);
             canvasGroup.alpha = eased;
             canvasGroup.interactable = canvasGroup.blocksRaycasts = chest.IsBroken && eased > .9f;
             panel.position = transform.position + d.panelOffset + Vector3.down * ((1f - eased) * .9f);
@@ -211,7 +242,6 @@ private void OnDestroy(){if(chest!=null){chest.Changed-=Refresh;chest.Paid-=Show
             UnbindRepairWallet();
             if (repairPanel != null) repairPanel.gameObject.SetActive(false);
             if (canvasGroup != null) canvasGroup.interactable = canvasGroup.blocksRaycasts = false;
-            if (screenStats != null) screenStats.gameObject.SetActive(false);
         }
 
         private void OnEnable()
@@ -255,44 +285,6 @@ private void OnDestroy(){if(chest!=null){chest.Changed-=Refresh;chest.Paid-=Show
             if (repairWallet != null) repairWallet.MoneyChanged += OnRepairMoneyChanged;
         }
 
-        private void BuildScreenStats()
-        {
-            screenStats = Rect("Chest world stats", transform, new Vector2(300, 190), Vector2.zero);
-            statsCanvas = screenStats.gameObject.AddComponent<Canvas>();
-            statsCanvas.renderMode = RenderMode.WorldSpace;
-            statsCanvas.additionalShaderChannels = AdditionalCanvasShaderChannels.TexCoord1 | AdditionalCanvasShaderChannels.TexCoord2;
-            statsGroup = screenStats.gameObject.AddComponent<CanvasGroup>();
-            statsGroup.interactable = statsGroup.blocksRaycasts = false;
-            statsGroup.alpha = 0f;
-            Image("Chest stats", screenStats, screenStats.sizeDelta, Vector2.zero, new Color(.02f, .04f, .07f, .85f));
-            screenStatsText = Label("Chest stats values", new Vector2(272, 164), Vector2.zero, 23);
-            screenStatsText.rectTransform.SetParent(screenStats, false);
-            screenStatsText.rectTransform.anchoredPosition = Vector2.zero;
-            screenStatsText.alignment = TextAlignmentOptions.MidlineLeft;
-        }
-
-        private void UpdateWorldStats(float distance, float deltaTime)
-        {
-            var d = chest.Data;
-            if (distance <= d.statsNearDistance) statsNearby = true;
-            else if (distance >= Mathf.Max(d.statsNearDistance + .01f, d.statsHideDistance)) statsNearby = false;
-            statsVisibility = Mathf.MoveTowards(statsVisibility, d.showScreenStats && statsNearby ? 1f : 0f,
-                deltaTime / Mathf.Max(.01f, d.panelTransitionSeconds));
-            float eased = Mathf.SmoothStep(0f, 1f, statsVisibility);
-            screenStats.gameObject.SetActive(eased > 0f);
-            statsGroup.alpha = eased;
-            statsCanvas.worldCamera = viewer;
-            // Horizontal offset stays on the viewer's left, without inheriting camera pitch.
-            Vector3 right = Vector3.ProjectOnPlane(viewer.transform.right, Vector3.up).normalized;
-            Vector3 forward = Vector3.ProjectOnPlane(viewer.transform.forward, Vector3.up).normalized;
-            screenStats.position = transform.position + right * d.statsWorldOffset.x +
-                Vector3.up * (d.statsWorldOffset.y - (1f - eased) * .5f) + forward * d.statsWorldOffset.z;
-            screenStats.rotation = viewer.transform.rotation;
-            float scale = Mathf.Max(.001f, d.statsWorldScale) * Mathf.Max(.1f, d.screenStatsScale) * Mathf.Lerp(.12f, 1f, eased);
-            Vector3 parent = transform.lossyScale;
-            screenStats.localScale = new Vector3(scale / Mathf.Max(.001f, Mathf.Abs(parent.x)),
-                scale / Mathf.Max(.001f, Mathf.Abs(parent.y)), scale / Mathf.Max(.001f, Mathf.Abs(parent.z)));
-        }
 
         private void UnbindRepairWallet()
         {

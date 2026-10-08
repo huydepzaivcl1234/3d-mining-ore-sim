@@ -31,6 +31,8 @@ namespace MiningSimulator.Ores
         private bool secondAttack, nextSecondAttack;
         private MonsterRangedAttack rangedAttack;
         private ForestGolemAbility forestGolem;
+        private MushnightThief thief;
+        public bool IsTargetVisible => thief == null || !thief.IsInvisible;
         private bool rangedStrike;
         private string ActiveAttackState => rangedStrike ? rangedAttack.FireState : secondAttack ? secondAttackState : attackState;
         private float ActiveHitMoment => rangedStrike ? rangedAttack.ReleaseMoment : secondAttack ? secondHitMoment : hitMoment;
@@ -84,7 +86,7 @@ namespace MiningSimulator.Ores
         private float perceptionClock, nextTargetScan, lastTargetSeen;
         private bool playerDetected;
         private Vector3 lastKnownPlayer;
-        public string NavigationStatus => navigation != null ? navigation.State : "Idle";
+        public string NavigationStatus => thief != null ? thief.NavigationStatus : navigation != null ? navigation.State : "Idle";
         public bool HasPlayerTarget => playerDetected;
         [Header("Navigation (collision-aware, including boss size)")]
         [Min(.05f), SerializeField] [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("chaseRepathSeconds")] private float legacy_chaseRepathSeconds = .4f;
@@ -113,7 +115,7 @@ namespace MiningSimulator.Ores
         public MonsterRewardData RewardData => rewards;
         // Loot overrides must not replace the original species' combat loadout.
         private MonsterRewardData speciesData;
-        private MonsterRewardData SpeciesData => speciesData != null ? speciesData : rewards;
+        public MonsterRewardData SpeciesData => speciesData != null ? speciesData : rewards;
         public MonsterCombatSettings CombatData => SpeciesData != null && SpeciesData.HasCombatData ? SpeciesData.combat : null;
         public float AttackSpeed => (CombatData != null ? CombatData.SafeAttackSpeed : 1f) * bossSkill.AttackSpeedMultiplier;
         public float EffectiveAttackCooldown => attackCooldown / AttackSpeed;
@@ -182,6 +184,12 @@ namespace MiningSimulator.Ores
                 encounterVisuals = gameObject.AddComponent<MonsterEncounterVisuals>();
                 encounterVisuals.Configure(this, definition, IsBoss ? bossSettings : null);
             }
+            if (definition is MushnightData nightData && nightData.mushnight != null && nightData.mushnight.enabled)
+            {
+                thief ??= GetComponent<MushnightThief>();
+                if (thief == null) thief = gameObject.AddComponent<MushnightThief>();
+                thief.Initialize(this, player);
+            }
         }
         private void Awake()
         {
@@ -206,6 +214,7 @@ namespace MiningSimulator.Ores
         private void OnDamage()
         {
             if (health.Health <= 0f) return;
+            if (thief != null) { thief.OnDamaged(); return; }
             if (forestGolem != null && forestGolem.IsCharging) return;
             bossSkill.NotifyHealth(health.Health, health.MaxHealth);
             // Preserve the committed contact frame, then allow the hit reaction.
@@ -220,6 +229,7 @@ namespace MiningSimulator.Ores
             if (encounterVisuals != null) encounterVisuals.CancelExpiry();
             if (rewardsGranted) return;
             rewardsGranted = true;
+            if (thief != null) thief.OnKilled();
             var killer = health.LastDamageSource;
             if (killer != null && killer.GetComponentInParent<PlayerCombatInput>(true) != null && rewards != null)
                 TreasureChest.Active?.GrantKillExperience(rewards.experience *
@@ -311,6 +321,7 @@ namespace MiningSimulator.Ores
             if (RuneStation.PlayerUsesRuneTime) return;
             if (health.Health <= 0f || animator == null) return;
             if (IsDespawning) return;
+            if (thief != null) { thief.Tick(Time.deltaTime); return; }
             float healing = bossSkill.TickHealing(Time.deltaTime, health.MaxHealth);
             if (healing > 0f) health.Heal(healing / health.HealingMultiplier);
             // Only the attack speeds up, not walk/down/hit-reaction animations.

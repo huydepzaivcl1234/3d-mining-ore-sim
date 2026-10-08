@@ -12,5 +12,9 @@ namespace MiningSimulator.Ores
         [Tooltip("Shared daily event settings. A reference remains valid when its asset moves outside Resources.")]
         [SerializeField] private DailyEncounterEventData dailyEvents;
         public DailyEncounterEventData DailyEvents => dailyEvents;
+        [Header("Optional night thief encounters (share the 50-living-monster cap)")]
+        public MonsterSpawnEntry nightThief;
+        [Min(0)] public int thievesPerNight = 1;
+        [Range(0f, .95f)] public float nightThiefStartProgress = .05f;
     }
 }

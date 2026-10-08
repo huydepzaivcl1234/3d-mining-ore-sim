@@ -26,6 +26,13 @@ Imported asset bytes were compared against the archive; Unity subsequently migra
 
 ## Validation
 
+### HP / XP proximity correction
+
+- Confirmed in the connected Editor that HP/XP still used Near=12 m / Hide=30 m while world stats used 4 m / 6 m. This made the health panel remain visible well after leaving the nearby stats panel.
+- Updated the HP/XP GameData and defaults to Near=4 m / Hide=6 m. Initial visibility is hidden; the existing eased fade/scale/downward slide remains. At zero visibility the HP/XP canvas object is disabled, including Repair and popup children, and is re-enabled by the HUD owner when approached again.
+- Added `HealthPanelHidesWhenFarAndReturnsWhenNear`: start far without a flash, approach, leave to 10 m (previously still visible), check zero alpha/no raycast, then approach again. Thresholds remain editable; no scene edits are required.
+- Editor compiled without Console errors before starting the new test job. MCP disconnected repeatedly while awaiting that job; the on-disk TestResults.xml still belongs to the earlier 39-test run and does not include this regression. The new test result and a fresh Play Mode check remain unverified; do not treat the earlier pass as validation of this correction.
+
 ### Nearby world stats / moving-target lunge revision
 
 - Connected Editor compilation and 39 selected EditMode tests passed (TreasureChestTests and FreeFlowCombatTests). World-space stats near/far visibility and bounded moving-target steps have regression coverage.
@@ -54,3 +61,11 @@ Imported asset bytes were compared against the archive; Unity subsequently migra
 - The cap-guard probe uses an injected full owned list; it is not a 50-monster performance soak.
 
 Re-run the opt-in probe after gameplay changes. Never set a validation scene as the editor's permanent Play Mode Start Scene.
+
+### Combined chest status panel — 2026-10-08
+
+- One 530 × 144 world-space billboard now contains chest name/icon, level badge, HP, thin XP bar, income per interval, Armor, MR and XP percentage. Removed the separate side stats canvas.
+- Reuses existing HP/XP art, payout popup and Repair button. New compact frame/icon/badge use textured SVG import for uGUI. English and Vietnamese labels added.
+- Unified visibility uses Panel Near/Hide Distance, Panel Offset, Panel World Scale and transition time in TreasureChestData; old separate-stats serialized fields are retained but hidden.
+- Connected Editor compilation: no errors. All 14 parameterless TreasureChestTests methods invoked directly in Editor passed, including one-canvas layout, Repair, bar bindings and far/near visibility. This is not a fresh Test Runner or Play Mode run; parameterized cases were not rerun in this revision.
+- Camera-rendered isolated additive preview visually inspected. Preview scene closed without saving; SampleScene active and Play Mode Start Scene remains None. No production saves, currency or gameplay settings modified.

@@ -9,9 +9,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5ce228d6dde5489e959cc89554e9ce6d, type: 3}
+  m_Script: {fileID: 11500000, guid: 2fab0bc80f39b6b4a8a05fb5e077e8ae, type: 3}
   m_Name: MushroomRewards
-  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MonsterRewardData
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MushroomData
   combat:
     maxHealth: 10
     regenAmount: 0
@@ -68,30 +68,6 @@ MonoBehaviour:
     projectileCollisionLayers:
       serializedVersion: 2
       m_Bits: 4294967295
-    forestGolem:
-      enabled: 0
-      waveExtraRadius: 1.2
-      waveSeconds: 0.65
-      waveWidth: 0.12
-      waveColor: {r: 0.5, g: 1, b: 0.18, a: 0.85}
-      waveMaterial: {fileID: 0}
-      impactPrefab: {fileID: 0}
-      hitsToCharge: 3
-      chargeState: ChargeUp
-      chargeReleaseMoment: 1
-      burnDamagePerTick: 5
-      burnTickSeconds: 1
-      burnSeconds: 5
-      bossSkills:
-        enabled: 0
-        slamsToPulse: 3
-        pulseSeconds: 3
-        pulseTickSeconds: 1
-        pulseRadius: 3.6
-        pulseHeight: 2.5
-        playerMaxHealthDamagePercent: 1
-        regenerationSeconds: 10
-        regenerationMaxHealthPercent: 1
   combatSettingsVersion: 1
   boss:
     enabled: 1

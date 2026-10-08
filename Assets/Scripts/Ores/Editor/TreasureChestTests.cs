@@ -98,21 +98,24 @@ public sealed class TreasureChestTests
             var button = (UnityEngine.UI.Button)typeof(TreasureChestHud).GetField("repairButton", flags).GetValue(hud);
             Assert.That(button.GetComponentInParent<Canvas>(true).renderMode, Is.EqualTo(RenderMode.WorldSpace));
             Assert.That(button.GetComponentInParent<UnityEngine.UI.GraphicRaycaster>(true), Is.Not.Null);
-            var stats = (RectTransform)typeof(TreasureChestHud).GetField("screenStats", flags).GetValue(hud);
-            Assert.That(stats.GetComponentInParent<Canvas>(true).renderMode, Is.EqualTo(RenderMode.WorldSpace));
-            Assert.That(stats.GetComponentInParent<CanvasGroup>(true).blocksRaycasts, Is.False);
+            var panel = (RectTransform)typeof(TreasureChestHud).GetField("panel", flags).GetValue(hud);
+            Assert.That(hud.GetComponentsInChildren<Canvas>(true).Length, Is.EqualTo(1));
+            Assert.That(panel.Find("Chest stats/Income"), Is.Not.Null);
+            Assert.That(panel.Find("Chest stats/Armor"), Is.Not.Null);
+            Assert.That(panel.Find("Chest stats/Magic resistance"), Is.Not.Null);
+            Assert.That(panel.Find("HP Background").GetComponent<RectTransform>().sizeDelta.y, Is.GreaterThan(
+                panel.Find("XP Background").GetComponent<RectTransform>().sizeDelta.y));
             var cameraRoot = new GameObject("Isolated stats camera");
             try
             {
                 var camera = cameraRoot.AddComponent<Camera>();
                 typeof(TreasureChestHud).GetField("viewer", flags).SetValue(hud, camera);
-                var updateStats = typeof(TreasureChestHud).GetMethod("UpdateWorldStats", flags);
-                updateStats.Invoke(hud, new object[]{chest.Data.statsNearDistance, 1f});
-                Assert.That(stats.gameObject.activeSelf, Is.True);
-                Assert.That(stats.position.x, Is.LessThan(root.transform.position.x));
-                Assert.That(stats.rotation, Is.EqualTo(camera.transform.rotation));
-                updateStats.Invoke(hud, new object[]{chest.Data.statsHideDistance + 1f, 1f});
-                Assert.That(stats.gameObject.activeSelf, Is.False);
+                var update = typeof(TreasureChestHud).GetMethod("UpdateHealthPanel", flags);
+                update.Invoke(hud, new object[]{chest.Data.panelNearDistance, 1f});
+                Assert.That(panel.gameObject.activeSelf, Is.True);
+                Assert.That(panel.rotation, Is.EqualTo(camera.transform.rotation));
+                update.Invoke(hud, new object[]{chest.Data.panelHideDistance + 1f, 1f});
+                Assert.That(panel.gameObject.activeSelf, Is.False);
             }
             finally { Object.DestroyImmediate(cameraRoot); }
             var cost = (TMPro.TextMeshProUGUI)typeof(TreasureChestHud).GetField("repairCostLabel", flags).GetValue(hud);
@@ -124,6 +127,41 @@ public sealed class TreasureChestTests
             Assert.That(button.GetComponent<RectTransform>().sizeDelta, Is.EqualTo(new Vector2(340,89)));
         }
         finally { Object.DestroyImmediate(root); }
+    }
+
+    [Test] public void HealthPanelHidesWhenFarAndReturnsWhenNear()
+    {
+        var prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>("Assets/GameData/Base/BaseTreasureChest.prefab");
+        var root = Object.Instantiate(prefab); root.SetActive(false);
+        var cameraRoot = new GameObject("Isolated HP proximity camera");
+        var flags = BindingFlags.Instance | BindingFlags.NonPublic;
+        try
+        {
+            var chest = root.GetComponent<TreasureChest>();
+            typeof(TreasureChest).GetField("persistProgress", flags).SetValue(chest, false);
+            typeof(TreasureChest).GetMethod("Awake", flags).Invoke(chest, null);
+            var hud = root.GetComponent<TreasureChestHud>(); hud.Bind(chest);
+            typeof(TreasureChestHud).GetField("viewer", flags).SetValue(hud, cameraRoot.AddComponent<Camera>());
+            var panel = (RectTransform)typeof(TreasureChestHud).GetField("panel", flags).GetValue(hud);
+            var group = panel.GetComponent<CanvasGroup>();
+            var update = typeof(TreasureChestHud).GetMethod("UpdateHealthPanel", flags);
+            // Starting far away must not flash a fully visible health panel.
+            update.Invoke(hud, new object[]{20f, 1f});
+            Assert.That(group.alpha, Is.Zero);
+            Assert.That(panel.gameObject.activeSelf, Is.False);
+            update.Invoke(hud, new object[]{2f, 1f});
+            Assert.That(group.alpha, Is.EqualTo(1f));
+            Assert.That(panel.gameObject.activeSelf, Is.True);
+            // The old 30 m setting left the panel visible at this distance.
+            update.Invoke(hud, new object[]{10f, 1f});
+            Assert.That(group.alpha, Is.Zero);
+            Assert.That(panel.gameObject.activeSelf, Is.False);
+            Assert.That(group.blocksRaycasts, Is.False);
+            update.Invoke(hud, new object[]{2f, 1f});
+            Assert.That(group.alpha, Is.EqualTo(1f));
+            Assert.That(panel.gameObject.activeSelf, Is.True);
+        }
+        finally { Object.DestroyImmediate(root); Object.DestroyImmediate(cameraRoot); }
     }
 
     [Test] public void ChestAudioIsConfiguredAndSpatial()

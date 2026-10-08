@@ -41,7 +41,7 @@ namespace MiningSimulator.Ores
         private int playerHits;
         private bool wave, chargePending;
         public bool IsCharging { get; private set; }
-        private ForestGolemSettings Settings => owner != null ? owner.CombatData?.forestGolem : null;
+        private ForestGolemSettings Settings => owner != null && owner.SpeciesData is ForestGolemData data ? data.forestGolem : null;
         private void Awake() { owner = GetComponent<MushroomMonster>(); animator = GetComponentInChildren<Animator>(); }
         public void Initialize(MiningCharacterHealth target)
         {
