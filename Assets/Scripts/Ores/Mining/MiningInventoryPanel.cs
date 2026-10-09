@@ -33,6 +33,12 @@ namespace MiningSimulator.Ores
         [Header("Empty necklace socket hint")]
         [SerializeField] private Sprite necklacePlaceholder;
         [SerializeField] private Color necklacePlaceholderTint = new(1f, 1f, 1f, 0.25f);
+        [Header("Compact inventory design (optional)")]
+        [SerializeField] private bool compactDesign;
+        [SerializeField] private TextMeshProUGUI capacityLabel, detailName, detailMeta, detailSummary, detailDuration;
+        [SerializeField] private Image detailIcon;
+        [SerializeField] private Button useFiveButton, useTenButton, useAllButton;
+        private int selectedSlot = -1;
 
         private readonly SlotView[] slotViews =
             new SlotView[MiningItemDatabase.InventoryCapacity + MiningItemSystem.NecklaceSlotCount];
@@ -85,6 +91,9 @@ namespace MiningSimulator.Ores
             openButton?.onClick.AddListener(OpenPanel);
             closeButton?.onClick.RemoveListener(ClosePanel);
             closeButton?.onClick.AddListener(ClosePanel);
+            useFiveButton?.onClick.AddListener(UseFive);
+            useTenButton?.onClick.AddListener(UseTen);
+            useAllButton?.onClick.AddListener(UseAll);
             if (itemSystem != null)
             {
                 itemSystem.InventoryChanged -= Refresh;
@@ -98,6 +107,9 @@ namespace MiningSimulator.Ores
             MiningLocalization.LanguageChanged -= HandleLanguageChanged;
             openButton?.onClick.RemoveListener(OpenPanel);
             closeButton?.onClick.RemoveListener(ClosePanel);
+            useFiveButton?.onClick.RemoveListener(UseFive);
+            useTenButton?.onClick.RemoveListener(UseTen);
+            useAllButton?.onClick.RemoveListener(UseAll);
             if (itemSystem != null)
             {
                 itemSystem.InventoryChanged -= Refresh;
@@ -106,6 +118,7 @@ namespace MiningSimulator.Ores
 
         public void UseSlot(int index)
         {
+            ShowSlotDetails(index);
             Interactions?.DismissMenu();
             if (itemSystem == null)
             {
@@ -290,6 +303,8 @@ namespace MiningSimulator.Ores
                 titleLabel.text = string.Format(MiningLocalization.Text(
                         "INVENTORY  •  {0}/{1} SLOTS", "TÚI ĐỒ  •  {0}/{1} Ô"),
                     occupied, MiningItemDatabase.InventoryCapacity);
+                if (compactDesign) titleLabel.text = MiningLocalization.Text("INVENTORY", "TÚI ĐỒ");
+                if (capacityLabel != null) capacityLabel.text = $"{occupied} / {MiningItemDatabase.InventoryCapacity} {MiningLocalization.Text("SLOTS", "Ô")}";
             }
 
             for (int index = 0; index < slotViews.Length; index++)
@@ -325,12 +340,46 @@ namespace MiningSimulator.Ores
                     view.nameLabel.text = occupied
                         ? $"{slot.Item.DisplayName}\n{slot.Item.GetInventorySummary()}"
                         : MiningLocalization.Text("EMPTY", "TRỐNG");
+                    if (compactDesign) view.nameLabel.enabled = false;
                 }
                 if (view.countLabel != null)
                 {
                     view.countLabel.text = occupied ? $"x{slot.Count}" : string.Empty;
                 }
             }
+            RefreshDetails();
+        }
+
+        public void ShowSlotDetails(int index)
+        {
+            selectedSlot = index;
+            RefreshDetails();
+        }
+        private void UseFive() => UseSelected(5);
+        private void UseTen() => UseSelected(10);
+        private void UseAll() => UseSelected(int.MaxValue);
+        private void UseSelected(int count)
+        {
+            if (itemSystem == null || selectedSlot < 0) return;
+            var slot = itemSystem.GetSlot(selectedSlot);
+            if (!slot.IsEmpty && slot.Item.UseType == MiningItemUseType.TimedEffect) itemSystem.TryUseSlot(selectedSlot, count);
+        }
+        private void RefreshDetails()
+        {
+            if (!compactDesign) return;
+            var slot = itemSystem != null && selectedSlot >= 0 ? itemSystem.GetSlot(selectedSlot) : new MiningItemSystem.InventorySlotView(null, 0);
+            var item = slot.IsEmpty ? null : slot.Item;
+            if (detailIcon != null) { detailIcon.sprite = item != null ? item.InventoryIcon : null; detailIcon.enabled = detailIcon.sprite != null; }
+            if (detailName != null) detailName.text = item != null ? item.DisplayName.ToUpperInvariant() : MiningLocalization.Text("SELECT AN ITEM", "CHỌN VẬT PHẨM");
+            if (detailMeta != null) detailMeta.text = item != null ? $"{item.Rarity.ToString().ToUpperInvariant()} • x{slot.Count}" : "";
+            if (detailSummary != null) detailSummary.text = item != null ? item.GetInventorySummary() : MiningLocalization.Text("Hover an item to see its details", "Di chuột lên vật phẩm để xem thông tin");
+            if (detailDuration != null) detailDuration.text = item != null && item.UseType == MiningItemUseType.TimedEffect ? string.Format(MiningLocalization.Text("Duration: {0:0.#} seconds", "Thời gian: {0:0.#} giây"), item.EffectDurationSeconds) : "";
+            bool usable = item != null && item.UseType == MiningItemUseType.TimedEffect;
+            if (useFiveButton != null) useFiveButton.interactable = usable;
+            if (useTenButton != null) useTenButton.interactable = usable;
+            if (useAllButton != null) useAllButton.interactable = usable;
+            for (int i = 0; i < slotViews.Length; i++)
+                if (slotViews[i]?.button?.targetGraphic != null) slotViews[i].button.targetGraphic.color = i == selectedSlot && item != null ? new Color32(255,210,83,255) : Color.white;
         }
 
         private void HandleLanguageChanged()

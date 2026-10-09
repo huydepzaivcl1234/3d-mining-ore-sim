@@ -24,6 +24,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private RectTransform claimButtonBody;
         [SerializeField] private UnityEngine.UI.Image claimButtonBackground;
         [SerializeField] private TextMeshProUGUI claimLabel;
+        [SerializeField] private bool compactDesign;
 
         [Header("Animation only")]
         [Min(0.01f), SerializeField] private float progressSpeed = 3.5f;
@@ -186,6 +187,14 @@ namespace MiningSimulator.Ores
             bool claimed = questSystem != null && questSystem.IsClaimed(questId);
             bool complete = definition != null && questSystem != null &&
                             questSystem.GetProgress(questId) >= definition.TargetAmount;
+            if (compactDesign)
+            {
+                if (claimButtonBackground != null) claimButtonBackground.color = complete && !claimed
+                    ? new Color32(255, 210, 83, 255) : new Color32(216, 233, 224, 255);
+                if (claimLabel != null) claimLabel.color = complete && !claimed
+                    ? new Color32(53, 41, 35, 255) : new Color32(132, 111, 94, 255);
+                return;
+            }
             Color top = claimed ? ClaimedTop : complete ? ClaimTop : InProgressTop;
             Color bottom = claimed ? ClaimedBottom : complete ? ClaimBottom : InProgressBottom;
             if (claimGradient != null)

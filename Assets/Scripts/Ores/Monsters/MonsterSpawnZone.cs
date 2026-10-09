@@ -296,6 +296,7 @@ public bool TryGetPatrolPoint(Vector3 origin,out Vector3 point)
             AnnounceDailyEvent();
             if (TreasureChest.Active == null || !TreasureChest.Active.IsAlive) return;
             TickNightThieves();
+            TickNightSkullclaw();
             if (dayNight.CurrentPeriod != SpawnPeriod)
             {
                 // Night-only waves are deferred during the day, not discarded.
@@ -356,6 +357,31 @@ public bool TryGetPatrolPoint(Vector3 origin,out Vector3 point)
                     unlockNotifier.ShowToast(string.Format(MiningLocalization.Text("MONSTER_BOSS_UNLOCKED",
                         "Đã mở khóa boss: {0} (Lv. {1})!"), name, bossRequired));
             }
+        }
+
+        private static readonly Dictionary<MonsterSpawnRoster, SkullclawNightRoll> skullNights = new();
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetSkullNightRolls() => skullNights.Clear();
+        private float nextSkullRetry;
+        private void TickNightSkullclaw()
+        {
+            var entry = additionalRoster != null ? additionalRoster.nightSkullclaw : null;
+            var data = entry?.prefab != null ? entry.prefab.SpeciesData as SkullclawData : null;
+            if (data == null || dayNight.CurrentPeriod != MiningTimePeriod.Night ||
+                RuneStation.PlayerUsesRuneTime || !CanSpawnSpecies(entry)) return;
+            if (Time.time < nextSkullRetry) return;
+            nextSkullRetry = Time.time + 1f;
+            // Only the first enabled zone owns this special encounter, even with several spawn zones.
+            foreach (var zone in FindObjectsByType<MonsterSpawnZone>(FindObjectsSortMode.InstanceID))
+                if (zone.isActiveAndEnabled && zone.additionalRoster?.nightSkullclaw?.prefab != null)
+                { if (zone != this) return; break; }
+            if (dayNight.CurrentPeriodProgress < data.nightStartProgress) return;
+            if (!skullNights.TryGetValue(additionalRoster, out var skullNight))
+                skullNights.Add(additionalRoster, skullNight = new SkullclawNightRoll());
+            if (!skullNight.IsRolledFor(dayNight.DayNumber))
+                skullNight.Roll(dayNight.DayNumber, data.nightSpawnChance, UnityEngine.Random.value);
+            if (!skullNight.Pending) return;
+            if (SpawnOne(entry)) skullNight.MarkSpawned();
         }
 
         private void TickNightThieves()

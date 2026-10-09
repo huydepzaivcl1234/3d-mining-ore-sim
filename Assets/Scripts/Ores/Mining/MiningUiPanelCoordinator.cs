@@ -156,6 +156,8 @@ namespace MiningSimulator.Ores
             }
             panel.gameObject.SetActive(true);
             panel.anchoredPosition = GetHomePosition(panel);
+            panel.SetAsLastSibling();
+            panel.GetComponent<MiningPanelMotion>()?.PlayOpen();
             SetCanvasAlpha(panel, 0f, false);
             AnimateBasePanels(false);
             orbitCamera?.SetInputLocked(true);
@@ -176,6 +178,7 @@ namespace MiningSimulator.Ores
             if (activeModal != panel) return; // An old panel closing must not reveal HUD behind a new modal.
             StopAllCoroutines();
             SetInteraction(panel, false);
+            panel.GetComponent<MiningPanelMotion>()?.PlayClose(false);
             AnimateBasePanels(!mainMenuOpen);
             orbitCamera?.SetInputLocked(false);
             HideBackdrop();
@@ -550,7 +553,8 @@ namespace MiningSimulator.Ores
 
         private static CanvasGroup GetCanvasGroup(RectTransform panel)
         {
-            return panel.GetComponent<CanvasGroup>() ?? panel.gameObject.AddComponent<CanvasGroup>();
+            CanvasGroup group = panel.GetComponent<CanvasGroup>();
+            return group != null ? group : panel.gameObject.AddComponent<CanvasGroup>();
         }
 
         private static void SetCanvasAlpha(RectTransform panel, float alpha, bool interactive)

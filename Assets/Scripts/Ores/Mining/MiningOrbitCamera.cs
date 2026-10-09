@@ -50,7 +50,9 @@ namespace MiningSimulator.Ores
             PlayerPrefs.SetFloat(MouseSensitivityKey, mouseSensitivity);
         }
         public bool IsShiftLocked => shiftLocked && !inputLocked && !cinematicOverride &&
-            isActiveAndEnabled && Time.timeScale > 0f && (playerHealth == null || playerHealth.Health > 0f);
+            !FollowingKnockdown && isActiveAndEnabled && Time.timeScale > 0f && (playerHealth == null || playerHealth.Health > 0f);
+        private PlayerKnockbackRagdoll playerKnockdown;
+        private bool FollowingKnockdown => playerKnockdown != null && playerKnockdown.IsIncapacitated;
 
         [Header("Combat framing (follows the player's Standing/Combat mode)")]
         [SerializeField] private bool adaptiveCombatFraming = true;
@@ -130,6 +132,7 @@ namespace MiningSimulator.Ores
                 playerInput = followTarget.GetComponentInChildren<PlayerInput>(true);
                 combatInput = followTarget.GetComponent<PlayerCombatInput>();
                 playerHealth = followTarget.GetComponent<MiningCharacterHealth>();
+                playerKnockdown = followTarget.GetComponent<PlayerKnockbackRagdoll>();
                 playerMovement = followTarget.GetComponent<StarterAssets.ThirdPersonController>();
                 if (playerMovement != null) playerMovement.ExternalCameraControl = true;
             }
@@ -137,9 +140,9 @@ namespace MiningSimulator.Ores
 
         private void Update()
         {
-            if (shiftLocked && (playerHealth != null && playerHealth.Health <= 0f)) SetShiftLocked(false);
+            if (shiftLocked && (FollowingKnockdown || playerHealth != null && playerHealth.Health <= 0f)) SetShiftLocked(false);
             if (followTarget != null && gameData != null && !inputLocked && !cinematicOverride && Time.timeScale > 0f &&
-                toggleShiftLock != null && toggleShiftLock.WasPressedThisFrame()) SetShiftLocked(!shiftLocked);
+                !FollowingKnockdown && toggleShiftLock != null && toggleShiftLock.WasPressedThisFrame()) SetShiftLocked(!shiftLocked);
             UpdateShiftCursor();
             if (IsShiftLocked && playerMovement != null) playerMovement.ExternalFacing = true;
             if (gameData == null || inputLocked || cinematicOverride)
@@ -200,7 +203,7 @@ namespace MiningSimulator.Ores
             EnsureCameraBodyCollider();
 
             if (followTarget != null)
-                focusPoint = followTarget.position + followOffset;
+                focusPoint = FollowingKnockdown ? playerKnockdown.CameraFocusPosition : followTarget.position + followOffset;
 
             UpdateFollowHeading();
             UpdateCombatFraming();
@@ -231,7 +234,7 @@ namespace MiningSimulator.Ores
 
         public void SetShiftLocked(bool locked)
         {
-            shiftLocked = locked && followTarget != null;
+            shiftLocked = locked && followTarget != null && !FollowingKnockdown;
             headingVelocity = 0f;
             shiftFacingVelocity = 0f;
             lastManualOrbitTime = Time.unscaledTime;
@@ -367,6 +370,7 @@ namespace MiningSimulator.Ores
 
         private void UpdateFollowHeading()
         {
+            if (FollowingKnockdown) { headingVelocity = 0f; return; }
             // Never feed combat-facing changes back into the camera yaw.
             if (IsShiftLocked || suppressHeadingDuringCombat && combatInput != null && combatInput.IsCombatMode)
             { headingVelocity = 0f; return; }

@@ -339,6 +339,13 @@ namespace MiningSimulator.Ores
             index >= 0 && index < cells.Length && cells[index].ground &&
             IsCapsuleClear(cells[index].point, radius, height);
         public bool IsSegmentClear(Vector3 start, Vector3 end, float radius, float height = 0)
+            => CheckSegment(start, end, radius, height, false);
+
+        /// <summary>Shortcuts must preserve A*'s choice to avoid expensive terrain.</summary>
+        public bool IsShortcutClear(Vector3 start, Vector3 end, float radius, float height = 0)
+            => CheckSegment(start, end, radius, height, true);
+
+        private bool CheckSegment(Vector3 start, Vector3 end, float radius, float height, bool shortcut)
         {
             if (!HasBaked) return false;
             Vector3 delta = end - start; delta.y = 0;
@@ -350,7 +357,8 @@ namespace MiningSimulator.Ores
                 Vector3 p = Vector3.Lerp(start, end, (float)step / steps); int i = Index(p);
                 // Cell centers are conservative samples, not the actor's actual position.
                 // A clear endpoint beside an ore can belong to a cell whose center is blocked.
-                if (i < 0 || !cells[i].ground || !TryGetGroundPoint(p, out Vector3 ground) ||
+                if (i < 0 || !cells[i].ground || (shortcut && cells[i].cost > 1.01f) ||
+                    !TryGetGroundPoint(p, out Vector3 ground) ||
                     !IsCapsuleClear(ground, radius, height)) return false;
                 if (step > 0 && Mathf.Abs(previousGround.y - ground.y) > maximumStep) return false;
                 previousGround = ground;
@@ -397,7 +405,7 @@ namespace MiningSimulator.Ores
                 r.revision = Revision;
                 if (!IsCapsulePlacementClear(r.start, r.radius, r.height)) { Finish(r, PathStatus.InvalidStart); continue; }
                 if (!IsPointClear(r.end, r.radius, r.height)) { Finish(r, PathStatus.InvalidEnd); continue; }
-                bool direct = IsSegmentClear(r.start, r.end, r.radius, r.height);
+                bool direct = IsShortcutClear(r.start, r.end, r.radius, r.height);
                 if (direct) { Finish(r, PathStatus.Success, new List<Vector3> { r.end }); continue; }
                 r.search = searchPool.Count > 0 ? searchPool.Pop() : new Search();
                 if (!Begin(r.search, r.start, r.end, r.radius, r.height))
@@ -523,8 +531,7 @@ namespace MiningSimulator.Ores
                 int next = i;
                 // Clearance-aware smoothing, without shortcuts through costly terrain.
                 while (next + 1 < raw.Count && next - i < smoothingLookAheadCells &&
-                    IsSegmentClear(previous, raw[next + 1], s.radius, s.height) &&
-                    cells[Index(raw[next + 1])].cost <= 1.01f) next++;
+                    IsShortcutClear(previous, raw[next + 1], s.radius, s.height)) next++;
                 if (!IsSegmentClear(previous, raw[next], s.radius, s.height)) { result.Clear(); return false; }
                 result.Add(raw[next]); previous = raw[next]; i = next + 1;
             }

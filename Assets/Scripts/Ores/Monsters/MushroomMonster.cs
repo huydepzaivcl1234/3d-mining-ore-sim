@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace MiningSimulator.Ores
 {
     [RequireComponent(typeof(MiningCharacterHealth), typeof(CharacterController))]
-    public sealed class MushroomMonster : MonoBehaviour
+    public sealed partial class MushroomMonster : MonoBehaviour
     {
         [SerializeField] private Animator animator;
         [Tooltip("Animator state containing this species' attack clip.")]
@@ -34,9 +34,9 @@ namespace MiningSimulator.Ores
         private MushnightThief thief;
         public bool IsTargetVisible => thief == null || !thief.IsInvisible;
         private bool rangedStrike;
-        private string ActiveAttackState => rangedStrike ? rangedAttack.FireState : secondAttack ? secondAttackState : attackState;
-        private float ActiveHitMoment => rangedStrike ? rangedAttack.ReleaseMoment : secondAttack ? secondHitMoment : hitMoment;
-        private float ActiveAreaRadius => secondAttack ? secondAreaRadius : areaRadius;
+        private string ActiveAttackState => Skullclaw != null ? Skullclaw.AttackState(skullCombo.Current) : rangedStrike ? rangedAttack.FireState : secondAttack ? secondAttackState : attackState;
+        private float ActiveHitMoment => Skullclaw != null ? Skullclaw.Contact(skullCombo.Current) : rangedStrike ? rangedAttack.ReleaseMoment : secondAttack ? secondHitMoment : hitMoment;
+        private float ActiveAreaRadius => IsSkullclawJump ? Skullclaw.jumpAreaRadius : secondAttack ? secondAreaRadius : areaRadius;
         [Min(0f), SerializeField] [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("moveSpeed")] private float legacy_moveSpeed = 1.5f;
         private float moveSpeed => CombatData != null ? CombatData.moveSpeed : legacy_moveSpeed;
         [Min(0f), SerializeField] [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("detectionRange")] private float legacy_detectionRange = 6f;
@@ -54,7 +54,7 @@ namespace MiningSimulator.Ores
         public enum HitShape { Sweep, Area }
         [Header("Hit volume and ground warning")]
         [SerializeField] [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("hitShape")] private HitShape legacy_hitShape;
-        private HitShape hitShape => CombatData != null ? CombatData.hitShape : legacy_hitShape;
+        private HitShape hitShape => IsSkullclawJump ? HitShape.Area : CombatData != null ? CombatData.hitShape : legacy_hitShape;
         [Min(.1f), SerializeField] [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("areaRadius")] private float legacy_areaRadius = 1.6f;
         private float areaRadius => CombatData != null ? CombatData.areaRadius : legacy_areaRadius;
         [Min(0f), SerializeField] [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("areaForwardOffset")] private float legacy_areaForwardOffset = 1.6f;
@@ -113,6 +113,7 @@ namespace MiningSimulator.Ores
         public bool IsDespawning { get; private set; }
         public float CombatTimeRemaining => encounterVisuals != null ? encounterVisuals.RemainingSeconds : 0f;
         public MonsterRewardData RewardData => rewards;
+        public DayNightSystem SpawnClock => zone != null ? zone.DayNight : null;
         // Loot overrides must not replace the original species' combat loadout.
         private MonsterRewardData speciesData;
         public MonsterRewardData SpeciesData => speciesData != null ? speciesData : rewards;
@@ -145,6 +146,10 @@ namespace MiningSimulator.Ores
         }
         public void Initialize(MonsterSpawnZone owner, MiningCharacterHealth player, bool boss = false)
         {
+            ResetRetaliation();
+            skullCombo.Reset();
+            skullJumpGate.Reset(); skullApproachTarget = null;
+            skullJumpActive = false;
             navigation?.Reset();
             playerDetected = false; perceptionClock = nextTargetScan = lastTargetSeen = 0f;
             zone = owner;
@@ -215,14 +220,17 @@ namespace MiningSimulator.Ores
         {
             if (health.Health <= 0f) return;
             if (thief != null) { thief.OnDamaged(); return; }
+            RememberPlayerAttacker();
             if (forestGolem != null && forestGolem.IsCharging) return;
             bossSkill.NotifyHealth(health.Health, health.MaxHealth);
             // Preserve the committed contact frame, then allow the hit reaction.
             // Otherwise a player's strike can cancel every incoming headbutt.
-            if (animationState != attackStateHash || hitApplied) Play("Damage");
+            if (!skullJumpActive && (animationState != attackStateHash || hitApplied)) Play("Damage");
         }
         private void OnDeath()
         {
+            ResetRetaliation();
+            skullJumpActive = false;
             if (forestGolem != null) forestGolem.Cancel();
             if (animator != null) animator.speed = baseAnimatorSpeed;
             if (IsDespawning) return;
@@ -270,11 +278,12 @@ namespace MiningSimulator.Ores
                 if (!rangedStrike && hitShape == HitShape.Area)
                 {
                     if (groundWarning == null) groundWarning = gameObject.AddComponent<MonsterAttackWarning>();
-                    groundWarning.Show(strikeCenter, ActiveAreaRadius * HitScale, warningColor, warningShader, transform);
+                    groundWarning.Show(IsSkullclawJump ? skullJumpEnd : strikeCenter, ActiveAreaRadius * HitScale, warningColor, warningShader, transform);
                 }
             }
             else if (hash != attackStateHash)
             {
+                skullJumpActive = false;
                 strikeLocked = false;
                 if (groundWarning != null) groundWarning.Hide();
             }
@@ -282,6 +291,7 @@ namespace MiningSimulator.Ores
         }
         private void BeginAttack()
         {
+            if (Skullclaw != null) BeginSkullclawAttack();
             Transform victim = target != null ? target.transform : null;
             rangedStrike = rangedAttack != null && rangedAttack.IsReady && victim != null &&
                 Vector3.ProjectOnPlane(victim.position - transform.position, Vector3.up).magnitude > EffectiveAttackRange;
@@ -296,6 +306,7 @@ namespace MiningSimulator.Ores
         {
             get
             {
+                if (IsSkullclawJump) return transform.position;
                 Vector2 offset = secondAttack ? secondAreaOffset : new Vector2(areaSideOffset, areaForwardOffset);
                 return transform.position + (transform.right * offset.x + transform.forward * offset.y) * HitScale;
             }
@@ -307,6 +318,7 @@ namespace MiningSimulator.Ores
         }
         private void TrackAttackTarget(float normalizedTime)
         {
+            if (IsSkullclawJump) return; // landing point commits at takeoff; no homing through walls
             if (hitApplied || normalizedTime >= ActiveHitMoment * trackingEndFraction) return;
             Transform victim = target != null && target.Health > 0f ? target.transform : null;
             if (victim == null) return;
@@ -322,6 +334,8 @@ namespace MiningSimulator.Ores
             if (health.Health <= 0f || animator == null) return;
             if (IsDespawning) return;
             if (thief != null) { thief.Tick(Time.deltaTime); return; }
+            TickRetaliation(Time.deltaTime);
+            TickSkullclawApproach(Time.deltaTime);
             float healing = bossSkill.TickHealing(Time.deltaTime, health.MaxHealth);
             if (healing > 0f) health.Heal(healing / health.HealingMultiplier);
             // Only the attack speeds up, not walk/down/hit-reaction animations.
@@ -337,6 +351,7 @@ namespace MiningSimulator.Ores
             bool reacting = state.IsName("Damage");
             var windup = animator.IsInTransition(0) && animator.GetNextAnimatorStateInfo(0).IsName(ActiveAttackState)
                 ? animator.GetNextAnimatorStateInfo(0) : state;
+            bool jumpMoved = windup.IsName(ActiveAttackState) && MoveSkullclawJump(windup.normalizedTime);
             if (windup.IsName(ActiveAttackState) && animationState == attackStateHash) TrackAttackTarget(windup.normalizedTime);
             if (groundWarning != null)
             {
@@ -345,7 +360,7 @@ namespace MiningSimulator.Ores
                 else if (hitApplied || animationState != attackStateHash) groundWarning.Hide();
             }
             if (attacking && !animator.IsInTransition(0) && !hitApplied &&
-                state.normalizedTime >= ActiveHitMoment)
+                state.normalizedTime >= ActiveHitMoment && (!IsSkullclawJump || motor.isGrounded))
             {
                 hitApplied = true;
                 if (bossSkill.NotifyStrike() && target == playerTarget && target != null && target.Health > 0f &&
@@ -359,16 +374,25 @@ namespace MiningSimulator.Ores
                 if (!rangedStrike && forestGolem != null) forestGolem.BeginSlam(strikeCenter, EffectiveAreaRadius, HitScale, hitHeight * HitScale);
                 if (rangedStrike)
                     rangedAttack.Fire(this, target != null && target.Health > 0f ? target.transform : null);
-                if (!rangedStrike && target != null && target.Health > 0f && ContainsVictim(target.transform, targetCollider))
+                if (IsSkullclawJump) ApplySkullclawAreaHit();
+                if (!IsSkullclawJump && !rangedStrike && target != null && target.Health > 0f && ContainsVictim(target.transform, targetCollider))
                 {
                     float dealt = target.DealDamage(scaledDamage,
-                        rewards != null ? rewards.attackDamageType : CombatDamageType.Physical);
+                        rewards != null ? rewards.attackDamageType : CombatDamageType.Physical, gameObject);
                     if (target == playerTarget && bossSkill.NotifyPlayerDamage(dealt, target.MaxHealth))
                     {
                         nextAttack = Mathf.Min(nextAttack, Time.time + EffectiveAttackCooldown);
                         animator.speed = baseAnimatorSpeed * AttackSpeed;
                     }
                     ApplyHitHealing(dealt);
+                    if (dealt > 0f && target == playerTarget && target.Health > 0f &&
+                        CombatData != null && CombatData.knockbackSpeed > 0f)
+                    {
+                        Vector3 away = Vector3.ProjectOnPlane(target.transform.position - transform.position, Vector3.up);
+                        if (away.sqrMagnitude < .001f) away = transform.forward;
+                        target.GetComponent<PlayerKnockbackRagdoll>()?.ApplyKnockback(
+                            away.normalized * CombatData.knockbackSpeed + Vector3.up * CombatData.knockbackLift);
+                    }
                     if (forestGolem != null && target == playerTarget) { forestGolem.RememberHit(target); forestGolem.NotifyPlayerHit(target, dealt); }
                     if (dealt > 0f && rewards != null) target.ApplyBurn(scaledBurnDamage, rewards.burnTickSeconds, rewards.burnDurationSeconds);
                 }
@@ -376,7 +400,8 @@ namespace MiningSimulator.Ores
 
             }
             Vector3 movement = Vector3.zero;
-            if (!animator.IsInTransition(0) && ((!attacking && !reacting) || state.normalizedTime >= 1f))
+            bool skullRecovery = FinishSkullclawAttack(state);
+            if (!skullRecovery && !animator.IsInTransition(0) && ((!attacking && !reacting) || state.normalizedTime >= 1f))
             {
                 bool chasing = UpdatePlayerTarget(Time.deltaTime);
                 if (chasing) destination = lastKnownPlayer;
@@ -394,8 +419,8 @@ namespace MiningSimulator.Ores
                 Transform victim = chasing ? target.transform : null;
                 bool canShoot = rangedAttack != null && rangedAttack.IsReady &&
                     delta.magnitude <= rangedAttack.Range && rangedAttack.CanReach(victim);
-                float engagementRange = canShoot ? Mathf.Max(EffectiveAttackRange, rangedAttack.Range) : EffectiveAttackRange;
-                bool canEngage = chasing && delta.magnitude <= engagementRange &&
+                float engagementRange = canShoot ? Mathf.Max(EngagementRange, rangedAttack.Range) : EngagementRange;
+                bool canEngage = chasing && (Skullclaw != null ? CanSkullclawEngage : delta.magnitude <= engagementRange) &&
                     target != null && HasStrikeLineOfSight(target.transform,
                         targetCollider != null ? targetCollider.ClosestPoint(transform.TransformPoint(motor.center)) :
                             target.transform.position + Vector3.up * .5f);
@@ -413,8 +438,11 @@ namespace MiningSimulator.Ores
                     transform.rotation = Quaternion.RotateTowards(transform.rotation,
                         Quaternion.LookRotation(movement.sqrMagnitude > 0.01f ? movement : delta), chaseTurnSpeed * Time.deltaTime);
             }
-            verticalSpeed = motor.isGrounded ? -2f : verticalSpeed + Physics.gravity.y * Time.deltaTime;
-            motor.Move((movement + Vector3.up * verticalSpeed) * Time.deltaTime);
+            if (!jumpMoved)
+            {
+                verticalSpeed = motor.isGrounded ? -2f : verticalSpeed + Physics.gravity.y * Time.deltaTime;
+                motor.Move((movement + Vector3.up * verticalSpeed) * Time.deltaTime);
+            }
         }
 
         private float HitScale => Mathf.Max(.01f, Mathf.Max(transform.lossyScale.x, transform.lossyScale.z));
@@ -430,7 +458,7 @@ namespace MiningSimulator.Ores
             if (IsDespawning) return;
             if (player != null && player.Health > 0f)
             {
-                float dealt = player.DealDamage(scaledDamage, rewards != null ? rewards.attackDamageType : CombatDamageType.Physical);
+                float dealt = player.DealDamage(scaledDamage, rewards != null ? rewards.attackDamageType : CombatDamageType.Physical, gameObject);
                 if(player==playerTarget)bossSkill.NotifyPlayerDamage(dealt, player.MaxHealth);
                 ApplyHitHealing(dealt);
                 if (forestGolem != null && player==playerTarget) forestGolem.NotifyPlayerHit(player, dealt);
@@ -491,7 +519,7 @@ private Vector3 ChaseDirection(bool chasing)
             legacyNavigation.avoidanceLookAhead = avoidanceLookAhead;
             legacyNavigation.avoidanceHoldSeconds = avoidanceHoldSeconds;
             return navigation.Tick(destination, chasing && target != null ? target.transform : null,
-                EffectiveAttackRange, CombatData ?? legacyNavigation, Time.deltaTime);
+                EngagementRange, CombatData ?? legacyNavigation, Time.deltaTime);
         }
 
 private bool UpdatePlayerTarget(float dt)
@@ -504,11 +532,12 @@ private bool UpdatePlayerTarget(float dt)
                 var stats = FindAnyObjectByType<MiningPlayerStats>();
                 if (stats != null) playerTarget = stats.GetComponent<MiningCharacterHealth>();
             }
+            if (TrySelectRetaliationTarget()) return true;
             if (chest != null && chest.IsAlive)
             {
                 Vector3 towardChest = Vector3.ProjectOnPlane(chest.transform.position-transform.position,Vector3.up).normalized;
                 Vector3 towardPlayer = playerTarget != null ? Vector3.ProjectOnPlane(playerTarget.transform.position-transform.position,Vector3.up) : Vector3.zero;
-                bool intercept = playerTarget != null && playerTarget.gameObject.activeInHierarchy && playerTarget.Health > 0f &&
+                bool intercept = !returningFromRetaliation && playerTarget != null && playerTarget.gameObject.activeInHierarchy && playerTarget.Health > 0f &&
                     towardPlayer.sqrMagnitude <= chest.Data.playerInterceptRange * chest.Data.playerInterceptRange &&
                     (target == playerTarget && playerDetected || Vector3.Dot(towardPlayer.normalized,towardChest) >= chest.Data.playerInterceptDot) &&
                     HasStrikeLineOfSight(playerTarget.transform,playerTarget.transform.position+Vector3.up*.5f);
@@ -566,6 +595,10 @@ private bool UpdatePlayerTarget(float dt)
 
         private void OnDisable()
         {
+            ResetRetaliation();
+            skullJumpGate.Reset(); skullApproachTarget = null;
+            skullJumpActive = false;
+            skullCombo.Reset();
             if (forestGolem != null) forestGolem.Cancel();
             navigation?.Reset();
             playerDetected = false;

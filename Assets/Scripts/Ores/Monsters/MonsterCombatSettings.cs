@@ -30,6 +30,9 @@ namespace MiningSimulator.Ores
         [Min(.1f)] public float attackRange = 1.5f;
         [Range(1f, 180f)] public float attackArc = 120f;
         [Min(0f)] public float damage = 5f;
+        [Header("Player knockdown (0 disables; ordinary hits stay unchanged)")]
+        [Min(0f)] public float knockbackSpeed;
+        [Min(0f)] public float knockbackLift;
         [Min(.1f)] public float attackCooldown = 2f;
         [Range(0f, 1f)] public float hitMoment = 0.45f;
         public MushroomMonster.HitShape hitShape;
@@ -48,6 +51,8 @@ namespace MiningSimulator.Ores
         [Header("A* movement and obstacle avoidance")]
         [Min(.05f)] public float targetScanSeconds = .25f;
         [Min(0f)] public float targetMemorySeconds = 2f;
+        [Tooltip("Return to the chest after the attacking player stays outside detection range for this many seconds.")]
+        [Min(.1f)] public float retaliationForgetSeconds = 3f;
         [Min(0f)] public float detectionHysteresis = 1f;
         [Min(.05f)] public float targetRepathDistance = .75f;
         [Min(.05f)] public float waypointTolerance = .2f;

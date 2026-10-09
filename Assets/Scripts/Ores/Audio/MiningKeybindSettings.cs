@@ -26,6 +26,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private GameObject controlsPanel;
         [SerializeField] private BindingRow[] rows;
         [SerializeField] private Button openButton, backButton, resetButton;
+        [SerializeField] private Button closeButton;
         [SerializeField] private TextMeshProUGUI statusLabel;
         [Min(1f), SerializeField] private float rebindTimeoutSeconds = 10f;
         private const string PlayerKey = "MiningSimulator.PlayerBindings.v1";
@@ -62,6 +63,7 @@ namespace MiningSimulator.Ores
             openButton.onClick.AddListener(Open);
             backButton.onClick.AddListener(Close);
             resetButton.onClick.AddListener(ResetBindings);
+            closeButton?.onClick.AddListener(Close);
             controlsPanel.SetActive(false);
             RefreshLabels();
         }
@@ -78,8 +80,8 @@ namespace MiningSimulator.Ores
             Cancel();
         }
         private void Update() { if (operation != null && !controlsPanel.activeInHierarchy) Cancel(); }
-        private void Open() { controlsPanel.SetActive(true); controlsPanel.transform.SetAsLastSibling(); RefreshLabels(); }
-        private void Close() { Cancel(); if (controlsPanel != null) controlsPanel.SetActive(false); }
+        private void Open() { controlsPanel.SetActive(true); controlsPanel.transform.SetAsLastSibling(); RefreshLabels(); controlsPanel.GetComponent<MiningPanelMotion>()?.PlayOpen(); }
+        private void Close() { Cancel(); if (controlsPanel == null) return; if (controlsPanel.activeInHierarchy && controlsPanel.TryGetComponent(out MiningPanelMotion motion)) motion.PlayClose(); else controlsPanel.SetActive(false); }
         public void BeginRebind(BindingRow row)
         {
             Cancel();

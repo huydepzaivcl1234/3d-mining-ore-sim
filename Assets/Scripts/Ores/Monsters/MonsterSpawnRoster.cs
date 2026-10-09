@@ -14,6 +14,8 @@ namespace MiningSimulator.Ores
         public DailyEncounterEventData DailyEvents => dailyEvents;
         [Header("Optional night thief encounters (share the 50-living-monster cap)")]
         public MonsterSpawnEntry nightThief;
+        [Tooltip("Separate night-only encounter, never added to the ordinary daily pool.")]
+        public MonsterSpawnEntry nightSkullclaw;
         [Min(0)] public int thievesPerNight = 1;
         [Range(0f, .95f)] public float nightThiefStartProgress = .05f;
     }

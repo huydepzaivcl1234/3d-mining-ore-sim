@@ -31,6 +31,8 @@ MonoBehaviour:
     attackRange: 2.1
     attackArc: 120
     damage: 20
+    knockbackSpeed: 0
+    knockbackLift: 0
     attackCooldown: 2
     hitMoment: 0.5
     hitShape: 1

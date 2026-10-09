@@ -12,7 +12,11 @@ namespace MiningSimulator.Ores
         [Min(1f), SerializeField] private float respawnSeconds = 10f;
         [SerializeField] private Transform respawnPoint;
         [SerializeField] private Animator animator;
-        [SerializeField] private string deathState = "Base Layer.Death";
+        [Header("Death ragdoll launch")]
+        [Tooltip("Horizontal launch speed in metres/second, away from the killing hit.")]
+        [Min(0f), SerializeField] private float lethalLaunchSpeed = 6f;
+        [Tooltip("Upward launch speed in metres/second. Increase to throw the body higher.")]
+        [Min(0f), SerializeField] private float lethalLaunchLift = 3f;
         [SerializeField] private GameObject respawnPanel;
         [SerializeField] private TMP_Text countdownLabel;
         [SerializeField] private PlayerRespawnCurtain respawnCurtain;
@@ -51,6 +55,10 @@ namespace MiningSimulator.Ores
         private MiningAudioManager audioManager;
         private AudioSource deathSource;
         private AudioClip fallbackDeathSfx;
+        private PlayerKnockbackRagdoll deathRagdoll;
+        private bool landed;
+        private Vector3 deathCameraOffset;
+        public bool IsAwaitingLanding => dead && !landed;
 
         private void Awake()
         {
@@ -84,7 +92,7 @@ namespace MiningSimulator.Ores
         // Skip the countdown, retaining the curtain and safe spawn collision check.
         public void RespawnNow()
         {
-            if (!Application.isPlaying || !dead || !isActiveAndEnabled) return;
+            if (!Application.isPlaying || !dead || !landed || !isActiveAndEnabled) return;
             remaining = 0f;
             if (respawnNowButton != null) respawnNowButton.interactable = false;
             if (respawnCurtain != null) respawnCurtain.Close();
@@ -98,11 +106,13 @@ namespace MiningSimulator.Ores
             if (dead) RestoreControls();
             if (respawnCurtain != null) respawnCurtain.ResetImmediate();
             dead = false;
+            landed = false;
         }
 
         private void Die()
         {
             if (dead) return;
+            GetComponent<PlayerKnockbackRagdoll>()?.CancelForDeath();
             dead = true;
             var stats = MiningPlayerStats.For(this);
             PlayDeathSound(stats);
@@ -132,13 +142,28 @@ namespace MiningSimulator.Ores
                     layerWeights[i] = animator.GetLayerWeight(i);
                     if (i > 0) animator.SetLayerWeight(i, 0f);
                 }
-                int state = Animator.StringToHash(deathState);
-                if (animator.HasState(0, state)) animator.CrossFadeInFixedTime(state, 0.15f, 0);
-                else Debug.LogWarning("Player death state is missing. Run Setup/Player Death And Respawn.", this);
             }
+            Vector3 away = health.LastDamageSource != null
+                ? Vector3.ProjectOnPlane(transform.position - health.LastDamageSource.transform.position, Vector3.up)
+                : -transform.forward;
+            if (away.sqrMagnitude < .001f) away = -transform.forward;
+            deathRagdoll = GetComponent<PlayerKnockbackRagdoll>();
+            if (deathRagdoll == null) deathRagdoll = gameObject.AddComponent<PlayerKnockbackRagdoll>();
+            bool launched = deathRagdoll.BeginDeathRagdoll(away.normalized * lethalLaunchSpeed + Vector3.up * lethalLaunchLift);
+            landed = false;
+            if (!launched)
+                Debug.LogError("Player death ragdoll could not initialize the Humanoid body.", this);
+            if (respawnPanel != null) respawnPanel.SetActive(false);
+            if (respawnNowButton != null) respawnNowButton.interactable = false;
+            BeginCamera();
+            if (!launched) BeginLandedRespawn(); // Invalid rig must not permanently trap the player.
+        }
+
+        private void BeginLandedRespawn()
+        {
+            landed = true;
             if (respawnPanel != null) respawnPanel.SetActive(true);
             if (respawnNowButton != null) respawnNowButton.interactable = true;
-            BeginCamera();
             UpdateCountdown();
         }
 
@@ -182,6 +207,12 @@ namespace MiningSimulator.Ores
         }
         private void BeginCamera()
         {
+            if (spectatorCamera == null) spectatorCamera = Camera.main;
+            if ((cameraDrivers == null || cameraDrivers.Length == 0) && spectatorCamera != null)
+            {
+                var orbit = spectatorCamera.GetComponent<MiningOrbitCamera>();
+                if (orbit != null) cameraDrivers = new Behaviour[] { orbit };
+            }
             inputCursorLocked = inputs != null && inputs.cursorLocked;
             if (inputs != null) inputs.cursorLocked = false;
             driverEnabled = new bool[cameraDrivers != null ? cameraDrivers.Length : 0];
@@ -210,6 +241,9 @@ namespace MiningSimulator.Ores
             cameraBody.skinWidth = 0.02f;
             cameraBody.minMoveDistance = 0f;
             cameraBody.stepOffset = 0f;
+            foreach (var own in GetComponentsInChildren<Collider>(true))
+                Physics.IgnoreCollision(cameraBody, own, true);
+            deathCameraOffset = cameraPosition - deathRagdoll.CameraFocusPosition;
             // Resolve existing overlap before the first camera frame.
             for (int pass = 0; pass < 8; pass++)
             {
@@ -238,13 +272,15 @@ namespace MiningSimulator.Ores
                 if (health.Health <= 0f) Die();
                 return;
             }
+            if (!landed)
+            {
+                if (deathRagdoll != null && deathRagdoll.HasLanded) BeginLandedRespawn();
+                return; // Countdown and curtain cannot run while the body is airborne.
+            }
             remaining -= Time.deltaTime;
             UpdateCountdown();
             if (respawnCurtain != null && remaining <= respawnCurtain.CloseSeconds)
                 respawnCurtain.Close();
-            if (animator != null && animator.GetCurrentAnimatorStateInfo(0).IsName(deathState) &&
-                !animator.IsInTransition(0) && animator.GetCurrentAnimatorStateInfo(0).normalizedTime >= 1f)
-                animator.speed = 0f;
             if (remaining <= 0f) TryRespawn();
         }
 
@@ -252,6 +288,18 @@ namespace MiningSimulator.Ores
         {
             if (dead) ReleaseDeathCursor();
             if (!dead || spectatorCamera == null || cameraBody == null || Time.deltaTime <= 0f) return;
+            if (!landed)
+            {
+                Vector3 focus = deathRagdoll.CameraFocusPosition;
+                cameraBody.Move(focus + deathCameraOffset - cameraProxy.transform.position);
+                Vector3 look = focus - cameraProxy.transform.position;
+                Quaternion followRotation = look.sqrMagnitude > .001f
+                    ? Quaternion.LookRotation(look, Vector3.up) : spectatorCamera.transform.rotation;
+                spectatorCamera.transform.SetPositionAndRotation(cameraProxy.transform.position, followRotation);
+                yaw = followRotation.eulerAngles.y;
+                pitch = Mathf.DeltaAngle(0f, followRotation.eulerAngles.x);
+                return;
+            }
             Keyboard keyboard = Keyboard.current;
             Mouse mouse = Mouse.current;
             if (mouse != null && mouse.rightButton.isPressed)
@@ -335,6 +383,7 @@ namespace MiningSimulator.Ores
 
         private void RestoreControls()
         {
+            GetComponent<PlayerKnockbackRagdoll>()?.ResetForRespawn();
             if (respawnPanel != null) respawnPanel.SetActive(false);
             if (respawnCurtain != null) respawnCurtain.Open();
             if (cameraProxy != null) Destroy(cameraProxy);

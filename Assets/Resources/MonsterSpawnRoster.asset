@@ -35,5 +35,11 @@ MonoBehaviour:
     displayName: Mushnight
     chance: 100
     minimumPlayerLevel: 1
+  nightSkullclaw:
+    prefab: {fileID: 8381387769689784945, guid: a22d7fcf32841994a95fba7985c7dc51, type: 3}
+    icon: {fileID: 0}
+    displayName: Skullclaw
+    chance: 100
+    minimumPlayerLevel: 1
   thievesPerNight: 1
   nightThiefStartProgress: 0.05

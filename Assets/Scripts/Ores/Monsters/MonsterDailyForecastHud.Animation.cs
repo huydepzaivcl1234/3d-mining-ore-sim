@@ -52,7 +52,7 @@ namespace MiningSimulator.Ores
         private void DrawNumbers(int index)
         {
             var n = numbers[index];
-            counts[index].text = string.Format(MiningLocalization.TextKey("MONSTER_FORECAST_COUNTS", "Today: {0}\nAlive: {1}"), n.planned, n.alive);
+            counts[index].text = n.planned.ToString();aliveCounts[index].text=n.alive.ToString();
         }
 
         private void Update()

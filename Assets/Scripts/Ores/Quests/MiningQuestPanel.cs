@@ -24,10 +24,12 @@ namespace MiningSimulator.Ores
             [SerializeField] private Image progressFill;
             [SerializeField] private Button claimButton;
             [SerializeField] private TextMeshProUGUI claimLabel;
+            [SerializeField] private bool compactDesign;
 
             private UnityAction claimAction;
 
             public string QuestId => questId;
+            public GameObject Root => root;
             public Button ClaimButton => claimButton;
 
             public void Bind(Action<string> claim)
@@ -70,8 +72,9 @@ namespace MiningSimulator.Ores
                 }
                 if (rewardLabel != null)
                 {
-                    rewardLabel.text = MiningLocalization.Text("REWARD:") + " " +
-                                       definition.GetRewardPreview();
+                    rewardLabel.text = compactDesign && definition.RewardType == MiningQuestRewardType.Money
+                        ? definition.MoneyReward.ToString("N0", System.Globalization.CultureInfo.InvariantCulture)
+                        : MiningLocalization.Text("REWARD:") + " " + definition.GetRewardPreview();
                 }
                 if (progressFill != null)
                 {
@@ -84,7 +87,7 @@ namespace MiningSimulator.Ores
                     claimLabel.text = claimed
                         ? MiningLocalization.Text("CLAIMED")
                         : complete
-                            ? MiningLocalization.Text("CLAIM")
+                            ? (compactDesign ? MiningLocalization.Text("CLAIM REWARD", "NHẬN THƯỞNG") : MiningLocalization.Text("CLAIM"))
                             : MiningLocalization.Text("IN PROGRESS");
                 }
             }
@@ -104,6 +107,10 @@ namespace MiningSimulator.Ores
         [SerializeField] private TextMeshProUGUI resetTimerLabel;
         [SerializeField] private TextMeshProUGUI statusLabel;
         [SerializeField] private List<QuestRowView> rows = new();
+        [Header("Compact quest presentation")]
+        [SerializeField] private bool compactDesign;
+        [SerializeField] private TextMeshProUGUI dailyTimerLabel, weeklyHeading, dailyHeading, emptyDailyLabel, footerLabel;
+        [SerializeField] private RectTransform questContent, dailySection;
 
         private float nextTimerRefresh;
         private GameObject lastOpener;
@@ -222,7 +229,7 @@ namespace MiningSimulator.Ores
         {
             if (titleLabel != null)
             {
-                titleLabel.text = MiningLocalization.Text("DAILY & WEEKLY QUESTS");
+                titleLabel.text = compactDesign ? MiningLocalization.Text("QUESTS", "NHIỆM VỤ") : MiningLocalization.Text("DAILY & WEEKLY QUESTS");
             }
             if (gameplayOpenButton != null)
             {
@@ -236,6 +243,10 @@ namespace MiningSimulator.Ores
             }
             RefreshTimer();
             RefreshRows();
+            if (weeklyHeading != null) weeklyHeading.text = MiningLocalization.Text("WEEKLY");
+            if (dailyHeading != null) dailyHeading.text = MiningLocalization.Text("DAILY");
+            if (emptyDailyLabel != null) emptyDailyLabel.text = MiningLocalization.Text("No daily quests available", "Chưa có nhiệm vụ ngày");
+            if (footerLabel != null) footerLabel.text = MiningLocalization.Text("Rewards are collected once per quest period.", "Mỗi nhiệm vụ chỉ nhận thưởng một lần trong kỳ.");
         }
 
         private void RefreshRows()
@@ -247,6 +258,29 @@ namespace MiningSimulator.Ores
                     : null;
                 row.Refresh(definition, questSystem);
             }
+            if (compactDesign && questContent != null && dailySection != null)
+            {
+                float y = 50f;
+                int dailyCount = 0;
+                foreach (QuestRowView row in rows)
+                {
+                    var definition = data != null ? data.GetDefinition(row.QuestId) : null;
+                    if (definition == null || definition.Period != MiningQuestPeriod.Weekly || row.Root == null) continue;
+                    ((RectTransform)row.Root.transform).anchoredPosition = new Vector2(0f, -y - 66f);
+                    y += 148f;
+                }
+                dailySection.anchoredPosition = new Vector2(0f, -y);
+                y += 50f;
+                foreach (QuestRowView row in rows)
+                {
+                    var definition = data != null ? data.GetDefinition(row.QuestId) : null;
+                    if (definition == null || definition.Period != MiningQuestPeriod.Daily || row.Root == null) continue;
+                    ((RectTransform)row.Root.transform).anchoredPosition = new Vector2(0f, -y - 66f);
+                    y += 148f; dailyCount++;
+                }
+                emptyDailyLabel?.transform.parent.gameObject.SetActive(dailyCount == 0);
+                questContent.sizeDelta = new Vector2(questContent.sizeDelta.x, Mathf.Max(306f, y + (dailyCount == 0 ? 58f : 0f)));
+            }
         }
 
         private void RefreshTimer()
@@ -254,8 +288,10 @@ namespace MiningSimulator.Ores
             if (resetTimerLabel == null || questSystem == null) return;
             TimeSpan daily = questSystem.GetTimeUntilReset(MiningQuestPeriod.Daily);
             TimeSpan weekly = questSystem.GetTimeUntilReset(MiningQuestPeriod.Weekly);
-            resetTimerLabel.text = string.Format(MiningLocalization.Text("DAILY RESET {0}  •  WEEKLY RESET {1}"),
-                FormatDuration(daily), FormatDuration(weekly));
+            resetTimerLabel.text = compactDesign
+                ? string.Format(MiningLocalization.Text("Resets in {0}", "Đặt lại sau {0}"), FormatDuration(weekly))
+                : string.Format(MiningLocalization.Text("DAILY RESET {0}  •  WEEKLY RESET {1}"), FormatDuration(daily), FormatDuration(weekly));
+            if (dailyTimerLabel != null) dailyTimerLabel.text = string.Format(MiningLocalization.Text("Resets in {0}", "Đặt lại sau {0}"), FormatDuration(daily));
         }
 
         private void AddListeners()

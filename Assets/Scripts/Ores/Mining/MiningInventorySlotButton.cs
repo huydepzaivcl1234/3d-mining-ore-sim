@@ -6,7 +6,7 @@ namespace MiningSimulator.Ores
 {
     /// <summary>Routes one authored inventory slot button to its panel without lambda listeners.</summary>
     [DisallowMultipleComponent]
-    public sealed class MiningInventorySlotButton : MonoBehaviour, IPointerClickHandler,
+    public sealed class MiningInventorySlotButton : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler,
         IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler
     {
         [SerializeField] private MiningInventoryPanel panel;
@@ -48,6 +48,7 @@ namespace MiningSimulator.Ores
             if (e.button == PointerEventData.InputButton.Right)
                 panel?.Interactions?.ShowMenu(slotIndex, e.position, e.pressEventCamera);
         }
+        public void OnPointerEnter(PointerEventData e) => panel?.ShowSlotDetails(slotIndex);
 
         public void OnBeginDrag(PointerEventData e)
         {

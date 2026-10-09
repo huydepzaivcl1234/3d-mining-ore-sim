@@ -90,8 +90,10 @@ namespace MiningSimulator.Ores
             distance = Mathf.Min(distance, Mathf.Max(config.waypointTolerance, Flat(route[waypoint] - foot).magnitude));
             Vector3 steered = Avoid(foot, direction, distance);
             float remaining = Flat(route[waypoint] - foot).magnitude;
-            float speedFactor = waypoint == route.Count - 1
-                ? Mathf.Min(1f, remaining / Mathf.Max(.001f, config.moveSpeed * Mathf.Max(dt, .001f))) : 1f;
+            // Clamp every corner, not just the destination. At high speed/low FPS
+            // overshooting a corner makes the next tick steer back toward it.
+            float speedFactor = Mathf.Min(1f, remaining / Mathf.Max(.001f,
+                config.moveSpeed * Mathf.Max(dt, .001f)));
             previousDirection = steered;
             return Steering = steered * speedFactor;
         }
@@ -153,7 +155,8 @@ namespace MiningSimulator.Ores
                 // The actor kept moving while A* searched. Skip already passed/visible corners.
                 Vector3 current = profile.Foot(owner.transform.position);
                 for (int i = 0; i < route.Count; i++)
-                    if (grid.IsSegmentClear(current, route[i], profile.Radius, profile.Height)) waypoint = i;
+                    if (i == 0 ? grid.IsSegmentClear(current, route[i], profile.Radius, profile.Height) :
+                        grid.IsShortcutClear(current, route[i], profile.Radius, profile.Height)) waypoint = i;
                     else break;
                 State = "Following A*";
             });
@@ -168,6 +171,9 @@ namespace MiningSimulator.Ores
                 float t = edge.sqrMagnitude > .0001f ? Vector3.Dot(offset, edge) / edge.sqrMagnitude : 1f;
                 bool passed = t >= 1f && Flat(foot - end).magnitude <= Mathf.Max(tolerance, profile.Radius);
                 if (!passed && Flat(foot - end).magnitude > Mathf.Max(.05f, tolerance)) break;
+                // Arrival tolerance cannot authorize cutting the inside of a wall corner.
+                if (waypoint + 1 < route.Count &&
+                    !grid.IsSegmentClear(foot, route[waypoint + 1], profile.Radius, profile.Height)) break;
                 waypoint++;
             }
         }
