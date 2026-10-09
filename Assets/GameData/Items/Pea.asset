@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningItemData
   itemId: Pea
   displayName: Pea
-  description: 15 percent critical chance to deal 145 percent extra damage to ores
-    and Lucky Blocks.
+  description: "M\u1ED7i \u0111\xF2n \u0111\xE1nh th\xEAm 0,5% HP t\u1ED1i \u0111a
+    c\u1EE7a qu\xE1i th\xE0nh s\xE1t th\u01B0\u01A1ng chu\u1EA9n trong 150 gi\xE2y"
   rarity: 2
   worldModel: {fileID: 3497661880722294818, guid: 492d59b740506494086bb01c4b392b14, type: 3}
   inventoryIcon: {fileID: 665014490, guid: 9a4c94d0e91b7c74b8cb3f6d32b74e38, type: 3}
@@ -37,10 +37,21 @@ MonoBehaviour:
   traderSellValue: 3
   traderGemSellMaximum: 4
   useType: 0
-  effectType: 4
-  effectPercent: 145
+  equipmentBonuses:
+    armor: 0
+    magicResistance: 0
+    lifeStealPercent: 0
+    healingBonusPercent: 0
+    regenIntervalReductionPercent: 0
+    burnDamagePerTick: 0
+    burnTickSeconds: 1
+    burnDurationSeconds: 0
+  equipmentGemPrice: 10
+  effectType: 13
+  effectPercent: 0.5
   criticalChancePercent: 15
-  effectDurationSeconds: 180
+  effectDurationSeconds: 150
   giftRewards: []
   giftSpinDurationSeconds: 3.5
   giftSpinRotations: 6
+  tower: {fileID: 0}

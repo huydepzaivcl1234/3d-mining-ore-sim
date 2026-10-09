@@ -22,18 +22,21 @@ namespace MiningSimulator.Ores
         {
             public string itemId;
             public int count;
+            public float paidPrice;
         }
 
         private sealed class RuntimeSlot
         {
             public MiningItemData item;
             public int count;
+            public float paidPrice;
         }
 
         private struct RuntimeEffect
         {
             public MiningItemData item;
             public float endTime;
+            public float startTime;
         }
 
         public readonly struct InventorySlotView
@@ -96,6 +99,11 @@ namespace MiningSimulator.Ores
         public float PlayerExperienceMultiplier => GetEffectMultiplier(MiningItemEffectType.PlayerExperience);
         public float PlayerDamageMultiplier => GetEffectMultiplier(MiningItemEffectType.PlayerDamage);
         public float EventChanceBonusPercent => GetActiveEffectPercent(MiningItemEffectType.EventChance);
+        public float PlayerMoveSpeedBonus => GetActiveEffectPercent(MiningItemEffectType.PlayerMoveSpeed);
+        public float PlayerHealthMultiplier => GetEffectMultiplier(MiningItemEffectType.PlayerMaxHealth);
+        public float PlayerDamageReduction => Mathf.Clamp01(GetActiveEffectPercent(MiningItemEffectType.PlayerDamageReduction) * .01f);
+        public float MonsterTrueDamageFraction => GetActiveEffectPercent(MiningItemEffectType.MonsterMaxHealthTrueDamage) * .01f;
+        private MiningCharacterHealth consumablePlayer;
 
         public float RollOreLuckyDamage(float baseDamage)
         {
@@ -137,6 +145,18 @@ namespace MiningSimulator.Ores
 
         private void Update()
         {
+            if (consumablePlayer == null)
+            {
+                var player = FindFirstObjectByType<MiningPlayerStats>();
+                if (player != null) consumablePlayer = player.GetComponent<MiningCharacterHealth>();
+            }
+            if (consumablePlayer != null && activeEffects.TryGetValue(MiningItemEffectType.PlayerHealing, out var heal) && heal.item != null)
+            {
+                float intervalStart = Mathf.Max(heal.startTime, Time.time - Time.deltaTime);
+                float intervalEnd = Mathf.Min(heal.endTime, Time.time);
+                if (intervalEnd > intervalStart)
+                    consumablePlayer.Heal(heal.item.EffectPercent / heal.item.EffectDurationSeconds * (intervalEnd - intervalStart));
+            }
             if (activeEffects.Count == 0)
             {
                 return;
@@ -206,6 +226,7 @@ namespace MiningSimulator.Ores
                 int added = Mathf.Min(remaining, item.MaximumStack);
                 slot.item = item;
                 slot.count = added;
+                slot.paidPrice = 0f; // Gifts/drops have no refundable purchase cost.
                 remaining -= added;
             }
 
@@ -220,6 +241,54 @@ namespace MiningSimulator.Ores
             EnsureRuntimeSlots();
             return item != null && amount > 0 && GetAvailableSpace(item) >= amount;
         }
+
+        public bool TryBuyTower(TowerData tower, PlayerWallet wallet)
+        {
+            float purchasePrice = tower != null ? tower.price : 0f;
+            if (tower == null || tower.prefab == null || tower.inventoryItem == null || wallet == null ||
+                float.IsNaN(purchasePrice) || float.IsInfinity(purchasePrice) || purchasePrice < 0 ||
+                !CanAddItem(tower.inventoryItem) || !wallet.TrySpend(purchasePrice)) return false;
+            foreach (var slot in slots)
+                if (slot.item == null || slot.count <= 0)
+                {
+                    slot.item = tower.inventoryItem; slot.count = 1; slot.paidPrice = purchasePrice;
+                    SaveInventory(); InventoryChanged?.Invoke(); ItemCollected?.Invoke(slot.item); return true;
+                }
+            wallet.AddMoney(purchasePrice); return false;
+        }
+
+        public bool TryTakeTower(MiningItemData item, out float paid)
+        {
+            paid = 0f;
+            if (item == null || item.UseType != MiningItemUseType.Tower) return false;
+            foreach (var slot in slots)
+                if (slot.item == item && slot.count > 0)
+                {
+                    paid = slot.paidPrice; slot.item = null; slot.count = 0; slot.paidPrice = 0;
+                    SaveInventory(); InventoryChanged?.Invoke(); return true;
+                }
+            return false;
+        }
+        public bool TryTakeTowerAt(int index, MiningItemData expectedItem, out float paid)
+        {
+            EnsureRuntimeSlots(); paid = 0;
+            if (index < 0 || index >= slots.Length || expectedItem == null ||
+                expectedItem.UseType != MiningItemUseType.Tower) return false;
+            var slot = slots[index];
+            if (slot.item != expectedItem || slot.count <= 0) return false;
+            paid = slot.paidPrice; slot.item = null; slot.count = 0; slot.paidPrice = 0;
+            SaveInventory(); InventoryChanged?.Invoke(); return true;
+        }
+        public bool TrySellTowerSlot(int index, PlayerWallet wallet)
+        {
+            if (wallet == null || index < 0 || index >= slots.Length) return false;
+            var slot = slots[index];
+            if (slot.item == null || slot.item.UseType != MiningItemUseType.Tower || slot.count <= 0) return false;
+            float paid = slot.paidPrice;
+            slot.item = null; slot.count = 0; slot.paidPrice = 0;
+            SaveInventory(); wallet.AddMoney(paid * .35f); InventoryChanged?.Invoke(); return true;
+        }
+        public float TowerRefundAt(int index) => index >= 0 && index < slots.Length ? slots[index].paidPrice * .35f : 0f;
 
         /// <summary>Returns the total amount of one item currently held by the player.</summary>
         public int GetItemCount(MiningItemData item)
@@ -311,6 +380,8 @@ namespace MiningSimulator.Ores
             }
 
             MiningItemData item = slot.item;
+            if (item.UseType == MiningItemUseType.Tower)
+                return TowerPlacement.BeginPlacement(this, item, index);
             if (item.IsEquipment) return TryMoveEquipment(index, FirstFreeNecklaceSlot(), item);
             if (item.UseType != MiningItemUseType.TimedEffect)
             {
@@ -405,6 +476,7 @@ namespace MiningSimulator.Ores
             activeEffects[item.EffectType] = new RuntimeEffect
             {
                 item = item,
+                startTime = Time.time,
                 endTime = startTime + item.EffectDurationSeconds * count
             };
             EffectsChanged?.Invoke();
@@ -556,6 +628,7 @@ namespace MiningSimulator.Ores
                 }
                 slots[index].item = item;
                 slots[index].count = Mathf.Clamp(saved.count, 1, item.MaximumStack);
+                slots[index].paidPrice = float.IsNaN(saved.paidPrice) || float.IsInfinity(saved.paidPrice) ? 0f : Mathf.Max(0, saved.paidPrice);
             }
         }
 
@@ -573,7 +646,8 @@ namespace MiningSimulator.Ores
                 save.slots.Add(new SavedSlot
                 {
                     itemId = slot.item != null ? slot.item.ItemId : string.Empty,
-                    count = slot.item != null ? slot.count : 0
+                    count = slot.item != null ? slot.count : 0,
+                    paidPrice = slot.item != null ? slot.paidPrice : 0
                 });
             }
             PlayerPrefs.SetString(database.InventorySaveKey, JsonUtility.ToJson(save));

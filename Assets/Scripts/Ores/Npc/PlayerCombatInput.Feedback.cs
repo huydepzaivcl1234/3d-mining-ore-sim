@@ -7,9 +7,11 @@ public partial class PlayerCombatInput
     private void DamageTarget(MiningCharacterHealth target, Vector3 point, float damageMultiplier = 1f)
     {
         if (!Application.isPlaying || Damage <= 0 || target == null || target.Health <= 0f ||
-            target.GetComponentInParent<TreasureChest>() != null) return;
-        float dealt = target.DealDamage(Damage * damageMultiplier,
-            Stats != null ? Stats.attackDamageType : CombatDamageType.Physical, gameObject);
+            (target.GetComponentInParent<TreasureChest>() != null || target.GetComponentInParent<TowerRuntime>() != null)) return;
+        bool monsterHit = target.GetComponent<MushroomMonster>() != null;
+        float trueBonus = monsterHit && PlayerStats != null ? target.MaxHealth * PlayerStats.ConsumableMonsterTrueDamageFraction : 0f;
+        float dealt = target.DealDamageWithTrueBonus(Damage * damageMultiplier,
+            Stats != null ? Stats.attackDamageType : CombatDamageType.Physical, gameObject, trueBonus);
         if (dealt <= 0f) return;
         if (target.GetComponent<MushroomMonster>() != null && Stats != null)
             MiningDamagePopup.Show(dealt, point, Stats.damagePopup);

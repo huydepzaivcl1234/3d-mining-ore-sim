@@ -30,9 +30,9 @@ MonoBehaviour:
     detectionRange: 6
     attackRange: 2.1
     attackArc: 120
-    damage: 20
-    knockbackSpeed: 0
-    knockbackLift: 0
+    damage: 30
+    knockbackSpeed: 1
+    knockbackLift: 2
     attackCooldown: 2
     hitMoment: 0.45
     hitShape: 0
@@ -49,6 +49,7 @@ MonoBehaviour:
     chaseStandMaximumRangeFraction: 0.95
     targetScanSeconds: 0.25
     targetMemorySeconds: 2
+    retaliationForgetSeconds: 3
     detectionHysteresis: 1
     targetRepathDistance: 0.75
     waypointTolerance: 0.2
@@ -72,15 +73,15 @@ MonoBehaviour:
       m_Bits: 4294967295
   combatSettingsVersion: 1
   boss:
-    enabled: 0
+    enabled: 1
     chancePercent: 5
-    minimumPlayerLevel: 5
+    minimumPlayerLevel: 35
     sizeIncreasePercent: 35
     healthMultiplier: 3
     damageMultiplier: 1.5
     goldMultiplier: 5
     experienceMultiplier: 3
-    rewardOverride: {fileID: 0}
+    rewardOverride: {fileID: 11400000}
     effectColor: {r: 1, g: 0.2, b: 0.06, a: 1}
     combatSeconds: 120
     skill: 0
@@ -135,17 +136,8 @@ MonoBehaviour:
   attractionRadius: 30
   attractionSpeed: 2
   attractionAcceleration: 3
-  nightSpawnChance: 30
+  nightSpawnChance: 10
   nightStartProgress: 0.05
-  clawTrail:
-    enabled: 1
-    material: {fileID: 2100000, guid: 77417673324341cbb8cb67093253b934, type: 2}
-    lifetime: 0.18
-    followThroughSeconds: 0.06
-    bladeFraction: 1
-    color: {r: 0.65, g: 1, b: 0.8, a: 0.7}
-  trailStart: 0.32
-  trailEnd: 0.64
   idleClip: {fileID: 7400000, guid: 25a499cb51f97b849a5eaf398f0c97b0, type: 2}
   walkClip: {fileID: 7400000, guid: f2dde8e9efa87224c8df0c39e21a2f07, type: 2}
   rightSwipeClip: {fileID: 7400000, guid: 9cb33abe102d78543ae9a7426f317a52, type: 2}
@@ -157,6 +149,7 @@ MonoBehaviour:
   takeoff: 0.15
   landing: 0.43
   jumpRange: 5
+  jumpApproachDelay: 0.5
   jumpAreaRadius: 3
   jumpHeight:
     serializedVersion: 2

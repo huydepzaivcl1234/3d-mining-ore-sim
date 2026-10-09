@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 99b06ae46e34c12458686b4eb64e24cb, type: 3}
+  m_Name: CannonData
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.CannonTowerData
+  towerId: cannon
+  displayName: Cannon
+  price: 100
+  damage: 5
+  range: 10
+  attackSpeed: 1
+  health: 100
+  magicResistance: 0
+  armor: 0
+  projectileSpeed: 12
+  level: 1
+  prefab: {fileID: 1395771667881826005, guid: fbfab3767baeead43b0df52e4163a99f, type: 3}
+  projectile: {fileID: 6937337689582916348, guid: 1661b36632168de4da4f2aaa9f47ec20, type: 3}
+  icon: {fileID: 21300000, guid: 91f3eada02b02b646a6ad53e1cda6dca, type: 3}
+  inventoryItem: {fileID: 11400000, guid: a64cd1a349e9e1c41852ab5c2e2e4b43, type: 2}
+  shotDelay: 0.033
+  fireTrigger: Fire

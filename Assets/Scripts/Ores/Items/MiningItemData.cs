@@ -23,14 +23,20 @@ namespace MiningSimulator.Ores
         EventChance = 5,
         PlayerAttackSpeed = 6,
         PlayerExperience = 7,
-        PlayerDamage = 8
+        PlayerDamage = 8,
+        PlayerHealing = 9,
+        PlayerMoveSpeed = 10,
+        PlayerMaxHealth = 11,
+        PlayerDamageReduction = 12,
+        MonsterMaxHealthTrueDamage = 13
     }
 
     public enum MiningItemUseType
     {
         TimedEffect = 0,
         GiftBox = 1,
-        Equipment = 2
+        Equipment = 2,
+        Tower = 3
     }
 
     public enum MiningGiftRewardType
@@ -159,7 +165,7 @@ namespace MiningSimulator.Ores
         public Vector3 ModelLocalPosition => modelLocalPosition;
         public Vector3 ModelLocalEulerAngles => modelLocalEulerAngles;
         public float SelectionChancePercent => selectionChancePercent;
-        public int MaximumStack => IsEquipment ? 1 : maximumStack;
+        public int MaximumStack => IsEquipment || useType == MiningItemUseType.Tower ? 1 : maximumStack;
         public bool TraderCanBuy => traderCanBuy;
         public bool TraderCanSell => traderCanSell;
         public int TraderMinimumOfferAmount => traderMinimumOfferAmount;
@@ -171,6 +177,8 @@ namespace MiningSimulator.Ores
         public float TraderSellValue => traderSellValue;
         public float TraderGemSellMaximum => traderGemSellMaximum;
         public MiningItemUseType UseType => useType;
+        [SerializeField] private TowerData tower;
+        public TowerData Tower => tower;
         public MiningItemEffectType EffectType => effectType;
         public float EffectPercent => effectPercent;
         public float CriticalChancePercent => criticalChancePercent;
@@ -184,6 +192,9 @@ namespace MiningSimulator.Ores
 
         public string GetEffectSummary()
         {
+            if (useType == MiningItemUseType.Tower && tower != null) return tower.Summary;
+            if (effectType == MiningItemEffectType.PlayerHealing) return $"Heal {effectPercent:0.##} HP over {effectDurationSeconds:0.#}s";
+            if (effectType == MiningItemEffectType.PlayerMoveSpeed) return $"Move speed +{effectPercent:0.##} / {effectDurationSeconds:0.#}s";
             if (IsEquipment) return equipmentBonuses.Summary();
             if (effectType == MiningItemEffectType.OreLuckyCritical)
                 return $"{EffectName} {criticalChancePercent:0.##}% / +{effectPercent:0.##}% / {effectDurationSeconds:0.#}s";
@@ -192,6 +203,9 @@ namespace MiningSimulator.Ores
 
         public string GetInventorySummary()
         {
+            if (useType == MiningItemUseType.Tower && tower != null) return tower.Summary;
+            if (effectType == MiningItemEffectType.PlayerHealing) return $"Heal {effectPercent:0.##} HP";
+            if (effectType == MiningItemEffectType.PlayerMoveSpeed) return $"Move speed +{effectPercent:0.##}";
             if (IsEquipment) return equipmentBonuses.Summary();
             return useType == MiningItemUseType.GiftBox
                 ? MiningLocalization.Text("OPEN TO SPIN")

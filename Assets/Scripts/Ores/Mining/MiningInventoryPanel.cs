@@ -132,7 +132,7 @@ namespace MiningSimulator.Ores
                 giftBoxWheelPanel?.Show(index, slot.Item);
                 return;
             }
-            itemSystem.TryUseSlot(index);
+            if (itemSystem.TryUseSlot(index) && slot.Item != null && slot.Item.UseType == MiningItemUseType.Tower) ClosePanel();
         }
 
         private void OpenPanel()
@@ -362,7 +362,12 @@ namespace MiningSimulator.Ores
         {
             if (itemSystem == null || selectedSlot < 0) return;
             var slot = itemSystem.GetSlot(selectedSlot);
-            if (!slot.IsEmpty && slot.Item.UseType == MiningItemUseType.TimedEffect) itemSystem.TryUseSlot(selectedSlot, count);
+            if (!slot.IsEmpty && slot.Item.UseType == MiningItemUseType.Tower)
+            {
+                if (count == 5) { if (itemSystem.TryUseSlot(selectedSlot)) ClosePanel(); }
+                else if (count == 10) itemSystem.TrySellTowerSlot(selectedSlot, FindFirstObjectByType<PlayerWallet>());
+            }
+            else if (!slot.IsEmpty && slot.Item.UseType == MiningItemUseType.TimedEffect) itemSystem.TryUseSlot(selectedSlot, count);
         }
         private void RefreshDetails()
         {
@@ -375,8 +380,19 @@ namespace MiningSimulator.Ores
             if (detailSummary != null) detailSummary.text = item != null ? item.GetInventorySummary() : MiningLocalization.Text("Hover an item to see its details", "Di chuột lên vật phẩm để xem thông tin");
             if (detailDuration != null) detailDuration.text = item != null && item.UseType == MiningItemUseType.TimedEffect ? string.Format(MiningLocalization.Text("Duration: {0:0.#} seconds", "Thời gian: {0:0.#} giây"), item.EffectDurationSeconds) : "";
             bool usable = item != null && item.UseType == MiningItemUseType.TimedEffect;
-            if (useFiveButton != null) useFiveButton.interactable = usable;
-            if (useTenButton != null) useTenButton.interactable = usable;
+            bool tower = item != null && item.UseType == MiningItemUseType.Tower;
+            if (useFiveButton != null)
+            {
+                useFiveButton.interactable = usable || tower;
+                var label = useFiveButton.GetComponentInChildren<TMP_Text>();
+                if (label != null) label.text = tower ? "PLACE" : "USE x5";
+            }
+            if (useTenButton != null)
+            {
+                useTenButton.interactable = usable || tower;
+                var label = useTenButton.GetComponentInChildren<TMP_Text>();
+                if (label != null) label.text = tower ? $"SELL +{MiningMoneyFormatter.Format(itemSystem.TowerRefundAt(selectedSlot))}" : "USE x10";
+            }
             if (useAllButton != null) useAllButton.interactable = usable;
             for (int i = 0; i < slotViews.Length; i++)
                 if (slotViews[i]?.button?.targetGraphic != null) slotViews[i].button.targetGraphic.color = i == selectedSlot && item != null ? new Color32(255,210,83,255) : Color.white;

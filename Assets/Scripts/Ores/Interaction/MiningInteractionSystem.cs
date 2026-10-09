@@ -43,6 +43,7 @@ namespace MiningSimulator.Ores
 
         private void Update()
         {
+            if (TowerPlacement.IsPlacing) { ClearFocus(); return; }
             Pointer pointer = Pointer.current;
             if (pointer == null || targetCamera == null || data == null || prompt == null ||
                 IsPointerOverUi())
@@ -76,7 +77,8 @@ namespace MiningSimulator.Ores
             prompt.Show(focusedPromptText, pointerPosition, data.CursorOffset);
 
             Keyboard keyboard = Keyboard.current;
-            if (keyboard != null && keyboard[data.InteractionKey].wasPressedThisFrame)
+            if (keyboard != null && keyboard[data.InteractionKey].wasPressedThisFrame ||
+                target is TowerRuntime && Mouse.current?.leftButton.wasPressedThisFrame == true)
             {
                 target.Interact();
                 // The same target may change from BUY to VIEW INFO without pointer exit.

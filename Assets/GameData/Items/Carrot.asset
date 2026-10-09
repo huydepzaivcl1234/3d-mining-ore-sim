@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningItemData
   itemId: Carrot
   displayName: Carrot
-  description: 'Increase NPC mining swing and hit speed by 15 percent. '
+  description: "T\u0103ng 1% t\u1ED1c \u0111\xE1nh trong 3 ph\xFAt"
   rarity: 2
   worldModel: {fileID: 2579262722937850041, guid: 86c3bf2ce4713e74aa9f6f3ec6f01480, type: 3}
   inventoryIcon: {fileID: -1271730710, guid: ce1f5791901f56d4592e40b651f49f35, type: 3}
@@ -36,10 +36,21 @@ MonoBehaviour:
   traderSellValue: 3
   traderGemSellMaximum: 4
   useType: 0
-  effectType: 3
-  effectPercent: 15
+  equipmentBonuses:
+    armor: 0
+    magicResistance: 0
+    lifeStealPercent: 0
+    healingBonusPercent: 0
+    regenIntervalReductionPercent: 0
+    burnDamagePerTick: 0
+    burnTickSeconds: 1
+    burnDurationSeconds: 0
+  equipmentGemPrice: 10
+  effectType: 6
+  effectPercent: 1
   criticalChancePercent: 15
   effectDurationSeconds: 180
   giftRewards: []
   giftSpinDurationSeconds: 3.5
   giftSpinRotations: 6
+  tower: {fileID: 0}

@@ -37,7 +37,7 @@ namespace MiningSimulator.Ores
         private float visibility, promptVisibility;
 
         public bool IsOpen => opened;
-        public string InteractionLabel => MiningLocalization.TextKey("UPGRADE_STATION_NAME", "Mining upgrades");
+        public string InteractionLabel => MiningLocalization.Text("Tower shop", "Cửa hàng trụ");
         public bool CanInteract => configured && isActiveAndEnabled && Available &&
             PlayerDistance <= interactionDistance && !opened;
         private float PlayerDistance => player != null ? Vector3.Distance(player.position, transform.position) : float.PositiveInfinity;
@@ -139,7 +139,7 @@ namespace MiningSimulator.Ores
         }
         private void RefreshLanguage()
         {
-            if (promptText != null) promptText.text = MiningLocalization.TextKey("UPGRADE_STATION_INTERACT", "CLICK TO INTERACT\nMining upgrades");
+            if (promptText != null) promptText.text = MiningLocalization.Text("CLICK TO INTERACT\nTower shop", "BẤM ĐỂ TƯƠNG TÁC\nCửa hàng trụ");
         }
         public void Interact() => Open();
         public void SetInteractionFocused(bool focused) { }

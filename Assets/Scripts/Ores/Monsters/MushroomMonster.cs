@@ -533,15 +533,25 @@ private bool UpdatePlayerTarget(float dt)
                 if (stats != null) playerTarget = stats.GetComponent<MiningCharacterHealth>();
             }
             if (TrySelectRetaliationTarget()) return true;
-            if (chest != null && chest.IsAlive)
+            MiningCharacterHealth defense = chest != null && chest.IsAlive ? chest.Health : null;
+            float defenseDistance = defense != null ? Vector3.ProjectOnPlane(chest.ApproachGoal(transform.position) - transform.position, Vector3.up).sqrMagnitude : float.PositiveInfinity;
+            foreach (var tower in TowerRuntime.Active)
             {
-                Vector3 towardChest = Vector3.ProjectOnPlane(chest.transform.position-transform.position,Vector3.up).normalized;
+                if (tower == null || !tower.IsAlive) continue;
+                var shape = tower.GetComponent<Collider>();
+                Vector3 point = shape != null ? shape.ClosestPoint(transform.position) : tower.transform.position;
+                float distance = Vector3.ProjectOnPlane(point - transform.position, Vector3.up).sqrMagnitude;
+                if (distance < defenseDistance) { defenseDistance = distance; defense = tower.Health; }
+            }
+            if (defense != null)
+            {
+                Vector3 towardChest = Vector3.ProjectOnPlane(defense.transform.position-transform.position,Vector3.up).normalized;
                 Vector3 towardPlayer = playerTarget != null ? Vector3.ProjectOnPlane(playerTarget.transform.position-transform.position,Vector3.up) : Vector3.zero;
                 bool intercept = !returningFromRetaliation && playerTarget != null && playerTarget.gameObject.activeInHierarchy && playerTarget.Health > 0f &&
-                    towardPlayer.sqrMagnitude <= chest.Data.playerInterceptRange * chest.Data.playerInterceptRange &&
-                    (target == playerTarget && playerDetected || Vector3.Dot(towardPlayer.normalized,towardChest) >= chest.Data.playerInterceptDot) &&
+                    towardPlayer.sqrMagnitude <= Mathf.Pow(chest != null ? chest.Data.playerInterceptRange : 3f, 2f) &&
+                    (target == playerTarget && playerDetected || Vector3.Dot(towardPlayer.normalized,towardChest) >= (chest != null ? chest.Data.playerInterceptDot : .5f)) &&
                     HasStrikeLineOfSight(playerTarget.transform,playerTarget.transform.position+Vector3.up*.5f);
-                var chosen = intercept ? playerTarget : chest.Health;
+                var chosen = intercept ? playerTarget : defense;
                 if (target != chosen)
                 {
                     navigation?.Reset();
@@ -549,7 +559,7 @@ private bool UpdatePlayerTarget(float dt)
                     targetCollider = target.GetComponent<Collider>();
                 }
                 playerDetected = intercept;
-                lastKnownPlayer = intercept ? target.transform.position : chest.ApproachGoal(transform.position);
+                lastKnownPlayer = intercept ? target.transform.position : targetCollider != null ? targetCollider.ClosestPoint(transform.position) : defense.transform.position;
                 return true;
             }
             if (target != playerTarget)

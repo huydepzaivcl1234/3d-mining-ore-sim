@@ -165,6 +165,7 @@ namespace MiningSimulator.Ores
         /// Rebirth...) is open, so orbit/pan/zoom can't fight with clicking/scrolling the UI.</summary>
         public void SetInputLocked(bool locked)
         {
+            locked |= TowerPlacement.IsPlacing;
             inputLocked = locked;
             if (followTarget == null) return;
             if (playerInput == null) playerInput = followTarget.GetComponentInChildren<PlayerInput>(true);

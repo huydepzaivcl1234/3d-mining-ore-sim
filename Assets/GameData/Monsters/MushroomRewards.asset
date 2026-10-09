@@ -31,8 +31,8 @@ MonoBehaviour:
     attackRange: 1.5
     attackArc: 120
     damage: 5
-    knockbackSpeed: 10
-    knockbackLift: 10
+    knockbackSpeed: 0
+    knockbackLift: 0
     attackCooldown: 2
     hitMoment: 0.45
     hitShape: 0
@@ -49,6 +49,7 @@ MonoBehaviour:
     chaseStandMaximumRangeFraction: 0.95
     targetScanSeconds: 0.25
     targetMemorySeconds: 2
+    retaliationForgetSeconds: 3
     detectionHysteresis: 1
     targetRepathDistance: 0.75
     waypointTolerance: 0.2

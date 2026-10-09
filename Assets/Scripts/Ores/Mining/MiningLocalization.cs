@@ -211,12 +211,15 @@ namespace MiningSimulator.Ores
         {
             return itemId?.ToLowerInvariant() switch
             {
-                "apple" => Text("Increases NPC damage for a limited time.", fallback),
+                "apple" => Text("Restores 10 HP over 5 seconds.", "Hồi 10 HP trong 5 giây."),
                 "yellow_potion" => Text("Temporarily increases player attack speed.", "Tạm thời tăng tốc độ đánh của người chơi."),
                 "green_potion" => Text("Temporarily increases player experience received.", "Tạm thời tăng XP người chơi nhận được."),
                 "red_potion" => Text("Temporarily increases player damage.", "Tạm thời tăng sát thương của người chơi."),
-                "banana" => Text("Increases money earned from ores and Lucky Blocks for a limited time.", fallback),
-                "grape" => Text("Increases NPC move speed for a limited time.", fallback),
+                "banana" => Text("Adds 5 movement speed for 3 minutes.", "Cộng 5 tốc chạy trong 3 phút."),
+                "grape" => Text("Adds 5% maximum health for 3 minutes.", "Tăng 5% máu tối đa trong 3 phút."),
+                "carrot" => Text("Adds 1% attack speed for 3 minutes.", "Tăng 1% tốc đánh trong 3 phút."),
+                "ice_cream" => Text("Reduces incoming damage by 1% for 3 minutes.", "Giảm 1% sát thương nhận trong 3 phút."),
+                "pea" => Text("Hits add 0.5% of monster maximum HP as true damage for 150 seconds.", "Đòn đánh thêm 0,5% HP tối đa của quái thành sát thương chuẩn trong 150 giây."),
                 "rare_gift_box" => Text(
                     "Open it to spin for a weighted money or item reward.", fallback),
                 _ => fallback
@@ -225,6 +228,14 @@ namespace MiningSimulator.Ores
 
         public static string GetEffectName(MiningItemEffectType effectType, bool shortened)
         {
+            switch (effectType)
+            {
+                case MiningItemEffectType.PlayerHealing: return Text("HEAL HP", "HỒI HP");
+                case MiningItemEffectType.PlayerMoveSpeed: return Text("MOVE SPEED", "TỐC CHẠY");
+                case MiningItemEffectType.PlayerMaxHealth: return Text("MAX HP", "HP TỐI ĐA");
+                case MiningItemEffectType.PlayerDamageReduction: return Text("DAMAGE REDUCTION", "MIỄN THƯƠNG");
+                case MiningItemEffectType.MonsterMaxHealthTrueDamage: return Text("MAX HP TRUE DAMAGE", "SÁT THƯƠNG CHUẨN % HP");
+            }
             if (shortened)
             {
                 return effectType switch

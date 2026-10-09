@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningItemData
   itemId: Ice cream
   displayName: Ice cream
-  description: 'Increase good and bad event chances by 10 percentage points. '
+  description: "Gi\u1EA3m 1% s\xE1t th\u01B0\u01A1ng nh\u1EADn trong 3 ph\xFAt"
   rarity: 3
   worldModel: {fileID: 5305367537970599588, guid: bc74e538d58fa504e92c2ec6d2399268, type: 3}
   inventoryIcon: {fileID: 668051623, guid: 2d91f35370402ca4eaf80ba95f600b29, type: 3}
@@ -36,10 +36,21 @@ MonoBehaviour:
   traderSellValue: 3
   traderGemSellMaximum: 4
   useType: 0
-  effectType: 5
-  effectPercent: 10
+  equipmentBonuses:
+    armor: 0
+    magicResistance: 0
+    lifeStealPercent: 0
+    healingBonusPercent: 0
+    regenIntervalReductionPercent: 0
+    burnDamagePerTick: 0
+    burnTickSeconds: 1
+    burnDurationSeconds: 0
+  equipmentGemPrice: 10
+  effectType: 12
+  effectPercent: 1
   criticalChancePercent: 15
   effectDurationSeconds: 180
   giftRewards: []
   giftSpinDurationSeconds: 3.5
   giftSpinRotations: 6
+  tower: {fileID: 0}

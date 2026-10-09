@@ -21,7 +21,9 @@ namespace MiningSimulator.Ores
         private MiningItemSystem itemEffects;
         private float DamagePotionMultiplier => itemEffects != null ? itemEffects.PlayerDamageMultiplier : 1f;
         private float AttackSpeedPotionMultiplier => itemEffects != null ? itemEffects.PlayerAttackSpeedMultiplier : 1f;
-        public float MaxHealth => ((data != null ? Mathf.Max(1, data.maxHealth + Mathf.Max(0, data.healthPerLevel) * (Level - 1)) : 100) * (1f + CardHealthPercent * .01f) + CardHealth) * (1f + RuneUpgrades.Bonus(RuneStat.Health) * .01f);
+        public float MaxHealth => ((data != null ? Mathf.Max(1, data.maxHealth + Mathf.Max(0, data.healthPerLevel) * (Level - 1)) : 100) * (1f + CardHealthPercent * .01f) + CardHealth) * (1f + RuneUpgrades.Bonus(RuneStat.Health) * .01f) * (itemEffects != null ? itemEffects.PlayerHealthMultiplier : 1f);
+        public float ConsumableDamageReduction => itemEffects != null ? itemEffects.PlayerDamageReduction : 0f;
+        public float ConsumableMonsterTrueDamageFraction => itemEffects != null ? itemEffects.MonsterTrueDamageFraction : 0f;
         public float Damage => ((data != null ? Mathf.Max(0, data.damage + Mathf.Max(0, data.damagePerLevel) * (Level - 1)) : 1) * (1f + CardDamagePercent * .01f) + CardDamage) * DamagePotionMultiplier * (1f + RuneUpgrades.Bonus(RuneStat.Damage) * .01f);
         public float AttackSpeed => Mathf.Max(.1f, ((data != null ? data.attackSpeed : 1f) * (1f + CardAttackSpeedPercent * .01f) + CardAttackSpeed) * AttackSpeedPotionMultiplier * (1f + RuneUpgrades.Bonus(RuneStat.AttackSpeed) * .01f));
         // Retain old flat bonuses for v2 saves; new cards add percentage points.
@@ -203,8 +205,8 @@ namespace MiningSimulator.Ores
         private void ApplyMovement()
         {
             if (data == null || movement == null) return;
-            movement.MoveSpeed = Mathf.Max(0, data.MoveSpeed);
-            movement.SprintSpeed = Mathf.Max(0, data.SprintSpeed);
+            movement.MoveSpeed = Mathf.Max(0, data.MoveSpeed + (itemEffects != null ? itemEffects.PlayerMoveSpeedBonus : 0f));
+            movement.SprintSpeed = Mathf.Max(0, data.SprintSpeed + (itemEffects != null ? itemEffects.PlayerMoveSpeedBonus : 0f));
             movement.RotationSmoothTime = Mathf.Max(0.001f, data.RotationSmoothTime);
             movement.SpeedChangeRate = Mathf.Max(0, data.SpeedChangeRate);
             movement.JumpHeight = Mathf.Max(0, data.JumpHeight);

@@ -120,8 +120,14 @@ public void ConfigureMaximumHealth(float value, bool preserveDamage = true)
         public float DealDamage(float amount, CombatDamageType type) => DealDamage(amount, type, null);
 
         public float DealDamage(float amount, CombatDamageType type, GameObject source)
+            => DealDamageWithTrueBonus(amount, type, source, 0f);
+
+        // One damage event for a normal strike plus its unmitigated on-hit bonus.
+        public float DealDamageWithTrueBonus(float amount, CombatDamageType type, GameObject source, float trueBonus)
         {
             amount = CombatDamage.Resolve(amount, type, Armor, MagicResistance, ResistanceScale);
+            amount += CombatDamage.NonNegative(trueBonus);
+            if (PlayerStats != null) amount *= 1f - PlayerStats.ConsumableDamageReduction;
             if (!damageEnabled || amount <= 0f || health <= 0f) return 0f;
             float dealt = Mathf.Min(health, amount);
             LastDamageSource = source;
@@ -176,7 +182,8 @@ public void ConfigureMaximumHealth(float value, bool preserveDamage = true)
             TickBurn(Time.deltaTime);
             if (initializedMaxHealth != MaxHealth)
             {
-                if (health > 0) health = Mathf.Clamp(health + MaxHealth - initializedMaxHealth, 0, MaxHealth);
+                // Expiring maximum-HP buffs must not silently kill a low-health player.
+                if (health > 0) health = Mathf.Clamp(health + Mathf.Max(0, MaxHealth - initializedMaxHealth), 0, MaxHealth);
                 initializedMaxHealth = MaxHealth;
                 if (microBar != null) microBar.Initialize(MaxHealth);
                 Refresh(true);

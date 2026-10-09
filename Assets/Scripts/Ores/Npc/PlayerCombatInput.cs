@@ -437,6 +437,7 @@ public partial class PlayerCombatInput : MonoBehaviour
     }
 
     private bool CanUseGameplay() => Time.timeScale > 0f &&
+        !TowerPlacement.IsPlacing &&
         (ownHealth == null || ownHealth.Health > 0f) &&
         (panels == null || !panels.BlocksGameplay);
 

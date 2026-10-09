@@ -46,14 +46,14 @@ namespace MiningSimulator.Ores
             if (worldStation == null || upgradePanel == null) return;
             RemoveListeners();
             usesCardPurchases = true;
-            var carousel = upgradePanel.GetComponent<MiningUpgradeCarousel>();
-            if (carousel == null) carousel = upgradePanel.AddComponent<MiningUpgradeCarousel>();
-            carousel.Initialize(upgradeSystem, wallet, worldStation.UpgradeOrder, worldStation.Close);
-            var autoButton = upgradePanel.GetComponent<MiningAutoUpgradeButton>() ?? upgradePanel.AddComponent<MiningAutoUpgradeButton>();
-            autoButton.Configure(upgradeSystem);
+            var oldCarousel = upgradePanel.GetComponent<MiningUpgradeCarousel>();
+            if (oldCarousel != null) oldCarousel.enabled = false;
+            var oldAuto = upgradePanel.GetComponent<MiningAutoUpgradeButton>();
+            if (oldAuto != null) oldAuto.enabled = false;
+            var towerShop = upgradePanel.GetComponent<TowerShopPanel>() ?? upgradePanel.AddComponent<TowerShopPanel>();
+            towerShop.Initialize(wallet, worldStation.Close);
             panelCoordinator?.RegisterWorldUpgradePanel(upgradePanel.GetComponent<RectTransform>());
             worldStation.Initialize(this, upgradePanel.GetComponent<RectTransform>(), panelCoordinator);
-            // Preserve the authored reference/listeners, but retire the flat HUD button.
             if (openButton != null) openButton.gameObject.SetActive(false);
         }
 
