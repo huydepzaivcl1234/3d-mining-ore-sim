@@ -12,14 +12,17 @@ namespace MiningSimulator.Ores
         [SerializeField] private Image visibleFill;
         [SerializeField, Min(0)] private float coveredWidth = 28;
         [SerializeField, Min(1)] private float visibleWidth = 134;
+        [SerializeField] private bool useAuthoredColor;
+        [SerializeField] private Color authoredColor = Color.white;
         private float lastFill = -1;
         private void OnEnable() => lastFill = -1;
         private void LateUpdate()
         {
             if (animatedFill == null || viewport == null) return;
             float value = Mathf.Clamp01(animatedFill.fillAmount);
-            if (visibleFill != null && visibleFill.color != animatedFill.color)
-                visibleFill.color = animatedFill.color;
+            Color color = useAuthoredColor ? authoredColor : animatedFill.color;
+            if (visibleFill != null && visibleFill.color != color)
+                visibleFill.color = color;
             if (value == lastFill) return;
             lastFill = value;
             viewport.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal,

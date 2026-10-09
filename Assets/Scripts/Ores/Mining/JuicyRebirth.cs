@@ -28,6 +28,10 @@ namespace MiningSimulator.Ores
         [SerializeField] private TextMeshProUGUI percentText;
         [SerializeField] private TextMeshProUGUI buttonTitleText;
         [SerializeField] private TextMeshProUGUI buttonSubText;
+        [Header("Flat design (optional)")]
+        [SerializeField] private bool flatDesign;
+        [SerializeField] private TextMeshProUGUI xpRewardText;
+        [SerializeField] private TextMeshProUGUI actionText;
 
         [Header("Animation only")]
         [Min(0f), SerializeField] private float pressDepth = 8f;
@@ -166,8 +170,7 @@ namespace MiningSimulator.Ores
             }
             if (levelBadgeText != null)
             {
-                levelBadgeText.text = string.Format(MiningLocalization.Text("LEVEL {0}", "CẤP {0}"),
-                    count);
+                levelBadgeText.text = flatDesign ? $"R ×{currentMultiplier:0.##}" : string.Format(MiningLocalization.Text("LEVEL {0}", "CẤP {0}"), count);
             }
             if (titleText != null)
             {
@@ -175,7 +178,7 @@ namespace MiningSimulator.Ores
             }
             if (currentRewardText != null)
             {
-                currentRewardText.text = string.Format(MiningLocalization.Text(
+                currentRewardText.text = flatDesign ? $"×{currentMultiplier:0.00} {MiningLocalization.Text("Money", "Tiền")}" : string.Format(MiningLocalization.Text(
                     "Permanent reward: x{0:0.00} money & XP",
                     "Thưởng vĩnh viễn: x{0:0.00} tiền & XP"),
                     currentMultiplier);
@@ -214,10 +217,22 @@ namespace MiningSimulator.Ores
             }
 
             ApplyButtonColors(ready);
+            if (flatDesign)
+            {
+                if (xpRewardText != null) xpRewardText.text = $"×{currentMultiplier:0.00} XP";
+                if (actionText != null) actionText.text = ready ? MiningLocalization.Text("REBIRTH →", "TÁI SINH →") : MiningLocalization.Text("KEEP EARNING", "TIẾP TỤC KIẾM TIỀN");
+                if (buttonTitleText != null) buttonTitleText.color = new Color32(132,111,94,255);
+                if (buttonSubText != null) buttonSubText.color = new Color32(132,111,94,255);
+            }
         }
 
         private void ApplyButtonColors(bool ready)
         {
+            if (flatDesign)
+            {
+                if (buttonBackground != null) buttonBackground.color = ready ? new Color32(255,210,83,255) : new Color32(217,233,222,255);
+                return;
+            }
             Color top = ready ? readyTop : lockedTop;
             Color bottom = ready ? readyBottom : lockedBottom;
             if (buttonGradient != null)

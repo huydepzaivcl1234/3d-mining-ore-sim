@@ -41,6 +41,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private Button settingsButton;
         [SerializeField] private Button exitButton;
         [SerializeField] private MiningShopPanel shopPanel;
+        [SerializeField] private MiningAudioSettingsPanel sharedSettingsPanel;
 
         [Header("Settings controls")]
         [SerializeField] private Button backButton;
@@ -239,6 +240,11 @@ namespace MiningSimulator.Ores
         {
             if (closing)
             {
+                return;
+            }
+            if (sharedSettingsPanel != null)
+            {
+                sharedSettingsPanel.OpenPanel();
                 return;
             }
             RefreshAudioControls();

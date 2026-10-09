@@ -27,6 +27,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private TMP_Text nameLabel;
         [SerializeField] private string displayName;
         [SerializeField] private bool screenSpaceBar;
+        [SerializeField] private string healthValueSuffix = "";
         private int displayedLevel = -1;
         private Camera healthCamera;
         private PlayerCombatInput combatInput;
@@ -275,7 +276,7 @@ public void ConfigureMaximumHealth(float value, bool preserveDamage = true)
                     levelLabel.text = level.ToString();
                     string title = string.IsNullOrWhiteSpace(displayName) ? gameObject.name.Replace("(Clone)", "") : displayName;
                     nameLabel.text = string.IsNullOrEmpty(status) ? MiningLocalization.Text(title) : status.Trim();
-                    healthLabel.text = $"{Mathf.Ceil(health):0} / {Mathf.Ceil(MaxHealth):0}";
+                    healthLabel.text = $"{Mathf.Ceil(health):0} / {Mathf.Ceil(MaxHealth):0}{healthValueSuffix}";
                 }
                 else
                     healthLabel.text = $"{status}Lv. {level} | {Mathf.Ceil(health):0} / {Mathf.Ceil(MaxHealth):0}";

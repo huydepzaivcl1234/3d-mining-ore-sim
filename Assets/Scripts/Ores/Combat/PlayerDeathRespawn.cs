@@ -18,6 +18,10 @@ namespace MiningSimulator.Ores
         [SerializeField] private PlayerRespawnCurtain respawnCurtain;
         [SerializeField] private UnityEngine.UI.Button respawnNowButton;
         [SerializeField] private TMP_Text respawnNowLabel;
+        [Header("Optional designed countdown")]
+        [SerializeField] private UnityEngine.UI.Image countdownProgress;
+        [SerializeField] private TMP_Text spectatorHelpLabel;
+        private float countdownDuration;
         [Header("Spectator camera")]
         [SerializeField] private Camera spectatorCamera;
         [Tooltip("Camera drivers only (Orbit camera / Cinemachine Brain). Restored after respawn.")]
@@ -103,6 +107,7 @@ namespace MiningSimulator.Ores
             var stats = MiningPlayerStats.For(this);
             PlayDeathSound(stats);
             remaining = Mathf.Max(1f, stats != null ? stats.respawnSeconds : respawnSeconds);
+            countdownDuration = remaining;
             movementEnabled = movement != null && movement.enabled;
             combatEnabled = combat != null && combat.enabled;
             inputEnabled = playerInput != null && playerInput.inputIsActive;
@@ -275,6 +280,16 @@ namespace MiningSimulator.Ores
         private void UpdateCountdown()
         {
             if (countdownLabel == null) return;
+            if (countdownProgress != null)
+            {
+                countdownProgress.fillAmount = 1f - Mathf.Clamp01(remaining / Mathf.Max(1f, countdownDuration));
+                countdownLabel.text = remaining > 0f
+                    ? string.Format(MiningLocalization.Text("RESPAWNING IN {0}s", "HỒI SINH SAU {0} GIÂY"), Mathf.CeilToInt(remaining))
+                    : MiningLocalization.Text("READY TO RESPAWN", "SẴN SÀNG HỒI SINH");
+                if (spectatorHelpLabel != null)
+                    spectatorHelpLabel.text = MiningLocalization.Text("WASD • Move     Space/Ctrl • Up/down     RMB • Look", "WASD • Di chuyển     Space/Ctrl • Lên/xuống     RMB • Nhìn");
+                return;
+            }
             countdownLabel.text = string.Format(MiningLocalization.TextKey("PLAYER_RESPAWN_COUNTDOWN",
                 "Respawn in {0}s"), Mathf.Max(0, Mathf.CeilToInt(remaining))) + "\n" +
                 MiningLocalization.TextKey("PLAYER_SPECTATOR_HELP", "WASD: move | Space/Ctrl: up/down | Hold RMB: look");

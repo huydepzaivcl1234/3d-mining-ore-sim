@@ -175,6 +175,8 @@ namespace MiningSimulator.Ores
 
         [Header("Lucky Wheel")]
         [SerializeField] private RectTransform wheelRoot;
+        [Tooltip("Optional artwork segment centers, clockwise from the top, in reward order. Empty keeps legacy equal segments.")]
+        [SerializeField] private float[] wheelArtworkCenters = System.Array.Empty<float>();
         [SerializeField] private Button spinOnceButton;
         [SerializeField] private Button spinTenButton;
         [SerializeField] private RectTransform wheelResultPanel;
@@ -183,6 +185,12 @@ namespace MiningSimulator.Ores
         [SerializeField] private TextMeshProUGUI spinOnceLabel;
         [SerializeField] private TextMeshProUGUI spinTenLabel;
         [SerializeField] private TextMeshProUGUI wheelResultsLabel;
+        [SerializeField] private Button wheelResultCloseButton;
+        [SerializeField] private RectTransform wheelResultContent;
+        [SerializeField] private Sprite rewardCoinIcon, rewardGemIcon;
+        private readonly List<MiningShopWheelReward> grantedWheelRewards = new();
+        private float refundedWheelGems;
+        private bool resultsDirty = true;
 
         [Header("Shop labels")]
         [SerializeField] private TextMeshProUGUI gameplayButtonLabel;
@@ -257,6 +265,7 @@ namespace MiningSimulator.Ores
             }
             spinOnceButton?.onClick.AddListener(SpinOnce);
             spinTenButton?.onClick.AddListener(SpinTen);
+            wheelResultCloseButton?.onClick.AddListener(HideResultPanel);
             MiningLocalization.LanguageChanged += Refresh;
             if (wallet != null)
             {
@@ -435,6 +444,9 @@ namespace MiningSimulator.Ores
             }
 
             refundedItemRewards = 0;
+            grantedWheelRewards.Clear();
+            refundedWheelGems = 0f;
+            resultsDirty = true;
             currentSpinIndex = 0;
             pendingSpinCost = Mathf.Max(0f, totalCost);
             rewardsRevealed = false;
@@ -467,6 +479,10 @@ namespace MiningSimulator.Ores
             // fixed pointer lands on the center of the selected reward.
             float selectedAngle = Mathf.Repeat(
                 -(rolledRewardIndices[currentSpinIndex] + 0.5f) * step, 360f);
+            // The supplied weighted artwork is clockwise; rotating CCW by its
+            // center angle places the selected segment beneath the fixed top pointer.
+            if (wheelArtworkCenters != null && wheelArtworkCenters.Length == segmentCount)
+                selectedAngle = Mathf.Repeat(wheelArtworkCenters[rolledRewardIndices[currentSpinIndex]], 360f);
             float alignment = Mathf.Repeat(selectedAngle - Mathf.Repeat(startAngle, 360f), 360f);
             float endAngle = startAngle + data.WheelSpinRotations * 360f + alignment;
             RefreshStatus();
@@ -504,11 +520,14 @@ namespace MiningSimulator.Ores
                 {
                     wallet.AddGems(refundPerFailedItem);
                     refundedItemRewards++;
+                    refundedWheelGems += refundPerFailedItem;
                 }
+                else grantedWheelRewards.Add(reward);
             }
 
             pendingSpinCost = 0f;
             rewardsRevealed = true;
+            resultsDirty = true;
             CompleteWheelSpin();
         }
 
@@ -547,6 +566,7 @@ namespace MiningSimulator.Ores
             if (wheelResultPanel == null) return;
             if (resultSequence.isAlive) resultSequence.Stop();
             wheelResultPanel.gameObject.SetActive(true);
+            if (wheelResultGroup != null) wheelResultGroup.interactable = wheelResultGroup.blocksRaycasts = true;
             wheelResultPanel.localScale = Vector3.one * 0.72f;
             if (wheelResultGroup != null) wheelResultGroup.alpha = 0f;
             if (wheelResultGroup != null)
@@ -577,6 +597,7 @@ namespace MiningSimulator.Ores
             wheelResultPanel.localScale = Vector3.one;
             if (wheelResultGroup != null) wheelResultGroup.alpha = 0f;
             wheelResultPanel.gameObject.SetActive(false);
+            if (wheelResultGroup != null) wheelResultGroup.interactable = wheelResultGroup.blocksRaycasts = false;
         }
 
         private void Refresh()
@@ -712,6 +733,34 @@ namespace MiningSimulator.Ores
 
         private void RefreshResults()
         {
+            if (wheelResultContent != null)
+            {
+                if (!resultsDirty || !rewardsRevealed) return;
+                resultsDirty = false;
+                for (int i = wheelResultContent.childCount - 1; i >= 0; i--)
+                {
+                    var child = wheelResultContent.GetChild(i).gameObject;
+                    child.SetActive(false);
+                    if (Application.isPlaying) Destroy(child); else DestroyImmediate(child);
+                }
+                var totals = new Dictionary<(MiningShopWheelRewardType type, MiningItemData item), (Sprite icon, float amount)>();
+                foreach (var reward in grantedWheelRewards)
+                {
+                    var key = (reward.RewardType, reward.RewardType == MiningShopWheelRewardType.Item ? reward.Item : null);
+                    float amount = reward.RewardType == MiningShopWheelRewardType.Item ? reward.ItemAmount : reward.CurrencyAmount;
+                    Sprite icon = reward.Icon != null ? reward.Icon : reward.RewardType == MiningShopWheelRewardType.Gems ? rewardGemIcon : rewardCoinIcon;
+                    if (totals.TryGetValue(key, out var previous)) amount += previous.amount;
+                    totals[key] = (icon, amount);
+                }
+                if (refundedWheelGems > 0f)
+                {
+                    var key = (MiningShopWheelRewardType.Gems, (MiningItemData)null);
+                    float amount = refundedWheelGems + (totals.TryGetValue(key, out var previous) ? previous.amount : 0f);
+                    totals[key] = (rewardGemIcon, amount);
+                }
+                foreach (var entry in totals.Values) CreateRewardTile(entry.icon, entry.amount);
+                return;
+            }
             if (wheelResultsLabel == null) return;
             if (!rewardsRevealed || rolledRewards.Count == 0)
             {
@@ -726,6 +775,27 @@ namespace MiningSimulator.Ores
                     .Append(rolledRewards[index].GetDisplayName());
             }
             wheelResultsLabel.text = builder.ToString();
+        }
+
+        private void CreateRewardTile(Sprite icon, float amount)
+        {
+            var tile = new GameObject("Reward", typeof(RectTransform));
+            tile.transform.SetParent(wheelResultContent, false);
+            var imageObject = new GameObject("Icon", typeof(RectTransform), typeof(Image));
+            imageObject.transform.SetParent(tile.transform, false);
+            var image = imageObject.GetComponent<Image>(); image.sprite = icon;
+            image.preserveAspect = true; image.raycastTarget = false; image.enabled = icon != null;
+            image.rectTransform.sizeDelta = new Vector2(64, 64);
+            image.rectTransform.anchoredPosition = new Vector2(0, 17);
+            var textObject = new GameObject("Quantity", typeof(RectTransform), typeof(TextMeshProUGUI));
+            textObject.transform.SetParent(tile.transform, false);
+            var label = textObject.GetComponent<TextMeshProUGUI>();
+            if (spinOnceLabel != null) { label.font = spinOnceLabel.font; label.fontSharedMaterial = spinOnceLabel.font.material; }
+            label.text = "x" + MiningMoneyFormatter.Format(amount);
+            label.fontSize = 22; label.alignment = TextAlignmentOptions.Center;
+            label.color = new Color32(53, 41, 35, 255); label.raycastTarget = false;
+            label.rectTransform.sizeDelta = new Vector2(90, 34);
+            label.rectTransform.anchoredPosition = new Vector2(0, -35);
         }
 
         private void RefreshIcon(MiningItemData gift)
@@ -766,6 +836,7 @@ namespace MiningSimulator.Ores
             }
             spinOnceButton?.onClick.RemoveListener(SpinOnce);
             spinTenButton?.onClick.RemoveListener(SpinTen);
+            wheelResultCloseButton?.onClick.RemoveListener(HideResultPanel);
             MiningLocalization.LanguageChanged -= Refresh;
             if (wallet != null) wallet.GemsChanged -= HandleGemsChanged;
             if (itemSystem != null) itemSystem.InventoryChanged -= Refresh;

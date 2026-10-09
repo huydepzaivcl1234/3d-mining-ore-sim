@@ -181,7 +181,7 @@ MonoBehaviour:
     moveState: Walk
     maxStamina: 100
     staminaPerMovingSecond: 10
-    staminaRecoveryPerSecond: 25
+    staminaRecoveryPerSecond: 5
     staminaRecoveryDelay: 1
     resumeStaminaFraction: 0.5
     goldLabelWidth: 2.2

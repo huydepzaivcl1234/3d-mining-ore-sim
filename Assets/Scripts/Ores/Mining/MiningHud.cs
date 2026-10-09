@@ -11,6 +11,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private MiningGameData gameData;
         [SerializeField] private TextMeshProUGUI moneyText;
         [SerializeField] private string moneyFormat = "Tiền: {0}";
+        [SerializeField] private bool amountOnly;
         private readonly MiningAnimatedCurrencyValue moneyCounter = new();
 
         private void OnEnable()
@@ -46,7 +47,7 @@ namespace MiningSimulator.Ores
         private void RefreshMoneyText()
         {
             if (moneyText != null)
-                moneyText.text = string.Format(MiningLocalization.Text("Money: {0}", moneyFormat),
+                moneyText.text = string.Format(amountOnly ? "{0}" : MiningLocalization.Text("Money: {0}", moneyFormat),
                     MiningMoneyFormatter.Format(moneyCounter.Value));
         }
     }

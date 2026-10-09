@@ -33,6 +33,9 @@ namespace MiningSimulator.Ores
         [SerializeField] private MiningMainMenu mainMenu;
         [SerializeField] private Button returnToMenuButton;
         [SerializeField] private TextMeshProUGUI returnToMenuLabel;
+        [SerializeField] private Button englishButton;
+        [SerializeField] private Button vietnameseButton;
+        [SerializeField] private bool flatDesign;
 
         private Coroutine resetStateCoroutine;
         private bool resetConfirmationArmed;
@@ -82,12 +85,16 @@ namespace MiningSimulator.Ores
             returnToMenuButton?.onClick.AddListener(HandleReturnToMenuClicked);
             MiningLocalization.LanguageChanged -= HandleLanguageChanged;
             MiningLocalization.LanguageChanged += HandleLanguageChanged;
+            englishButton?.onClick.AddListener(SelectEnglish);
+            vietnameseButton?.onClick.AddListener(SelectVietnamese);
             ResetButtonState();
             RefreshFromManager();
         }
 
         private void OnDisable()
         {
+            englishButton?.onClick.RemoveListener(SelectEnglish);
+            vietnameseButton?.onClick.RemoveListener(SelectVietnamese);
             openButton?.onClick.RemoveListener(OpenPanel);
             closeButton?.onClick.RemoveListener(ClosePanel);
             masterSlider?.onValueChanged.RemoveListener(SetMasterVolume);
@@ -106,7 +113,7 @@ namespace MiningSimulator.Ores
             ResetButtonState();
         }
 
-        private void OpenPanel()
+        public void OpenPanel()
         {
             ApplyLanguage();
             RefreshFromManager();
@@ -251,7 +258,7 @@ namespace MiningSimulator.Ores
         private void ResetButtonState()
         {
             resetConfirmationArmed = false;
-            SetResetButtonVisual(MiningLocalization.Text("RESET DATA"),
+            SetResetButtonVisual(flatDesign ? MiningLocalization.Text("RESET", "XÓA") : MiningLocalization.Text("RESET DATA"),
                 uiData != null ? uiData.ResetDataButtonColor : new Color(0.88f, 0.12f, 0.18f));
         }
 
@@ -473,6 +480,18 @@ namespace MiningSimulator.Ores
             {
                 returnToMenuLabel.text = MiningLocalization.Text("MAIN MENU");
             }
+            if (flatDesign && settingsPanel != null)
+            {
+                var root = settingsPanel.transform;
+                SetLocalizedChildText(root, "Design Settings Title", "SETTINGS", "CÀI ĐẶT");
+                SetLocalizedChildText(root, "Language Caption", "LANGUAGE", "NGÔN NGỮ");
+                SetLocalizedChildText(root, "Language Hint", "Change interface language", "Đổi ngôn ngữ giao diện");
+                SetLocalizedChildText(root, "Reset Caption", "RESET DATA", "XÓA DỮ LIỆU");
+                SetLocalizedChildText(root, "Reset Hint", "Erase saved progress", "Xóa tiến trình đã lưu");
+                SetLocalizedChildText(root, "Design Controls", "CONTROLS", "ĐIỀU KHIỂN");
+                if (englishButton != null) englishButton.targetGraphic.color = MiningLocalization.IsEnglish ? new Color32(255,210,83,255) : Color.white;
+                if (vietnameseButton != null) vietnameseButton.targetGraphic.color = !MiningLocalization.IsEnglish ? new Color32(255,210,83,255) : Color.white;
+            }
         }
 
         private static void SetLocalizedChildText(Transform root, string childName,
@@ -495,5 +514,8 @@ namespace MiningSimulator.Ores
                 return;
             }
         }
+
+        private void SelectEnglish() => MiningLocalization.SetLanguage(MiningLanguage.English);
+        private void SelectVietnamese() => MiningLocalization.SetLanguage(MiningLanguage.Vietnamese);
     }
 }

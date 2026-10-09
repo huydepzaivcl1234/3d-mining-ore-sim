@@ -17,11 +17,11 @@ MonoBehaviour:
   ticksPerSecond: 0.2
   goldPerTick: 5
   goldPerLevel: 2
-  baseHealth: 300
-  healthPerLevel: 50
+  baseHealth: 100
+  healthPerLevel: 10
   experiencePerTick: 1
   killExperienceMultiplier: 1
-  experienceForFirstLevel: 10
+  experienceForFirstLevel: 100
   experienceGrowth: 1.25
   maximumLevel: 100
   openingSeconds: 0.6
@@ -49,15 +49,21 @@ MonoBehaviour:
   openPunchStrength: 0.12
   hitPunchStrength: 0.08
   punchSeconds: 0.35
-  barBackground: {fileID: 3286163911610860551, guid: db956362bcb88514d9734e38783cc1ef, type: 3}
-  healthFill: {fileID: 3286163911610860551, guid: 2ff17913a3fe824429903adcd6f1195a, type: 3}
-  experienceFill: {fileID: 3286163911610860551, guid: 7049f1ed107867042b7a08081ccc6a02, type: 3}
+  barBackground: {fileID: 21300000, guid: 2e0d7babcdc104d45bfee20a243b7bea, type: 3}
+  healthFill: {fileID: 21300000, guid: e9602c4daa8741e448286d3f49aa1778, type: 3}
+  experienceFill: {fileID: 21300000, guid: b3382f24c8fab5541b808d1ed6b9188c, type: 3}
   barHighlight: {fileID: 3286163911610860551, guid: 5c88e570820b3f14f8880b483f2325a3, type: 3}
-  compactPanelFrame: {fileID: 3286163911610860551, guid: 78907bf1ed619cf4cb8b8313ef1a5e96, type: 3}
-  chestStatusIcon: {fileID: 3286163911610860551, guid: 19f0b32b79efe2a49811001bdb39a432, type: 3}
-  levelBadge: {fileID: 3286163911610860551, guid: b3c6291d0c750554fb5ad278a02342e7, type: 3}
-  monsterSpawnMinimumDistance: 12
-  monsterSpawnMaximumDistance: 16
+  compactPanelFrame: {fileID: 21300000, guid: cd0b1e0ec0cbd7e46832b1c9c1bf5d34, type: 3}
+  chestStatusIcon: {fileID: 21300000, guid: b0ce1e14d16c235458c23f341e27ea7f, type: 3}
+  levelBadge: {fileID: 21300000, guid: e45e9644e4206054e96cb2340e915806, type: 3}
+  statusArmorIcon: {fileID: 21300000, guid: 926543044a2c4cb43a958b86daf5daad, type: 3}
+  statusResistanceIcon: {fileID: 21300000, guid: ff9a966f41f90694693c4c85af173237, type: 3}
+  statusXpBackground: {fileID: 21300000, guid: 5481e5154db217e458a44bf402aba6a0, type: 3}
+  statusIncomeIcon: {fileID: 21300000, guid: 78d123784e9541544b15b7d2be645d0e, type: 3}
+  statusBodyFont: {fileID: 11400000, guid: 60f29145b3cdd8245a4a736dafa0c126, type: 2}
+  statusValueFont: {fileID: 11400000, guid: 638f1cf72654fec409ab1a33667482a8, type: 2}
+  monsterSpawnMinimumDistance: 15
+  monsterSpawnMaximumDistance: 20
   repairCost: 100
   repairButtonSprite: {fileID: 3286163911610860551, guid: 6d9cd5cd0f477744c845b42c96b51fa5, type: 3}
   repairButtonOffset: {x: 0, y: -135}
@@ -85,7 +91,7 @@ MonoBehaviour:
   damagedModelScale: 1
   breakEffectOffset: {x: 0, y: 0.7, z: 0}
   panelFrame: {fileID: 3286163911610860551, guid: 0a12f9fab5530014aad7ece2ffaf8adb, type: 3}
-  font: {fileID: 11400000, guid: 46e4afa4556d21e4e83de82013091b2b, type: 2}
+  font: {fileID: 11400000, guid: 69135959ec3bbf442921e2eccf9aa4e3, type: 2}
   panelOffset: {x: 0, y: 3.0695417, z: 0}
   panelWorldScale: 0.006
   panelNearDistance: 4

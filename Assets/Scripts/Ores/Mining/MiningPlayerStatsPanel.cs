@@ -14,6 +14,14 @@ namespace MiningSimulator.Ores
         [SerializeField] private TMP_Text levelLabel, experienceLabel;
         [SerializeField] private UnityEngine.UI.Slider experienceBar;
         [SerializeField] private MiningUiPanelCoordinator coordinator;
+        [System.Serializable]
+        private sealed class StatRow
+        {
+            public string key;
+            public TMP_Text label, value;
+        }
+        [SerializeField] private StatRow[] statRows;
+        [SerializeField] private TMP_Text offenseHeading, survivalHeading, statsFooter;
         private PlayerCombatInput combat;
         private float nextRefresh;
         private void Awake()
@@ -55,10 +63,13 @@ namespace MiningSimulator.Ores
         }
         private void Refresh()
         {
+            if (offenseHeading != null) offenseHeading.text = L("PLAYER_STATS_OFFENSE", "OFFENSE & MOVEMENT");
+            if (survivalHeading != null) survivalHeading.text = L("PLAYER_STATS_SURVIVAL", "SURVIVAL");
+            if (statsFooter != null) statsFooter.text = L("PLAYER_STATS_TOTALS", "CURRENT STATS • INCLUDING EQUIPMENT BONUSES");
             if (title != null) title.text = L("PLAYER_STATS_TITLE", "PLAYER STATS");
             if (openLabel != null) openLabel.text = L("PLAYER_STATS_BUTTON", "STATS");
             if (closeLabel != null) closeLabel.text = L("PLAYER_STATS_CLOSE", "CLOSE");
-            if (player == null || player.Data == null || body == null) return;
+            if (player == null || player.Data == null) return;
             var d = player.Data;
             if (levelLabel != null) levelLabel.text = $"{L("PLAYER_STATS_LEVEL", "Lv.")} {player.Level}";
             if (experienceLabel != null) experienceLabel.text = $"{player.Experience:0.##} / {player.ExperienceRequired:0.##} XP";
@@ -86,10 +97,21 @@ namespace MiningSimulator.Ores
                     L("PLAYER_STATS_REGEN_TICK_FORMAT", "{0:0.##} HP every {1:0.##}s"),
                     health.EffectiveRegenAmount, health.RegenInterval));
             }
-            body.text = text.ToString().TrimEnd('\n');
+            if (body != null) body.text = text.ToString().TrimEnd('\n');
         }
         private static string L(string key, string fallback) => MiningLocalization.TextKey(key, fallback);
-        private static void Row(StringBuilder text, string key, string fallback, string value)
-            => text.Append(L("PLAYER_STATS_" + key, fallback)).Append(":  ").Append(value).Append('\n');
+        private void Row(StringBuilder text, string key, string fallback, string value)
+        {
+            var label = L("PLAYER_STATS_" + key, fallback);
+            // The legacy body remains a fallback for scenes that have not applied the new layout.
+            text.Append(label).Append(":  ").Append(value).Append('\n');
+            if (statRows == null) return;
+            foreach (var row in statRows)
+            {
+                if (row == null || row.key != key) continue;
+                if (row.label != null) row.label.text = label;
+                if (row.value != null) row.value.text = value;
+            }
+        }
     }
 }

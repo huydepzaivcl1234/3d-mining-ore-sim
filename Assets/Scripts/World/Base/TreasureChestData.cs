@@ -48,6 +48,8 @@ public Vector3 lidOpenEuler = new Vector3(-95,0,0);
         public Sprite barBackground, healthFill, experienceFill, barHighlight;
         [Header("Combined chest status artwork")]
         public Sprite compactPanelFrame, chestStatusIcon, levelBadge;
+        public Sprite statusArmorIcon, statusResistanceIcon, statusXpBackground, statusIncomeIcon;
+        public TMPro.TMP_FontAsset statusBodyFont, statusValueFont;
         [Header("Monster spawn ring (metres from chest)")]
         [Min(.5f)] public float monsterSpawnMinimumDistance = 12f;
         [Min(.5f)] public float monsterSpawnMaximumDistance = 16f;

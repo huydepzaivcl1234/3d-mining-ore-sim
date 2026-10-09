@@ -312,3 +312,6 @@ BASE_CHEST_MR = MR: {0:0.##}
 BASE_CHEST_REPAIR = Repair
 BASE_CHEST_STATS = RƯƠNG · CẤP {0}\nMáu {1:0} / {2:0}\nXP {3:0.##} / {4:0.##}\nVàng +{5:0.##} / {6:0.##}s\nGiáp {7:0.##} · Kháng phép {8:0.##}
 BASE_CHEST_XP_PROGRESS = XP cấp: {0:0.##} / {1:0.##} XP ({2:0}%)
+PLAYER_STATS_OFFENSE = TẤN CÔNG & DI CHUYỂN
+PLAYER_STATS_SURVIVAL = SINH TỒN
+PLAYER_STATS_TOTALS = CHỈ SỐ HIỆN TẠI • ĐÃ TÍNH THƯỞNG TRANG BỊ
