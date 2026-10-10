@@ -39,6 +39,8 @@ namespace MiningSimulator.Ores
 
         private Coroutine resetStateCoroutine;
         private bool resetConfirmationArmed;
+        private PlayerGraphicsOptions graphicsOptions;
+        private PlayerGraphicsPanel graphicsPanel;
 
         public event Action PanelOpened;
         public event Action PanelClosed;
@@ -66,6 +68,13 @@ namespace MiningSimulator.Ores
 
         private void Start()
         {
+            if (settingsPanel != null)
+            {
+                graphicsOptions = GetComponent<PlayerGraphicsOptions>() ?? gameObject.AddComponent<PlayerGraphicsOptions>();
+                graphicsOptions.Initialize();
+                graphicsPanel = GetComponent<PlayerGraphicsPanel>() ?? gameObject.AddComponent<PlayerGraphicsPanel>();
+                graphicsPanel.Build(settingsPanel, graphicsOptions);
+            }
             ApplyLanguage();
         }
 
@@ -132,6 +141,7 @@ namespace MiningSimulator.Ores
 
         private void ClosePanel()
         {
+            graphicsPanel?.Close();
             audioManager?.SaveVolumeSettings();
             if (panelCoordinator != null)
             {
@@ -234,7 +244,11 @@ namespace MiningSimulator.Ores
             }
             resetStateCoroutine = null;
             resetConfirmationArmed = false;
-            rebirthSystem?.ResetAllProgress();
+            if (rebirthSystem == null || !rebirthSystem.ResetAllProgress())
+            {
+                SetResetButtonVisual("RESET FAILED — CHECK CONSOLE", Color.red);
+                return;
+            }
             SetResetButtonVisual(MiningLocalization.Text("DATA RESET"),
                 uiData != null ? uiData.ResetDataButtonColor : new Color(0.88f, 0.12f, 0.18f));
             resetStateCoroutine = StartCoroutine(RestoreResetButtonAfterDelay());

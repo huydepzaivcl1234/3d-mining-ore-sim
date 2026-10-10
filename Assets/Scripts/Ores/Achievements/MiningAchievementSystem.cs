@@ -111,14 +111,14 @@ namespace MiningSimulator.Ores
         {
             if (achievementData != null && !string.IsNullOrWhiteSpace(achievementData.SaveKey))
             {
-                PlayerPrefs.DeleteKey(achievementData.SaveKey);
+                GameSave.DeleteKey(achievementData.SaveKey);
             }
 
             progressById.Clear();
             initialized = false;
             InitializeState();
             ApplyPermanentRewards();
-            PlayerPrefs.Save();
+            GameSave.Save();
             ProgressChanged?.Invoke();
         }
 
@@ -312,12 +312,12 @@ namespace MiningSimulator.Ores
             }
 
             if (!string.IsNullOrWhiteSpace(achievementData.SaveKey) &&
-                PlayerPrefs.HasKey(achievementData.SaveKey))
+                GameSave.HasKey(achievementData.SaveKey))
             {
                 try
                 {
                     SavedAchievementData save = JsonUtility.FromJson<SavedAchievementData>(
-                        PlayerPrefs.GetString(achievementData.SaveKey));
+                        GameSave.GetString(achievementData.SaveKey));
                     if (save?.entries != null)
                     {
                         foreach (SavedAchievementProgress entry in save.entries)
@@ -378,8 +378,8 @@ namespace MiningSimulator.Ores
                 });
             }
 
-            PlayerPrefs.SetString(achievementData.SaveKey, JsonUtility.ToJson(save));
-            PlayerPrefs.Save();
+            GameSave.SetString(achievementData.SaveKey, JsonUtility.ToJson(save));
+            GameSave.Save();
         }
 
         private void ApplyPermanentRewards()

@@ -29,7 +29,8 @@ Each future tower can derive its own data class from `TowerData`; add its asset 
 - PLACE smoothly enters top-down camera mode, showing a 1 m ground grid, ghost, occupied-cell perimeter, range circle and preview stats. Green is valid; red is blocked. Camera is restored on placement/cancel; Escape/right click cancels without consuming an item.
 - Placement uses actor-filtered ground sampling and checks all four footprint corners. The stationary BaseMesh is aligned to the placement plane even while the firing clip plays.
 - Click a nearby placed tower (or interact) for a non-modal billboard world-space stats panel. X or moving beyond 5 m closes it. SELL on that panel, or inventory sell, refunds 35% of its receipt. Changing GameData price does not change refunds.
-- Bought inventory towers and their receipts use the existing inventory save. Deployed towers currently last for the current play session; deployed-world persistence is not implemented.
+- Bought inventory towers retain their receipts. Committed deployments now persist by unique ID and scene in `ChestDefense.PlacedTowers.v1`: tower type, position, yaw, current HP and paid price. Restore does not spend inventory or money. Sell/death remove records; Reset Data clears deployed towers. Invalid/unknown or newly blocked placements are retained rather than duplicated/refunded. Corrupt/newer saves are preserved and writes blocked. Cosmetic previews/tests are never registered.
+- Cannon grounding uses a cached real BaseMesh foot vertex, not the transformed renderer AABB (whose empty corners previously caused a ~34 cm lift). The FBX has Read/Write enabled for the one-time foot scan; LateUpdate is a single point transform, not a full vertex scan.
 - Towers use the shared navigation obstacle path and physical health/defenses. Player attacks do not damage their own tower or chest.
 - Monsters retain player interception/retaliation and otherwise choose the nearest living tower/chest by collider distance.
 - Cannon uses real swept projectiles: walls stop shots, not instantaneous damage through geometry.
@@ -55,3 +56,11 @@ Grape expiration clamps HP to the new maximum and cannot kill a low-health playe
 `MonsterRetaliationTests`: four existing regression tests.
 `TowerPlayValidation`: isolated bounded Play Mode fixture disables/restores scene roots and uses an inventory database with no save key. Checks recoil, projectile damage, wall blocking, Apple healing, supported/blocked footprint, grid alignment, grounded BaseMesh, world-space stats/X/distance closing, top-down camera, ghost/grid/range/stats overlays, and cancellation restoring camera and inventory receipt. Mouse preview uses a deterministic test ray.
 No original scene is saved or overwritten by validation. No player currency/progression reset is used.
+
+## Cannon fantasy UI
+
+The stats and compact damage-health billboard follow `Cannon_UI_Fantasy.zip` (Cannon_UI.png / Cannon_UI_Spec.json): dark plum panels, gold rounded borders, teal HP (red at or below 20%), six separate stat cells, the existing transparent cannon icon, Fredoka SemiBold titles and Nunito Bold content. Runtime values come from TowerData/MiningCharacterHealth; sell still uses the original receipt.
+
+`Assets/Resources/TowerUiTheme.asset` holds font references. The separate `TowerDamageHealthBar` starts hidden, appears on actual damage, resets its deadline on each subsequent hit, and hides after 3 unscaled seconds. It never opens stats, locks input or changes selection. The opened stats panel retains X / walk-away closing independently of this timer. Ghost previews disable the damage component.
+
+The isolated Play fixture tests damage reveal, critical color, repeated-hit timeout renewal and automatic hiding, in addition to the original placement/combat checks. Its camera capture is saved to `Docs/Validation/CannonFantasyUI.png` for visual review.

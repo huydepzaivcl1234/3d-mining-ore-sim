@@ -28,7 +28,7 @@ public sealed class TowerConsumableTests
         var data = AssetDatabase.LoadAssetAtPath<CannonTowerData>(Folder + "CannonData.asset");
         Assert.That(data.prefab, Is.Not.Null); Assert.That(data.projectile, Is.Not.Null);
         Assert.That(data.icon, Is.Not.Null); Assert.That(data.inventoryItem.Tower, Is.SameAs(data));
-        Assert.That(data.inventoryItem.MaximumStack, Is.EqualTo(1));
+        Assert.That(data.inventoryItem.MaximumStack, Is.EqualTo(999));
         Assert.That(data.prefab.GetComponentInChildren<Animator>().runtimeAnimatorController.animationClips.Length, Is.EqualTo(1));
         var importer = (TextureImporter)AssetImporter.GetAtPath(Folder + "CannonIcon.png");
         Assert.That(importer.spriteImportMode, Is.EqualTo(SpriteImportMode.Single));
@@ -53,14 +53,18 @@ public sealed class TowerConsumableTests
             Assert.That(wallet.CurrentMoney, Is.EqualTo(935));
         });
     }
-    [Test] public void PlacementConsumesSelectedReceiptNotFirstMatchingTower()
+    [Test] public void SameTowerStacksAndConsumesEachOriginalReceipt()
     {
         WithInventory((inv, wallet, data) => {
             data.price = 100; inv.TryBuyTower(data, wallet);
             data.price = 200; inv.TryBuyTower(data, wallet);
-            Assert.That(inv.TryTakeTowerAt(1, data.inventoryItem, out float paid), Is.True);
-            Assert.That(paid, Is.EqualTo(200)); Assert.That(inv.TowerRefundAt(0), Is.EqualTo(35));
-            Assert.That(inv.TryTakeTowerAt(1, data.inventoryItem, out _), Is.False);
+            Assert.That(inv.OccupiedSlotCount, Is.EqualTo(1));
+            Assert.That(inv.GetSlot(0).Count, Is.EqualTo(2));
+            Assert.That(inv.TryTakeTowerAt(0, data.inventoryItem, out float paid), Is.True);
+            Assert.That(paid, Is.EqualTo(100)); Assert.That(inv.TowerRefundAt(0), Is.EqualTo(70));
+            Assert.That(inv.TryTakeTowerAt(0, data.inventoryItem, out paid), Is.True);
+            Assert.That(paid, Is.EqualTo(200));
+            Assert.That(inv.TryTakeTowerAt(0, data.inventoryItem, out _), Is.False);
         });
     }
     [Test] public void InvalidPriceOrFullInventoryDoesNotChargeWallet()
@@ -70,9 +74,37 @@ public sealed class TowerConsumableTests
                 data.price = price; Assert.That(inv.TryBuyTower(data, wallet), Is.False);
             }
             data.price = 0;
-            for (int i = 0; i < inv.Capacity; i++) Assert.That(inv.TryBuyTower(data, wallet), Is.True);
+            Assert.That(inv.TryAddItem(data.inventoryItem,inv.Capacity*data.inventoryItem.MaximumStack), Is.True);
             data.price = 100; Assert.That(inv.TryBuyTower(data, wallet), Is.False);
             Assert.That(wallet.CurrentMoney, Is.EqualTo(1000));
+        });
+    }
+    [Test] public void GiftAndPurchasedReceiptsStayDistinctAfterMoveAndSale()
+    {
+        WithInventory((inv,wallet,data)=>{
+            inv.TryAddItem(data.inventoryItem,2);data.price=100;inv.TryBuyTower(data,wallet);
+            Assert.That(inv.TryMoveSlot(0,4,data.inventoryItem),Is.True);
+            Assert.That(inv.TryTakeTowerAt(4,data.inventoryItem,out float paid),Is.True);Assert.That(paid,Is.Zero);
+            Assert.That(inv.TrySellTowerSlot(4,wallet),Is.True);Assert.That(wallet.CurrentMoney,Is.EqualTo(900));
+            Assert.That(inv.TowerRefundAt(4),Is.EqualTo(35));
+            Assert.That(inv.TrySellTowerSlot(4,wallet),Is.True);Assert.That(wallet.CurrentMoney,Is.EqualTo(935));
+        });
+    }
+    [TestCase(3)] [TestCase(4)] public void SavedTowerSlotsMergeWithReceipts(int version)
+    {
+        WithInventory((inv,wallet,data)=>{
+            var db=ScriptableObject.CreateInstance<MiningItemDatabase>();string key="TowerStackTest."+System.Guid.NewGuid().ToString("N");
+            try {
+                Set(db,"items",new System.Collections.Generic.List<MiningItemData>{data.inventoryItem});Set(db,"inventorySaveKey",key);Set(inv,"database",db);
+                string id=data.inventoryItem.ItemId;
+                string first=version==3?"\"count\":1,\"paidPrice\":100":"\"count\":2,\"paidPrice\":100,\"towerReceipts\":[100,150]";
+                PlayerPrefs.SetString(key,"{\"version\":"+version+",\"slots\":[{\"itemId\":\""+id+"\","+first+"},{\"itemId\":\""+id+"\",\"count\":1,\"paidPrice\":200}]}");
+                typeof(MiningItemSystem).GetMethod("LoadInventory",Flags).Invoke(inv,null);
+                Assert.That(inv.OccupiedSlotCount,Is.EqualTo(1));Assert.That(inv.GetSlot(0).Count,Is.EqualTo(version==3?2:3));
+                Assert.That(inv.TryTakeTower(data.inventoryItem,out float paid),Is.True);Assert.That(paid,Is.EqualTo(100));
+                if(version==4){inv.TryTakeTower(data.inventoryItem,out paid);Assert.That(paid,Is.EqualTo(150));}
+                inv.TryTakeTower(data.inventoryItem,out paid);Assert.That(paid,Is.EqualTo(200));
+            } finally {PlayerPrefs.DeleteKey(key);Object.DestroyImmediate(db);}
         });
     }
     private static void WithInventory(System.Action<MiningItemSystem, PlayerWallet, CannonTowerData> run)

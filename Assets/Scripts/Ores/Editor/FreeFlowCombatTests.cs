@@ -7,6 +7,47 @@ using System.Linq;
 
 public sealed class FreeFlowCombatTests
 {
+    [Test]
+    public void ContactDoesNotReleaseFacingBeforeStrikeRecoveryFinishes()
+    {
+        var obj = new GameObject("Strike facing ownership test");
+        try
+        {
+            var combat = obj.AddComponent<PlayerCombatInput>();
+            var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+            typeof(PlayerCombatInput).GetField("wasAttacking", flags).SetValue(combat, true);
+            typeof(PlayerCombatInput).GetField("hitApplied", flags).SetValue(combat, true);
+            Assert.That(combat.ControlsStrikeFacing, Is.True,
+                "Camera must not turn the body during the remaining strike animation.");
+        }
+        finally { Object.DestroyImmediate(obj); }
+    }
+
+    [Test]
+    public void StopSoftAimPreservesStrikeOwnershipAndResetReleasesIt()
+    {
+        var obj = new GameObject("Strike cleanup ownership test");
+        try
+        {
+            var motor = obj.AddComponent<StarterAssets.ThirdPersonController>();
+            var combat = obj.AddComponent<PlayerCombatInput>();
+            var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+            typeof(PlayerCombatInput).GetField("movement", flags).SetValue(combat, motor);
+            typeof(PlayerCombatInput).GetField("strikeCommitted", flags).SetValue(combat, true);
+            typeof(PlayerCombatInput).GetField("hitApplied", flags).SetValue(combat, true);
+            typeof(PlayerCombatInput).GetMethod("StopSoftAim", flags).Invoke(combat, null);
+            Assert.That(motor.ExternalFacing, Is.True);
+            motor.CombatMoveMultiplier = 0f;
+            motor.CombatStepVelocity = Vector3.forward;
+            typeof(PlayerCombatInput).GetMethod("ResetFootwork", flags).Invoke(combat, null);
+            Assert.That(combat.ControlsStrikeFacing, Is.False);
+            Assert.That(motor.ExternalFacing, Is.False);
+            Assert.That(motor.CombatMoveMultiplier, Is.EqualTo(1f));
+            Assert.That(motor.CombatStepVelocity, Is.EqualTo(Vector3.zero));
+        }
+        finally { Object.DestroyImmediate(obj); }
+    }
+
     private const string ControllerPath = "Assets/GameData/Player/Animations/Player controller.controller";
 
     [Test]
@@ -54,30 +95,37 @@ public sealed class FreeFlowCombatTests
         Assert.That(mirror.speedParameter, Is.EqualTo("AttackSpeed"));
     }
 
-    [TestCase("Sword Attack 1", 1)]
-    [TestCase("Sword Attack 2", 2)]
-    [TestCase("Special Attack", 0)]
-    [TestCase("lunge attack", -1)]
-    [TestCase("turn attack", 0)]
-    [TestCase("Combat", 0)]
-    public void AcceptedComboClickAdvancesOneStrike(string current, int expected)
+    [TestCase(SwordStrike.First, SwordStrike.Second)]
+    [TestCase(SwordStrike.Second, SwordStrike.Third)]
+    [TestCase(SwordStrike.Lunge, SwordStrike.Turn)]
+    [TestCase(SwordStrike.Turn, SwordStrike.First)]
+    public void AcceptedComboClickAdvancesOneStrike(SwordStrike current, SwordStrike expected)
     {
-        var method = typeof(PlayerCombatInput).GetMethod("NextAttackIndex",
-            System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
-        Assert.That(method.Invoke(null, new object[] { Animator.StringToHash(current) }), Is.EqualTo(expected));
+        Assert.That(SwordComboRules.TryGetFollowUp(current, out var next), Is.True);
+        Assert.That(next, Is.EqualTo(expected));
+    }
+
+    [TestCase(SwordStrike.Third)]
+    [TestCase((SwordStrike)99)]
+    public void TerminalOrUnknownStrikeHasNoFollowUp(SwordStrike current)
+    {
+        Assert.That(SwordComboRules.TryGetFollowUp(current, out _), Is.False);
     }
 
     [Test]
     public void ComboSequenceMatchesBothAuthoredAnimatorLayers()
     {
-        var field = typeof(PlayerCombatInput).GetField("AttackStates",
+        var method = typeof(PlayerCombatInput).GetMethod("GetAttackStateHash",
             System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
-        var names = (string[])field.GetValue(null);
-        Assert.That(names, Is.EqualTo(new[] { "Sword Attack 1", "Sword Attack 2", "Special Attack" }));
+        var names = new[] { "Sword Attack 1", "Sword Attack 2", "Special Attack" };
         var controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(ControllerPath);
         foreach (var layer in controller.layers.Where(l => l.name == "combat layer" || l.name == "Combat Footwork"))
-            foreach (var name in names)
+            for (int i = 0; i < names.Length; i++)
+            {
+                string name = names[i];
+                Assert.That(method.Invoke(null, new object[] { (SwordStrike)i }), Is.EqualTo(Animator.StringToHash(name)));
                 Assert.That(layer.stateMachine.states.Any(s => s.state.name == name), Is.True, layer.name + ": " + name);
+            }
     }
 
     [Test]

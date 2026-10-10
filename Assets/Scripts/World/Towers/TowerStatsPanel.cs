@@ -12,7 +12,8 @@ namespace MiningSimulator.Ores
         private Camera viewer;
         private RectTransform panel;
         private CanvasGroup group;
-        private TMP_Text title, details, hpLabel;
+        private TMP_Text title, levelLabel, hpLabel;
+        private readonly TMP_Text[] statValues = new TMP_Text[6];
         private UnityEngine.UI.Image hpFill;
         private bool opened, previewMode, restoreShift;
         private float visibility, nextRefresh;
@@ -48,41 +49,56 @@ namespace MiningSimulator.Ores
         private void Build()
         {
             if (panel != null || definition == null) return;
-            panel = Rect("TowerStats", transform, new Vector2(720, 430), Vector2.zero);
-            panel.localScale = Vector3.one * .004f;
-            var canvas = panel.gameObject.AddComponent<Canvas>(); canvas.renderMode = RenderMode.WorldSpace;
-            canvas.worldCamera = viewer != null ? viewer : Camera.main;
+            panel=TowerFantasyUi.Frame("TowerStats",transform,new Vector2(520,740),Vector2.zero,TowerFantasyUi.Background,16);
+            panel.localScale=Vector3.one*.004f;
+            var canvas=panel.gameObject.AddComponent<Canvas>();canvas.renderMode=RenderMode.WorldSpace;canvas.worldCamera=viewer!=null?viewer:Camera.main;
             panel.gameObject.AddComponent<UnityEngine.UI.GraphicRaycaster>();
-            group = panel.gameObject.AddComponent<CanvasGroup>();group.alpha = 0;group.blocksRaycasts = false;
-            var bg = panel.gameObject.AddComponent<UnityEngine.UI.Image>(); bg.color = new Color32(255,246,223,245);bg.raycastTarget = false;
-            title = Label(panel, new Vector2(0,165), new Vector2(540,70), 40);
-            hpFill = Rect("HealthFill", panel, new Vector2(640,24), new Vector2(0,107)).gameObject.AddComponent<UnityEngine.UI.Image>();
-            hpFill.color = new Color32(235,68,75,255);hpFill.raycastTarget = false;
-            hpLabel = Label(panel, new Vector2(0,68), new Vector2(640,44), 27);
-            details = Label(panel, new Vector2(0,-55), new Vector2(640,175), 30);
-            if (!previewMode)
+            group=panel.gameObject.AddComponent<CanvasGroup>();group.alpha=0;group.blocksRaycasts=false;
+            title=TowerFantasyUi.Label(panel,"Title",new Vector2(-58,320),new Vector2(354,50),34,TowerFantasyUi.Cream,true);
+            TowerFantasyUi.Label(panel,"Type",new Vector2(-96,286),new Vector2(278,24),14,TowerFantasyUi.Gold).text="DEFENSE TOWER";
+            var badge=TowerFantasyUi.Frame("Level",panel,new Vector2(78,43),new Vector2(198,312),TowerFantasyUi.Cell,8);
+            levelLabel=TowerFantasyUi.Label(badge,"LevelText",Vector2.zero,new Vector2(64,36),16,TowerFantasyUi.Gold,false,TextAlignmentOptions.Center);
+            var iconFrame=TowerFantasyUi.Frame("IconFrame",panel,new Vector2(472,224),new Vector2(0,150),TowerFantasyUi.Cell,12);
+            var image=TowerFantasyUi.Rect("CannonIcon",iconFrame,new Vector2(300,216),Vector2.zero).gameObject.AddComponent<UnityEngine.UI.Image>();
+            image.sprite=definition.icon;image.preserveAspect=true;image.raycastTarget=false;
+            TowerFantasyUi.Label(panel,"Durability",new Vector2(-124,10),new Vector2(224,26),14,TowerFantasyUi.Gold).text="DURABILITY";
+            hpLabel=TowerFantasyUi.Label(panel,"HP",new Vector2(124,10),new Vector2(224,26),16,TowerFantasyUi.Cream,false,TextAlignmentOptions.Right);
+            hpFill=TowerFantasyUi.HealthFill(panel,new Vector2(472,22),new Vector2(0,-26));
+            string[] captions={"DAMAGE","ATTACK SPEED","RANGE","PROJECTILE SPEED","ARMOR","MAGIC RESIST"};
+            for(int i=0;i<6;i++)
             {
-                var rect = Rect("Close",panel,new Vector2(62,62),new Vector2(310,167));
-                var image = rect.gameObject.AddComponent<UnityEngine.UI.Image>();image.color = new Color32(239,93,92,255);
-                var button = rect.gameObject.AddComponent<UnityEngine.UI.Button>();button.targetGraphic=image;button.onClick.AddListener(Close);
-                Label(rect,Vector2.zero,new Vector2(62,62),34).text="X";
-                var sell = Rect("Sell", panel, new Vector2(400,56),new Vector2(0,-166));
-                var sellImage=sell.gameObject.AddComponent<UnityEngine.UI.Image>();sellImage.color=new Color32(255,210,77,255);
-                var sellButton=sell.gameObject.AddComponent<UnityEngine.UI.Button>();sellButton.targetGraphic=sellImage;
-                sellButton.onClick.AddListener(()=>owner?.Sell());
-                Label(sell,Vector2.zero,new Vector2(400,56),27).text=$"SELL +{MiningMoneyFormatter.Format(owner.PaidPrice*.35f)}";
+                var cell=TowerFantasyUi.Frame("Stat"+i,panel,new Vector2(230,70),new Vector2(i%2==0?-121:121,-89-(i/2)*80),TowerFantasyUi.Cell,9);
+                TowerFantasyUi.Label(cell,"Caption",new Vector2(0,17),new Vector2(200,23),14,TowerFantasyUi.Gold).text=captions[i];
+                statValues[i]=TowerFantasyUi.Label(cell,"Value",new Vector2(0,-11),new Vector2(200,33),24,TowerFantasyUi.Cream,false);
             }
-            Refresh(); panel.gameObject.SetActive(previewMode);
+            if(!previewMode)
+            {
+                var close=TowerFantasyUi.Rect("Close",panel,new Vector2(130,48),new Vector2(-169,-322));
+                var closeGraphic=TowerFantasyUi.Box(close,TowerFantasyUi.Background,8);closeGraphic.raycastTarget=true;
+                var closeButton=close.gameObject.AddComponent<UnityEngine.UI.Button>();closeButton.targetGraphic=closeGraphic;closeButton.onClick.AddListener(Close);
+                TowerFantasyUi.Label(close,"Text",Vector2.zero,new Vector2(110,42),16,TowerFantasyUi.Gold).text="X  Close";
+                var sell=TowerFantasyUi.Rect("Sell",panel,new Vector2(252,48),new Vector2(110,-322));
+                var sellGraphic=TowerFantasyUi.Box(sell,TowerFantasyUi.Gold,10);sellGraphic.raycastTarget=true;
+                var sellButton=sell.gameObject.AddComponent<UnityEngine.UI.Button>();sellButton.targetGraphic=sellGraphic;sellButton.onClick.AddListener(()=>owner?.Sell());
+                TowerFantasyUi.Label(sell,"Text",Vector2.zero,new Vector2(230,44),16,TowerFantasyUi.Background,false,TextAlignmentOptions.Center).text=$"SELL  +{MiningMoneyFormatter.Format(owner.PaidPrice*.35f)}";
+            }
+            Refresh();panel.gameObject.SetActive(previewMode);
         }
         private void Refresh()
         {
-            if (definition == null || title == null) return;
-            float hp = owner != null ? owner.Health.Health : definition.health;
-            float max = owner != null ? owner.Health.MaxHealth : definition.health;
-            title.text=$"{definition.displayName}  •  LV {definition.level}";
+            if(definition==null||title==null)return;
+            float hp=owner!=null?owner.Health.Health:definition.health;
+            float max=owner!=null?owner.Health.MaxHealth:definition.health;
+            title.text=definition.displayName;levelLabel.text=$"LV. {definition.level}";
             hpLabel.text=$"{hp:0.#} / {max:0.#} HP";
-            hpFill.rectTransform.sizeDelta=new Vector2(640*Mathf.Clamp01(hp/Mathf.Max(1,max)),24);
-            details.text=$"DMG {definition.damage:0.##}    AS {definition.attackSpeed:0.##}/s\nRange {definition.range:0.#}m    Projectile {definition.projectileSpeed:0.#}m/s\nArmor {definition.armor:0.#}    MR {definition.magicResistance:0.#}";
+            TowerFantasyUi.SetHealth(hpFill,hp/Mathf.Max(1,max));
+            hpLabel.color=hp/max<=.2f?TowerFantasyUi.Critical:TowerFantasyUi.Cream;
+            statValues[0].text=$"{definition.damage:0.##}";
+            statValues[1].text=$"{definition.attackSpeed:0.##} / s";
+            statValues[2].text=$"{definition.range:0.#} m";
+            statValues[3].text=$"{definition.projectileSpeed:0.#} m / s";
+            statValues[4].text=$"{definition.armor:0.#}";
+            statValues[5].text=$"{definition.magicResistance:0.#}";
         }
         private void LateUpdate()
         {
@@ -99,7 +115,7 @@ namespace MiningSimulator.Ores
                 panel.rotation=viewer.transform.rotation;
             }
             float top = owner != null ? owner.GetComponent<BoxCollider>().bounds.max.y-transform.position.y : 1.5f;
-            panel.position=transform.position+Vector3.up*(top+1.15f)+(previewMode?Vector3.right*3.5f:Vector3.zero);
+            panel.position=transform.position+Vector3.up*(top+1.65f)+(previewMode?Vector3.right*3.5f:Vector3.zero);
             panel.localScale=Vector3.one*(.004f*Mathf.Lerp(.85f,1,visibility));
             if(Time.unscaledTime>=nextRefresh){nextRefresh=Time.unscaledTime+.1f;Refresh();}
         }

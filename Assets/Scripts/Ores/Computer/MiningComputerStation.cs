@@ -188,9 +188,9 @@ namespace MiningSimulator.Ores
             currentLevel = 1;
             if (data != null)
             {
-                PlayerPrefs.DeleteKey(GetSaveKey());
-                PlayerPrefs.DeleteKey(GetLevelSaveKey());
-                PlayerPrefs.Save();
+                GameSave.DeleteKey(GetSaveKey());
+                GameSave.DeleteKey(GetLevelSaveKey());
+                GameSave.Save();
                 ApplyGhostMaterial(data.GhostColor);
             }
             StateChanged?.Invoke();
@@ -607,14 +607,14 @@ namespace MiningSimulator.Ores
 
         private bool LoadPurchased()
         {
-            return data != null && PlayerPrefs.GetInt(GetSaveKey(), 0) == 1;
+            return data != null && GameSave.GetInt(GetSaveKey(), 0) == 1;
         }
 
         private int LoadLevel()
         {
             return data == null
                 ? 1
-                : Mathf.Clamp(PlayerPrefs.GetInt(GetLevelSaveKey(), 1), 1, MaximumLevel);
+                : Mathf.Clamp(GameSave.GetInt(GetLevelSaveKey(), 1), 1, MaximumLevel);
         }
 
         private void SavePurchased()
@@ -623,8 +623,8 @@ namespace MiningSimulator.Ores
             {
                 return;
             }
-            PlayerPrefs.SetInt(GetSaveKey(), 1);
-            PlayerPrefs.Save();
+            GameSave.SetInt(GetSaveKey(), 1);
+            GameSave.Save();
         }
 
         private void SaveLevel()
@@ -633,8 +633,8 @@ namespace MiningSimulator.Ores
             {
                 return;
             }
-            PlayerPrefs.SetInt(GetLevelSaveKey(), CurrentLevel);
-            PlayerPrefs.Save();
+            GameSave.SetInt(GetLevelSaveKey(), CurrentLevel);
+            GameSave.Save();
         }
 
         private float CalculateReward(int baseCoins)

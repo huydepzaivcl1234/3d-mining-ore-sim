@@ -19,7 +19,9 @@ namespace MiningSimulator.Ores
             if (Skullclaw == null) return;
             if (skullApproachTarget != target) { skullJumpGate.Reset(); skullApproachTarget = target; }
             float distance = SkullclawTargetDistance;
-            skullJumpGate.Tick(playerDetected && target != null && target.Health > 0f &&
+            // The selected target can be a player, tower or chest. Navigation
+            // approaches all three at jump range; none may stall there forever.
+            skullJumpGate.Tick(target != null && target.Health > 0f &&
                 target.gameObject.activeInHierarchy && !IsSkullclawJump &&
                 distance > EffectiveAttackRange && distance <= Skullclaw.jumpRange * HitScale, dt);
         }

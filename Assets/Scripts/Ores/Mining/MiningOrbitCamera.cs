@@ -225,12 +225,13 @@ namespace MiningSimulator.Ores
                 ? ResolveFollowCameraPosition(desiredPosition, RuneStation.PlayerDeltaTime)
                 : ResolveCameraPosition(desiredPosition);
             controlledCamera.transform.SetPositionAndRotation(position, rotation);
-            if (IsShiftLocked && followTarget != null && (combatInput == null || !combatInput.IsTrackingLunge))
+            if (IsShiftLocked && followTarget != null && (combatInput == null || !combatInput.ControlsStrikeFacing))
             {
                 float facing = Mathf.SmoothDampAngle(followTarget.eulerAngles.y, rotation.eulerAngles.y,
                     ref shiftFacingVelocity, shiftFacingSmoothSeconds, shiftFacingMaximumSpeed, RuneStation.PlayerDeltaTime);
                 followTarget.rotation = Quaternion.Euler(0f, facing, 0f);
             }
+            else shiftFacingVelocity = 0f; // No stale camera turn velocity at strike handoff.
         }
 
         public void SetShiftLocked(bool locked)
@@ -239,7 +240,8 @@ namespace MiningSimulator.Ores
             headingVelocity = 0f;
             shiftFacingVelocity = 0f;
             lastManualOrbitTime = Time.unscaledTime;
-            if (playerMovement != null) playerMovement.ExternalFacing = IsShiftLocked;
+            if (playerMovement != null) playerMovement.ExternalFacing = IsShiftLocked ||
+                combatInput != null && combatInput.ControlsStrikeFacing;
             UpdateShiftCursor();
         }
 

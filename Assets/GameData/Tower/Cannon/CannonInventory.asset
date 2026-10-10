@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Cannon
   description: 
   rarity: 0
-  worldModel: {fileID: 0}
+  worldModel: {fileID: 1395771667881826005, guid: fbfab3767baeead43b0df52e4163a99f, type: 3}
   inventoryIcon: {fileID: 21300000, guid: 91f3eada02b02b646a6ad53e1cda6dca, type: 3}
   iconFallback: '?'
   fallbackColor: {r: 1, g: 1, b: 1, a: 1}

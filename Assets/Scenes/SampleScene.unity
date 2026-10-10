@@ -143790,7 +143790,8 @@ MonoBehaviour:
   respawnSeconds: 10
   respawnPoint: {fileID: 431888273}
   animator: {fileID: 2101234310564284531}
-  deathState: Base Layer.Death
+  lethalLaunchSpeed: 10
+  lethalLaunchLift: 10
   respawnPanel: {fileID: 370791526}
   countdownLabel: {fileID: 1874330573}
   respawnCurtain: {fileID: 48960300}
@@ -155525,6 +155526,12 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   freeFlowEnabled: 1
+  freeFlowSearchRadius: 7
+  freeFlowTravelDistance: 5
+  directionalAcquireAngle: 80
+  idleAcquireAngle: 100
+  targetDistanceWeight: 6
+  airStrikeStepDistance: 0.25
   movingBodyWeight: 0.9
   strikeMovementMultiplier: 0.15
   footworkBlendSeconds: 0.08
@@ -155549,8 +155556,8 @@ MonoBehaviour:
   recoveryEndPhase: 0.96
   attackTransitionSeconds: 0.07
   comboQueueStart: 0.45
-  comboLinkTime: 0.78
-  comboQueueEnd: 0.97
+  comboLinkStartPhase: 0.78
+  comboLinkEndPhase: 0.97
   attackReturnPhase: 0.98
   comboBufferSeconds: 0.25
 --- !u!1 &8018340325426387316
@@ -158738,18 +158745,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2cd62cadb01868448c9b26398306d27, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.PlayerKnockbackRagdoll
-  getUpClip: {fileID: -203655887218126122, guid: c07ba8048c9ff314e853e391b6388f07, type: 3}
-  getUpState: Base Layer.Getting Up
-  locomotionState: Base Layer.Default
+  knockbackSeconds: 0.5
   minimumFallSeconds: 0.4
   settledSeconds: 0.35
   settledSpeed: 0.8
   groundLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  getUpSpeed: 1
-  poseBlendSeconds: 0.25
-  recoverySearchRadius: 1.5
 --- !u!33 &9005690735916068889
 MeshFilter:
   m_ObjectHideFlags: 0

@@ -11,7 +11,7 @@ AssetOrigin:
   serializedVersion: 1
   productId: 107400
   packageName: FREE Skybox Extended Shader
-  packageVersion: 2.7.0
-  assetPath: Assets/BOXOPHOBIC/Skybox Cubemap Extended/Core/Shaders/Skybox Cubemap
-    Extended.shader
-  uploadId: 991516
+  packageVersion: 2.8.0
+  assetPath: Assets/Plugins/BOXOPHOBIC/Skybox Cubemap Extended/Core/Shaders/Skybox
+    Cubemap Extended.shader
+  uploadId: 1016442

@@ -82,20 +82,27 @@ namespace MiningSimulator.Ores
         }
 
         /// <summary>Clears all gameplay progression, including the saved Rebirth count.</summary>
-        public void ResetAllProgress()
+        public bool ResetAllProgress()
         {
+            if (!GameSave.ResetAll())
+            {
+                Debug.LogError("Cannot reset save files. Existing progress was not reset.", this);
+                return false;
+            }
             FindResetTargetsIfMissing();
             MiningPlayerStats.ResetSavedProgress();
+            PlayerCheckpointSave.ResetLoadedCheckpoints();
             upgradeSystem?.ResetAutoUpgrade();
             DayNightSystem.ResetSavedClock();
             TreasureChest.ResetSavedProgress();
+            TowerWorldSave.ResetAllProgress();
             MonsterSpawnZone.ResetLoadedEncounters();
             completedRebirths = 0;
-            PlayerPrefs.DeleteKey("MiningSimulator.SaveExists.v1");
+            GameSave.DeleteKey("MiningSimulator.SaveExists.v1");
             if (rebirthData != null)
             {
-                PlayerPrefs.DeleteKey(rebirthData.RebirthCountSaveKey);
-                PlayerPrefs.Save();
+                GameSave.DeleteKey(rebirthData.RebirthCountSaveKey);
+                GameSave.Save();
             }
 
             upgradeSystem?.ResetAllUpgrades();
@@ -106,15 +113,17 @@ namespace MiningSimulator.Ores
             MiningComputerStation.ResetAllLoadedStations();
             wallet?.ResetMoney();
             wallet?.ResetGems();
+            GameSave.Flush();
             ApplyPermanentBoost();
             StateChanged?.Invoke();
+            return true;
         }
 
         private void LoadProgress()
         {
             completedRebirths = rebirthData == null
                 ? 0
-                : Mathf.Max(0, PlayerPrefs.GetInt(rebirthData.RebirthCountSaveKey, 0));
+                : Mathf.Max(0, GameSave.GetInt(rebirthData.RebirthCountSaveKey, 0));
         }
 
         private void SaveProgress()
@@ -124,8 +133,8 @@ namespace MiningSimulator.Ores
                 return;
             }
 
-            PlayerPrefs.SetInt(rebirthData.RebirthCountSaveKey, completedRebirths);
-            PlayerPrefs.Save();
+            GameSave.SetInt(rebirthData.RebirthCountSaveKey, completedRebirths);
+            GameSave.Save();
         }
 
         private void ApplyPermanentBoost()

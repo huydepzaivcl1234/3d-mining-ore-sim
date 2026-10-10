@@ -24,7 +24,7 @@ namespace MiningSimulator.Ores
             p.savedCursor=Cursor.lockState;p.savedCursorVisible=Cursor.visible;p.started=Time.unscaledTime;active=p;
             if(orbit!=null){orbit.BeginCinematicOverride();orbit.SetInputLocked(true);}
             camera.orthographic=false;Cursor.lockState=CursorLockMode.None;Cursor.visible=true;
-            p.visuals=new TowerPlacementVisuals(item.Tower,player.transform,camera);p.visuals.Hide();return true;
+            p.visuals=new TowerPlacementVisuals(item.Tower,player.transform,camera);p.visuals.SetRemaining(inventory.GetItemCount(item));p.visuals.Hide();return true;
         }
         public void Cancel()
         {
@@ -45,11 +45,27 @@ namespace MiningSimulator.Ores
         void Update()
         {
             if(item==null)return;
+            int remaining=inventory!=null?inventory.GetItemCount(item):0;
+            if(remaining<=0){Cancel();return;}
+            visuals.SetRemaining(remaining);
             if(player==null||player.GetComponent<MiningCharacterHealth>()?.Health<=0||cameraView==null||Keyboard.current?.escapeKey.wasPressedThisFrame==true||Mouse.current?.rightButton.wasPressedThisFrame==true){Cancel();return;}
             if(Mouse.current==null||Time.unscaledTime-started<.35f)return;
             bool valid=PreviewAt(cameraView.ScreenPointToRay(Mouse.current.position.ReadValue()),out var foot);
-            if(valid&&Mouse.current.leftButton.wasPressedThisFrame&&(EventSystem.current==null||!EventSystem.current.IsPointerOverGameObject())&&inventory.TryTakeTowerAt(slotIndex,item,out float paid))
-            {var placed=Instantiate(item.Tower.prefab,foot,Quaternion.identity);var runtime=placed.GetComponent<TowerRuntime>();runtime.Initialize(item.Tower,paid);runtime.AlignToGround();Cancel();}
+            if(valid&&Mouse.current.leftButton.wasPressedThisFrame&&(EventSystem.current==null||!EventSystem.current.IsPointerOverGameObject()))
+                PlaceAt(foot);
+        }
+        private bool PlaceAt(Vector3 foot)
+        {
+            if(item==null||inventory==null)return false;
+            var body=item.Tower.prefab.GetComponent<BoxCollider>();
+            if(!TowerPlacementGeometry.Validate(ref foot,body,player,12))return false;
+            if(!inventory.TryTakeTowerAt(slotIndex,item,out float paid)&&!inventory.TryTakeTower(item,out paid))return false;
+            var placed=Instantiate(item.Tower.prefab,foot,Quaternion.identity);
+            var runtime=placed.GetComponent<TowerRuntime>();runtime.Initialize(item.Tower,paid);runtime.AlignToGround();TowerWorldSave.Register(runtime);
+            Physics.SyncTransforms();
+            int remaining=inventory.GetItemCount(item);
+            if(remaining<=0)Cancel();else{visuals.SetRemaining(remaining);visuals.Move(foot,false);}
+            return true;
         }
         public bool PreviewAt(Ray ray,out Vector3 foot)
         {

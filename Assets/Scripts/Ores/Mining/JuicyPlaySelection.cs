@@ -129,6 +129,11 @@ namespace MiningSimulator.Ores
         private void HandleLoadGame()
         {
             if (!hasSaveData) return;
+            if (!GameSave.Store.Writable)
+            {
+                Debug.LogError("Save could not be loaded safely: " + GameSave.Store.LastError, this);
+                return;
+            }
             MarkSaveExists();
             BeginGameplay();
         }
@@ -142,7 +147,7 @@ namespace MiningSimulator.Ores
                 return;
             }
 
-            rebirthSystem.ResetAllProgress();
+            if (!rebirthSystem.ResetAllProgress()) return;
             MarkSaveExists();
             BeginGameplay();
         }
@@ -281,12 +286,12 @@ namespace MiningSimulator.Ores
             string gemKey = wallet != null && wallet.GameData != null
                 ? wallet.GameData.GemSaveKey
                 : MiningGameData.DefaultGemSaveKey;
-            return PlayerPrefs.GetInt(SaveMarkerKey, 0) == 1 ||
-                   PlayerPrefs.HasKey(gemKey) ||
-                   PlayerPrefs.HasKey(RebirthSaveKey) ||
-                   PlayerPrefs.HasKey(InventorySaveKey) ||
-                   PlayerPrefs.HasKey(QuestSaveKey) ||
-                   PlayerPrefs.HasKey(AchievementSaveKey) ||
+            return GameSave.GetInt(SaveMarkerKey, 0) == 1 ||
+                   GameSave.HasKey(gemKey) ||
+                   GameSave.HasKey(RebirthSaveKey) ||
+                   GameSave.HasKey(InventorySaveKey) ||
+                   GameSave.HasKey(QuestSaveKey) ||
+                   GameSave.HasKey(AchievementSaveKey) ||
                    (rebirthSystem != null && rebirthSystem.CompletedRebirths > 0) ||
                    (wallet != null && wallet.CurrentGems > 0f);
         }
@@ -325,8 +330,8 @@ namespace MiningSimulator.Ores
 
         private static void MarkSaveExists()
         {
-            PlayerPrefs.SetInt(SaveMarkerKey, 1);
-            PlayerPrefs.Save();
+            GameSave.SetInt(SaveMarkerKey, 1);
+            GameSave.Save();
         }
 
         private void RemoveListeners()

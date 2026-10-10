@@ -47,6 +47,8 @@ public static class SkullclawPlayValidation
         var saved = new RootStates { roots = roots.Select(x => new RootState {
             id = GlobalObjectId.GetGlobalObjectIdSlow(x).ToString(), active = x.activeSelf }).ToArray() };
         SessionState.SetString(Key + ".roots", JsonUtility.ToJson(saved));
+        SessionState.SetBool(Key + ".background", Application.runInBackground);
+        Application.runInBackground = true;
         SessionState.SetBool(Key, true); SessionState.SetString(Key + ".result", "Running");
         foreach (var root in roots) root.SetActive(false);
         EditorApplication.isPlaying = true;
@@ -62,6 +64,7 @@ public static class SkullclawPlayValidation
                 if (GlobalObjectId.TryParse(root.id, out var id) && GlobalObjectId.GlobalObjectIdentifierToObjectSlow(id) is GameObject go)
                     go.SetActive(root.active);
             SessionState.SetBool(Key, false); Debug.Log("Skullclaw validation: " + Result);
+            Application.runInBackground = SessionState.GetBool(Key + ".background", false);
         }
         if (state != PlayModeStateChange.EnteredPlayMode) return;
         try
@@ -91,6 +94,20 @@ public static class SkullclawPlayValidation
             // Awake's species cache is initialized from the prefab before this test-only loadout is assigned.
             typeof(MushroomMonster).GetField("speciesData", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).SetValue(subject, data);
             subject.Initialize(null, victim, false);
+            if (SessionState.GetBool(Key + ".defense", false))
+            {
+                UnityEngine.Object.Destroy(player);
+                player = UnityEngine.Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>("Assets/GameData/Tower/Cannon/CannonTower.prefab"),
+                    new Vector3(10000, 0f, 10004), Quaternion.identity);
+                player.name = "__Unsaved Defense Cannon__";
+                var tower = player.GetComponent<TowerRuntime>();
+                var cannon = UnityEngine.Object.Instantiate((CannonTowerData)tower.Data);
+                cannon.damage = .1f; cannon.attackSpeed = 5f; cannon.range = 10f; cannon.health = 1000f;
+                tower.Initialize(cannon, 0f); // No placement ID: fixture damage cannot write the tower save.
+                victim = tower.Health;
+                typeof(MushroomMonster).GetField("playerTarget", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).SetValue(subject, null);
+                subject.Health.ConfigureSpawnHealth(5000f);
+            }
             dawnTriggered = dissolveObserved = false;
             if (SessionState.GetBool(Key + ".sunrise", false))
             {
@@ -246,7 +263,9 @@ public static class SkullclawPlayValidation
                     System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).GetValue(subject);
                 bool approachValid = hits[0] == 0 && hits[1] == 0 && hits[2] == 1 && combo.Next == 0 &&
                     maxTravel > .5f && subject.GetComponent<CharacterController>().isGrounded;
+                if (SessionState.GetBool(Key + ".defense", false)) approachValid &= subject.Health.Health < 5000f;
                 pendingResult = (approachValid ? "PASS" : "FAIL") + ": distant target triggers approach jump without consuming right swipe";
+                if (SessionState.GetBool(Key + ".defense", false)) pendingResult += $", cannon selected without player detection, hits={string.Join(",", hits)}, travel={maxTravel:F2}, grounded={subject.GetComponent<CharacterController>().isGrounded}, monsterHP={subject.Health.Health:F2}, next={combo.Next}";
                 finishedJump = true; victim.gameObject.SetActive(false); return;
             }
             bool valid = hits[0] == (single ? 0 : 1) && hits[1] == 1 && hits[2] == (wall || miss ? 0 : 1) && maxHeight > 1f &&

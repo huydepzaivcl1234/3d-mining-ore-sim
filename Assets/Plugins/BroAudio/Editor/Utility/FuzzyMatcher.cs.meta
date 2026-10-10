@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: c43e73f56cd82f34bafa5e5a1739f02b
+AssetOrigin:
+  serializedVersion: 1
+  productId: 257362
+  packageName: Bro Audio
+  packageVersion: 3.3.0
+  assetPath: Assets/BroAudio/Editor/Utility/FuzzyMatcher.cs
+  uploadId: 1008808

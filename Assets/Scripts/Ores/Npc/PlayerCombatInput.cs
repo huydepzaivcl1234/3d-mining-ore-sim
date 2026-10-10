@@ -3,14 +3,24 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using MiningSimulator.Ores;
 using UnityEngine.EventSystems;
+using UnityEngine.Serialization;
 
 [DisallowMultipleComponent]
+[DefaultExecutionOrder(-100)] // Publish strike motion before the existing CharacterController consumes it.
 public partial class PlayerCombatInput : MonoBehaviour
 {
     // Names match the player's authored Player controller.controller on main.
     private const string CombatLayerName = "combat layer";
     private const string FootworkLayerName = "Combat Footwork";
-    private static readonly int CombatStrikeRoute = Animator.StringToHash("CombatStrike");
+    private const string ArmsLayerName = "Arms Layer";
+    private const string CombatStrikeParameter = "CombatStrike";
+    private const string AttackSpeedParameter = "AttackSpeed";
+    private const string CombatModeParameter = "CombatMode";
+    private const float StrikeAnimatorTimeoutSeconds = 0.5f;
+    private static readonly int AttackTrigger = Animator.StringToHash("attack");
+    private static readonly int MoveTrigger = Animator.StringToHash("Move");
+    private static readonly int DefaultState = Animator.StringToHash("Default");
+    private static readonly int CombatStrikeRoute = Animator.StringToHash(CombatStrikeParameter);
     private bool usesCombatStrikeRoute;
     private static readonly int CombatMoveState = Animator.StringToHash("Combat");
     private static readonly int FirstAttackState = Animator.StringToHash("Sword Attack 1");
@@ -18,9 +28,6 @@ public partial class PlayerCombatInput : MonoBehaviour
     private static readonly int ThirdAttackState = Animator.StringToHash("Special Attack");
     private static readonly int LungeAttackState = Animator.StringToHash("lunge attack");
     private static readonly int TurnAttackState = Animator.StringToHash("turn attack");
-    // Keep the designer's state names on both body layers. A new combo starts
-    // at 1; each accepted follow-up advances exactly one strike.
-    private static readonly string[] AttackStates = { "Sword Attack 1", "Sword Attack 2", "Special Attack" };
     private static readonly int ArmedState = Animator.StringToHash("Combat");
     [SerializeField] private Animator animator;
     [Header("Input bindings - keyboard or mouse")]
@@ -34,6 +41,11 @@ public partial class PlayerCombatInput : MonoBehaviour
     [SerializeField] private string sheathWeaponParameter = "SheathWeapon";
     public bool IsCombatMode => combatMode;
     public bool IsTrackingLunge => lungeTracking;
+    public bool ControlsStrikeFacing => lungeTracking || softAimActive ||
+        freeFlowEnabled && (strikeCommitted || wasAttacking);
+    private bool strikeCommitted;
+    private bool strikeAwaitingAnimator;
+    private float strikeAnimatorDeadline;
     [HideInInspector, Min(0.1f), SerializeField] private float aimRange = 15f; // Legacy; targeting now uses AttackRange.
     [Min(0f), SerializeField] private float aimTurnSpeed = 720f;
     [Header("Soft aim while attacking (does not control the camera)")]
@@ -49,6 +61,7 @@ public partial class PlayerCombatInput : MonoBehaviour
     private MushroomMonster attackAimTarget;
     private MushroomMonster aimedMonster;
     private StarterAssets.ThirdPersonController movement;
+    private PlayerKnockbackRagdoll knockback;
     public MushroomMonster AimedMonster => aimedMonster;
     private MiningCharacterHealth ownHealth;
     private MiningUiPanelCoordinator panels;
@@ -66,8 +79,6 @@ public partial class PlayerCombatInput : MonoBehaviour
     [SerializeField] private LayerMask targetLayers = ~0;
 
     private bool wasAttacking;
-    private bool queuedAttack;
-    private int queuedAttackStateHash;
     private int lastAttackStateHash;
     private bool returningFromAttack;
     private MiningAudioManager feedbackAudio;
@@ -86,6 +97,15 @@ public partial class PlayerCombatInput : MonoBehaviour
     private readonly HashSet<MiningCharacterHealth> hitTargets = new HashSet<MiningCharacterHealth>();
     [Header("Free-flow footwork (camera remains independent)")]
     [SerializeField] private bool freeFlowEnabled = true;
+    [Header("Directional free-flow targeting")]
+    [Min(.1f), SerializeField] private float freeFlowSearchRadius = 7f;
+    [Min(0f), SerializeField] private float freeFlowTravelDistance = 5f;
+    [Range(0f, 180f), SerializeField] private float directionalAcquireAngle = 80f;
+    [Range(0f, 180f), SerializeField] private float idleAcquireAngle = 100f;
+    [Min(0f), SerializeField] private float targetDistanceWeight = 6f;
+    [Min(0f), SerializeField] private float airStrikeStepDistance = .25f;
+    private Vector3 attackIntentDirection;
+    private Transform attackCamera;
     [Range(0f, 1f), SerializeField] private float movingBodyWeight = 0.9f;
     [Range(0f, 1f), SerializeField] private float strikeMovementMultiplier = 0.15f;
     [Min(0.01f), SerializeField] private float footworkBlendSeconds = 0.08f;
@@ -114,12 +134,14 @@ public partial class PlayerCombatInput : MonoBehaviour
     [Range(0f, 1f), SerializeField] private float recoveryDelayPhase = 0.06f;
     [Range(0f, 1f), SerializeField] private float recoveryEndPhase = 0.96f;
     [Min(0.01f), SerializeField] private float attackTransitionSeconds = 0.07f;
-    [Range(0f, 1f), SerializeField] private float comboQueueStart = 0.45f;
-    [Range(0f, 1f), SerializeField] private float comboLinkTime = 0.78f;
-    [Range(0f, 1f), SerializeField] private float comboQueueEnd = 0.97f;
+    [HideInInspector, SerializeField] private float comboQueueStart = 0.45f; // Legacy scene data; no input buffering.
+    [Tooltip("A fresh click after this phase immediately links the next strike. Earlier clicks are discarded.")]
+    [FormerlySerializedAs("comboLinkTime")]
+    [Range(0f, 1f), SerializeField] private float comboLinkStartPhase = 0.78f;
+    [FormerlySerializedAs("comboQueueEnd")]
+    [Range(0f, 1f), SerializeField] private float comboLinkEndPhase = 0.97f;
     [Range(0f, 1f), SerializeField] private float attackReturnPhase = 0.98f;
-    [Min(0.01f), SerializeField] private float comboBufferSeconds = 0.25f;
-    private float queuedAttackUntil;
+    [HideInInspector, SerializeField] private float comboBufferSeconds = 0.25f; // Legacy scene data; no input buffering.
     private int footworkLayer = -1;
     private StarterAssets.StarterAssetsInputs locomotionInput;
     private MushroomMonster stepTarget;
@@ -129,6 +151,7 @@ public partial class PlayerCombatInput : MonoBehaviour
     private float lungeTravelRemaining;
     private Vector3 lungeDirection;
     private bool lungeTracking;
+    private bool lungeHasTarget;
     public float LungeAcquireRange => AttackRange + Mathf.Min(
         Mathf.Min(Mathf.Max(0f, lungeExtraRange), Mathf.Max(0f, strikeStepDistance)),
         Mathf.Max(0f, lungeMaximumSpeed) * Mathf.Max(0.01f, lungeSeconds) / AttackSpeed * lungeReachSafety);
@@ -152,8 +175,6 @@ public partial class PlayerCombatInput : MonoBehaviour
         ClearAim();
         wasAttacking = false;
         hitApplied = false;
-        queuedAttack = false;
-        queuedAttackStateHash = 0;
         returningFromAttack = false;
         lastAttackStateHash = 0;
         SetCombatMode(false);
@@ -162,7 +183,6 @@ public partial class PlayerCombatInput : MonoBehaviour
     private void LateUpdate()
     {
         UpdateSwordTrail();
-        UpdateFootwork();
         if (!CanUseGameplay())
         {
             ClearAim();
@@ -170,7 +190,13 @@ public partial class PlayerCombatInput : MonoBehaviour
         }
         // Footwork owns facing during the lunge; ordinary soft aim and camera lock must not fight it.
         if (lungeTracking) return;
-        if (IsShiftLocked) { StopSoftAim(); return; }
+        // An air strike also keeps the direction sampled on the accepted click.
+        // Looking elsewhere is allowed; it is not a request to redirect this strike.
+        if (freeFlowEnabled && ControlsStrikeFacing && !hitApplied && !softAimActive &&
+            attackIntentDirection.sqrMagnitude > .0001f)
+            transform.rotation = Quaternion.RotateTowards(transform.rotation,
+                Quaternion.LookRotation(attackIntentDirection), aimTurnSpeed * Time.deltaTime);
+        if (IsShiftLocked && !freeFlowEnabled) { StopSoftAim(); return; }
         if (aimedMonster != null && !IsAimValid(aimedMonster)) aimedMonster = null;
         int layer = animator != null ? animator.GetLayerIndex(CombatLayerName) : -1;
         bool swinging = layer >= 0 && (IsAttackState(animator.GetCurrentAnimatorStateInfo(layer)) ||
@@ -210,9 +236,10 @@ public partial class PlayerCombatInput : MonoBehaviour
         feedbackAudio = FindFirstObjectByType<MiningAudioManager>();
         ownHealth = GetComponent<MiningCharacterHealth>();
         movement = GetComponent<StarterAssets.ThirdPersonController>();
+        knockback = GetComponent<PlayerKnockbackRagdoll>();
         locomotionInput = GetComponent<StarterAssets.StarterAssetsInputs>();
         footworkLayer = animator != null ? animator.GetLayerIndex(FootworkLayerName) : -1;
-        usesCombatStrikeRoute = animator != null && HasParameter("CombatStrike", AnimatorControllerParameterType.Int);
+        usesCombatStrikeRoute = animator != null && HasParameter(CombatStrikeParameter, AnimatorControllerParameterType.Int);
         ResetFootwork();
         panels = FindFirstObjectByType<MiningUiPanelCoordinator>();
         foreach (var rig in FindObjectsByType<MiningOrbitCamera>(FindObjectsSortMode.None))
@@ -220,11 +247,11 @@ public partial class PlayerCombatInput : MonoBehaviour
     }
     private void Update()
     {
-        if (!CanUseGameplay()) { ClearAim(); return; }
+        if (!CanUseGameplay()) { ClearAim(); ResetFootwork(); return; }
         aimedMonster = combatMode ? FindNearestMonster() : null;
         if (animator == null || animator.runtimeAnimatorController == null) return;
         int layer = animator.GetLayerIndex(CombatLayerName);
-        if (HasParameter("AttackSpeed", AnimatorControllerParameterType.Float)) animator.SetFloat("AttackSpeed", AttackSpeed);
+        if (HasParameter(AttackSpeedParameter, AnimatorControllerParameterType.Float)) animator.SetFloat(AttackSpeedParameter, AttackSpeed);
         if (toggleCombat != null && toggleCombat.WasPressedThisFrame())
         {
             TryToggleCombat();
@@ -233,88 +260,132 @@ public partial class PlayerCombatInput : MonoBehaviour
         if (layer < 0) return;
         bool pressed = attack != null && attack.WasPressedThisFrame() &&
             (EventSystem.current == null || !EventSystem.current.IsPointerOverGameObject());
-        var state = animator.GetCurrentAnimatorStateInfo(layer);
-        bool swinging = IsAttackState(state);
-        // Accept one deliberate follow-up after the first strike begins. The
-        // previous 0.55-0.9 window was shorter than the player's click timing
-        // at higher attack speeds, so Sword Attack 2 was often skipped.
-        if (combatMode && pressed && swinging && !animator.IsInTransition(layer) &&
-            state.normalizedTime >= comboQueueStart && state.normalizedTime < comboQueueEnd)
+        ProcessAttackInput(layer, pressed);
+        UpdateFootwork();
+    }
+
+    // Input remains owned by the project's rebindable action, not a second motor/input script.
+    private void ProcessAttackInput(int layer, bool pressed)
+    {
+        var state = GetStrikeState(layer);
+        if (IsAttackState(state))
         {
-            queuedAttack = true;
-            queuedAttackStateHash = state.shortNameHash;
-            // Long authored openers must retain a deliberate click until their link frame.
-            float secondsToLink = Mathf.Max(0f, comboLinkTime - state.normalizedTime) * state.length /
-                Mathf.Max(.01f, state.speed * state.speedMultiplier * animator.speed);
-            queuedAttackUntil = Time.time + Mathf.Max(comboBufferSeconds, secondsToLink + attackTransitionSeconds);
+            if (TryLinkStrike(layer, state, pressed)) return;
+            ReturnToCombatIfFinished(layer, state);
+            return;
         }
-        if (swinging && !animator.IsInTransition(layer))
-        {
-            if (queuedAttack && (queuedAttackStateHash != state.shortNameHash || Time.time > queuedAttackUntil)) queuedAttack = false;
-            if (combatMode && queuedAttack && hitApplied && state.normalizedTime >= comboLinkTime)
-            {
-                queuedAttack = false;
-                PlayAttack(layer, NextAttackIndex(state.shortNameHash));
-            }
-            else if (!queuedAttack &&
-                     !returningFromAttack && state.normalizedTime >= attackReturnPhase)
-            {
-                returningFromAttack = true;
-                // Attack 2 has no Move transition in the authored controller.
-                // Return explicitly without rewriting the user's Animator.
-                animator.CrossFadeInFixedTime("Combat", attackTransitionSeconds, layer, 0f);
-            }
-        }
-        int armsLayer = animator.GetLayerIndex("Arms Layer");
-        bool swordReady = armsLayer < 0 || (!animator.IsInTransition(armsLayer) &&
+
+        if (!pressed || !combatMode || !IsSwordReady() || strikeAwaitingAnimator || animator.IsInTransition(layer)) return;
+        if (state.shortNameHash != CombatMoveState && !IsLocomotionState(state.shortNameHash)) return;
+        PlayAttack(layer, SwordStrike.First);
+    }
+
+    private AnimatorStateInfo GetStrikeState(int layer)
+    {
+        var current = animator.GetCurrentAnimatorStateInfo(layer);
+        if (!animator.IsInTransition(layer)) return current;
+        var next = animator.GetNextAnimatorStateInfo(layer);
+        return IsAttackState(next) ? next : current;
+    }
+
+    private bool TryLinkStrike(int layer, AnimatorStateInfo state, bool pressed)
+    {
+        // Never retain clicks: only this frame's fresh press can advance 1 -> 2 -> 3.
+        if (!combatMode || returningFromAttack || strikeAwaitingAnimator || animator.IsInTransition(layer)) return false;
+        if (!TryGetStrike(state.shortNameHash, out var current) ||
+            !SwordComboRules.TryLink(current, pressed, hitApplied, state.normalizedTime,
+                comboLinkStartPhase, comboLinkEndPhase, out var next)) return false;
+        PlayAttack(layer, next);
+        return true;
+    }
+
+    private void ReturnToCombatIfFinished(int layer, AnimatorStateInfo state)
+    {
+        if (animator.IsInTransition(layer) || returningFromAttack || state.normalizedTime < attackReturnPhase) return;
+        returningFromAttack = true;
+        // Attack 2 has no Move transition in the authored controller.
+        animator.CrossFadeInFixedTime(CombatMoveState, attackTransitionSeconds, layer, 0f);
+    }
+
+    private bool IsSwordReady()
+    {
+        int armsLayer = animator.GetLayerIndex(ArmsLayerName);
+        return armsLayer < 0 || (!animator.IsInTransition(armsLayer) &&
             animator.GetCurrentAnimatorStateInfo(armsLayer).shortNameHash == ArmedState);
-        if (!combatMode || !swordReady || swinging || animator.IsInTransition(layer) ||
-            (state.shortNameHash != CombatMoveState && !IsLocomotionState(state.shortNameHash)) || !pressed) return;
-        queuedAttack = false;
-        PlayAttack(layer, 0, true);
     }
 
-    private static int NextAttackIndex(int stateHash)
+    private static bool TryGetStrike(int stateHash, out SwordStrike strike)
     {
-        if (stateHash == LungeAttackState) return -1;
-        if (stateHash == TurnAttackState) return 0;
-        for (int i = 0; i < AttackStates.Length; i++)
-            if (Animator.StringToHash(AttackStates[i]) == stateHash) return (i + 1) % AttackStates.Length;
-        return 0;
+        if (stateHash == FirstAttackState) { strike = SwordStrike.First; return true; }
+        if (stateHash == SecondAttackState) { strike = SwordStrike.Second; return true; }
+        if (stateHash == ThirdAttackState) { strike = SwordStrike.Third; return true; }
+        if (stateHash == LungeAttackState) { strike = SwordStrike.Lunge; return true; }
+        if (stateHash == TurnAttackState) { strike = SwordStrike.Turn; return true; }
+        strike = SwordStrike.First;
+        return false;
     }
 
-    private void PlayAttack(int layer, int index, bool opening = false)
+    private static int GetAttackStateHash(SwordStrike strike)
     {
-        queuedAttack = false;
-        queuedAttackStateHash = 0;
+        switch (strike)
+        {
+            case SwordStrike.Lunge: return LungeAttackState;
+            case SwordStrike.Turn: return TurnAttackState;
+            case SwordStrike.First: return FirstAttackState;
+            case SwordStrike.Second: return SecondAttackState;
+            case SwordStrike.Third: return ThirdAttackState;
+            default: throw new System.ArgumentOutOfRangeException(nameof(strike));
+        }
+    }
+
+    private void PlayAttack(int layer, SwordStrike strike)
+    {
         hitApplied = false;
         returningFromAttack = false;
         BeginLunge();
-        if (opening && lungeTravelRemaining > 0.01f &&
-            animator.HasState(layer, LungeAttackState)) index = -2;
-        // Only the actual lunge opener travels. Turn/combo retain normal damage range.
-        lungeTracking = index == -2;
+        strikeCommitted = freeFlowEnabled;
+        strikeAwaitingAnimator = freeFlowEnabled;
+        strikeAnimatorDeadline = Time.time + StrikeAnimatorTimeoutSeconds;
+        if (movement != null)
+        {
+            movement.ExternalFacing = IsShiftLocked || ControlsStrikeFacing;
+            if (freeFlowEnabled) movement.CombatMoveMultiplier = 0f;
+            movement.CombatStepVelocity = Vector3.zero;
+        }
+        // Use the existing three sword clips. Every strike may approach a newly
+        // selected target; no extra lunge/turn opener or parallel animation controller.
+        lungeTracking = freeFlowEnabled && lungeTravelRemaining > .001f;
         if (!lungeTracking) lungeTravelRemaining = 0f;
-        else lungeTravelRemaining += Mathf.Max(0f, lungeTrackingDistance);
+        else if (stepTarget != null) lungeTravelRemaining += Mathf.Max(0f, lungeTrackingDistance);
         ClearLocomotionAnimation(false);
         BeginSoftAim();
-        animator.ResetTrigger("attack");
-        animator.ResetTrigger("Move");
-        string stateName = index == -2 ? "lunge attack" : index == -1 ? "turn attack" : AttackStates[index];
+        StartStrikeAnimation(layer, strike);
+    }
+
+    private void StartStrikeAnimation(int layer, SwordStrike strike)
+    {
+        animator.ResetTrigger(AttackTrigger);
+        animator.ResetTrigger(MoveTrigger);
+        int stateHash = GetAttackStateHash(strike);
         if (usesCombatStrikeRoute)
         {
-            animator.SetInteger(CombatStrikeRoute, index);
-            animator.SetTrigger("attack");
+            animator.SetInteger(CombatStrikeRoute, (int)strike);
+            animator.SetTrigger(AttackTrigger);
         }
-        else animator.CrossFadeInFixedTime(stateName, attackTransitionSeconds, layer, 0f);
+        else animator.CrossFadeInFixedTime(stateHash, attackTransitionSeconds, layer, 0f);
         if (footworkLayer >= 0)
-            animator.CrossFadeInFixedTime(stateName, attackTransitionSeconds, footworkLayer, 0f);
+            animator.CrossFadeInFixedTime(stateHash, attackTransitionSeconds, footworkLayer, 0f);
     }
 
     private bool HasParameter(string name, AnimatorControllerParameterType type)
     {
+        return HasParameter(Animator.StringToHash(name), type);
+    }
+
+    private bool HasParameter(int hash, AnimatorControllerParameterType type)
+    {
         foreach (var parameter in animator.parameters)
-            if (parameter.name == name && parameter.type == type) return true;
+            if (parameter.nameHash == hash && parameter.type == type) return true;
         return false;
     }
 
@@ -325,8 +396,8 @@ public partial class PlayerCombatInput : MonoBehaviour
     {
         if (!CanUseGameplay() || animator == null || animator.runtimeAnimatorController == null)
             return false;
-        int expected = combatMode ? ArmedState : Animator.StringToHash("Default");
-        foreach (string layerName in new[] { CombatLayerName, "Arms Layer" })
+        int expected = combatMode ? ArmedState : DefaultState;
+        foreach (string layerName in new[] { CombatLayerName, ArmsLayerName })
         {
             int layer = animator.GetLayerIndex(layerName);
             if (layer >= 0 && (animator.IsInTransition(layer) ||
@@ -342,12 +413,12 @@ public partial class PlayerCombatInput : MonoBehaviour
         if (!enabled) EndSwordTrail();
         bool changed = combatMode != enabled;
         combatMode = enabled;
-        if (!enabled) { ClearAim(); ResetFootwork(); ClearLocomotionAnimation(false); queuedAttack = false; queuedAttackStateHash = 0; }
+        if (!enabled) { ClearAim(); ResetFootwork(); ClearLocomotionAnimation(false); }
         if (animator == null || animator.runtimeAnimatorController == null) return;
         if (HasParameter(drawWeaponParameter, AnimatorControllerParameterType.Bool))
             animator.SetBool(drawWeaponParameter, enabled);
-        if (HasParameter("CombatMode", AnimatorControllerParameterType.Bool))
-            animator.SetBool("CombatMode", enabled);
+        if (HasParameter(CombatModeParameter, AnimatorControllerParameterType.Bool))
+            animator.SetBool(CombatModeParameter, enabled);
         if (HasParameter(drawWeaponParameter, AnimatorControllerParameterType.Trigger))
             animator.ResetTrigger(drawWeaponParameter);
         string sheathTrigger = HasParameter(sheathWeaponParameter, AnimatorControllerParameterType.Trigger)
@@ -359,12 +430,12 @@ public partial class PlayerCombatInput : MonoBehaviour
             string trigger = enabled ? drawWeaponParameter : sheathTrigger;
             if (HasParameter(trigger, AnimatorControllerParameterType.Trigger)) animator.SetTrigger(trigger);
         }
-        if (HasParameter("attack", AnimatorControllerParameterType.Trigger)) animator.ResetTrigger("attack");
+        if (HasParameter(AttackTrigger, AnimatorControllerParameterType.Trigger)) animator.ResetTrigger(AttackTrigger);
         int combatLayer = animator.GetLayerIndex(CombatLayerName);
         if (!enabled && combatLayer >= 0 &&
             IsAttackState(animator.GetCurrentAnimatorStateInfo(combatLayer)) &&
-            HasParameter("Move", AnimatorControllerParameterType.Trigger))
-            animator.SetTrigger("Move");
+            HasParameter(MoveTrigger, AnimatorControllerParameterType.Trigger))
+            animator.SetTrigger(MoveTrigger);
     }
 
     private void TrackAttack(int layer)
@@ -376,6 +447,11 @@ public partial class PlayerCombatInput : MonoBehaviour
             if (IsAttackState(next)) state = next;
         }
         bool active = combatMode && IsAttackState(state);
+        if (active) strikeAwaitingAnimator = false;
+        // Animator triggers are evaluated after Update. Do not release ownership
+        // in the gap between accepting an attack and entering its state.
+        if (!active && strikeAwaitingAnimator && Time.time < strikeAnimatorDeadline) return;
+        if (!active) { strikeCommitted = false; strikeAwaitingAnimator = false; }
         if (active && (!wasAttacking || lastAttackStateHash != state.shortNameHash))
         {
             hitApplied = false;
@@ -391,8 +467,6 @@ public partial class PlayerCombatInput : MonoBehaviour
             EndSwordTrail();
             if (movement != null && !softAimActive) movement.ExternalFacing = IsShiftLocked;
             returningFromAttack = false;
-            queuedAttack = false;
-            queuedAttackStateHash = 0;
         }
     }
 
@@ -423,7 +497,8 @@ public partial class PlayerCombatInput : MonoBehaviour
         if (!current && !next) return;
         FinishSwordTrail();
         hitApplied = true;
-        if (expectedState == LungeAttackState)
+        StopSoftAim(); // Freeze facing at contact, not when the short lunge happens to finish.
+        if (lungeTracking)
         {
             lungeTracking = false;
             lungeTravelRemaining = 0f;
@@ -437,6 +512,7 @@ public partial class PlayerCombatInput : MonoBehaviour
     }
 
     private bool CanUseGameplay() => Time.timeScale > 0f &&
+        (knockback == null || !knockback.IsIncapacitated) &&
         !TowerPlacement.IsPlacing &&
         (ownHealth == null || ownHealth.Health > 0f) &&
         (panels == null || !panels.BlocksGameplay);

@@ -14,11 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.CannonTowerData
   towerId: cannon
   displayName: Cannon
-  price: 100
-  damage: 5
-  range: 10
+  price: 20
+  damage: 1
+  range: 7
   attackSpeed: 1
-  health: 100
+  health: 30
   magicResistance: 0
   armor: 0
   projectileSpeed: 12

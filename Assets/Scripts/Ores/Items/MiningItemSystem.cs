@@ -11,7 +11,7 @@ namespace MiningSimulator.Ores
         [Serializable]
         private sealed class SavedInventory
         {
-            public int version = 3;
+            public int version = 4;
             public string necklaceId;
             public List<string> necklaceIds = new();
             public List<SavedSlot> slots = new();
@@ -23,6 +23,7 @@ namespace MiningSimulator.Ores
             public string itemId;
             public int count;
             public float paidPrice;
+            public List<float> towerReceipts;
         }
 
         private sealed class RuntimeSlot
@@ -30,6 +31,7 @@ namespace MiningSimulator.Ores
             public MiningItemData item;
             public int count;
             public float paidPrice;
+            public readonly List<float> towerReceipts = new();
         }
 
         private struct RuntimeEffect
@@ -209,6 +211,8 @@ namespace MiningSimulator.Ores
                     continue;
                 }
                 int added = Mathf.Min(remaining, item.MaximumStack - slot.count);
+                if (item.UseType == MiningItemUseType.Tower)
+                    for (int i = 0; i < added; i++) slot.towerReceipts.Add(0f);
                 slot.count += added;
                 remaining -= added;
                 if (remaining == 0)
@@ -227,6 +231,9 @@ namespace MiningSimulator.Ores
                 slot.item = item;
                 slot.count = added;
                 slot.paidPrice = 0f; // Gifts/drops have no refundable purchase cost.
+                slot.towerReceipts.Clear();
+                if (item.UseType == MiningItemUseType.Tower)
+                    for (int i = 0; i < added; i++) slot.towerReceipts.Add(0f);
                 remaining -= added;
             }
 
@@ -248,11 +255,19 @@ namespace MiningSimulator.Ores
             if (tower == null || tower.prefab == null || tower.inventoryItem == null || wallet == null ||
                 float.IsNaN(purchasePrice) || float.IsInfinity(purchasePrice) || purchasePrice < 0 ||
                 !CanAddItem(tower.inventoryItem) || !wallet.TrySpend(purchasePrice)) return false;
+            RuntimeSlot destination = null;
             foreach (var slot in slots)
-                if (slot.item == null || slot.count <= 0)
+                if (slot.item == tower.inventoryItem && slot.count < slot.item.MaximumStack) { destination = slot; break; }
+            if (destination == null)
+                foreach (var slot in slots)
+                    if (slot.item == null || slot.count <= 0) { destination = slot; break; }
+            if (destination != null)
                 {
-                    slot.item = tower.inventoryItem; slot.count = 1; slot.paidPrice = purchasePrice;
-                    SaveInventory(); InventoryChanged?.Invoke(); ItemCollected?.Invoke(slot.item); return true;
+                    if (destination.count <= 0) destination.towerReceipts.Clear();
+                    destination.item = tower.inventoryItem;
+                    destination.towerReceipts.Add(purchasePrice); destination.count++;
+                    destination.paidPrice = destination.towerReceipts[0];
+                    SaveInventory(); InventoryChanged?.Invoke(); ItemCollected?.Invoke(destination.item); return true;
                 }
             wallet.AddMoney(purchasePrice); return false;
         }
@@ -261,12 +276,9 @@ namespace MiningSimulator.Ores
         {
             paid = 0f;
             if (item == null || item.UseType != MiningItemUseType.Tower) return false;
-            foreach (var slot in slots)
-                if (slot.item == item && slot.count > 0)
-                {
-                    paid = slot.paidPrice; slot.item = null; slot.count = 0; slot.paidPrice = 0;
-                    SaveInventory(); InventoryChanged?.Invoke(); return true;
-                }
+            EnsureRuntimeSlots();
+            for (int i = 0; i < slots.Length; i++)
+                if (TryTakeTowerAt(i, item, out paid)) return true;
             return false;
         }
         public bool TryTakeTowerAt(int index, MiningItemData expectedItem, out float paid)
@@ -276,19 +288,34 @@ namespace MiningSimulator.Ores
                 expectedItem.UseType != MiningItemUseType.Tower) return false;
             var slot = slots[index];
             if (slot.item != expectedItem || slot.count <= 0) return false;
-            paid = slot.paidPrice; slot.item = null; slot.count = 0; slot.paidPrice = 0;
+            paid = TakeTowerReceipt(slot);
             SaveInventory(); InventoryChanged?.Invoke(); return true;
         }
         public bool TrySellTowerSlot(int index, PlayerWallet wallet)
         {
+            EnsureRuntimeSlots();
             if (wallet == null || index < 0 || index >= slots.Length) return false;
             var slot = slots[index];
             if (slot.item == null || slot.item.UseType != MiningItemUseType.Tower || slot.count <= 0) return false;
-            float paid = slot.paidPrice;
-            slot.item = null; slot.count = 0; slot.paidPrice = 0;
+            float paid = TakeTowerReceipt(slot);
             SaveInventory(); wallet.AddMoney(paid * .35f); InventoryChanged?.Invoke(); return true;
         }
-        public float TowerRefundAt(int index) => index >= 0 && index < slots.Length ? slots[index].paidPrice * .35f : 0f;
+        public float TowerRefundAt(int index)
+        {
+            EnsureRuntimeSlots();
+            return index >= 0 && index < slots.Length && slots[index].item?.UseType == MiningItemUseType.Tower
+                ? slots[index].paidPrice * .35f : 0f;
+        }
+
+        private static float TakeTowerReceipt(RuntimeSlot slot)
+        {
+            float paid = slot.towerReceipts.Count > 0 ? slot.towerReceipts[0] : slot.paidPrice;
+            if (slot.towerReceipts.Count > 0) slot.towerReceipts.RemoveAt(0);
+            slot.count--;
+            slot.paidPrice = slot.towerReceipts.Count > 0 ? slot.towerReceipts[0] : 0f;
+            if (slot.count == 0) { slot.item = null; slot.towerReceipts.Clear(); }
+            return paid;
+        }
 
         /// <summary>Returns the total amount of one item currently held by the player.</summary>
         public int GetItemCount(MiningItemData item)
@@ -328,6 +355,13 @@ namespace MiningSimulator.Ores
                 }
 
                 int removed = Mathf.Min(slot.count, remaining);
+                if (item.UseType == MiningItemUseType.Tower)
+                {
+                    for (int i = 0; i < removed; i++) TakeTowerReceipt(slot);
+                    remaining -= removed;
+                    if (remaining == 0) break;
+                    continue;
+                }
                 slot.count -= removed;
                 remaining -= removed;
                 if (slot.count == 0)
@@ -443,13 +477,15 @@ namespace MiningSimulator.Ores
             {
                 slot.item = null;
                 slot.count = 0;
+                slot.paidPrice = 0f;
+                slot.towerReceipts.Clear();
             }
             activeEffects.Clear();
             foreach (var necklace in necklaces) { necklace.item = null; necklace.count = 0; }
             if (database != null && !string.IsNullOrEmpty(database.InventorySaveKey))
             {
-                PlayerPrefs.DeleteKey(database.InventorySaveKey);
-                PlayerPrefs.Save();
+                GameSave.DeleteKey(database.InventorySaveKey);
+                GameSave.Save();
             }
 
             MiningWorldItem[] worldItems = FindObjectsByType<MiningWorldItem>(
@@ -588,7 +624,7 @@ namespace MiningSimulator.Ores
         {
             EnsureRuntimeSlots();
             if (database == null || string.IsNullOrEmpty(database.InventorySaveKey) ||
-                !PlayerPrefs.HasKey(database.InventorySaveKey))
+                !GameSave.HasKey(database.InventorySaveKey))
             {
                 return;
             }
@@ -597,7 +633,7 @@ namespace MiningSimulator.Ores
             try
             {
                 save = JsonUtility.FromJson<SavedInventory>(
-                    PlayerPrefs.GetString(database.InventorySaveKey));
+                    GameSave.GetString(database.InventorySaveKey));
             }
             catch (ArgumentException)
             {
@@ -621,6 +657,7 @@ namespace MiningSimulator.Ores
             for (int index = 0; index < count; index++)
             {
                 SavedSlot saved = save.slots[index];
+                if (saved == null) continue;
                 MiningItemData item = database.FindById(saved.itemId);
                 if (item == null || saved.count <= 0)
                 {
@@ -629,6 +666,29 @@ namespace MiningSimulator.Ores
                 slots[index].item = item;
                 slots[index].count = Mathf.Clamp(saved.count, 1, item.MaximumStack);
                 slots[index].paidPrice = float.IsNaN(saved.paidPrice) || float.IsInfinity(saved.paidPrice) ? 0f : Mathf.Max(0, saved.paidPrice);
+                slots[index].towerReceipts.Clear();
+                if (item.UseType == MiningItemUseType.Tower)
+                    for (int i = 0; i < slots[index].count; i++)
+                    {
+                        float price = saved.towerReceipts != null && i < saved.towerReceipts.Count
+                            ? saved.towerReceipts[i] : slots[index].paidPrice;
+                        slots[index].towerReceipts.Add(float.IsNaN(price) || float.IsInfinity(price) ? 0f : Mathf.Max(0, price));
+                    }
+            }
+            // Merge legacy one-tower slots without losing their individual purchase receipts.
+            for (int i = 0; i < slots.Length; i++)
+            {
+                var first = slots[i];
+                if (first.item == null || first.item.UseType != MiningItemUseType.Tower) continue;
+                for (int j = i + 1; j < slots.Length && first.count < first.item.MaximumStack; j++)
+                {
+                    var next = slots[j];
+                    if (next.item != first.item) continue;
+                    int moved = Mathf.Min(next.count, first.item.MaximumStack - first.count);
+                    for (int n = 0; n < moved; n++) first.towerReceipts.Add(TakeTowerReceipt(next));
+                    first.count += moved;
+                }
+                first.paidPrice = first.towerReceipts[0];
             }
         }
 
@@ -647,11 +707,12 @@ namespace MiningSimulator.Ores
                 {
                     itemId = slot.item != null ? slot.item.ItemId : string.Empty,
                     count = slot.item != null ? slot.count : 0,
-                    paidPrice = slot.item != null ? slot.paidPrice : 0
+                    paidPrice = slot.item != null ? slot.paidPrice : 0,
+                    towerReceipts = slot.item != null && slot.item.UseType == MiningItemUseType.Tower ? new List<float>(slot.towerReceipts) : null
                 });
             }
-            PlayerPrefs.SetString(database.InventorySaveKey, JsonUtility.ToJson(save));
-            PlayerPrefs.Save();
+            GameSave.SetString(database.InventorySaveKey, JsonUtility.ToJson(save));
+            GameSave.Save();
         }
 
         private void EnsureRuntimeSlots()

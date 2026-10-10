@@ -178,7 +178,7 @@ namespace MiningSimulator.Ores
         /// <summary>Only called by the Settings full-data reset.</summary>
         public void ResetAllData()
         {
-            if (data != null) PlayerPrefs.DeleteKey(data.SaveKey);
+            if (data != null) GameSave.DeleteKey(data.SaveKey);
             states.Clear();
             initialized = false;
             dirty = false;
@@ -231,8 +231,8 @@ namespace MiningSimulator.Ores
 
         private void LoadState()
         {
-            if (data == null || !PlayerPrefs.HasKey(data.SaveKey)) return;
-            string json = PlayerPrefs.GetString(data.SaveKey, string.Empty);
+            if (data == null || !GameSave.HasKey(data.SaveKey)) return;
+            string json = GameSave.GetString(data.SaveKey, string.Empty);
             if (string.IsNullOrWhiteSpace(json)) return;
 
             SavedQuestState saved;
@@ -299,8 +299,8 @@ namespace MiningSimulator.Ores
                     claimed = state.Claimed
                 });
             }
-            PlayerPrefs.SetString(data.SaveKey, JsonUtility.ToJson(saved));
-            if (flush) PlayerPrefs.Save();
+            GameSave.SetString(data.SaveKey, JsonUtility.ToJson(saved));
+            if (flush) GameSave.Save();
             dirty = false;
         }
 

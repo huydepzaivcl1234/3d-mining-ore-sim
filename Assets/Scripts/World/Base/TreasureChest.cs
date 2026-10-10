@@ -73,8 +73,8 @@ private void OnEnable()
             if (wallet == null) wallet = FindAnyObjectByType<PlayerWallet>();
             if (persistProgress)
             {
-                Level = Mathf.Clamp(PlayerPrefs.GetInt(saveKey+".Level",1),1,data.maximumLevel);
-                Experience = Mathf.Max(0,PlayerPrefs.GetFloat(saveKey+".XP",0));
+                Level = Mathf.Clamp(GameSave.GetInt(saveKey+".Level",1),1,data.maximumLevel);
+                Experience = Mathf.Max(0,GameSave.GetFloat(saveKey+".XP",0));
             }
             initialized=true;
             ConfigureAudio();
@@ -83,8 +83,14 @@ private void OnEnable()
 health.ConfigureSpawnHealth(data.MaxHealth(Level));
             SampleLid(false,1);
             BuildBreakVisuals();
+            if (persistProgress && GameSave.HasKey(saveKey + ".Health"))
+            {
+                health.RestoreSavedHealth(GameSave.GetFloat(saveKey + ".Health", health.MaxHealth));
+                SetBrokenVisual(IsBroken);
+            }
             GetComponent<TreasureChestHud>()?.Bind(this);
             Changed?.Invoke();
+            if (persistProgress) TowerWorldSaveHost.Ensure(this);
         }
 private void Update()
         {
@@ -237,6 +243,7 @@ private void SampleLid(bool open,float progress)
 
         private void OnDamaged()
         {
+            SaveProgress();
             if (data != null && IsAlive) Punch(data.hitPunchStrength);
             if (data != null && IsAlive && Time.unscaledTime >= nextHitSoundTime)
             {
@@ -247,6 +254,7 @@ private void SampleLid(bool open,float progress)
         }
         private void OnDied()
         {
+            SaveProgress();
             if (chestAudio != null) chestAudio.Stop();
             if (data != null) PlaySound(data.breakSfx, data.breakVolume);
             opening = rewarded = false;
@@ -304,14 +312,16 @@ private void SampleLid(bool open,float progress)
             SampleLid(false, 1f);
             SetBrokenVisual(false);
             PlaySound(data.repairSfx, data.repairVolume);
+            SaveProgress();
             Changed?.Invoke();
             return true;
         }
         private void SaveProgress()
         {
             if(!persistProgress || !initialized)return;
-            PlayerPrefs.SetInt(saveKey+".Level",Level);
-            PlayerPrefs.SetFloat(saveKey+".XP",Experience);
+            GameSave.SetInt(saveKey+".Level",Level);
+            GameSave.SetFloat(saveKey+".XP",Experience);
+            if (health != null) GameSave.SetFloat(saveKey + ".Health", health.Health);
         }
         private void OnDisable()
         {
@@ -326,15 +336,16 @@ private void SampleLid(bool open,float progress)
 
 public static void ResetSavedProgress()
         {
-            PlayerPrefs.DeleteKey("BaseTreasureChest.v1.Level");
-            PlayerPrefs.DeleteKey("BaseTreasureChest.v1.XP");
+            GameSave.DeleteKey("BaseTreasureChest.v1.Level");
+            GameSave.DeleteKey("BaseTreasureChest.v1.XP");
+            GameSave.DeleteKey("BaseTreasureChest.v1.Health");
             foreach (var chest in FindObjectsByType<TreasureChest>(FindObjectsInactive.Include, FindObjectsSortMode.None))
             {
                 if (chest.transform.parent != null &&
                     chest.transform.parent.GetComponentInParent<TreasureChest>() != null) continue;
                 chest.ResetProgress();
             }
-            PlayerPrefs.Save();
+            GameSave.Save();
         }
 
 
@@ -355,8 +366,9 @@ public void ResetProgress()
             }
             if (persistProgress)
             {
-                PlayerPrefs.DeleteKey(saveKey + ".Level");
-                PlayerPrefs.DeleteKey(saveKey + ".XP");
+                GameSave.DeleteKey(saveKey + ".Level");
+                GameSave.DeleteKey(saveKey + ".XP");
+                GameSave.DeleteKey(saveKey + ".Health");
             }
             Changed?.Invoke();
         }

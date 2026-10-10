@@ -933,8 +933,8 @@ ModelImporter:
   assetBundleVariant: 
 AssetOrigin:
   serializedVersion: 1
-  productId: 196526
-  packageName: First Person + Third Person | Character Controllers
-  packageVersion: 2.0.1
-  assetPath: Assets/BroAudio/Samples/Demo/Character/Animations/Locomotion--Walk_N.anim.fbx
-  uploadId: 998422
+  productId: 257362
+  packageName: Bro Audio
+  packageVersion: 3.3.0
+  assetPath: Assets/Plugins/BroAudio/Samples/Demo/Character/Animations/Locomotion--Walk_N.anim.fbx
+  uploadId: 1008808

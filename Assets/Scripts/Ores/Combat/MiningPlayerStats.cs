@@ -11,7 +11,7 @@ namespace MiningSimulator.Ores
         private RuneUpgradeProgress runeUpgrades;
         public RuneUpgradeProgress RuneUpgrades => runeUpgrades ??= new RuneUpgradeProgress(
             Resources.Load<RuneUpgradeData>("RuneUpgradeData"),
-            Application.isPlaying ? PlayerPrefs.GetString(RuneUpgradeProgress.SaveKey, "") : null);
+            Application.isPlaying ? GameSave.GetString(RuneUpgradeProgress.SaveKey, "") : null);
         public float Armor => DefenseAtLevel(data != null ? data.armor : 0f,
             data != null ? data.armorPerLevel : 0f) + RuneUpgrades.Bonus(RuneStat.Armor);
         public float MagicResistance => DefenseAtLevel(data != null ? data.magicResistance : 0f,
@@ -88,6 +88,8 @@ namespace MiningSimulator.Ores
         private void Awake()
         {
             movement = GetComponent<ThirdPersonController>();
+            if (movement != null && GetComponent<PlayerCheckpointSave>() == null)
+                gameObject.AddComponent<PlayerCheckpointSave>();
             itemEffects = FindFirstObjectByType<MiningItemSystem>(FindObjectsInactive.Include);
             if (movement != null && GetComponent<PlayerMonsterHeadDeflection>() == null)
                 gameObject.AddComponent<PlayerMonsterHeadDeflection>();
@@ -115,10 +117,10 @@ namespace MiningSimulator.Ores
         }
         private void LoadProgress()
         {
-            if (!Application.isPlaying || !PlayerPrefs.HasKey(ProgressSaveKey)) return;
+            if (!Application.isPlaying || !GameSave.HasKey(ProgressSaveKey)) return;
             try
             {
-                var saved = JsonUtility.FromJson<SavedProgress>(PlayerPrefs.GetString(ProgressSaveKey));
+                var saved = JsonUtility.FromJson<SavedProgress>(GameSave.GetString(ProgressSaveKey));
                 if (saved == null || (saved.version < 1 || saved.version > 4) || saved.level < 1 ||
                     float.IsNaN(saved.experience) || float.IsInfinity(saved.experience) || saved.experience < 0 ||
                     float.IsNaN(saved.requiredExperience) || float.IsInfinity(saved.requiredExperience) || saved.requiredExperience < 1)
@@ -146,20 +148,20 @@ namespace MiningSimulator.Ores
         private void SaveProgress()
         {
             if (!Application.isPlaying || !dirty || saveBlocked || data == null) return;
-            PlayerPrefs.SetString(ProgressSaveKey, JsonUtility.ToJson(new SavedProgress
+            GameSave.SetString(ProgressSaveKey, JsonUtility.ToJson(new SavedProgress
             { level = Level, experience = Experience, requiredExperience = ExperienceRequired,
                 cardDamage = CardDamage, cardHealth = CardHealth, cardAttackSpeed = CardAttackSpeed,
                 cardDamagePercent = CardDamagePercent, cardHealthPercent = CardHealthPercent,
                 cardAttackSpeedPercent = CardAttackSpeedPercent,
                 cardRegenReductionPercent = CardRegenReductionPercent, cardHealingPercent = CardHealingPercent }));
-            PlayerPrefs.SetInt("MiningSimulator.SaveExists.v1", 1);
-            PlayerPrefs.Save();
+            GameSave.SetInt("MiningSimulator.SaveExists.v1", 1);
+            GameSave.Save();
             dirty = false;
         }
         public static void ResetSavedProgress()
         {
-            PlayerPrefs.DeleteKey(ProgressSaveKey);
-            PlayerPrefs.DeleteKey(RuneUpgradeProgress.SaveKey);
+            GameSave.DeleteKey(ProgressSaveKey);
+            GameSave.DeleteKey(RuneUpgradeProgress.SaveKey);
             foreach (var player in FindObjectsByType<MiningPlayerStats>(FindObjectsInactive.Include, FindObjectsSortMode.None))
             {
                 var defaults = player.Data;
@@ -173,7 +175,7 @@ namespace MiningSimulator.Ores
                 player.dirty = false; // Do not recreate a deleted save on scene unload.
                 player.saveBlocked = false;
             }
-            PlayerPrefs.Save();
+            GameSave.Save();
         }
         private void OnApplicationPause(bool paused) { if (paused) SaveProgress(); }
         private static float SafeBonus(float value) => float.IsNaN(value) || float.IsInfinity(value) ? 0f : Mathf.Max(0f, value);

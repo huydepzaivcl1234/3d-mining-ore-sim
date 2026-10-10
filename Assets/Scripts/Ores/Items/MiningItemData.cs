@@ -165,7 +165,7 @@ namespace MiningSimulator.Ores
         public Vector3 ModelLocalPosition => modelLocalPosition;
         public Vector3 ModelLocalEulerAngles => modelLocalEulerAngles;
         public float SelectionChancePercent => selectionChancePercent;
-        public int MaximumStack => IsEquipment || useType == MiningItemUseType.Tower ? 1 : maximumStack;
+        public int MaximumStack => IsEquipment ? 1 : useType == MiningItemUseType.Tower ? 999 : maximumStack;
         public bool TraderCanBuy => traderCanBuy;
         public bool TraderCanSell => traderCanSell;
         public int TraderMinimumOfferAmount => traderMinimumOfferAmount;

@@ -73,6 +73,16 @@ namespace MiningSimulator.Ores
             Refresh(true);
         }
 
+        // Loading is not a hit: do not fire damage/death feedback or flash the HP bar.
+        public void RestoreSavedHealth(float value)
+        {
+            if (float.IsNaN(value) || float.IsInfinity(value)) return;
+            health = Mathf.Clamp(value, 0f, MaxHealth);
+            regenTimer = 0f;
+            ClearBurn();
+            Refresh(true);
+        }
+
 public void ConfigureMaximumHealth(float value, bool preserveDamage = true)
         {
             float oldMax = MaxHealth;

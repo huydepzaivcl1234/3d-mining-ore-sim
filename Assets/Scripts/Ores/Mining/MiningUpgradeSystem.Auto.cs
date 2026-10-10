@@ -20,8 +20,8 @@ namespace MiningSimulator.Ores
         private void LoadAutoUpgrade()
         {
             if (upgradeData == null || string.IsNullOrWhiteSpace(upgradeData.AutoUpgradeSaveKey)) return;
-            AutoUpgradeUnlocked = PlayerPrefs.GetInt(upgradeData.AutoUpgradeSaveKey, 0) == 1;
-            AutoUpgradeEnabled = AutoUpgradeUnlocked && PlayerPrefs.GetInt(upgradeData.AutoUpgradeSaveKey + ".Enabled", 0) == 1;
+            AutoUpgradeUnlocked = GameSave.GetInt(upgradeData.AutoUpgradeSaveKey, 0) == 1;
+            AutoUpgradeEnabled = AutoUpgradeUnlocked && GameSave.GetInt(upgradeData.AutoUpgradeSaveKey + ".Enabled", 0) == 1;
         }
 
         public bool TryUnlockAutoUpgrade()
@@ -39,9 +39,9 @@ namespace MiningSimulator.Ores
             AutoUpgradeEnabled = enabled && AutoUpgradeUnlocked;
             if (upgradeData != null && !string.IsNullOrWhiteSpace(upgradeData.AutoUpgradeSaveKey))
             {
-                PlayerPrefs.SetInt(upgradeData.AutoUpgradeSaveKey, AutoUpgradeUnlocked ? 1 : 0);
-                PlayerPrefs.SetInt(upgradeData.AutoUpgradeSaveKey + ".Enabled", AutoUpgradeEnabled ? 1 : 0);
-                PlayerPrefs.Save();
+                GameSave.SetInt(upgradeData.AutoUpgradeSaveKey, AutoUpgradeUnlocked ? 1 : 0);
+                GameSave.SetInt(upgradeData.AutoUpgradeSaveKey + ".Enabled", AutoUpgradeEnabled ? 1 : 0);
+                GameSave.Save();
             }
             AutoUpgradeChanged?.Invoke();
         }
@@ -51,9 +51,9 @@ namespace MiningSimulator.Ores
             AutoUpgradeUnlocked = AutoUpgradeEnabled = false;
             if (upgradeData != null && !string.IsNullOrWhiteSpace(upgradeData.AutoUpgradeSaveKey))
             {
-                PlayerPrefs.DeleteKey(upgradeData.AutoUpgradeSaveKey);
-                PlayerPrefs.DeleteKey(upgradeData.AutoUpgradeSaveKey + ".Enabled");
-                PlayerPrefs.Save();
+                GameSave.DeleteKey(upgradeData.AutoUpgradeSaveKey);
+                GameSave.DeleteKey(upgradeData.AutoUpgradeSaveKey + ".Enabled");
+                GameSave.Save();
             }
             AutoUpgradeChanged?.Invoke();
         }

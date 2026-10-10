@@ -22,6 +22,14 @@ namespace MiningSimulator.Ores
         private TowerStatsPanel statsPanel;
         private Renderer foundation;
         private Transform visualMount;
+        private Vector3 foundationFoot;
+        private bool hasFoundationFoot;
+        private MiningPlayerStats collisionPlayer;
+        private float nextPlayerCollisionCheck;
+        private readonly List<Collider> towerColliders = new();
+        private readonly List<Collider> playerColliders = new();
+        public string PlacementId { get; private set; }
+        public void MarkDeployed(string id) => PlacementId = id;
         public string InteractionLabel => $"{data?.displayName} • Stats";
         public bool CanInteract => IsAlive;
         public void SetInteractionFocused(bool focused) { }
@@ -39,6 +47,7 @@ namespace MiningSimulator.Ores
             if (!IsAlive || wallet == null) return;
             var player = FindFirstObjectByType<MiningPlayerStats>();
             if (player == null || Vector3.Distance(player.transform.position, transform.position) > 4f) return;
+            TowerWorldSave.Remove(this);
             wallet.AddMoney(paidPrice * .35f);
             gameObject.SetActive(false); Destroy(gameObject);
         }
@@ -59,20 +68,59 @@ namespace MiningSimulator.Ores
             foreach (var shape in GetComponentsInChildren<Renderer>())
                 if (shape.name == "BaseMesh") { foundation=shape;break; }
             if (animator != null) visualMount=animator.transform.parent!=transform?animator.transform.parent:animator.transform;
+            var mesh = foundation != null ? foundation.GetComponent<MeshFilter>()?.sharedMesh : null;
+            if (mesh != null && mesh.isReadable && visualMount != null)
+            {
+                float bottom = float.PositiveInfinity;
+                foreach (var vertex in mesh.vertices)
+                {
+                    float y = foundation.transform.TransformPoint(vertex).y;
+                    if (y < bottom) { bottom = y; foundationFoot = vertex; }
+                }
+                hasFoundationFoot = bottom < float.PositiveInfinity;
+            }
             AlignToGround();
+            if(Application.isPlaying)
+                (GetComponent<TowerDamageHealthBar>()??gameObject.AddComponent<TowerDamageHealthBar>()).Bind(this);
         }
         // The animated FBX must never lift the stationary foundation off its placement plane.
         public void AlignToGround()
         {
-            if(foundation!=null&&visualMount!=null)
-                visualMount.position+=Vector3.up*(transform.position.y-foundation.bounds.min.y);
+            // Renderer.bounds is a transformed AABB: its corners need not be on the mesh.
+            // Cache a real foot vertex once; yaw/recoil must not accumulate a false lift.
+            if(hasFoundationFoot && foundation!=null && visualMount!=null)
+                visualMount.position+=Vector3.up*(transform.position.y-foundation.transform.TransformPoint(foundationFoot).y);
         }
         private void LateUpdate()=>AlignToGround();
-        private void OnEnable() { Active.Add(this); health.Died += OnDeath; }
-        private void OnDisable() { Active.Remove(this); if (health != null) health.Died -= OnDeath; }
-        private void OnDeath() { gameObject.SetActive(false); Destroy(gameObject); }
+        private void OnEnable()
+        {
+            Active.Add(this); health.Died += OnDeath; health.Damaged += SaveDamage;
+            if (Application.isPlaying) RefreshPlayerCollision();
+        }
+        private void RefreshPlayerCollision()
+        {
+            nextPlayerCollisionCheck = Time.unscaledTime + .5f;
+            if (collisionPlayer == null || !collisionPlayer.gameObject.activeInHierarchy)
+                collisionPlayer = FindFirstObjectByType<MiningPlayerStats>() ?? FindFirstObjectByType<MiningPlayerStats>(FindObjectsInactive.Include);
+            if (collisionPlayer == null) return;
+            GetComponentsInChildren(true, towerColliders);
+            collisionPlayer.GetComponentsInChildren(true, playerColliders);
+            // Per-pair suppression preserves solid tower geometry for monsters,
+            // targeting, projectiles and placement validation. Reapply after respawn
+            // or ragdoll colliders are enabled; do not change the global layer matrix.
+            foreach (var towerCollider in towerColliders)
+                foreach (var playerCollider in playerColliders)
+                    if (towerCollider != null && playerCollider != null && towerCollider != playerCollider &&
+                        towerCollider.enabled && playerCollider.enabled &&
+                        towerCollider.gameObject.activeInHierarchy && playerCollider.gameObject.activeInHierarchy)
+                        Physics.IgnoreCollision(towerCollider, playerCollider, true);
+        }
+        private void SaveDamage() => TowerWorldSave.Capture(this);
+        private void OnDisable() { TowerWorldSave.Capture(this); Active.Remove(this); if (health != null) { health.Died -= OnDeath; health.Damaged -= SaveDamage; } }
+        private void OnDeath() { TowerWorldSave.Remove(this); gameObject.SetActive(false); Destroy(gameObject); }
         private void Update()
         {
+            if (Time.unscaledTime >= nextPlayerCollisionCheck) RefreshPlayerCollision();
             if (!IsAlive || data == null || RuneStation.PlayerUsesRuneTime) return;
             if (committedTarget != null && Time.time >= releaseAt)
             {

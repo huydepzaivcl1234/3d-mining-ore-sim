@@ -52,7 +52,7 @@ namespace MiningSimulator.Ores
         {
             if (wallet == null || !CanBuy(index, wallet.CurrentGems) || !wallet.TrySpendGems(Cost(index))) return false;
             ranks[index]++;
-            if (Application.isPlaying) { PlayerPrefs.SetString(SaveKey, ToJson()); PlayerPrefs.Save(); }
+            if (Application.isPlaying) { GameSave.SetString(SaveKey, ToJson()); GameSave.Save(); }
             Changed?.Invoke();
             return true;
         }

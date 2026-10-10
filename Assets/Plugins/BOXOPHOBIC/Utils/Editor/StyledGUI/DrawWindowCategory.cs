@@ -38,7 +38,7 @@ namespace Boxophobic.StyledGUI
             EditorGUI.DrawRect(fillRect, Constant.CategoryColor);
             EditorGUI.DrawRect(lineRect, Constant.LineColor);
 
-            bannerText = FormatBannerText(bannerText);
+            bannerText = BoxoUtils.FormatTitle(bannerText);
             message = BoxoUtils.FormatMessage(message);
 
             var bannerContext = new GUIContent(bannerText, message);

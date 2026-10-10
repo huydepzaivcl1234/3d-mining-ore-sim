@@ -60,6 +60,23 @@ namespace MiningSimulator.Ores
         private ColorAdjustments colorAdjustments;
         private Vignette vignette;
         private Tonemapping tonemapping;
+        private PlayerGraphicsOptions graphicsOptions;
+
+        public Volume CinematicVolume => cinematicVolume;
+        public bool ControlsCinematicPostProcessing => data != null && data.ControlCinematicPostProcessing;
+        public void SetGraphicsOptions(PlayerGraphicsOptions options)
+        {
+            graphicsOptions = options;
+            // Options own a deep runtime copy. Keep the lighting writer on that same copy.
+            var profile = cinematicVolume != null ? cinematicVolume.sharedProfile : null;
+            if (profile != null)
+            {
+                profile.TryGet(out bloom); profile.TryGet(out colorAdjustments); profile.TryGet(out vignette);
+            }
+            RefreshGraphicsOptions();
+        }
+        public void RefreshGraphicsOptions() => ApplyCinematicPostProcessing(daylight,
+            transitionBellCurve * (data != null ? data.GoldenHourStrength : 0f));
 
         public MiningTimePeriod CurrentPeriod => currentPeriod;
         public int DayNumber { get; private set; } = 1;
@@ -114,17 +131,17 @@ namespace MiningSimulator.Ores
         private void SaveClock()
         {
             if (!Application.isPlaying || !initialized || data == null) return;
-            PlayerPrefs.SetString(ClockSaveKey, JsonUtility.ToJson(new SavedClock
+            GameSave.SetString(ClockSaveKey, JsonUtility.ToJson(new SavedClock
             {
                 day = DayNumber, period = currentPeriod, elapsed = periodElapsed
             }));
-            PlayerPrefs.Save();
+            GameSave.Save();
             nextClockSaveTime = Time.unscaledTime + Mathf.Max(1f, clockSaveInterval);
         }
 
         public static void ResetSavedClock()
         {
-            PlayerPrefs.DeleteKey(ClockSaveKey);
+            GameSave.DeleteKey(ClockSaveKey);
             foreach (var clock in FindObjectsByType<DayNightSystem>(
                          FindObjectsInactive.Include, FindObjectsSortMode.None))
             {
@@ -137,11 +154,12 @@ namespace MiningSimulator.Ores
                 clock.ApplyLighting(clock.daylight);
                 clock.PeriodChanged?.Invoke(clock.currentPeriod);
             }
-            PlayerPrefs.Save();
+            GameSave.Save();
         }
 
         private void OnDestroy()
         {
+            graphicsOptions?.Release();
             StopLightingTween();
             if (runtimeSkybox == null)
             {
@@ -258,8 +276,8 @@ namespace MiningSimulator.Ores
 
             currentPeriod = data != null ? data.StartingPeriod : MiningTimePeriod.Day;
             periodElapsed = 0f;
-            if (Application.isPlaying && PlayerPrefs.HasKey(ClockSaveKey))
-                RestoreClock(PlayerPrefs.GetString(ClockSaveKey));
+            if (Application.isPlaying && GameSave.HasKey(ClockSaveKey))
+                RestoreClock(GameSave.GetString(ClockSaveKey));
             daylight = currentPeriod == MiningTimePeriod.Day ? 1f : 0f;
             initialized = true;
         }
@@ -432,7 +450,10 @@ namespace MiningSimulator.Ores
             }
 
             originalVolumeProfile = cinematicVolume.sharedProfile;
-            runtimeVolumeProfile = Instantiate(originalVolumeProfile);
+            // Clone the overrides too: Instantiate(profile) alone shares its sub-assets.
+            runtimeVolumeProfile = ScriptableObject.CreateInstance<VolumeProfile>();
+            foreach (var component in originalVolumeProfile.components)
+                if (component != null) runtimeVolumeProfile.components.Add(Instantiate(component));
             runtimeVolumeProfile.name = originalVolumeProfile.name + " (Cinematic Runtime)";
             cinematicVolume.sharedProfile = runtimeVolumeProfile;
             bloom = GetOrAddVolumeComponent<Bloom>();
@@ -482,6 +503,7 @@ namespace MiningSimulator.Ores
                     data.DayVignetteIntensity, daylightAmount));
                 vignette.smoothness.Override(data.VignetteSmoothness);
             }
+            graphicsOptions?.ApplyCinematic(bloom, colorAdjustments, vignette);
         }
 
         private void RestoreCinematicVolume()
@@ -493,6 +515,8 @@ namespace MiningSimulator.Ores
             }
             if (runtimeVolumeProfile != null)
             {
+                foreach (var component in runtimeVolumeProfile.components)
+                    if (component != null) Destroy(component);
                 Destroy(runtimeVolumeProfile);
             }
             runtimeVolumeProfile = null;

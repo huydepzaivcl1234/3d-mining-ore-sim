@@ -13,6 +13,6 @@ AssetOrigin:
   serializedVersion: 1
   productId: 257362
   packageName: Bro Audio
-  packageVersion: 3.2.3
-  assetPath: Assets/BroAudio/Runtime/MonoComponent/SpectrumAnalyzer.cs
-  uploadId: 979632
+  packageVersion: 3.3.0
+  assetPath: Assets/Plugins/BroAudio/Runtime/MonoComponent/SpectrumAnalyzer.cs
+  uploadId: 1008808

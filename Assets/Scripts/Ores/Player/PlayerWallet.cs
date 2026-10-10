@@ -28,7 +28,8 @@ namespace MiningSimulator.Ores
 
         private void Awake()
         {
-            currentMoney = Mathf.Max(0f, currentMoney);
+            currentMoney = Mathf.Max(0f, GameSave.GetFloat(MoneySaveKey, currentMoney));
+            MoneyChanged += PersistMoney;
             currentGems = LoadGems();
             MoneyChanged?.Invoke(currentMoney);
             GemsChanged?.Invoke(currentGems);
@@ -47,7 +48,7 @@ namespace MiningSimulator.Ores
 
         public void AddMoney(float amount)
         {
-            if (amount <= 0f)
+            if (float.IsNaN(amount) || float.IsInfinity(amount) || amount <= 0f)
             {
                 return;
             }
@@ -58,7 +59,7 @@ namespace MiningSimulator.Ores
 
         public bool TrySpend(float amount)
         {
-            if (amount < 0f || amount > currentMoney)
+            if (float.IsNaN(amount) || float.IsInfinity(amount) || amount < 0f || amount > currentMoney)
             {
                 return false;
             }
@@ -85,6 +86,7 @@ namespace MiningSimulator.Ores
 
         public void SetMoney(float amount)
         {
+            if (float.IsNaN(amount) || float.IsInfinity(amount)) return;
             float safeAmount = Mathf.Max(0f, amount);
             if (Mathf.Approximately(currentMoney, safeAmount))
             {
@@ -99,6 +101,7 @@ namespace MiningSimulator.Ores
         {
             if (currentMoney == 0f)
             {
+                PersistMoney(0f);
                 return;
             }
 
@@ -146,9 +149,9 @@ namespace MiningSimulator.Ores
         /// <summary>Clears Gem only during a full data reset. A normal Rebirth keeps Gem.</summary>
         public void ResetGems()
         {
-            PlayerPrefs.DeleteKey(GemSaveKey);
+            GameSave.DeleteKey(GemSaveKey);
             currentGems = gameData != null ? gameData.StartingGems : 0f;
-            PlayerPrefs.Save();
+            GameSave.Save();
             GemsChanged?.Invoke(currentGems);
         }
 
@@ -159,13 +162,27 @@ namespace MiningSimulator.Ores
         private float LoadGems()
         {
             float startingAmount = gameData != null ? gameData.StartingGems : 0f;
-            return Mathf.Max(0f, PlayerPrefs.GetFloat(GemSaveKey, startingAmount));
+            return Mathf.Max(0f, GameSave.GetFloat(GemSaveKey, startingAmount));
         }
 
         private void SaveGems()
         {
-            PlayerPrefs.SetFloat(GemSaveKey, currentGems);
-            PlayerPrefs.Save();
+            GameSave.SetFloat(GemSaveKey, currentGems);
+            GameSave.Save();
+        }
+
+        public const string MoneySaveKey = "ChestDefense.Wallet.Money.v1";
+        private void PersistMoney(float amount)
+        {
+            if (!Application.isPlaying) return;
+            GameSave.SetFloat(MoneySaveKey, amount);
+            GameSave.Save();
+        }
+        private void OnDisable()
+        {
+            if (!Application.isPlaying) return;
+            PersistMoney(currentMoney);
+            SaveGems();
         }
     }
 }

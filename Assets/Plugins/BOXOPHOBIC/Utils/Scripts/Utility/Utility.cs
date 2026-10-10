@@ -1,10 +1,10 @@
 ﻿// Cristian Pop - https://boxophobic.com/
 
-using System;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Unity.Scripting.LifecycleManagement;
+
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -14,6 +14,7 @@ using UnityEngine.Rendering;
 
 namespace Boxophobic.Utility
 {
+    [NoAutoStaticsCleanup]
     public static class BoxoUtils
     {
         public static string GetProjectPipeline()
@@ -905,24 +906,54 @@ namespace Boxophobic.Utility
 
             return sb.ToString();
         }
-        public static string FormatMessage(string message)
+        public static string FormatTitle(string text)
         {
-            if (string.IsNullOrEmpty(message))
+            if (string.IsNullOrEmpty(text))
             {
                 return "";
             }
 
-            var sb = new StringBuilder(message.Length);
+            var sb = new StringBuilder(text.Length);
 
-            for (int i = 0; i < message.Length; i++)
+            for (int i = 0; i < text.Length; i++)
             {
-                if (i < message.Length - 2)
+                if (i < text.Length - 2)
                 {
-                    string token = message.Substring(i, 3);
+                    string token = text.Substring(i, 3);
 
                     switch (token)
                     {
                         case "MIN": sb.Append('-'); i += 2; continue;
+                        case "VER": sb.Append('|'); i += 2; continue;
+                        case "OPA": sb.Append('('); i += 2; continue;
+                        case "CPA": sb.Append(')'); i += 2; continue;
+                    }
+                }
+
+                sb.Append(text[i]);
+            }
+
+            return sb.ToString();
+        }
+        public static string FormatMessage(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return "";
+            }
+
+            var sb = new StringBuilder(text.Length);
+
+            for (int i = 0; i < text.Length; i++)
+            {
+                if (i < text.Length - 2)
+                {
+                    string token = text.Substring(i, 3);
+
+                    switch (token)
+                    {
+                        case "MIN": sb.Append('-'); i += 2; continue;
+                        case "VER": sb.Append('|'); i += 2; continue;
                         case "PLU": sb.Append('+'); i += 2; continue;
                         case "NEW": sb.Append('\n'); i += 2; continue;
                         case "EXC": sb.Append('!'); i += 2; continue;
@@ -941,13 +972,13 @@ namespace Boxophobic.Utility
                     }
                 }
 
-                if (i < message.Length - 1)
+                if (i < text.Length - 1)
                 {
-                    string token2 = message.Substring(i, 2);
+                    string token2 = text.Substring(i, 2);
                     if (token2 == "__") { sb.Append(','); i++; continue; }
                 }
 
-                sb.Append(message[i]);
+                sb.Append(text[i]);
             }
 
             return sb.ToString();
@@ -967,6 +998,7 @@ namespace Boxophobic.Utility
                 switch (c)
                 {
                     case '-': sb.Append("MIN"); break;
+                    case '|': sb.Append("VER"); break;
                     case '+': sb.Append("PLU"); break;
                     case '\n': sb.Append("NEW"); break;
                     case '!': sb.Append("EXC"); break;
@@ -1511,6 +1543,3 @@ namespace Boxophobic.Utility
         }
     }
 }
-
-
-

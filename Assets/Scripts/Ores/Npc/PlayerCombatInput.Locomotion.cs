@@ -35,6 +35,11 @@ public partial class PlayerCombatInput
         { ClearLocomotionAnimation(true); return; }
         int layer = animator.GetLayerIndex(CombatLayerName);
         if (layer < 0) return;
+        // A queued Animator trigger has not changed the visible state yet. The
+        // motor's later callback must not replace the attack legs in that gap,
+        // or crossfade back into strafe during strike recovery.
+        if (freeFlowEnabled && ControlsStrikeFacing)
+        { ClearLocomotionAnimation(false); return; }
         var state = animator.IsInTransition(layer) ? animator.GetNextAnimatorStateInfo(layer) :
             animator.GetCurrentAnimatorStateInfo(layer);
         if (IsAttackState(state)) { ClearLocomotionAnimation(false); return; }
@@ -54,7 +59,8 @@ public partial class PlayerCombatInput
         int hash = Animator.StringToHash(stateName);
         if (locomotionStateHash == hash || footworkLayer < 0 || !animator.HasState(footworkLayer, hash)) return;
         locomotionStateHash = hash;
-        if (combatMode) animator.CrossFadeInFixedTime("Combat", BlendSeconds, layer, 0f);
+        if (combatMode && state.shortNameHash != CombatMoveState)
+            animator.CrossFadeInFixedTime("Combat", BlendSeconds, layer, 0f);
         animator.CrossFadeInFixedTime(stateName, BlendSeconds, footworkLayer, 0f);
     }
 

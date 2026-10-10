@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: f68606c75feba70459b106a80b01ca0a
+AssetOrigin:
+  serializedVersion: 1
+  productId: 257362
+  packageName: Bro Audio
+  packageVersion: 3.3.0
+  assetPath: Assets/BroAudio/Editor/EditorWindow/LibraryManagerWindow.Search.cs
+  uploadId: 1008808

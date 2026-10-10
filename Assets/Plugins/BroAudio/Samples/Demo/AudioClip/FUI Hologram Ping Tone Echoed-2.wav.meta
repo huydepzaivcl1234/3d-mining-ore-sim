@@ -24,6 +24,7 @@ AssetOrigin:
   serializedVersion: 1
   productId: 257362
   packageName: Bro Audio
-  packageVersion: 3.2.3
-  assetPath: Assets/BroAudio/Samples/Demo/AudioClip/FUI Hologram Ping Tone Echoed-2.wav
-  uploadId: 979632
+  packageVersion: 3.3.0
+  assetPath: Assets/Plugins/BroAudio/Samples/Demo/AudioClip/FUI Hologram Ping Tone
+    Echoed-2.wav
+  uploadId: 1008808

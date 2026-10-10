@@ -8,6 +8,35 @@ using UnityEngine;
 
 public sealed class SkullclawTests
 {
+    [Test]
+    public void DefenseTargetCanArmTheJumpWithoutPlayerDetection()
+    {
+        var obj = Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>(SkullclawSetup.PrefabPath));
+        var tower = new GameObject("Defense jump gate target");
+        try
+        {
+            obj.transform.position = new Vector3(12000, 0, 12000);
+            tower.transform.position = obj.transform.position + Vector3.forward * 4f;
+            var health = tower.AddComponent<MiningCharacterHealth>(); health.ConfigureSpawnHealth(1000f);
+            var shape = tower.AddComponent<BoxCollider>(); shape.center = Vector3.up; shape.size = new Vector3(1, 2, 1);
+            var monster = obj.GetComponent<MushroomMonster>();
+            var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+            typeof(MushroomMonster).GetField("motor", flags).SetValue(monster, obj.GetComponent<CharacterController>());
+            typeof(MushroomMonster).GetField("target", flags).SetValue(monster, health);
+            typeof(MushroomMonster).GetField("targetCollider", flags).SetValue(monster, shape);
+            typeof(MushroomMonster).GetField("playerDetected", flags).SetValue(monster, false);
+            Physics.SyncTransforms();
+            typeof(MushroomMonster).GetMethod("TickSkullclawApproach", flags).Invoke(monster, new object[] { .51f });
+            Assert.That(typeof(MushroomMonster).GetProperty("CanSkullclawEngage", flags).GetValue(monster), Is.True,
+                "A defense target at jump distance must not stall at the navigation stand point.");
+            tower.transform.position = obj.transform.position + Vector3.forward * 10f;
+            Physics.SyncTransforms();
+            typeof(MushroomMonster).GetMethod("TickSkullclawApproach", flags).Invoke(monster, new object[] { .51f });
+            Assert.That(typeof(MushroomMonster).GetProperty("CanSkullclawEngage", flags).GetValue(monster), Is.False);
+        }
+        finally { Object.DestroyImmediate(obj); Object.DestroyImmediate(tower); }
+    }
+
     [Test] public void CloseCombatNeverSchedulesTheJump()
     {
         var combo = new SkullclawCombo();

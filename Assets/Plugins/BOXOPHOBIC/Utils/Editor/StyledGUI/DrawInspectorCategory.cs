@@ -22,7 +22,7 @@ namespace Boxophobic.StyledGUI
             EditorGUI.DrawRect(fillRect, Constant.CategoryColor);
             EditorGUI.DrawRect(lineRect, Constant.LineColor);
 
-            bannerText = FormatBannerText(bannerText);
+            bannerText = BoxoUtils.FormatTitle(bannerText);
 
             GUI.Label(titleRect, bannerText, Constant.HeaderStyle);
 
@@ -42,7 +42,7 @@ namespace Boxophobic.StyledGUI
             EditorGUI.DrawRect(fillRect, Constant.CategoryColor);
             EditorGUI.DrawRect(lineRect, Constant.LineColor);
 
-            bannerText = FormatBannerText(bannerText);
+            bannerText = BoxoUtils.FormatTitle(bannerText);
             message = BoxoUtils.FormatMessage(message);
 
             var bannerContext = new GUIContent(bannerText, message);
@@ -93,7 +93,7 @@ namespace Boxophobic.StyledGUI
             EditorGUI.DrawRect(fillRect, Constant.CategoryColor);
             EditorGUI.DrawRect(lineRect, Constant.LineColor);
 
-            bannerText = FormatBannerText(bannerText);
+            bannerText = BoxoUtils.FormatTitle(bannerText);
 
             GUI.Label(titleRect, bannerText, Constant.HeaderStyle);
 
@@ -163,7 +163,7 @@ namespace Boxophobic.StyledGUI
             EditorGUI.DrawRect(fillRect, Constant.CategoryColor);
             EditorGUI.DrawRect(lineRect, Constant.LineColor);
 
-            bannerText = FormatBannerText(bannerText);
+            bannerText = BoxoUtils.FormatTitle(bannerText);
             message = BoxoUtils.FormatMessage(message);
 
             var bannerContext = new GUIContent(bannerText, message);
@@ -236,7 +236,7 @@ namespace Boxophobic.StyledGUI
             EditorGUI.DrawRect(fillRect, Constant.CategoryColor);
             EditorGUI.DrawRect(lineRect, Constant.LineColor);
 
-            bannerText = FormatBannerText(bannerText);
+            bannerText = BoxoUtils.FormatTitle(bannerText);
             message = BoxoUtils.FormatMessage(message);
 
             var bannerContext = new GUIContent(bannerText, message);
@@ -281,18 +281,6 @@ namespace Boxophobic.StyledGUI
             }
 
             return enabled;
-        }
-
-        static string FormatBannerText(string bannerText)
-        {
-            if (bannerText.Contains("_"))
-            {
-                var splitBanner = bannerText.Split("_");
-
-                bannerText = splitBanner[0] + " (" + splitBanner[1] + ")";
-            }
-
-            return bannerText;
         }
     }
 }

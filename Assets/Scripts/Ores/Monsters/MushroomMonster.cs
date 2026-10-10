@@ -223,6 +223,10 @@ namespace MiningSimulator.Ores
             RememberPlayerAttacker();
             if (forestGolem != null && forestGolem.IsCharging) return;
             bossSkill.NotifyHealth(health.Health, health.MaxHealth);
+            // Tower fire still deals damage, but must not stun-lock the AI or cancel
+            // the recovery/landing portion of an already committed attack.
+            if (health.LastDamageSource != null &&
+                health.LastDamageSource.GetComponentInParent<TowerRuntime>(true) != null) return;
             // Preserve the committed contact frame, then allow the hit reaction.
             // Otherwise a player's strike can cancel every incoming headbutt.
             if (!skullJumpActive && (animationState != attackStateHash || hitApplied)) Play("Damage");

@@ -106,18 +106,18 @@ MonoBehaviour:
   coinRainParticlesPerSecond: 193
   controlCinematicPostProcessing: 1
   useAcesTonemapping: 1
-  dayBloomIntensity: 0.18
-  nightBloomIntensity: 0.38
+  dayBloomIntensity: 0.55
+  nightBloomIntensity: 0.6
   bloomThreshold: 0.9
-  goldenHourBloomBoost: 0.18
-  dayPostExposure: -0.08
-  nightPostExposure: -0.18
-  dayContrast: 7
-  nightContrast: 13
-  daySaturation: 4
-  nightSaturation: -5
-  dayColorFilter: {r: 1, g: 1, b: 1, a: 1}
-  nightColorFilter: {r: 0.72, g: 0.8, b: 1, a: 1}
-  dayVignetteIntensity: 0.12
-  nightVignetteIntensity: 0.2
-  vignetteSmoothness: 0.55
+  goldenHourBloomBoost: 0.2
+  dayPostExposure: 0.18
+  nightPostExposure: 0.12
+  dayContrast: 15
+  nightContrast: 16
+  daySaturation: -8
+  nightSaturation: -10
+  dayColorFilter: {r: 1, g: 0.96, b: 0.9, a: 1}
+  nightColorFilter: {r: 0.9, g: 0.94, b: 1, a: 1}
+  dayVignetteIntensity: 0.24
+  nightVignetteIntensity: 0.28
+  vignetteSmoothness: 0.6

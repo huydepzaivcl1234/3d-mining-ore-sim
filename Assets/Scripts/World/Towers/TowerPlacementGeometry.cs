@@ -31,6 +31,25 @@ namespace MiningSimulator.Ores
         }
         public static Vector2Int FootprintCells(BoxCollider body, float cell)
             => new Vector2Int(Mathf.CeilToInt((body.size.x + .1f) / cell), Mathf.CeilToInt((body.size.z + .1f) / cell));
+        public static bool ValidateRestore(ref Vector3 foot, BoxCollider body, Quaternion rotation)
+        {
+            if (!GroundBelow(foot, out var ground) || Mathf.Abs(ground.y - foot.y) > .5f) return false;
+            foot = ground;
+            var half = Vector3.Scale(body.size, body.transform.lossyScale) * .5f;
+            var offset = Vector3.Scale(body.center, body.transform.lossyScale);
+            for (int x = -1; x <= 1; x += 2) for (int z = -1; z <= 1; z += 2)
+            {
+                var probe = foot + rotation * new Vector3(offset.x + x * half.x, 0, offset.z + z * half.z);
+                if (!GroundBelow(probe, out var support) || Mathf.Abs(support.y - foot.y) > .12f) return false;
+            }
+            var center = foot + rotation * offset + Vector3.up * .03f;
+            half.y = Mathf.Max(.01f, half.y - .03f);
+            int count = Physics.OverlapBoxNonAlloc(center, half, Overlaps, rotation, ~0, QueryTriggerInteraction.Ignore);
+            if (count == Overlaps.Length) return false;
+            for (int i = 0; i < count; i++)
+                if (!IsSupport(Overlaps[i]) || Overlaps[i].bounds.max.y > foot.y + .025f) return false;
+            return true;
+        }
         public static Vector3 Snap(Vector3 point, BoxCollider body, float cell)
         {
             var cells = FootprintCells(body, cell);

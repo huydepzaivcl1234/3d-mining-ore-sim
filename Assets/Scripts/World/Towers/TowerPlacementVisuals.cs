@@ -8,6 +8,8 @@ namespace MiningSimulator.Ores
         readonly LineRenderer footprint,range;
         readonly BoxCollider body;
         readonly TowerData data;
+        readonly TMPro.TMP_Text remainingLabel;
+        int shownCount=-1;
         Vector3 last=Vector3.positiveInfinity;
         public TowerPlacementVisuals(TowerData definition,Transform player,Camera camera)
         {
@@ -22,6 +24,15 @@ namespace MiningSimulator.Ores
             foreach(var c in ghost.GetComponentsInChildren<Collider>(true))c.enabled=false;
             foreach(var r in ghost.GetComponentsInChildren<Renderer>(true)){var m=new Material[r.sharedMaterials.Length];for(int i=0;i<m.Length;i++)m[i]=material;r.sharedMaterials=m;}
             ghost.AddComponent<TowerStatsPanel>().BindPreview(data,player,camera);
+            var canvasObject=new GameObject("Placement quantity",typeof(RectTransform),typeof(Canvas),typeof(UnityEngine.UI.CanvasScaler));
+            canvasObject.transform.SetParent(root.transform,false);
+            var canvas=canvasObject.GetComponent<Canvas>();canvas.renderMode=RenderMode.ScreenSpaceOverlay;canvas.sortingOrder=200;
+            var scaler=canvasObject.GetComponent<UnityEngine.UI.CanvasScaler>();scaler.uiScaleMode=UnityEngine.UI.CanvasScaler.ScaleMode.ScaleWithScreenSize;scaler.referenceResolution=new Vector2(1920,1080);scaler.matchWidthOrHeight=.5f;
+            var panel=TowerFantasyUi.Frame("Quantity",canvas.transform,new Vector2(420,86),Vector2.zero,TowerFantasyUi.Background);
+            panel.anchorMin=panel.anchorMax=panel.pivot=new Vector2(.5f,0);panel.anchoredPosition=new Vector2(0,32);
+            var icon=TowerFantasyUi.Rect("Icon",panel,new Vector2(48,48),new Vector2(-170,10)).gameObject.AddComponent<UnityEngine.UI.Image>();icon.sprite=data.icon;icon.preserveAspect=true;icon.raycastTarget=false;
+            remainingLabel=TowerFantasyUi.Label(panel,"Remaining",new Vector2(28,12),new Vector2(330,32),24,TowerFantasyUi.Cream,true);
+            TowerFantasyUi.Label(panel,"Hint",new Vector2(0,-22),new Vector2(398,25),15,TowerFantasyUi.Gold,false,TMPro.TextAlignmentOptions.Center).text="Click to place • Right click / Esc to finish";
             footprint=Line("Occupied cells",5,.06f);range=Line("Attack range",129,.04f);
             int cx=Mathf.RoundToInt(player.position.x),cz=Mathf.RoundToInt(player.position.z);
             for(int i=-12;i<=12;i++)
@@ -45,6 +56,7 @@ namespace MiningSimulator.Ores
         }
         public void Hide(){ghost.SetActive(false);footprint.enabled=range.enabled=false;}
         public void Show(){footprint.enabled=range.enabled=true;}
+        public void SetRemaining(int count){if(count==shownCount)return;shownCount=count;remainingLabel.text=data.displayName+"  x"+count;}
         public void Dispose(){Object.Destroy(root);Object.Destroy(material);}
     }
 }

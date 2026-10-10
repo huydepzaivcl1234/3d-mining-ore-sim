@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: ea742f891a0d20245baba757c9f8aaf2
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 403204
+  packageName: Project Cleaner Free
+  packageVersion: 1.0
+  assetPath: Assets/ProjectCleanerFree/Scene/UnusedAssetsFinder_Sample.unity
+  uploadId: 983734

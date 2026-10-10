@@ -313,7 +313,8 @@ namespace StarterAssets
                 _speed = targetSpeed;
             }
 
-            _animationBlend = Mathf.Lerp(_animationBlend, targetSpeed, MovementDeltaTime * SpeedChangeRate);
+            _animationBlend = Mathf.Lerp(_animationBlend, targetSpeed * Mathf.Clamp01(CombatMoveMultiplier),
+                MovementDeltaTime * SpeedChangeRate);
             if (_animationBlend < 0.01f) _animationBlend = 0f;
 
             // normalise input direction
@@ -327,12 +328,16 @@ namespace StarterAssets
             {
                 _targetRotation = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg +
                                   _mainCamera.transform.eulerAngles.y;
-                float rotation = Mathf.SmoothDampAngle(transform.eulerAngles.y, _targetRotation, ref _rotationVelocity,
-                    ExternalRotationSmoothTime > 0f ? ExternalRotationSmoothTime : RotationSmoothTime,
-                    Mathf.Infinity, MovementDeltaTime);
-
-                // rotate to face input direction relative to camera position
-                if (!ExternalFacing) transform.rotation = Quaternion.Euler(0.0f, rotation, 0.0f);
+                // Don't accumulate an unused camera-relative turn velocity while
+                // combat owns facing; the handoff must begin from the current pose.
+                if (!ExternalFacing)
+                {
+                    float rotation = Mathf.SmoothDampAngle(transform.eulerAngles.y, _targetRotation, ref _rotationVelocity,
+                        ExternalRotationSmoothTime > 0f ? ExternalRotationSmoothTime : RotationSmoothTime,
+                        Mathf.Infinity, MovementDeltaTime);
+                    transform.rotation = Quaternion.Euler(0.0f, rotation, 0.0f);
+                }
+                else _rotationVelocity = 0f;
             }
 
 
