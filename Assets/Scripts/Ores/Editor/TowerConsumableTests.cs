@@ -100,10 +100,10 @@ public sealed class TowerConsumableTests
                 string first=version==3?"\"count\":1,\"paidPrice\":100":"\"count\":2,\"paidPrice\":100,\"towerReceipts\":[100,150]";
                 PlayerPrefs.SetString(key,"{\"version\":"+version+",\"slots\":[{\"itemId\":\""+id+"\","+first+"},{\"itemId\":\""+id+"\",\"count\":1,\"paidPrice\":200}]}");
                 typeof(MiningItemSystem).GetMethod("LoadInventory",Flags).Invoke(inv,null);
-                Assert.That(inv.OccupiedSlotCount,Is.EqualTo(1));Assert.That(inv.GetSlot(0).Count,Is.EqualTo(version==3?2:3));
-                Assert.That(inv.TryTakeTower(data.inventoryItem,out float paid),Is.True);Assert.That(paid,Is.EqualTo(100));
-                if(version==4){inv.TryTakeTower(data.inventoryItem,out paid);Assert.That(paid,Is.EqualTo(150));}
-                inv.TryTakeTower(data.inventoryItem,out paid);Assert.That(paid,Is.EqualTo(200));
+                Assert.That(inv.OccupiedSlotCount,Is.Zero);Assert.That(inv.GetTowerStockCount(data.inventoryItem),Is.EqualTo(version==3?2:3));
+                Assert.That(inv.TryTakeConstructionTower(data.inventoryItem,out float paid),Is.True);Assert.That(paid,Is.EqualTo(100));
+                if(version==4){inv.TryTakeConstructionTower(data.inventoryItem,out paid);Assert.That(paid,Is.EqualTo(150));}
+                inv.TryTakeConstructionTower(data.inventoryItem,out paid);Assert.That(paid,Is.EqualTo(200));
             } finally {PlayerPrefs.DeleteKey(key);Object.DestroyImmediate(db);}
         });
     }

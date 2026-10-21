@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.DayNightData
   cycleEnabled: 1
   startingPeriod: 0
-  dayDurationSeconds: 120
-  nightDurationSeconds: 90
+  dayDurationSeconds: 70
+  nightDurationSeconds: 40
   transitionDurationSeconds: 8
   transitionCurve:
     serializedVersion: 2

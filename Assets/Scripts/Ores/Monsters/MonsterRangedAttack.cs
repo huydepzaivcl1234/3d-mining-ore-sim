@@ -18,6 +18,8 @@ namespace MiningSimulator.Ores
         private MushroomMonster monster;
         private MonsterCombatSettings Data => (monster != null ? monster : monster = GetComponent<MushroomMonster>())?.CombatData;
         private readonly RaycastHit[] sightHits = new RaycastHit[32];
+        [Header("Projectile reuse (0 destroys returned shots)")]
+        [SerializeField, Min(0)] private int projectilePoolCapacity = 32;
         public string FireState => fireState;
         public float ReleaseMoment => releaseMoment;
         public float Range => range * Mathf.Max(.01f, transform.lossyScale.x);
@@ -45,8 +47,9 @@ namespace MiningSimulator.Ores
             if (!IsReady || owner == null || victim == null) return;
             Vector3 aim = HomingMonsterProjectile.AimPoint(victim) - muzzle.position;
             Quaternion rotation = aim.sqrMagnitude > .001f ? Quaternion.LookRotation(aim) : muzzle.rotation;
-            var shot = Instantiate(projectile, muzzle.position, rotation);
+            var shot = SceneProjectilePool.Rent<HomingMonsterProjectile>(projectile.gameObject,muzzle.position,rotation,gameObject.scene,projectilePoolCapacity);
             shot.Launch(owner, victim);
+            shot.gameObject.SetActive(true);
         }
         private void OnDrawGizmosSelected()
         {

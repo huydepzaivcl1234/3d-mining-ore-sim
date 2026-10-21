@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 24f167fab8120ca45be90069e1a5a786
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 237358
+  packageName: 'SightsAligner: FPS Tool'
+  packageVersion: 1.0
+  assetPath: Assets/Kinemation/SightsAligner/AnimToolkitLib.cs
+  uploadId: 538927

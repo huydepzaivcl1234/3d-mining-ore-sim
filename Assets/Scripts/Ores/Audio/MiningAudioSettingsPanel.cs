@@ -18,9 +18,9 @@ namespace MiningSimulator.Ores
         [SerializeField] private Slider masterSlider;
         [SerializeField] private Slider musicSlider;
         [SerializeField] private Slider sfxSlider;
-        [SerializeField] private MiningOrbitCamera cameraRig;
         [SerializeField] private UnityEngine.UI.Slider sensitivitySlider;
         [SerializeField] private TextMeshProUGUI sensitivityValueLabel;
+        [SerializeField] private GameData.Player.Script.PlayerController1 playerController;
         [SerializeField] private TextMeshProUGUI masterValueLabel;
         [SerializeField] private TextMeshProUGUI musicValueLabel;
         [SerializeField] private TextMeshProUGUI sfxValueLabel;
@@ -47,14 +47,7 @@ namespace MiningSimulator.Ores
 
         private void Awake()
         {
-            if (cameraRig == null)
-                foreach (var rig in FindObjectsByType<MiningOrbitCamera>(FindObjectsInactive.Include, FindObjectsSortMode.None))
-                    if (rig.FollowTarget != null) { cameraRig = rig; break; }
-            if (sensitivitySlider != null && cameraRig != null)
-            {
-                sensitivitySlider.minValue = cameraRig.SensitivityMinimum;
-                sensitivitySlider.maxValue = cameraRig.SensitivityMaximum;
-            }
+            RefreshSensitivityBinding();
             if (uiData == null && panelCoordinator != null)
             {
                 uiData = panelCoordinator.UiData;
@@ -68,6 +61,7 @@ namespace MiningSimulator.Ores
 
         private void Start()
         {
+            RefreshSensitivityBinding();
             if (settingsPanel != null)
             {
                 graphicsOptions = GetComponent<PlayerGraphicsOptions>() ?? gameObject.AddComponent<PlayerGraphicsOptions>();
@@ -176,11 +170,7 @@ namespace MiningSimulator.Ores
 
         private void RefreshFromManager()
         {
-            if (cameraRig != null)
-            {
-                SetSliderWithoutNotify(sensitivitySlider, cameraRig.MouseSensitivity);
-                RefreshSensitivityLabel(cameraRig.MouseSensitivity);
-            }
+            RefreshSensitivityBinding();
             if (audioManager == null)
             {
                 return;
@@ -204,10 +194,18 @@ namespace MiningSimulator.Ores
 
         private void SetMouseSensitivity(float value)
         {
-            // Both the gameplay rig and the existing overview rig use the same preference.
-            foreach (var rig in FindObjectsByType<MiningOrbitCamera>(FindObjectsInactive.Include, FindObjectsSortMode.None))
-                rig.SetMouseSensitivity(value);
-            RefreshSensitivityLabel(cameraRig != null ? cameraRig.MouseSensitivity : value);
+            if(!playerController)playerController=FindAnyObjectByType<GameData.Player.Script.PlayerController1>();
+            if(!playerController)return;
+            playerController.SetMouseSensitivityMultiplier(value);
+            RefreshSensitivityLabel(playerController.MouseSensitivityMultiplier);
+        }
+
+        private void RefreshSensitivityBinding()
+        {
+            if(!playerController)playerController=FindAnyObjectByType<GameData.Player.Script.PlayerController1>();
+            if(sensitivitySlider){sensitivitySlider.minValue=.1f;sensitivitySlider.maxValue=4f;sensitivitySlider.interactable=playerController!=null;
+                if(playerController)sensitivitySlider.SetValueWithoutNotify(playerController.MouseSensitivityMultiplier);}
+            if(playerController)RefreshSensitivityLabel(playerController.MouseSensitivityMultiplier);
         }
 
         private void RefreshSensitivityLabel(float value)
@@ -244,7 +242,7 @@ namespace MiningSimulator.Ores
             }
             resetStateCoroutine = null;
             resetConfirmationArmed = false;
-            if (rebirthSystem == null || !rebirthSystem.ResetAllProgress())
+            if (!WorldProgressReset.ResetAll())
             {
                 SetResetButtonVisual("RESET FAILED — CHECK CONSOLE", Color.red);
                 return;

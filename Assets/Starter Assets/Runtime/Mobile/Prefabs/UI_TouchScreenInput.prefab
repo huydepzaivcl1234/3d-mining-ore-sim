@@ -11,7 +11,6 @@ GameObject:
   - component: {fileID: 5052264629267279113}
   - component: {fileID: 3990693672098548669}
   - component: {fileID: 7140694399045626294}
-  - component: {fileID: 3004629566080465027}
   - component: {fileID: 7921911991004155457}
   m_Layer: 0
   m_Name: UI_TouchScreenInput
@@ -49,9 +48,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_PanelSettings: {fileID: 11400000, guid: 6f80c07efbcffac4380910b5aac93c8d, type: 2}
   m_ParentUI: {fileID: 0}
-  sourceAsset: {fileID: 9197481963319205126, guid: ccd45339dc8ff154fbbe578856089eaf,
-    type: 3}
+  sourceAsset: {fileID: 9197481963319205126, guid: ccd45339dc8ff154fbbe578856089eaf, type: 3}
   m_SortingOrder: 0
+  m_Position: 0
+  m_WorldSpaceSizeMode: 1
+  m_WorldSpaceWidth: 1920
+  m_WorldSpaceHeight: 1080
+  m_PivotReferenceSize: 0
+  m_Pivot: 0
+  m_WorldSpaceCollider: {fileID: 0}
 --- !u!114 &7140694399045626294
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -70,7 +75,7 @@ MonoBehaviour:
   MoveEvent:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 3004629566080465027}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: VirtualInput, Unity.StarterAssets
         m_MethodName: VirtualMoveInput
         m_Mode: 0
@@ -85,7 +90,7 @@ MonoBehaviour:
   LookEvent:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 3004629566080465027}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: VirtualInput, Unity.StarterAssets
         m_MethodName: VirtualLookInput
         m_Mode: 0
@@ -100,7 +105,7 @@ MonoBehaviour:
   JumpEvent:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 3004629566080465027}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: VirtualInput, Unity.StarterAssets
         m_MethodName: VirtualJumpInput
         m_Mode: 0
@@ -115,7 +120,7 @@ MonoBehaviour:
   SprintEvent:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 3004629566080465027}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: VirtualInput, Unity.StarterAssets
         m_MethodName: VirtualSprintInput
         m_Mode: 0
@@ -127,19 +132,6 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
---- !u!114 &3004629566080465027
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7137023482562969817}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ed06e3b6fec5ecc4696004cedc31f0ac, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  StarterAssetsInputs: {fileID: 0}
 --- !u!114 &7921911991004155457
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -152,4 +144,3 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 901182334643ba1438a25accc6bd0c79, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerInput: {fileID: 0}

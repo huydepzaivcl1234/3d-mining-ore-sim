@@ -105,7 +105,7 @@ namespace MiningSimulator.Ores
             Instance = this;
         }
         private void Start() { if (rebakeOnStart && cells == null) RequestFullRebake(); }
-        private void OnDestroy() { if (Instance == this) Instance = null; }
+        private void OnDestroy() { if (Instance == this) { Instance = null; actorCache.Clear(); actorCacheFrame = -1; } }
         private void OnDisable()
         {
             HasBaked = false;
@@ -157,24 +157,31 @@ namespace MiningSimulator.Ores
         }
         private void Update()
         {
+            using var sample = NavigationUpdate.Auto();
             if (cells == null) return;
+            float milliseconds = GameplayPerformanceData.Current ? GameplayPerformanceData.Current.navigationBudgetMilliseconds : 2f;
+            long deadline = milliseconds > 0 && !float.IsInfinity(milliseconds)
+                ? System.Diagnostics.Stopwatch.GetTimestamp() + (long)(milliseconds * System.Diagnostics.Stopwatch.Frequency / 1000d)
+                : long.MaxValue;
             int budget = Mathf.Max(1, bakeCellsPerFrame);
             if (!HasBaked)
             {
-                while (budget-- > 0 && cursor < cells.Length) BakeCell(cursor++);
+                while (budget-- > 0 && cursor < cells.Length && HasTime(deadline)) BakeCell(cursor++);
                 HasBaked = cursor == cells.Length;
             }
             if (!HasBaked) return;
             bool changed = false;
-            while (budget-- > 0 && dirty.Count > 0)
+            while (budget-- > 0 && dirty.Count > 0 && HasTime(deadline))
             {
                 var it = dirty.GetEnumerator(); it.MoveNext(); int i = it.Current; it.Dispose(); dirty.Remove(i);
                 bool open = cells[i].ground && IsCapsuleClear(cells[i].point, agentRadius, probeHeight);
                 changed |= open != cells[i].open; cells[i].open = open;
             }
             if (changed) Revision++;
-            ProcessSearchBudget();
+            ProcessSearchBudget(deadline);
         }
+        private static bool HasTime(long deadline) => System.Diagnostics.Stopwatch.GetTimestamp() < deadline;
+        private static readonly Unity.Profiling.ProfilerMarker NavigationUpdate = new("Mining.NavigationUpdate");
         private void BakeCell(int i)
         {
             Vector3 p = origin + new Vector3((i % width + .5f) * cellSize, 0, (i / width + .5f) * cellSize);
@@ -216,12 +223,25 @@ namespace MiningSimulator.Ores
             if (supported) p.y = supportHeight;
             return count < hits.Length && supported;
         }
-        private static bool IsActorOrMineable(Collider c) =>
-            c.GetComponentInParent<MiningChest>() != null || c.GetComponentInParent<LuckyBlock>() != null ||
-            c.GetComponentInParent<CharacterController>() != null ||
-            (c.attachedRigidbody != null && !c.attachedRigidbody.isKinematic);
+        private static readonly Dictionary<Collider, bool> actorCache = new();
+        private static int actorCacheFrame = -1;
+        private static bool IsActorOrMineable(Collider c)
+        {
+            // Crowd controllers dominate overlap results. Avoid repeated hierarchy walks
+            // for the same collider in hundreds of path probes during one frame.
+            if (c is CharacterController) return true;
+            if (actorCacheFrame != Time.frameCount)
+            { actorCacheFrame = Time.frameCount; actorCache.Clear(); }
+            if (actorCache.TryGetValue(c, out bool actor)) return actor;
+            actor = c.GetComponentInParent<MiningChest>() != null || c.GetComponentInParent<LuckyBlock>() != null ||
+                c.GetComponentInParent<CharacterController>() != null ||
+                (c.attachedRigidbody != null && !c.attachedRigidbody.isKinematic);
+            actorCache[c] = actor;
+            return actor;
+        }
         private bool Blocks(Collider c, float ground)
         {
+            if (c is CharacterController) return false;
             if (c is TerrainCollider || c.bounds.max.y <= ground + probeGroundClearance) return false;
             MiningChest chest = c.GetComponentInParent<MiningChest>(); if (chest != null) return chest.CanMine;
             LuckyBlock block = c.GetComponentInParent<LuckyBlock>(); if (block != null) return !block.IsResolved;
@@ -394,10 +414,10 @@ namespace MiningSimulator.Ores
             request.result?.Invoke(new PathResult(status, route, request.ticket, request.revision));
             request.complete?.Invoke(status == PathStatus.Success, route);
         }
-        private void ProcessSearchBudget()
+        private void ProcessSearchBudget(long deadline)
         {
             int admissions = concurrentSearches;
-            while (admissions-- > 0 && searches.Count < concurrentSearches && requests.Count > 0)
+            while (admissions-- > 0 && searches.Count < concurrentSearches && requests.Count > 0 && HasTime(deadline))
             {
                 Request r = requests.Dequeue();
                 lastSearchWork = Time.time;
@@ -413,7 +433,7 @@ namespace MiningSimulator.Ores
                 searches.Add(r);
             }
             int budget = Mathf.Max(1, searchNodesPerFrame);
-            while (budget > 0 && searches.Count > 0)
+            while (budget > 0 && searches.Count > 0 && HasTime(deadline))
             {
                 searchCursor %= searches.Count;
                 Request r = searches[searchCursor];
@@ -422,7 +442,7 @@ namespace MiningSimulator.Ores
                     searches.RemoveAt(searchCursor);
                     Finish(r, PathStatus.Stale); continue;
                 }
-                int slice = Mathf.Min(budget, Mathf.Max(1, searchNodesPerFrame / Mathf.Max(1, searches.Count)));
+                int slice = Mathf.Min(budget, 8);
                 Expand(r.search, slice); budget -= slice;
                 lastSearchWork = Time.time;
                 if (!r.search.finished) { searchCursor++; continue; }

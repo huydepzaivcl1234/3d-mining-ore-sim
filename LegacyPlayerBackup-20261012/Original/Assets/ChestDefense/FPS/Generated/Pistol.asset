@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d1fa0648ec695e3f892f7138305354ee, type: 3}
+  m_Name: Pistol
+  m_EditorClassIdentifier: Assembly-CSharp::ChestDefense.Fps.FpsWeaponData
+  weaponId: glock
+  nameKey: FPS_PISTOL
+  displayName: Glock
+  viewPrefab: {fileID: 2440911989779128209, guid: 33864ddd7cbd63c4498905194fddf517, type: 3}
+  idle: {fileID: -5115344659993355237, guid: 96bdd73c0e9b53949185e1fe49ebab41, type: 3}
+  shoot: {fileID: 7400000, guid: b42607888b68d7743adc1adbf2193855, type: 2}
+  reload: {fileID: 7400000, guid: 4db0f8294facc594db9116ba00c9f43c, type: 2}
+  hipPosition: {x: -0.45945728, y: -1.6670085, z: 0.2495884}
+  hipEuler: {x: 21.698683, y: 89.803154, z: 358.03696}
+  aimPosition: {x: -1.1417447, y: -1.2536504, z: 0.019588426}
+  aimEuler: {x: 39.155136, y: 89.764145, z: 357.96082}
+  alignIronSights: 1
+  aimEyeRelief: 0.17
+  aimSightOffset: {x: 0, y: 0}
+  poseBlendSeconds: 0.15
+  aimFieldOfView: 48
+  animationBlendSeconds: 0.06
+  fireMode: 0
+  roundsPerSecond: 4
+  minimumShotInterval: 0.35
+  usePlayerAttackSpeed: 1
+  range: 100
+  hipSpreadDegrees: 1
+  aimSpreadDegrees: 0.15
+  hitLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  usePlayerDamage: 1
+  damageMultiplier: 1
+  flatDamage: 10
+  damageType: 0
+  magazineCapacity: 12
+  startingReserve: 60
+  maximumReserve: 240
+  reloadSeconds: 2.0416667
+  reloadWhenEmpty: 0
+  recoilPitch: 1
+  recoilYaw: 0.25
+  recoilRecovery: 8
+  shotSound: {fileID: 8300000, guid: 3cba897c9aec5dad9920a0a4f9da0fe1, type: 3}
+  reloadSound: {fileID: 8300000, guid: c83ec450cc0c54eaa3c6f5e7574673fa, type: 3}
+  emptySound: {fileID: 8300000, guid: 0f4e3f22cd2e56308f84c78a7c75a2b0, type: 3}
+  soundGain: 1
+  impactPrefab: {fileID: 0}
+  impactLifetime: 1

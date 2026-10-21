@@ -1,0 +1,11 @@
+{
+  "name": "CannonLOD", "attach_tolerance": 0.05,
+  "parts": [
+    {"name":"BaseMesh","expected_size":[0.94744,1.212,1.292],"tol":0.02},
+    {"name":"BarrelMesh","expected_size":[0.45189,0.861,0.636],"tol":0.02}
+  ],
+  "attachments": [["BaseMesh","BarrelMesh"]],
+  "max_islands": {"BaseMesh":200,"BarrelMesh":200},
+  "open_parts": ["BaseMesh","BarrelMesh"],
+  "budget": {"max_tris":7800}
+}

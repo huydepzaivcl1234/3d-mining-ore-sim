@@ -64,7 +64,7 @@ namespace MiningSimulator.Ores
             root = CreateRect("Daily Monster Forecast", settings.parent);
             root.anchorMin = root.anchorMax = root.pivot = Vector2.one;
             root.sizeDelta = new Vector2(344f, 120f);
-            root.anchoredPosition = new Vector2(-14f, settings.anchoredPosition.y - settings.rect.height - 12f);
+            root.anchoredPosition = panelOffset;
             shownPosition = root.anchoredPosition;
             slideProgress = IsDaytime ? 1f : 0f;
             var background = root.gameObject.AddComponent<UnityEngine.UI.Image>();

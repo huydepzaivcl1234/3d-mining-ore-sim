@@ -1,4 +1,3 @@
-using StarterAssets;
 using UnityEngine;
 
 namespace MiningSimulator.Ores
@@ -7,8 +6,6 @@ namespace MiningSimulator.Ores
     public sealed class MiningPlayerStamina : MonoBehaviour
     {
         private MiningPlayerStats stats;
-        private ThirdPersonController movement;
-        private StarterAssetsInputs input;
         private MiningCharacterHealth health;
         private MiningAudioManager audioManager;
         private AudioSource fallbackSource;
@@ -21,8 +18,6 @@ namespace MiningSimulator.Ores
         private void Awake()
         {
             stats = GetComponent<MiningPlayerStats>();
-            movement = GetComponent<ThirdPersonController>();
-            input = GetComponent<StarterAssetsInputs>();
             health = GetComponent<MiningCharacterHealth>();
             audioManager = FindAnyObjectByType<MiningAudioManager>();
             Current = Maximum;
@@ -30,23 +25,14 @@ namespace MiningSimulator.Ores
         private void Update()
         {
             var data = stats.Data;
-            if (data == null || movement == null || input == null) return;
+            if (data == null) return;
             bool dead = health != null && health.Health <= 0;
             if (wasDead && !dead) { Current = Maximum; Exhausted = false; regenTimer = 0; }
             wasDead = dead;
             Current = Mathf.Clamp(Current, 0, Maximum);
             float threshold = Mathf.Clamp(data.staminaResumeThreshold, 0.01f, Maximum);
             if (Exhausted && Current >= threshold) Exhausted = false;
-            movement.SprintAllowed = !Exhausted && !dead;
-            bool sprinting = !dead && movement.enabled && input.enabled && input.sprint &&
-                input.move.sqrMagnitude > 0.01f && movement.SprintAllowed && data.SprintSpeed > data.MoveSpeed;
-            if (sprinting)
-            {
-                regenTimer = 0;
-                Current = Mathf.Max(0, Current - Mathf.Max(0, data.sprintStaminaPerSecond) * Time.deltaTime);
-                if (Current <= 0) { Exhausted = true; movement.SprintAllowed = false; }
-            }
-            else if (!dead && Current < Maximum)
+            if (!dead && Current < Maximum)
             {
                 regenTimer += Time.deltaTime;
                 float interval = Mathf.Max(0.1f, data.staminaRegenInterval);
@@ -95,7 +81,6 @@ namespace MiningSimulator.Ores
             generatedBreathing.SetData(samples, 0);
             return generatedBreathing;
         }
-        private void OnDisable() { if (movement != null) movement.SprintAllowed = true; }
         private void OnDestroy()
         {
             if (generatedBreathing != null) Destroy(generatedBreathing);

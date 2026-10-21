@@ -51,13 +51,19 @@ namespace MiningSimulator.Ores
             return true;
         }
         public static Vector3 Snap(Vector3 point, BoxCollider body, float cell)
+            => Snap(point,body,cell,Quaternion.identity);
+        public static Vector3 Snap(Vector3 point, BoxCollider body, float cell,Quaternion rotation)
         {
             var cells = FootprintCells(body, cell);
-            point.x = (Mathf.Floor(point.x / cell) + (cells.x % 2) * .5f) * cell - body.center.x;
-            point.z = (Mathf.Floor(point.z / cell) + (cells.y % 2) * .5f) * cell - body.center.z;
+            var rotated=rotation*new Vector3(cells.x,0,cells.y);
+            var center=rotation*body.center;
+            point.x = (Mathf.Floor(point.x / cell) + (Mathf.RoundToInt(Mathf.Abs(rotated.x)) % 2) * .5f) * cell - center.x;
+            point.z = (Mathf.Floor(point.z / cell) + (Mathf.RoundToInt(Mathf.Abs(rotated.z)) % 2) * .5f) * cell - center.z;
             return point;
         }
         public static bool Validate(ref Vector3 foot, BoxCollider body, Transform player, float reach)
+            => Validate(ref foot,body,player,reach,Quaternion.identity);
+        public static bool Validate(ref Vector3 foot, BoxCollider body, Transform player, float reach,Quaternion rotation)
         {
             if (!GroundBelow(foot, out var ground)) return false;
             foot = ground;
@@ -66,12 +72,12 @@ namespace MiningSimulator.Ores
             // All four feet need continuous, nearly level support; do not bridge a ledge.
             for (int x = -1; x <= 1; x += 2) for (int z = -1; z <= 1; z += 2)
             {
-                Vector3 probe = foot + new Vector3(body.center.x + x * half.x, 0, body.center.z + z * half.z);
+                Vector3 probe = foot + rotation*new Vector3(body.center.x + x * half.x, 0, body.center.z + z * half.z);
                 if (!GroundBelow(probe, out var support) || Mathf.Abs(support.y - foot.y) > .12f) return false;
             }
-            Vector3 center = foot + body.center + Vector3.up * .03f;
+            Vector3 center = foot + rotation*body.center + Vector3.up * .03f;
             half.x += .05f; half.z += .05f; half.y = Mathf.Max(.01f, half.y - .03f);
-            int count = Physics.OverlapBoxNonAlloc(center, half, Overlaps, Quaternion.identity, ~0, QueryTriggerInteraction.Ignore);
+            int count = Physics.OverlapBoxNonAlloc(center, half, Overlaps, rotation, ~0, QueryTriggerInteraction.Ignore);
             if (count == Overlaps.Length) return false;
             for (int i = 0; i < count; i++)
             {

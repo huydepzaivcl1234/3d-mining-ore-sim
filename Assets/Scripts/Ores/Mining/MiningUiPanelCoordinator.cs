@@ -10,6 +10,7 @@ namespace MiningSimulator.Ores
     public sealed class MiningUiPanelCoordinator : MonoBehaviour
     {
         [SerializeField] private MiningUiData uiData;
+        [Tooltip("Legacy base HUD/currency container, NOT the modal Gem Shop window.")]
         [SerializeField] private RectTransform shopPanel;
         [SerializeField] private RectTransform pcQuickActions;
         [SerializeField] private RectTransform rebirthHud;
@@ -28,7 +29,6 @@ namespace MiningSimulator.Ores
         [SerializeField] private RectTransform dock;
         [SerializeField] private RectTransform questPanel;
         [Tooltip("Auto-found in Awake when left empty.")]
-        [SerializeField] private MiningOrbitCamera orbitCamera;
 
         private Vector2 upgradeHome;
         private Vector2 rebirthPanelHome;
@@ -55,6 +55,7 @@ namespace MiningSimulator.Ores
         }
 
         public MiningUiData UiData => uiData;
+        public bool IsMainMenuOpen => mainMenuOpen;
         public bool BlocksGameplay => mainMenuOpen || activeModal != null;
 
         /// <summary>The anvil view is a world interaction, not a movement-blocking modal.</summary>
@@ -64,7 +65,6 @@ namespace MiningSimulator.Ores
             if (activeModal == panel)
             {
                 activeModal = null;
-                orbitCamera?.SetInputLocked(false);
                 HideBackdrop();
                 AnimateBasePanels(!mainMenuOpen);
             }
@@ -108,10 +108,6 @@ namespace MiningSimulator.Ores
         private float TransitionDuration => uiData != null ? uiData.PanelTransitionDuration : 0.28f;
         private void Awake()
         {
-            if (orbitCamera == null)
-            {
-                orbitCamera = FindFirstObjectByType<MiningOrbitCamera>(FindObjectsInactive.Include);
-            }
             ResolveOptionalHudReferences();
             CacheHomePositions();
         }
@@ -160,7 +156,6 @@ namespace MiningSimulator.Ores
             panel.GetComponent<MiningPanelMotion>()?.PlayOpen();
             SetCanvasAlpha(panel, 0f, false);
             AnimateBasePanels(false);
-            orbitCamera?.SetInputLocked(true);
             ShowBackdrop(panel);
             CanvasGroup group = GetCanvasGroup(panel);
             StartCoroutine(AnimateCanvasGroupAlpha(group, 1f, TransitionDuration,
@@ -180,7 +175,6 @@ namespace MiningSimulator.Ores
             SetInteraction(panel, false);
             panel.GetComponent<MiningPanelMotion>()?.PlayClose(false);
             AnimateBasePanels(!mainMenuOpen);
-            orbitCamera?.SetInputLocked(false);
             HideBackdrop();
             CanvasGroup group = GetCanvasGroup(panel);
             StartCoroutine(AnimateCanvasGroupAlpha(group, 0f, TransitionDuration, () =>
@@ -206,7 +200,6 @@ namespace MiningSimulator.Ores
                 HideModalImmediately(inventoryPanel);
                 HideModalImmediately(questPanel);
                 activeModal = null;
-                orbitCamera?.SetInputLocked(false);
                 HideBackdrop();
             }
             AnimateBasePanels(visible && !mainMenuOpen && activeModal == null);
@@ -231,7 +224,6 @@ namespace MiningSimulator.Ores
             activeModal = panel;
             if (previous != null && previous != panel) HideModalImmediately(previous);
             AnimateBasePanels(false);
-            orbitCamera?.SetInputLocked(true);
             HideBackdrop();
         }
         public void NotifyExternalPanelClosed(RectTransform panel)
@@ -240,7 +232,6 @@ namespace MiningSimulator.Ores
             activeModal = null;
             StopAllCoroutines();
             AnimateBasePanels(!mainMenuOpen);
-            orbitCamera?.SetInputLocked(false);
             HideBackdrop();
         }
 
@@ -480,7 +471,6 @@ namespace MiningSimulator.Ores
         {
             StopAllCoroutines();
             SetAdditionalHudVisible(true, true);
-            orbitCamera?.SetInputLocked(false);
         }
         private void SetWorldBarsVisible(bool visible)
         {

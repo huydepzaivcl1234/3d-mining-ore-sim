@@ -1,0 +1,11 @@
+.weapon-debug {
+    padding: 12px;
+}
+.weapon-debug Label {
+    margin-bottom: 8px;
+    white-space: normal;
+}
+.weapon-debug Button {
+    height: 30px;
+    margin-bottom: 5px;
+}

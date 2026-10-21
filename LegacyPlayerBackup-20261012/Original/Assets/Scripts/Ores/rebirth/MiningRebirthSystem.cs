@@ -1,0 +1,172 @@
+using System;
+using UnityEngine;
+
+namespace MiningSimulator.Ores
+{
+    /// <summary>Owns saved rebirth progression and applies its permanent money multiplier.</summary>
+    [DisallowMultipleComponent]
+    public sealed class MiningRebirthSystem : MonoBehaviour
+    {
+        [SerializeField] private PlayerWallet wallet;
+        [SerializeField] private MiningUpgradeSystem upgradeSystem;
+        [SerializeField] private MiningRebirthData rebirthData;
+        [SerializeField] private MiningItemSystem itemSystem;
+        [SerializeField] private MiningAchievementSystem achievementSystem;
+        [SerializeField] private MiningQuestSystem questSystem;
+        private int completedRebirths;
+
+        public int CompletedRebirths => completedRebirths;
+        public int CurrentRequirement => rebirthData != null
+            ? rebirthData.GetRequirement(completedRebirths)
+            : int.MaxValue;
+        public float PermanentMoneyMultiplier => rebirthData != null
+            ? rebirthData.GetMoneyMultiplier(completedRebirths)
+            : 1f;
+        public float NextMoneyMultiplier => rebirthData != null
+            ? rebirthData.GetMoneyMultiplier(completedRebirths + 1)
+            : 1f;
+        // Rebirth's permanent boost now applies to both money and NPC experience, at the
+        // same multiplier value.
+        public float PermanentExperienceMultiplier => PermanentMoneyMultiplier;
+        public float NextExperienceMultiplier => NextMoneyMultiplier;
+        public bool CanRebirth => wallet != null && rebirthData != null &&
+                                  wallet.CurrentMoney >= CurrentRequirement;
+        public float Progress01 => wallet == null || rebirthData == null
+            ? 0f
+            : Mathf.Clamp01((float)wallet.CurrentMoney / CurrentRequirement);
+
+        public event Action StateChanged;
+        public event Action<int> RebirthCompleted;
+
+        private void Awake()
+        {
+            FindResetTargetsIfMissing();
+            LoadProgress();
+            ApplyPermanentBoost();
+        }
+
+        private void OnEnable()
+        {
+            if (wallet != null)
+            {
+                wallet.MoneyChanged -= HandleMoneyChanged;
+                wallet.MoneyChanged += HandleMoneyChanged;
+            }
+        }
+
+        private void OnDisable()
+        {
+            if (wallet != null)
+            {
+                wallet.MoneyChanged -= HandleMoneyChanged;
+            }
+        }
+
+        public bool TryRebirth()
+        {
+            if (!CanRebirth)
+            {
+                return false;
+            }
+
+            completedRebirths++;
+            SaveProgress();
+            ApplyPermanentBoost();
+            upgradeSystem?.ResetAllUpgrades();
+
+            MiningComputerStation.ResetAllLoadedStations();
+            wallet.ResetMoney();
+            RebirthCompleted?.Invoke(completedRebirths);
+            StateChanged?.Invoke();
+            return true;
+        }
+
+        /// <summary>Clears all gameplay progression, including the saved Rebirth count.</summary>
+        public bool ResetAllProgress()
+        {
+            if (!GameSave.ResetAll())
+            {
+                Debug.LogError("Cannot reset save files. Existing progress was not reset.", this);
+                return false;
+            }
+            FindResetTargetsIfMissing();
+            MiningPlayerStats.ResetSavedProgress();
+            PlayerCheckpointSave.ResetLoadedCheckpoints();
+            upgradeSystem?.ResetAutoUpgrade();
+            DayNightSystem.ResetSavedClock();
+            TreasureChest.ResetSavedProgress();
+            TowerWorldSave.ResetAllProgress();
+            MonsterSpawnZone.ResetLoadedEncounters();
+            completedRebirths = 0;
+            GameSave.DeleteKey("MiningSimulator.SaveExists.v1");
+            if (rebirthData != null)
+            {
+                GameSave.DeleteKey(rebirthData.RebirthCountSaveKey);
+                GameSave.Save();
+            }
+
+            upgradeSystem?.ResetAllUpgrades();
+
+            itemSystem?.ResetAllData();
+            achievementSystem?.ResetAllData();
+            questSystem?.ResetAllData();
+            MiningComputerStation.ResetAllLoadedStations();
+            wallet?.ResetMoney();
+            wallet?.ResetGems();
+            GameSave.Flush();
+            ApplyPermanentBoost();
+            StateChanged?.Invoke();
+            return true;
+        }
+
+        private void LoadProgress()
+        {
+            completedRebirths = rebirthData == null
+                ? 0
+                : Mathf.Max(0, GameSave.GetInt(rebirthData.RebirthCountSaveKey, 0));
+        }
+
+        private void SaveProgress()
+        {
+            if (rebirthData == null)
+            {
+                return;
+            }
+
+            GameSave.SetInt(rebirthData.RebirthCountSaveKey, completedRebirths);
+            GameSave.Save();
+        }
+
+        private void ApplyPermanentBoost()
+        {
+            upgradeSystem?.SetPermanentMoneyMultiplier(PermanentMoneyMultiplier);
+            upgradeSystem?.SetPermanentExperienceMultiplier(PermanentExperienceMultiplier);
+        }
+
+        private void FindResetTargetsIfMissing()
+        {
+
+
+
+            if (itemSystem == null)
+            {
+                itemSystem = FindFirstObjectByType<MiningItemSystem>(FindObjectsInactive.Include);
+            }
+            if (achievementSystem == null)
+            {
+                achievementSystem = FindFirstObjectByType<MiningAchievementSystem>(
+                    FindObjectsInactive.Include);
+            }
+            if (questSystem == null)
+            {
+                questSystem = FindFirstObjectByType<MiningQuestSystem>(
+                    FindObjectsInactive.Include);
+            }
+        }
+
+        private void HandleMoneyChanged(float money)
+        {
+            StateChanged?.Invoke();
+        }
+    }
+}

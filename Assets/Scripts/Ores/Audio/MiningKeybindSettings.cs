@@ -15,6 +15,7 @@ namespace MiningSimulator.Ores
             public string actionName;
             public string compositePart;
             public bool cameraLock;
+            public bool fpsWeapon;
             public Button button;
             public TextMeshProUGUI label;
             public TextMeshProUGUI value;
@@ -22,15 +23,14 @@ namespace MiningSimulator.Ores
             [NonSerialized] public int index = -1;
         }
         [SerializeField] private PlayerInput playerInput;
-        [SerializeField] private MiningOrbitCamera cameraRig;
+        public bool IsRebinding => operation != null;
         [SerializeField] private GameObject controlsPanel;
         [SerializeField] private BindingRow[] rows;
         [SerializeField] private Button openButton, backButton, resetButton;
         [SerializeField] private Button closeButton;
         [SerializeField] private TextMeshProUGUI statusLabel;
         [Min(1f), SerializeField] private float rebindTimeoutSeconds = 10f;
-        private const string PlayerKey = "MiningSimulator.PlayerBindings.v1";
-        private const string CameraKey = "MiningSimulator.CameraLockBinding.v1";
+        private const string PlayerKey = "MiningSimulator.CustomPlayerBindings.v1";
         private InputActionRebindingExtensions.RebindingOperation operation;
         private BindingRow editing;
         private bool wasEnabled;
@@ -39,21 +39,23 @@ namespace MiningSimulator.Ores
 
         private void Start()
         {
-            if (playerInput == null || playerInput.actions == null || cameraRig == null) return;
+            if (playerInput == null) playerInput = FindFirstObjectByType<PlayerInput>();
+            if (playerInput == null || playerInput.actions == null) return;
+            EnsureBuildRow();
             try
             {
                 if (PlayerPrefs.HasKey(PlayerKey)) playerInput.actions.LoadBindingOverridesFromJson(PlayerPrefs.GetString(PlayerKey));
-                if (PlayerPrefs.HasKey(CameraKey)) cameraRig.ShiftLockAction.ApplyBindingOverride(0, PlayerPrefs.GetString(CameraKey));
             }
             catch (Exception e) { Debug.LogWarning("Unable to read saved controls: " + e.Message, this); }
             foreach (var row in rows)
             {
-                row.action = row.cameraLock ? cameraRig.ShiftLockAction : playerInput.actions.FindAction("Player/" + row.actionName);
+                row.action = row.cameraLock || row.fpsWeapon ? null : playerInput.currentActionMap?.FindAction(row.actionName);
+                if (row.button != null) row.button.interactable = row.action != null;
                 if (row.action != null)
                     for (int i = 0; i < row.action.bindings.Count; i++)
                     {
                         var binding = row.action.bindings[i];
-                        if (!binding.isComposite && (binding.path.Contains("<Keyboard>") || row.cameraLock) &&
+                        if (!binding.isComposite && (binding.path.Contains("<Keyboard>") || row.cameraLock || row.fpsWeapon) &&
                             (string.IsNullOrEmpty(row.compositePart) || binding.name == row.compositePart))
                         { row.index = i; break; }
                     }
@@ -66,6 +68,20 @@ namespace MiningSimulator.Ores
             closeButton?.onClick.AddListener(Close);
             controlsPanel.SetActive(false);
             RefreshLabels();
+        }
+        public void EnsureBuildRow()
+        {
+            if(rows==null||rows.Length==0||controlsPanel==null)return;
+            foreach(var row in rows)if(row.actionName=="Build"&&!row.cameraLock)return;
+            var template=rows[rows.Length-1];
+            if(template.button==null||template.label==null)return;
+            var button=Instantiate(template.button,template.button.transform.parent,false);
+            button.name="Build Binding";button.onClick=new Button.ButtonClickedEvent();
+            ((RectTransform)button.transform).anchoredPosition-=new Vector2(0,48);
+            var label=Instantiate(template.label,template.label.transform.parent,false);
+            label.name="Build Action";label.rectTransform.anchoredPosition-=new Vector2(0,48);
+            Array.Resize(ref rows,rows.Length+1);
+            rows[rows.Length-1]=new BindingRow {labelKey="Build",actionName="Build",button=button,label=label,value=button.GetComponentInChildren<TextMeshProUGUI>(true)};
         }
         private void OnEnable()
         {
@@ -135,9 +151,6 @@ namespace MiningSimulator.Ores
         private void Save()
         {
             PlayerPrefs.SetString(PlayerKey, playerInput.actions.SaveBindingOverridesAsJson());
-            var action = cameraRig.ShiftLockAction;
-            if (action.bindings[0].overridePath == null) PlayerPrefs.DeleteKey(CameraKey);
-            else PlayerPrefs.SetString(CameraKey, action.bindings[0].overridePath);
             PlayerPrefs.Save();
         }
         private void RefreshLabels()
@@ -145,7 +158,7 @@ namespace MiningSimulator.Ores
             if (rows == null) return;
             foreach (var row in rows)
             {
-                if (row.label != null) row.label.text = MiningLocalization.Text(row.labelKey);
+                if (row.label != null) row.label.text = row.actionName=="Build"?MiningLocalization.Text("Build","Xây dựng"):MiningLocalization.Text(row.labelKey);
                 if (row.value != null) row.value.text = row.action != null && row.index >= 0 ? row.action.GetBindingDisplayString(row.index) : "—";
             }
             if (statusLabel != null && operation == null) statusLabel.text = MiningLocalization.Text("CLICK TO CHANGE KEY");

@@ -20,8 +20,6 @@ namespace MiningSimulator.Ores
         [SerializeField] private MiningUiData uiData;
         [SerializeField] private CurrencyRewardPopup rewardPopupPrefab;
         [SerializeField] private GameObject healthBarPrefab;
-        [Tooltip("Receives rare Lucky Block reward shake. Auto-found in Awake when left empty.")]
-        [SerializeField] private MiningOrbitCamera orbitCamera;
 
         private readonly HashSet<LuckyBlock> activeBlocks = new();
         private readonly Dictionary<LuckyBlockVariantData, Queue<LuckyBlock>> pools = new();
@@ -47,11 +45,6 @@ namespace MiningSimulator.Ores
 
 
 
-            if (orbitCamera == null)
-            {
-                orbitCamera = FindFirstObjectByType<MiningOrbitCamera>(
-                    FindObjectsInactive.Include);
-            }
         }
 
 
@@ -561,13 +554,6 @@ namespace MiningSimulator.Ores
             }
 
             LuckyBlockRewardGranted?.Invoke(block, amount);
-            if (data != null && data.ShouldShakeCamera(block.Type))
-            {
-                orbitCamera ??= FindFirstObjectByType<MiningOrbitCamera>(
-                    FindObjectsInactive.Include);
-                orbitCamera?.PlayRewardShake(data.GetCameraShakeStrength(block.Type),
-                    data.RareShakeDuration, data.RareShakeFrequency);
-            }
             if (amount <= 0f || rewardPopupPrefab == null || uiData == null)
             {
                 return;

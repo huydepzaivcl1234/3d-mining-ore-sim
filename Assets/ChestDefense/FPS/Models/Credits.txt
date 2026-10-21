@@ -1,0 +1,5 @@
+J-Toastie FPS pack, CC BY 3.0.
+Glock: https://poly.pizza/m/uxko5LkGia
+AKM: https://poly.pizza/m/U6l6wjxFhC
+License: https://creativecommons.org/licenses/by/3.0/
+Modifications: Blender/FBX format conversion, editable mounting and game integration. Preserve attribution in shipped game credits.

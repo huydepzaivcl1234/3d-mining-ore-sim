@@ -13,11 +13,13 @@ namespace MiningSimulator.Ores
         private RectTransform panel;
         private CanvasGroup group;
         private TMP_Text title, levelLabel, hpLabel;
+        private TMP_Text upgradeText;
+        private UnityEngine.UI.Button upgradeButton;
+        private PlayerWallet wallet;
         private readonly TMP_Text[] statValues = new TMP_Text[6];
         private UnityEngine.UI.Image hpFill;
-        private bool opened, previewMode, restoreShift;
+        private bool opened, previewMode;
         private float visibility, nextRefresh;
-        private MiningOrbitCamera orbit;
         public bool IsOpen => opened;
         public RectTransform Panel => panel;
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -31,25 +33,19 @@ namespace MiningSimulator.Ores
             if (owner == null || !owner.IsAlive || Vector3.Distance(followPlayer.position, owner.transform.position) > 4f) return;
             if (openedPanel != null && openedPanel != this) openedPanel.Close();
             openedPanel = this; player = followPlayer; viewer = Camera.main; opened = true;
-            orbit = FindFirstObjectByType<MiningOrbitCamera>();
-            restoreShift = orbit != null && orbit.IsShiftLocked;
-            if (restoreShift) orbit.SetShiftLocked(false);
             Cursor.lockState = CursorLockMode.None; Cursor.visible = true;
         }
         public void Close()
         {
             opened = false;
             if (openedPanel == this) openedPanel = null;
-            if (restoreShift && orbit != null && player != null && player.GetComponent<MiningCharacterHealth>()?.Health > 0)
-                orbit.SetShiftLocked(true);
-            restoreShift = false;
         }
         private void OnDisable() { Close(); if (panel != null) panel.gameObject.SetActive(false); visibility = 0; }
         private void OnEnable() { if (previewMode) opened = true; }
         private void Build()
         {
             if (panel != null || definition == null) return;
-            panel=TowerFantasyUi.Frame("TowerStats",transform,new Vector2(520,740),Vector2.zero,TowerFantasyUi.Background,16);
+            panel=TowerFantasyUi.Frame("TowerStats",transform,new Vector2(520,810),Vector2.zero,TowerFantasyUi.Background,16);
             panel.localScale=Vector3.one*.004f;
             var canvas=panel.gameObject.AddComponent<Canvas>();canvas.renderMode=RenderMode.WorldSpace;canvas.worldCamera=viewer!=null?viewer:Camera.main;
             panel.gameObject.AddComponent<UnityEngine.UI.GraphicRaycaster>();
@@ -73,11 +69,17 @@ namespace MiningSimulator.Ores
             }
             if(!previewMode)
             {
-                var close=TowerFantasyUi.Rect("Close",panel,new Vector2(130,48),new Vector2(-169,-322));
+                wallet = FindFirstObjectByType<PlayerWallet>();
+                var upgrade=TowerFantasyUi.Rect("Upgrade",panel,new Vector2(472,48),new Vector2(0,-316));
+                var upgradeGraphic=TowerFantasyUi.Box(upgrade,TowerFantasyUi.Teal,10);upgradeGraphic.raycastTarget=true;
+                upgradeButton=upgrade.gameObject.AddComponent<UnityEngine.UI.Button>();upgradeButton.targetGraphic=upgradeGraphic;
+                upgradeButton.onClick.AddListener(()=>{owner?.TryUpgrade(wallet,player);Refresh();});
+                upgradeText=TowerFantasyUi.Label(upgrade,"Text",Vector2.zero,new Vector2(452,44),20,TowerFantasyUi.Cream,true,TextAlignmentOptions.Center);
+                var close=TowerFantasyUi.Rect("Close",panel,new Vector2(130,48),new Vector2(-169,-374));
                 var closeGraphic=TowerFantasyUi.Box(close,TowerFantasyUi.Background,8);closeGraphic.raycastTarget=true;
                 var closeButton=close.gameObject.AddComponent<UnityEngine.UI.Button>();closeButton.targetGraphic=closeGraphic;closeButton.onClick.AddListener(Close);
                 TowerFantasyUi.Label(close,"Text",Vector2.zero,new Vector2(110,42),16,TowerFantasyUi.Gold).text="X  Close";
-                var sell=TowerFantasyUi.Rect("Sell",panel,new Vector2(252,48),new Vector2(110,-322));
+                var sell=TowerFantasyUi.Rect("Sell",panel,new Vector2(252,48),new Vector2(110,-374));
                 var sellGraphic=TowerFantasyUi.Box(sell,TowerFantasyUi.Gold,10);sellGraphic.raycastTarget=true;
                 var sellButton=sell.gameObject.AddComponent<UnityEngine.UI.Button>();sellButton.targetGraphic=sellGraphic;sellButton.onClick.AddListener(()=>owner?.Sell());
                 TowerFantasyUi.Label(sell,"Text",Vector2.zero,new Vector2(230,44),16,TowerFantasyUi.Background,false,TextAlignmentOptions.Center).text=$"SELL  +{MiningMoneyFormatter.Format(owner.PaidPrice*.35f)}";
@@ -89,20 +91,27 @@ namespace MiningSimulator.Ores
             if(definition==null||title==null)return;
             float hp=owner!=null?owner.Health.Health:definition.health;
             float max=owner!=null?owner.Health.MaxHealth:definition.health;
-            title.text=definition.displayName;levelLabel.text=$"LV. {definition.level}";
+            title.text=definition.displayName;levelLabel.text=$"LV. {(owner!=null?owner.Level:definition.level)}";
             hpLabel.text=$"{hp:0.#} / {max:0.#} HP";
             TowerFantasyUi.SetHealth(hpFill,hp/Mathf.Max(1,max));
             hpLabel.color=hp/max<=.2f?TowerFantasyUi.Critical:TowerFantasyUi.Cream;
-            statValues[0].text=$"{definition.damage:0.##}";
-            statValues[1].text=$"{definition.attackSpeed:0.##} / s";
-            statValues[2].text=$"{definition.range:0.#} m";
+            statValues[0].text=$"{(owner!=null?owner.Damage:definition.damage):0.##}";
+            statValues[1].text=$"{(owner!=null?owner.AttackSpeed:definition.attackSpeed):0.##} / s";
+            statValues[2].text=$"{(owner!=null?owner.Range:definition.range):0.#} m";
             statValues[3].text=$"{definition.projectileSpeed:0.#} m / s";
-            statValues[4].text=$"{definition.armor:0.#}";
-            statValues[5].text=$"{definition.magicResistance:0.#}";
+            statValues[4].text=$"{(owner!=null?owner.Armor:definition.armor):0.#}";
+            statValues[5].text=$"{(owner!=null?owner.MagicResistance:definition.magicResistance):0.#}";
+            if(upgradeButton!=null && owner!=null)
+            {
+                upgradeText.text=owner.CanUpgrade ? TowerShopPanel.L("UPGRADE · ","NÂNG CẤP · ")+MiningMoneyFormatter.Format(owner.UpgradeCost) : TowerShopPanel.L("MAX LEVEL","CẤP TỐI ĐA");
+                upgradeButton.interactable=owner.IsAlive && owner.CanUpgrade && wallet!=null && wallet.CurrentMoney>=owner.UpgradeCost;
+            }
         }
         private void LateUpdate()
         {
             if (panel == null) return;
+            // Closed panels have no visual work. Keep this component alive for Show().
+            if (!opened && visibility <= .001f) return;
             if (!previewMode && opened && (owner == null || !owner.IsAlive || player == null ||
                 Vector3.Distance(player.position,owner.transform.position)>5f || player.GetComponent<MiningCharacterHealth>()?.Health<=0)) Close();
             visibility = Mathf.MoveTowards(visibility, opened ? 1 : 0, Time.unscaledDeltaTime * 6);

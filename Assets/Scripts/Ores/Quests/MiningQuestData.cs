@@ -14,8 +14,13 @@ namespace MiningSimulator.Ores
     {
         MineOre = 0,
         PurchaseNpc = 1,
-        Rebirth = 2
+        Rebirth = 2,
+        KillMonster = 3,
+        KillBoss = 4
     }
+
+    public enum QuestMonsterSpecies { None, Mushroom, Golem, Bat, Mushranon, ForestGolem, Skullclaw }
+    public enum QuestDifficulty { Easy, Medium, Hard }
 
     public enum MiningQuestRewardType
     {
@@ -29,6 +34,8 @@ namespace MiningSimulator.Ores
         [SerializeField] private string questId;
         [SerializeField] private MiningQuestPeriod period;
         [SerializeField] private MiningQuestObjective objective;
+        [SerializeField] private QuestMonsterSpecies species;
+        [SerializeField] private QuestDifficulty difficulty;
         [Min(1), SerializeField] private int targetAmount = 1;
         [SerializeField] private string englishName;
         [SerializeField] private string vietnameseName;
@@ -40,11 +47,14 @@ namespace MiningSimulator.Ores
         public MiningQuestDefinition(string id, MiningQuestPeriod questPeriod,
             MiningQuestObjective questObjective, int target, string english, string vietnamese,
             MiningQuestRewardType type, float reward, float randomMinimum = 0f,
-            float randomMaximum = 0f)
+            float randomMaximum = 0f, QuestMonsterSpecies monsterSpecies = QuestMonsterSpecies.None,
+            QuestDifficulty questDifficulty = QuestDifficulty.Easy)
         {
             questId = id;
             period = questPeriod;
             objective = questObjective;
+            species = monsterSpecies;
+            difficulty = questDifficulty;
             targetAmount = target;
             englishName = english;
             vietnameseName = vietnamese;
@@ -64,13 +74,33 @@ namespace MiningSimulator.Ores
             Mathf.Min(randomMoneyMinimum, randomMoneyMaximum));
         public float RandomMoneyMaximum => Mathf.Max(RandomMoneyMinimum,
             Mathf.Max(randomMoneyMinimum, randomMoneyMaximum));
-        public bool IsValid => objective == MiningQuestObjective.Rebirth && !string.IsNullOrWhiteSpace(QuestId) && TargetAmount > 0;
+        public QuestDifficulty Difficulty => difficulty;
+        public bool IsValid => !string.IsNullOrWhiteSpace(QuestId) &&
+            (objective == MiningQuestObjective.Rebirth || objective == MiningQuestObjective.KillBoss ||
+             objective == MiningQuestObjective.KillMonster && species != QuestMonsterSpecies.None);
+
+        public bool MatchesKill(MonsterRewardData monster, bool boss)
+        {
+            if (objective == MiningQuestObjective.KillBoss) return boss;
+            if (objective != MiningQuestObjective.KillMonster || monster == null) return false;
+            return species switch
+            {
+                QuestMonsterSpecies.Mushroom => monster is MushroomData,
+                QuestMonsterSpecies.Golem => monster is GolemData,
+                QuestMonsterSpecies.Bat => monster is BatData,
+                QuestMonsterSpecies.Mushranon => monster is MushranonData,
+                QuestMonsterSpecies.ForestGolem => monster is ForestGolemData,
+                QuestMonsterSpecies.Skullclaw => monster is SkullclawData,
+                _ => false
+            };
+        }
 
         public string GetLocalizedName()
         {
             return MiningLocalization.Text(
                 string.IsNullOrWhiteSpace(englishName) ? QuestId : englishName,
-                string.IsNullOrWhiteSpace(vietnameseName) ? englishName : vietnameseName);
+                string.IsNullOrWhiteSpace(vietnameseName) ? englishName : vietnameseName)
+                .Replace("{0}", TargetAmount.ToString());
         }
 
         public string GetRewardPreview()
@@ -137,6 +167,31 @@ namespace MiningSimulator.Ores
                 }
             }
             return null;
+        }
+
+        // Explicit authoring operation; never runs on load or resets existing progress/definitions.
+        public void AddDefenseQuests()
+        {
+            AddKill("daily_mushroom", "Mushroom", 10, QuestMonsterSpecies.Mushroom, QuestDifficulty.Easy, 100);
+            AddKill("daily_golem", "Golem", 5, QuestMonsterSpecies.Golem, QuestDifficulty.Medium, 200);
+            AddKill("daily_bat", "Bat", 5, QuestMonsterSpecies.Bat, QuestDifficulty.Medium, 200);
+            AddKill("daily_mushranon", "Mushranon", 5, QuestMonsterSpecies.Mushranon, QuestDifficulty.Easy, 100);
+            AddKill("daily_forest_golem", "Forest Golem", 2, QuestMonsterSpecies.ForestGolem, QuestDifficulty.Hard, 400);
+            AddKill("daily_skullclaw", "Skullclaw", 1, QuestMonsterSpecies.Skullclaw, QuestDifficulty.Hard, 500);
+            if (GetDefinition("weekly_boss") == null)
+                quests.Add(new MiningQuestDefinition("weekly_boss", MiningQuestPeriod.Weekly,
+                    MiningQuestObjective.KillBoss, 5, "Defeat {0} bosses", "Hạ {0} boss",
+                    MiningQuestRewardType.Money, 1500, questDifficulty: QuestDifficulty.Hard));
+        }
+
+        private void AddKill(string id, string name, int amount, QuestMonsterSpecies kind,
+            QuestDifficulty grade, float reward)
+        {
+            quests ??= new List<MiningQuestDefinition>();
+            if (GetDefinition(id) != null) return;
+            quests.Add(new MiningQuestDefinition(id, MiningQuestPeriod.Daily,
+                MiningQuestObjective.KillMonster, amount, "Defeat {0} " + name, "Hạ {0} " + name,
+                MiningQuestRewardType.Money, reward, monsterSpecies: kind, questDifficulty: grade));
         }
 
         private void OnValidate()

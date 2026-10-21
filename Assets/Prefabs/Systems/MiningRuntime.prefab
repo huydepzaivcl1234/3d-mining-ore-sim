@@ -10272,7 +10272,6 @@ GameObject:
   - component: {fileID: 5319940144110336854}
   - component: {fileID: 8225797318797681101}
   - component: {fileID: 5370041993921817231}
-  - component: {fileID: 2190442768477424192}
   - component: {fileID: 8801503712155055006}
   - component: {fileID: 8763811069879228364}
   - component: {fileID: 1740591884523500440}
@@ -10353,62 +10352,7 @@ MonoBehaviour:
   gameData: {fileID: 11400000, guid: fa0fc8680dcb4e63a9939950274281de, type: 2}
   moneyText: {fileID: 5345239619240162320}
   moneyFormat: "Ti\u1EC1n: {0}"
---- !u!114 &2190442768477424192
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2565732122295331608}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 39e5c12d270583ae35a8c92223a405a4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningOrbitCamera
-  controlledCamera: {fileID: 0}
-  gameData: {fileID: 11400000, guid: fa0fc8680dcb4e63a9939950274281de, type: 2}
-  followTarget: {fileID: 0}
-  followOffset: {x: 0, y: 1.5, z: 0}
-  followDistance: 4.5
-  followPitch: 18
-  rotateOnlyWhileRightMouseHeld: 1
-  followPlayerHeading: 1
-  headingSmoothTime: 0.3
-  manualOrbitResumeDelay: 1
-  toggleShiftLock:
-    m_Name: Shift Lock
-    m_Type: 1
-    m_ExpectedControlType: 
-    m_Id: 61b92102-c6bb-49e9-91fc-9ae99be173c0
-    m_Processors: 
-    m_Interactions: 
-    m_SingletonActionBindings:
-    - m_Name: 
-      m_Id: 84b8170b-e47f-4ef2-a946-41427527183e
-      m_Path: <Keyboard>/leftShift
-      m_Interactions: 
-      m_Processors: 
-      m_Groups: 
-      m_Action: Shift Lock
-      m_Flags: 0
-    m_Flags: 0
-  shiftFacingSmoothSeconds: 0.15
-  shiftFacingMaximumSpeed: 540
-  suppressHeadingDuringCombat: 1
-  adaptiveCombatFraming: 1
-  reduceMotion: 1
-  explorationDistance: 4
-  combatDistance: 7
-  explorationFov: 60
-  combatFov: 70
-  combatPitchOffset: 6
-  framingSmoothTime: 0.35
-  collisionLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  collisionRadius: 0.35
-  collisionPadding: 0.08
-  collisionReturnSmoothTime: 0.25
+  amountOnly: 0
 --- !u!114 &8801503712155055006
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10568,6 +10512,9 @@ MonoBehaviour:
   mainMenu: {fileID: 0}
   returnToMenuButton: {fileID: 0}
   returnToMenuLabel: {fileID: 0}
+  englishButton: {fileID: 0}
+  vietnameseButton: {fileID: 0}
+  flatDesign: 0
 --- !u!114 &3120030093326673056
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10640,6 +10587,16 @@ MonoBehaviour:
   - {fileID: 0}
   necklacePlaceholder: {fileID: 0}
   necklacePlaceholderTint: {r: 1, g: 1, b: 1, a: 0.25}
+  compactDesign: 0
+  capacityLabel: {fileID: 0}
+  detailName: {fileID: 0}
+  detailMeta: {fileID: 0}
+  detailSummary: {fileID: 0}
+  detailDuration: {fileID: 0}
+  detailIcon: {fileID: 0}
+  useFiveButton: {fileID: 0}
+  useTenButton: {fileID: 0}
+  useAllButton: {fileID: 0}
   upperNecklaceOffset: {x: -117.6, y: 58.8}
   lowerNecklaceOffset: {x: -117.6, y: -58.8}
 --- !u!114 &8871868058287256622

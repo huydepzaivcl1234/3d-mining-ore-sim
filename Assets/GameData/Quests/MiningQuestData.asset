@@ -17,10 +17,96 @@ MonoBehaviour:
   - questId: weekly_rebirth_1
     period: 1
     objective: 2
+    species: 0
+    difficulty: 0
     targetAmount: 1
     englishName: Rebirth once this week
     vietnameseName: "T\xE1i sinh 1 l\u1EA7n trong tu\u1EA7n"
     rewardType: 0
     moneyReward: 5000
+    randomMoneyMinimum: 0
+    randomMoneyMaximum: 0
+  - questId: daily_mushroom
+    period: 0
+    objective: 3
+    species: 1
+    difficulty: 0
+    targetAmount: 10
+    englishName: Defeat {0} Mushroom
+    vietnameseName: "H\u1EA1 {0} Mushroom"
+    rewardType: 0
+    moneyReward: 100
+    randomMoneyMinimum: 0
+    randomMoneyMaximum: 0
+  - questId: daily_golem
+    period: 0
+    objective: 3
+    species: 2
+    difficulty: 1
+    targetAmount: 5
+    englishName: Defeat {0} Golem
+    vietnameseName: "H\u1EA1 {0} Golem"
+    rewardType: 0
+    moneyReward: 200
+    randomMoneyMinimum: 0
+    randomMoneyMaximum: 0
+  - questId: daily_bat
+    period: 0
+    objective: 3
+    species: 3
+    difficulty: 1
+    targetAmount: 5
+    englishName: Defeat {0} Bat
+    vietnameseName: "H\u1EA1 {0} Bat"
+    rewardType: 0
+    moneyReward: 200
+    randomMoneyMinimum: 0
+    randomMoneyMaximum: 0
+  - questId: daily_mushranon
+    period: 0
+    objective: 3
+    species: 4
+    difficulty: 0
+    targetAmount: 5
+    englishName: Defeat {0} Mushranon
+    vietnameseName: "H\u1EA1 {0} Mushranon"
+    rewardType: 0
+    moneyReward: 100
+    randomMoneyMinimum: 0
+    randomMoneyMaximum: 0
+  - questId: daily_forest_golem
+    period: 0
+    objective: 3
+    species: 5
+    difficulty: 2
+    targetAmount: 2
+    englishName: Defeat {0} Forest Golem
+    vietnameseName: "H\u1EA1 {0} Forest Golem"
+    rewardType: 0
+    moneyReward: 400
+    randomMoneyMinimum: 0
+    randomMoneyMaximum: 0
+  - questId: daily_skullclaw
+    period: 0
+    objective: 3
+    species: 6
+    difficulty: 2
+    targetAmount: 1
+    englishName: Defeat {0} Skullclaw
+    vietnameseName: "H\u1EA1 {0} Skullclaw"
+    rewardType: 0
+    moneyReward: 500
+    randomMoneyMinimum: 0
+    randomMoneyMaximum: 0
+  - questId: weekly_boss
+    period: 1
+    objective: 4
+    species: 0
+    difficulty: 2
+    targetAmount: 5
+    englishName: Defeat {0} bosses
+    vietnameseName: "H\u1EA1 {0} boss"
+    rewardType: 0
+    moneyReward: 1500
     randomMoneyMinimum: 0
     randomMoneyMaximum: 0

@@ -25,6 +25,7 @@ namespace MiningSimulator.Ores
         private float originalShadowDistance;
         private readonly List<(UniversalAdditionalCameraData camera, bool post, AntialiasingMode aa, AntialiasingQuality quality)> cameras = new();
         private readonly List<(ScriptableRendererFeature feature, bool active)> aoStates = new();
+        private readonly List<(Terrain terrain,float trees,float details)> terrains=new();
         private Volume volume;
         private VolumeProfile borrowedProfile, optionsProfile;
         private DayNightSystem dayNight;
@@ -49,6 +50,8 @@ namespace MiningSimulator.Ores
                 refreshDenominator = Screen.currentResolution.refreshRateRatio.denominator,
                 vsync = originalVsync > 0
             };
+            var performance=GameplayPerformanceData.Current;
+            if(performance&&performance.renderDistance>0)Defaults.renderDistance=performance.renderDistance;
             if (source != null)
             {
                 Defaults.msaa = source.msaaSampleCount; Defaults.renderScale = source.renderScale;
@@ -94,6 +97,8 @@ namespace MiningSimulator.Ores
                 if (optionsProfile.TryGet(out DepthOfField d)) Defaults.depthOfField = d.active && d.mode.value != DepthOfFieldMode.Off;
             }
             Values = PlayerGraphicsPreferences.Read(PlayerPrefs.GetString(PlayerGraphicsPreferences.SaveKey, ""), Defaults);
+            foreach(var terrain in FindObjectsByType<Terrain>(FindObjectsInactive.Include,FindObjectsSortMode.None))
+                terrains.Add((terrain,terrain.treeDistance,terrain.detailObjectDistance));
             Apply();
             dayNight?.SetGraphicsOptions(this);
             // Only a real player build changes the OS display; opening Play Mode doesn't resize the Editor.
@@ -105,6 +110,13 @@ namespace MiningSimulator.Ores
         {
             if (!initialized || Values == null) return;
             Values.Sanitize();
+            MiningRenderDistance.SetPlayerDistance(Values.renderDistance);
+            foreach(var state in terrains)
+                if(state.terrain)
+                {
+                    state.terrain.treeDistance=Mathf.Min(state.trees,Values.renderDistance);
+                    state.terrain.detailObjectDistance=Mathf.Min(state.details,Values.renderDistance);
+                }
             QualitySettings.vSyncCount = Values.vsync ? 1 : 0;
             if (runtimePipeline != null)
             {
@@ -231,6 +243,9 @@ namespace MiningSimulator.Ores
             if (optionsProfile != null)
             { foreach (var component in optionsProfile.components) if (component != null) DestroyRuntimeObject(component); DestroyRuntimeObject(optionsProfile); }
             initialized = false;
+            MiningRenderDistance.ClearPlayerDistance();
+            foreach(var state in terrains)if(state.terrain){state.terrain.treeDistance=state.trees;state.terrain.detailObjectDistance=state.details;}
+            terrains.Clear();
         }
 
         private static void DestroyRuntimeObject(Object value)

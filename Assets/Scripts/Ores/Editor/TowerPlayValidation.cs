@@ -157,7 +157,7 @@ public static class TowerPlayValidation
             if(!overlay.GetComponentInChildren<TowerStatsPanel>(true).IsOpen){Finish("FAIL preview stats");return;}
             try { VerifyRepeatedPlacement(); VerifyPlayerPassThrough(); VerifySkullclawUnderTowerFire(); }
             catch(Exception e) { Finish("FAIL combat/collision "+e.GetBaseException().Message);return; }
-            if(TowerPlacement.IsPlacing||Vector3.Distance(originalCameraPosition,testCamera.transform.position)>.001f||Quaternion.Angle(originalCameraRotation,testCamera.transform.rotation)>.1f||placementInventory.GetItemCount(tower.Data.inventoryItem)!=1){Finish("FAIL cancel restoration/receipt");return;}
+            if(TowerPlacement.IsPlacing||Vector3.Distance(originalCameraPosition,testCamera.transform.position)>.001f||Quaternion.Angle(originalCameraRotation,testCamera.transform.rotation)>.1f||placementInventory.GetTowerStockCount(tower.Data.inventoryItem)!=1){Finish("FAIL cancel restoration/receipt");return;}
             if(damageBar.IsVisible){Finish("FAIL HP should be hidden before damage");return;}
             statsPlayer.position=tower.transform.position+Vector3.right*2;towerStats.Show(statsPlayer);
             testCamera.transform.position=tower.transform.position+new Vector3(0,3,-8);testCamera.transform.LookAt(tower.transform.position+Vector3.up*2.5f);
@@ -211,7 +211,7 @@ public static class TowerPlayValidation
             if(Mathf.Abs(restored.Health.Health-17)>.001f||restored.PaidPrice!=123||Mathf.Abs(Mathf.DeltaAngle(restored.transform.eulerAngles.y,76))>.01f||Vector3.Distance(restored.transform.position,saved.towers[0].position)>.001f)throw new Exception("Restore HP/receipt/pose");
             TowerWorldSave.Remove(restored);
             if(!TowerSaveDocument.TryRead(GameSave.GetString(scratch),out saved)||saved.towers.Count!=0)throw new Exception("Remove left stale placement");
-            if(TowerSaveDocument.TryRead("{\"version\":2,\"towers\":[]}",out _)||TowerSaveDocument.TryRead("bad-json",out _))throw new Exception("Invalid save accepted");
+            if(TowerSaveDocument.TryRead("{\"version\":3,\"towers\":[]}",out _)||TowerSaveDocument.TryRead("bad-json",out _))throw new Exception("Invalid save accepted");
         }
         finally
         {
@@ -230,14 +230,14 @@ public static class TowerPlayValidation
         var place=typeof(TowerPlacement).GetMethod("PlaceAt",Flags);
         try {
             var foot=tower.transform.position+new Vector3(5,0,5);
-            if(!(bool)place.Invoke(placement,new object[]{foot})||!TowerPlacement.IsPlacing||placementInventory.GetItemCount(item)!=2)throw new Exception("First placement ended mode/count");
+            if(!(bool)place.Invoke(placement,new object[]{foot})||!TowerPlacement.IsPlacing||placementInventory.GetTowerStockCount(item)!=2)throw new Exception("First placement ended mode/count");
             var label=GameObject.Find("Placement quantity").GetComponentsInChildren<TMPro.TMP_Text>().First(x=>x.name=="Remaining");
             if(!label.text.EndsWith("x2"))throw new Exception("Remaining label not refreshed");
-            if((bool)place.Invoke(placement,new object[]{foot})||placementInventory.GetItemCount(item)!=2)throw new Exception("Occupied click consumed tower");
-            if(!(bool)place.Invoke(placement,new object[]{foot+Vector3.right*2})||!TowerPlacement.IsPlacing||placementInventory.GetItemCount(item)!=1)throw new Exception("Second placement ended mode/count");
+            if((bool)place.Invoke(placement,new object[]{foot})||placementInventory.GetTowerStockCount(item)!=2)throw new Exception("Occupied click consumed tower");
+            if(!(bool)place.Invoke(placement,new object[]{foot+Vector3.right*2})||!TowerPlacement.IsPlacing||placementInventory.GetTowerStockCount(item)!=1)throw new Exception("Second placement ended mode/count");
             placement.Cancel();
             if(!TowerPlacement.BeginPlacement(placementInventory,item,0))throw new Exception("Resume remaining stack");
-            if(!(bool)place.Invoke(placement,new object[]{foot+Vector3.right*4})||TowerPlacement.IsPlacing||placementInventory.GetItemCount(item)!=0)throw new Exception("Empty stack did not exit");
+            if(!(bool)place.Invoke(placement,new object[]{foot+Vector3.right*4})||TowerPlacement.IsPlacing||placementInventory.GetTowerStockCount(item)!=0)throw new Exception("Empty stack did not exit");
             placementInventory.TryAddItem(item); // Existing cancellation verification checks this final unplaced unit.
         } finally {
             placement.Cancel();

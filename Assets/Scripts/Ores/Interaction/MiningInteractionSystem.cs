@@ -44,15 +44,16 @@ namespace MiningSimulator.Ores
         private void Update()
         {
             if (TowerPlacement.IsPlacing) { ClearFocus(); return; }
+            bool centerAim = Cursor.lockState == CursorLockMode.Locked;
             Pointer pointer = Pointer.current;
             if (pointer == null || targetCamera == null || data == null || prompt == null ||
-                IsPointerOverUi())
+                (!centerAim && IsPointerOverUi()))
             {
                 ClearFocus();
                 return;
             }
 
-            Vector2 pointerPosition = pointer.position.ReadValue();
+            Vector2 pointerPosition = centerAim ? new Vector2(targetCamera.pixelWidth * .5f, targetCamera.pixelHeight * .5f) : pointer.position.ReadValue();
             Ray ray = targetCamera.ScreenPointToRay(pointerPosition);
             if (!Physics.Raycast(ray, out RaycastHit hit, data.MaximumDistance,
                     data.InteractionLayers, QueryTriggerInteraction.Ignore))
@@ -78,7 +79,7 @@ namespace MiningSimulator.Ores
 
             Keyboard keyboard = Keyboard.current;
             if (keyboard != null && keyboard[data.InteractionKey].wasPressedThisFrame ||
-                target is TowerRuntime && Mouse.current?.leftButton.wasPressedThisFrame == true)
+                !centerAim && target is TowerRuntime && Mouse.current?.leftButton.wasPressedThisFrame == true)
             {
                 target.Interact();
                 // The same target may change from BUY to VIEW INFO without pointer exit.

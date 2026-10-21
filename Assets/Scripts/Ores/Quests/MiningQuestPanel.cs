@@ -63,6 +63,8 @@ namespace MiningSimulator.Ores
                     periodLabel.text = definition.Period == MiningQuestPeriod.Daily
                         ? MiningLocalization.Text("DAILY")
                         : MiningLocalization.Text("WEEKLY");
+                    if (definition.Objective == MiningQuestObjective.KillMonster)
+                        periodLabel.text += " • " + MiningLocalization.Text(definition.Difficulty.ToString().ToUpperInvariant());
                 }
                 if (nameLabel != null) nameLabel.text = definition.GetLocalizedName();
                 if (progressLabel != null)

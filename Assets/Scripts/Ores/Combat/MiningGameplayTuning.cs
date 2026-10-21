@@ -24,7 +24,8 @@ namespace MiningSimulator.Ores
         [SerializeField] private MushroomMonster debugBossPrefab;
         [Header("Player progression - source asset and live player")]
         [SerializeField] private MiningPlayerStats player;
-        [SerializeField] private MiningPlayerStatsData playerData;
+        [SerializeField, HideInInspector] private MiningPlayerStatsData playerData;
+        public GameData.Player.Script.PlayerCoreStatsData PlayerCoreData => player != null ? player.CoreData : null;
         public MiningPlayerStats Player => player;
         public MiningPlayerStatsData PlayerData => playerData;
         [Header("Live Play Mode progress edit (applies automatically, saved)")]

@@ -3,7 +3,8 @@ using UnityEngine;
 
 namespace MiningSimulator.Ores
 {
-    public enum MiningCardChoice { Damage = 0, AttackSpeed = 1, Health = 2, RegenInterval = 3, HealingEffectiveness = 4 }
+    // Keep legacy numeric IDs reserved so old bindings never grant a different reward.
+    public enum MiningCardChoice { Damage = 0, AttackSpeed = 1, Health = 2, RegenInterval = 3, HealingEffectiveness = 4, GunDamage = 5, Magazine = 6, BulletSpeed = 7 }
     [CreateAssetMenu(menuName = "Mining Simulator/Card Drops")]
     public sealed class MiningCardData : ScriptableObject
     {
@@ -22,13 +23,14 @@ namespace MiningSimulator.Ores
             [Min(0f)] public float health = 5f;
             [Min(0f)] public float regenIntervalReduction = 1f;
             [Min(0f)] public float healingEffectiveness = 1f;
+            [Min(0f)] public float gunDamagePercent = 1f;
+            [Min(1)] public int magazineBonus = 1;
+            [Min(0f)] public float bulletSpeedPercent = 1f;
             public float Bonus(MiningCardChoice choice) => choice switch
             {
-                MiningCardChoice.Damage => damage,
-                MiningCardChoice.AttackSpeed => attackSpeed,
-                MiningCardChoice.Health => health,
-                MiningCardChoice.RegenInterval => regenIntervalReduction,
-                MiningCardChoice.HealingEffectiveness => healingEffectiveness,
+                MiningCardChoice.GunDamage => gunDamagePercent,
+                MiningCardChoice.Magazine => magazineBonus,
+                MiningCardChoice.BulletSpeed => bulletSpeedPercent,
                 _ => 0f
             };
         }

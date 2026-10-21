@@ -30,6 +30,8 @@ namespace MiningSimulator.Ores
         private GameObject damagedVisual;
         private Renderer[] intactRenderers;
         private bool[] intactVisibility;
+        private Renderer[] interiorRenderers;
+        private bool contentsClosed;
         
 private bool initialized;
         
@@ -48,6 +50,7 @@ private bool opening;
         public bool IsBroken => health != null && health.Health <= 0f;
         public event System.Action Changed;
         public event System.Action<float> Paid;
+        public float LastAttackTime { get; private set; } = float.NegativeInfinity;
         private void Awake()
         {
             health = GetComponent<MiningCharacterHealth>();
@@ -81,14 +84,16 @@ private void OnEnable()
             BuildVisualPivot();
             
 health.ConfigureSpawnHealth(data.MaxHealth(Level));
-            SampleLid(false,1);
             BuildBreakVisuals();
+            SampleLid(false,1);
             if (persistProgress && GameSave.HasKey(saveKey + ".Health"))
             {
                 health.RestoreSavedHealth(GameSave.GetFloat(saveKey + ".Health", health.MaxHealth));
                 SetBrokenVisual(IsBroken);
             }
             GetComponent<TreasureChestHud>()?.Bind(this);
+            if (GetComponent<TreasureChestDefenseFeedback>() == null)
+                gameObject.AddComponent<TreasureChestDefenseFeedback>();
             Changed?.Invoke();
             if (persistProgress) TowerWorldSaveHost.Ensure(this);
         }
@@ -150,7 +155,10 @@ private void Update()
 
         public void GrantKillExperience(float amount)
         {
-            if (!IsAlive || data == null || amount <= 0f || float.IsNaN(amount) || float.IsInfinity(amount)) return;
+            // A defender's kill still earns progression while the chest awaits repair.
+            // ConfigureMaximumHealth preserves zero HP, so levelling never revives it for free.
+            if (!isActiveAndEnabled || health == null || data == null || amount <= 0f ||
+                float.IsNaN(amount) || float.IsInfinity(amount)) return;
             float gained = amount * data.killExperienceMultiplier;
             if (gained <= 0f || float.IsNaN(gained) || float.IsInfinity(gained)) return;
             Experience += gained;
@@ -196,6 +204,8 @@ private void Update()
 
 private void SampleLid(bool open,float progress)
         {
+            contentsClosed = !open && progress >= 1f;
+            RefreshInteriorVisibility();
             var clip=open?data.openAnimation:data.closeAnimation;
             if(clip!=null && animationRoot!=null && lid!=null)
             {
@@ -243,6 +253,7 @@ private void SampleLid(bool open,float progress)
 
         private void OnDamaged()
         {
+            LastAttackTime = Time.time;
             SaveProgress();
             if (data != null && IsAlive) Punch(data.hitPunchStrength);
             if (data != null && IsAlive && Time.unscaledTime >= nextHitSoundTime)
@@ -280,6 +291,11 @@ private void SampleLid(bool open,float progress)
             intactRenderers = root.GetComponentsInChildren<Renderer>(true);
             intactVisibility = new bool[intactRenderers.Length];
             for (int i = 0; i < intactRenderers.Length; i++) intactVisibility[i] = intactRenderers[i].enabled;
+            var contents = new System.Collections.Generic.List<Renderer>();
+            foreach (var renderer in intactRenderers)
+                if (renderer.enabled && renderer.name.StartsWith("Treasure_", System.StringComparison.Ordinal))
+                    contents.Add(renderer);
+            interiorRenderers = contents.ToArray();
             if (data.damagedModel == null) return;
             damagedVisual = Instantiate(data.damagedModel, transform);
             damagedVisual.name = "Broken chest visual";
@@ -297,15 +313,39 @@ private void SampleLid(bool open,float progress)
                 for (int i = 0; i < intactRenderers.Length; i++)
                     if (intactRenderers[i] != null) intactRenderers[i].enabled = !broken && intactVisibility[i];
             if (damagedVisual != null) damagedVisual.SetActive(broken);
+            RefreshInteriorVisibility();
+        }
+
+        private void RefreshInteriorVisibility()
+        {
+            if (interiorRenderers == null) return;
+            bool visible = !IsBroken && !(contentsClosed && data.hideClosedContents);
+            foreach (var renderer in interiorRenderers)
+                if (renderer != null && renderer.enabled != visible) renderer.enabled = visible;
         }
 
         public bool Repair()
         {
             if (!CanRepair) return false;
             if (RepairCost > 0f && !wallet.TrySpend(RepairCost)) return false;
+            RestoreAfterRepair(1f);
+            return true;
+        }
+
+        public bool EmergencyRepair()
+        {
+            if (!isActiveAndEnabled || !IsBroken || data == null) return false;
+            RestoreAfterRepair(Mathf.Clamp(data.emergencyRepairHealthFraction, .01f, 1f));
+            return true;
+        }
+
+        private void RestoreAfterRepair(float fraction)
+        {
             // Repair preserves progression, clears lingering burn, and starts a fresh payout interval.
             health.ConfigureSpawnHealth(data.MaxHealth(Level));
             health.Respawn();
+            health.RestoreSavedHealth(health.MaxHealth * fraction);
+            LastAttackTime = float.NegativeInfinity;
             payoutClock = visualClock = 0f;
             pendingTicks = 0;
             opening = rewarded = false;
@@ -314,7 +354,6 @@ private void SampleLid(bool open,float progress)
             PlaySound(data.repairSfx, data.repairVolume);
             SaveProgress();
             Changed?.Invoke();
-            return true;
         }
         private void SaveProgress()
         {

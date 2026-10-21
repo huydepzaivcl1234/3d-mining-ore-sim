@@ -1,0 +1,13 @@
+# Tracer origin correction, 2026-10-15
+
+Observed issue: tracer appears disconnected from the visible rifle when looking or changing ADS. Camera orientation is updated by PlayerController1.LateUpdate; the body, IK and gun by PistolPresentation.LateUpdate (order 100). Shooting previously queried both transforms from Update, before these final poses.
+
+Controlled runtime reproduction uses synthetic mouse HIP/ADS fire while turning and varying pitch; a temporary PlayerLoop callback measures after all LateUpdate callbacks. Before correction: 15 shots, 2298 advancing frames, maximum start-to-rendered-muzzle discrepancy 0.65806663 m, camera rotation mismatch 3.37241626 degrees. The tracer's initial LineRenderer vertex had the same discrepancy.
+
+Correction: keep input-independent timers, reload and existing tracer stepping in Update. Handle normal mouse fire in PistolShooting.LateUpdate, existing execution order 110, after presentation 100. This queries this frame's camera and muzzle without a timer or delayed coroutine. Existing public TryFire remains synchronous; external callers should call it after pose evaluation if they require rendered-frame alignment. No new manager, serialized field, scene change, or controller edit.
+
+After correction, same reproduction: 15 shots, 1766 advancing frames, maximum muzzle-origin, initial tracer vertex and camera orientation discrepancies all zero. This measures the initial shot frame, not a requirement that an already travelling tracer remain attached to a moving gun. Later tracer motion remains world-space, visual-only hitscan feedback. Recoil impulses generated after presentation affect the next pose evaluation; no zero-millisecond input-latency claim is made.
+
+Probe: AgentPreviews/TracerOriginChecks.cs in the calling C-drive workspace, compiled ephemerally outside Assets. It restores PlayerLoop and synthetic input after finishing. Separate combat regression checks damage/flash/impact/reload and blocked states. Original live scene remains dirty and is not saved by this correction.
+
+Combat regression in a fresh Play session passed over 516 advancing frames: 5 HIP + 5 ADS shots, 10 flashes/tracers/impacts; damage 153.551758; cooldown, holster, pause and reload checks passed; support error <= .000044 m. Unity recompiled with zero errors. Historical Console stream recorded a separate teardown error in CoinRainEventSystem.OnDisable -> MiningAudioManager.StopCoinRainAmbience -> PlayWorldAmbience (inactive Audio System); current Console ground-truth error count was zero when sampled. This audio cleanup issue is not fixed or hidden here. Play stopped and test GameSave store cleared.

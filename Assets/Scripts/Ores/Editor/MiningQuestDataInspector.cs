@@ -158,7 +158,9 @@ namespace MiningSimulator.Ores.Editor
             }
 
             RectTransform scrollRectTransform = scrollTransform as RectTransform;
-            Center(scrollRectTransform, new Vector2(0f, -28f), new Vector2(970f, 460f));
+            float viewWidth = Mathf.Min(970f, card.rect.width - 56f);
+            float viewHeight = Mathf.Min(460f, card.rect.height - 145f);
+            Center(scrollRectTransform, new Vector2(0f, -28f), new Vector2(viewWidth, viewHeight));
             ConfigureCanvasGroup(scrollTransform.gameObject);
             ConfigureTransparentRaycastImage(scrollTransform.gameObject);
 
@@ -187,13 +189,14 @@ namespace MiningSimulator.Ores.Editor
             }
 
             RectTransform content = contentTransform as RectTransform;
-            float contentHeight = Mathf.Max(460f, questCount * 108f +
+            float rowHeight = viewWidth < 900 ? 132f : 108f;
+            float contentHeight = Mathf.Max(viewHeight, questCount * rowHeight +
                                                    Mathf.Max(0, questCount - 1) * 8f);
             content.anchorMin = new Vector2(0.5f, 1f);
             content.anchorMax = new Vector2(0.5f, 1f);
             content.pivot = new Vector2(0.5f, 1f);
             content.anchoredPosition = Vector2.zero;
-            content.sizeDelta = new Vector2(940f, contentHeight);
+            content.sizeDelta = new Vector2(viewWidth - 24f, contentHeight);
 
             ScrollRect scroll = scrollTransform.GetComponent<ScrollRect>() ??
                                 Undo.AddComponent<ScrollRect>(scrollTransform.gameObject);
@@ -271,8 +274,15 @@ namespace MiningSimulator.Ores.Editor
             bool created = existing == null;
             if (created)
             {
-                GameObject rowObject = CreateImage(content, objectName, Color.white, true,
-                    NeutralTop, NeutralBottom);
+                RectTransform template = null;
+                foreach (RectTransform candidate in content)
+                    if (candidate.GetComponentInChildren<JuicyQuestItem>(true) != null && candidate.rect.width < 900)
+                    { template = candidate; break; }
+                GameObject rowObject = template != null
+                    ? Object.Instantiate(template.gameObject, content)
+                    : CreateImage(content, objectName, Color.white, true, NeutralTop, NeutralBottom);
+                if (template != null) Undo.RegisterCreatedObjectUndo(rowObject, "Add defense quest row");
+                rowObject.name = objectName;
                 existing = rowObject.transform;
             }
             else if (existing.parent != content)
@@ -286,6 +296,12 @@ namespace MiningSimulator.Ores.Editor
             // synchronized, but never overwrite any RectTransform edited in the scene.
             if (!created && row.GetComponentInChildren<JuicyQuestItem>(true) != null)
             {
+                PositionAuthoredRow(row, index, quest);
+                return row;
+            }
+            if (created && row.GetComponentInChildren<JuicyQuestItem>(true) != null)
+            {
+                PositionAuthoredRow(row, index, quest);
                 return row;
             }
             row.anchorMin = new Vector2(0.5f, 1f);
@@ -334,6 +350,32 @@ namespace MiningSimulator.Ores.Editor
             claim.GetComponentInChildren<TextMeshProUGUI>().name = "Claim Label";
             LayoutQuestRow(row);
             return row;
+        }
+
+        private static void PositionAuthoredRow(RectTransform row, int index, MiningQuestDefinition quest)
+        {
+            Undo.RecordObject(row, "Reflow quest list");
+            row.anchorMin = row.anchorMax = new Vector2(.5f, 1f);
+            row.pivot = new Vector2(.5f, 1f);
+            row.anchoredPosition = new Vector2(0, -index * (row.sizeDelta.y + 8));
+            var nameLabel = FindComponent<TextMeshProUGUI>(row, "Quest Name");
+            var rewardLabel = FindComponent<TextMeshProUGUI>(row, "Reward");
+            var periodLabel = FindComponent<TextMeshProUGUI>(row, "Period");
+            if (nameLabel != null) { Undo.RecordObject(nameLabel, "Preview quest name"); nameLabel.text = quest.GetLocalizedName(); }
+            if (rewardLabel != null) { Undo.RecordObject(rewardLabel, "Preview quest reward"); rewardLabel.text = quest.MoneyReward.ToString("N0"); }
+            if (periodLabel != null)
+            {
+                Undo.RecordObject(periodLabel, "Preview quest period");
+                periodLabel.text = quest.Period == MiningQuestPeriod.Daily ? "DAILY" : "WEEKLY";
+                if (quest.Objective == MiningQuestObjective.KillMonster) periodLabel.text += " • " + quest.Difficulty.ToString().ToUpperInvariant();
+                periodLabel.enableAutoSizing = true; periodLabel.fontSizeMin = 8; periodLabel.fontSizeMax = 16;
+            }
+            foreach (var motion in row.GetComponentsInChildren<JuicyQuestItem>(true))
+            {
+                var serialized = new SerializedObject(motion);
+                serialized.FindProperty("questId").stringValue = quest.QuestId;
+                serialized.ApplyModifiedProperties();
+            }
         }
 
         private static void LayoutQuestRow(RectTransform row)

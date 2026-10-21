@@ -18,6 +18,9 @@ namespace MiningSimulator.Ores
         [Min(.01f)] public float openingSeconds = .6f, closingSeconds = .6f;
         [Min(0)] public float openHoldSeconds = .6f;
         public AnimationClip openAnimation, closeAnimation;
+        [Header("Rendering")]
+        [Tooltip("Hide imported Treasure_* interior meshes only while the lid is fully closed. Opening restores them; exterior decorations remain visible.")]
+        public bool hideClosedContents = true;
         
 public Vector3 lidOpenEuler = new Vector3(-95,0,0);
         [Min(0)] public float playerInterceptRange = 3f;
@@ -55,6 +58,12 @@ public Vector3 lidOpenEuler = new Vector3(-95,0,0);
         [Min(.5f)] public float monsterSpawnMaximumDistance = 16f;
         [Header("Broken chest / repair")]
         [Min(0f)] public float repairCost = 100f;
+        [Header("Emergency repair (hold E, no money required)")]
+        [Min(.1f)] public float emergencyRepairSeconds = 8f;
+        [Min(.1f)] public float emergencyRepairRange = 3f;
+        [Range(.01f, 1f)] public float emergencyRepairHealthFraction = .25f;
+        [Header("Distant attack warning")]
+        [Min(.1f)] public float threatWarningSeconds = 5f;
         public Sprite repairButtonSprite;
         public Vector2 repairButtonOffset = new Vector2(0, -135);
         [Header("Chest spatial SFX")]

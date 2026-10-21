@@ -91,7 +91,7 @@ namespace MiningSimulator.Ores
             }
             FindResetTargetsIfMissing();
             MiningPlayerStats.ResetSavedProgress();
-            PlayerCheckpointSave.ResetLoadedCheckpoints();
+            MiningDamagePopup.ClearAll();
             upgradeSystem?.ResetAutoUpgrade();
             DayNightSystem.ResetSavedClock();
             TreasureChest.ResetSavedProgress();

@@ -34,7 +34,7 @@ namespace MiningSimulator.Ores
             TowerFantasyUi.SetHealth(fill,displayedFraction);
             // Critical color responds immediately, even while the fill animates.
             fill.color=fraction<=.2f?TowerFantasyUi.Critical:TowerFantasyUi.Teal;
-            nameLabel.text=$"{owner.Data.displayName}  •  LV. {owner.Data.level}";
+            nameLabel.text=$"{owner.Data.displayName}  •  LV. {owner.Level}";
             hpLabel.text=$"{health.Health:0.#} / {health.MaxHealth:0.#} HP";hpLabel.color=fill.color==TowerFantasyUi.Critical?TowerFantasyUi.Critical:TowerFantasyUi.Cream;
         }
         void LateUpdate()

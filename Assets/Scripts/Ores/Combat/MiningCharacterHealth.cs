@@ -18,6 +18,14 @@ namespace MiningSimulator.Ores
         [Min(0.1f), SerializeField] private float regenInterval = 5f;
         private float regenTimer;
         public event System.Action Damaged;
+        public static event System.Action<MiningCharacterHealth,float,GameObject,bool,CombatDamageType> AnyDamaged;
+        private GameData.Player.Script.GunSpecialUpgrades survival;
+        public bool IsTargetable=>health>0&&!(survival&&survival.ReprieveActive);
+        public static event System.Action<MiningCharacterHealth,GameObject> AnyDied;
+        private static readonly System.Collections.Generic.HashSet<MiningCharacterHealth> activeMonsters=new();
+        public static System.Collections.Generic.IReadOnlyCollection<MiningCharacterHealth> ActiveMonsters=>activeMonsters;
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetDamageObservers() { AnyDamaged=null;AnyDied=null;activeMonsters.Clear(); }
         public event System.Action Died;
         [SerializeField] private Transform healthBar;
         [SerializeField] private MicroBar microBar;
@@ -30,8 +38,6 @@ namespace MiningSimulator.Ores
         [SerializeField] private string healthValueSuffix = "";
         private int displayedLevel = -1;
         private Camera healthCamera;
-        private PlayerCombatInput combatInput;
-        private bool displayedCombatMode;
         private float health;
         private bool damageEnabled = true;
         public void SetDamageEnabled(bool value) => damageEnabled = value;
@@ -47,9 +53,12 @@ namespace MiningSimulator.Ores
         public float Health => health;
         public Transform HealthBar => healthBar;
         private MushroomMonster combatOwner;
+        private GodBossController godOwner;
+        public bool IsMonster => combatOwner != null || godOwner != null;
         private MonsterCombatSettings MonsterCombat => combatOwner != null ? combatOwner.CombatData : null;
         private MiningPlayerStats playerStats;
-        private MiningPlayerStats PlayerStats => playerStats != null ? playerStats : playerStats = GetComponent<MiningPlayerStats>();
+        private static readonly Unity.Profiling.ProfilerMarker HealthMarker=new("Mining.HealthUpdate");
+        private MiningPlayerStats PlayerStats => combatOwner||godOwner ? null : playerStats != null ? playerStats : playerStats = GetComponent<MiningPlayerStats>();
         private MiningPlayerStatsData Stats => PlayerStats != null ? PlayerStats.Data : null;
         public float Armor => CombatDamage.NonNegative(Stats != null ? PlayerStats.Armor : armor) +
             (Stats != null && EquipmentBonuses != null ? CombatDamage.NonNegative(EquipmentBonuses.armor) : 0f);
@@ -63,7 +72,7 @@ namespace MiningSimulator.Ores
             resistanceScale = Mathf.Max(.01f, CombatDamage.NonNegative(scale));
         }
         private float spawnedMaxHealth;
-        public float MaxHealth => Mathf.Max(1f, Stats != null ? PlayerStats.MaxHealth : spawnedMaxHealth > 0 ? spawnedMaxHealth : MonsterCombat != null ? MonsterCombat.maxHealth : maxHealth);
+        public float MaxHealth => Mathf.Max(1f, PlayerStats != null && (Stats != null || PlayerStats.CoreData != null) ? PlayerStats.MaxHealth : spawnedMaxHealth > 0 ? spawnedMaxHealth : MonsterCombat != null ? MonsterCombat.maxHealth : maxHealth);
         public void ConfigureSpawnHealth(float value)
         {
             spawnedMaxHealth = Mathf.Max(1, value);
@@ -133,21 +142,28 @@ public void ConfigureMaximumHealth(float value, bool preserveDamage = true)
             => DealDamageWithTrueBonus(amount, type, source, 0f);
 
         // One damage event for a normal strike plus its unmitigated on-hit bonus.
-        public float DealDamageWithTrueBonus(float amount, CombatDamageType type, GameObject source, float trueBonus)
+        public float DealDamageWithTrueBonus(float amount, CombatDamageType type, GameObject source, float trueBonus, bool basicAttack=false)
         {
             amount = CombatDamage.Resolve(amount, type, Armor, MagicResistance, ResistanceScale);
             amount += CombatDamage.NonNegative(trueBonus);
             if (PlayerStats != null) amount *= 1f - PlayerStats.ConsumableDamageReduction;
-            if (!damageEnabled || amount <= 0f || health <= 0f) return 0f;
-            float dealt = Mathf.Min(health, amount);
+            if (!damageEnabled || amount <= 0f || health <= 0f || survival&&survival.ReprieveActive) return 0f;
+            float previous=health;
             LastDamageSource = source;
             health = Mathf.Max(0f, health - amount);
+            if(health<=0&&survival&&survival.TryPreventDeath())health=Mathf.Min(1,MaxHealth);
+            float dealt=previous-health;
+            // A damage listener may apply a separate lethal proc. Only the hit that
+            // actually crossed zero owns death notification (avoid nested double Died).
+            bool killedByThisHit = health <= 0f;
             Refresh(false, UpdateAnim.Damage);
             Damaged?.Invoke();
-            if (health <= 0f)
+            AnyDamaged?.Invoke(this,dealt,source,basicAttack,type);
+            if (killedByThisHit)
             {
                 ClearBurn();
                 Died?.Invoke();
+                AnyDied?.Invoke(this,source);
             }
             return dealt;
         }
@@ -181,15 +197,18 @@ public void ConfigureMaximumHealth(float value, bool preserveDamage = true)
 
         private void OnEnable()
         {
+            if(IsMonster)activeMonsters.Add(this);
             regenTimer = 0f;
             MiningLocalization.LanguageChanged += RefreshLabel;
         }
 
-        private void OnDisable() => MiningLocalization.LanguageChanged -= RefreshLabel;
+        private void OnDisable() { activeMonsters.Remove(this);MiningLocalization.LanguageChanged -= RefreshLabel; }
 
         private void Update()
         {
+            using var healthSample=HealthMarker.Auto();
             TickBurn(Time.deltaTime);
+            if(survival&&survival.ReprieveActive)return;
             if (initializedMaxHealth != MaxHealth)
             {
                 // Expiring maximum-HP buffs must not silently kill a low-health player.
@@ -218,9 +237,10 @@ public void ConfigureMaximumHealth(float value, bool preserveDamage = true)
 
         private void Awake()
         {
+            survival=GetComponent<GameData.Player.Script.GunSpecialUpgrades>();
             combatOwner = GetComponent<MushroomMonster>();
+            godOwner = GetComponent<GodBossController>();
             burnDamage = ApplyBurnDamage;
-            combatInput = GetComponent<PlayerCombatInput>();
             if (GetComponent<MiningPlayerStats>() != null)
             {
                 playerUpgrades = FindFirstObjectByType<MiningUpgradeSystem>(FindObjectsInactive.Include);
@@ -237,16 +257,15 @@ public void ConfigureMaximumHealth(float value, bool preserveDamage = true)
 
         private void LateUpdate()
         {
-            var monster = GetComponent<MushroomMonster>();
+            using var healthSample=HealthMarker.Auto();
+            var monster = combatOwner;
             if (monster != null && monster.IsBoss)
             {
                 int seconds = Mathf.CeilToInt(monster.CombatTimeRemaining);
                 if (displayedBossSeconds != seconds) { displayedBossSeconds = seconds; RefreshLabel(); }
             }
-            bool mode = combatInput != null && combatInput.IsCombatMode;
-            if (mode != displayedCombatMode) RefreshLabel();
             if (PlayerStats != null && PlayerStats.Level != displayedLevel) RefreshLabel();
-            if (healthBar == null) return;
+            if (healthBar == null || !healthBar.gameObject.activeInHierarchy) return;
             if (screenSpaceBar) return;
             if (healthCamera == null) healthCamera = Camera.main;
             if (healthCamera != null)
@@ -257,8 +276,8 @@ public void ConfigureMaximumHealth(float value, bool preserveDamage = true)
 
         private void Refresh(bool skipAnimation, UpdateAnim updateType = UpdateAnim.Damage)
         {
-            var monster = GetComponent<MushroomMonster>();
-            bool showBar = screenSpaceBar || monster != null && monster.IsBoss || health < MaxHealth - 0.001f;
+            var monster = combatOwner;
+            bool showBar = screenSpaceBar || godOwner != null || monster != null && monster.IsBoss || health < MaxHealth - 0.001f;
             // Enable before updating MicroBar so the first hit after spawning
             // animates correctly; hide the whole bar (including its text) at full HP.
             if (showBar && healthBar != null && !healthBar.gameObject.activeSelf)
@@ -273,28 +292,35 @@ public void ConfigureMaximumHealth(float value, bool preserveDamage = true)
 
         private void RefreshLabel()
         {
-            displayedCombatMode = combatInput != null && combatInput.IsCombatMode;
             if (healthLabel != null)
             {
                 var player = PlayerStats;
-                var monster = GetComponent<MushroomMonster>();
+                var monster = combatOwner;
                 int level = player != null ? player.Level : monster != null ? monster.Level : 1;
                 displayedLevel = level;
-                string status = combatInput != null
-                    ? MiningLocalization.Text(displayedCombatMode ? "Combat" : "Standing") + "\n"
-                    : string.Empty;
+                string status = string.Empty;
                 if (monster != null && monster.IsBoss)
                 {
                     int seconds = Mathf.CeilToInt(monster.CombatTimeRemaining);
                     status = $"{MiningLocalization.TextKey("MONSTER_BOSS", "BOSS")} {seconds / 60:00}:{seconds % 60:00}\n";
                 }
-                if (levelLabel != null && nameLabel != null)
+                // The player HUD has a level badge without a name label.
+                // Update each optional label independently.
+                if (levelLabel != null)
                 {
                     levelLabel.text = level.ToString();
+                }
+                if (nameLabel != null)
+                {
                     string title = string.IsNullOrWhiteSpace(displayName) ? gameObject.name.Replace("(Clone)", "") : displayName;
                     nameLabel.text = string.IsNullOrEmpty(status) ? MiningLocalization.Text(title) : status.Trim();
+                }
+                if (levelLabel != null)
+                {
                     healthLabel.text = $"{Mathf.Ceil(health):0} / {Mathf.Ceil(MaxHealth):0}{healthValueSuffix}";
                 }
+                else if (godOwner != null)
+                    healthLabel.text = $"GOD BOSS | {Mathf.Ceil(health):0} / {Mathf.Ceil(MaxHealth):0}";
                 else
                     healthLabel.text = $"{status}Lv. {level} | {Mathf.Ceil(health):0} / {Mathf.Ceil(MaxHealth):0}";
             }

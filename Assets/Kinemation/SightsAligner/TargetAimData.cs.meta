@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 59b3f1047c857ce468fd656aee397444
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 237358
+  packageName: 'SightsAligner: FPS Tool'
+  packageVersion: 1.0
+  assetPath: Assets/Kinemation/SightsAligner/TargetAimData.cs
+  uploadId: 538927

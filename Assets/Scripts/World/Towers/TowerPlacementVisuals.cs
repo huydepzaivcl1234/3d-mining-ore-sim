@@ -11,6 +11,7 @@ namespace MiningSimulator.Ores
         readonly TMPro.TMP_Text remainingLabel;
         int shownCount=-1;
         Vector3 last=Vector3.positiveInfinity;
+        Quaternion lastRotation;
         public TowerPlacementVisuals(TowerData definition,Transform player,Camera camera)
         {
             data=definition;body=data.prefab.GetComponent<BoxCollider>();root=new GameObject("Tower placement overlays");
@@ -23,7 +24,6 @@ namespace MiningSimulator.Ores
             foreach(var a in ghost.GetComponentsInChildren<Animator>(true))a.enabled=false;
             foreach(var c in ghost.GetComponentsInChildren<Collider>(true))c.enabled=false;
             foreach(var r in ghost.GetComponentsInChildren<Renderer>(true)){var m=new Material[r.sharedMaterials.Length];for(int i=0;i<m.Length;i++)m[i]=material;r.sharedMaterials=m;}
-            ghost.AddComponent<TowerStatsPanel>().BindPreview(data,player,camera);
             var canvasObject=new GameObject("Placement quantity",typeof(RectTransform),typeof(Canvas),typeof(UnityEngine.UI.CanvasScaler));
             canvasObject.transform.SetParent(root.transform,false);
             var canvas=canvasObject.GetComponent<Canvas>();canvas.renderMode=RenderMode.ScreenSpaceOverlay;canvas.sortingOrder=200;
@@ -32,7 +32,7 @@ namespace MiningSimulator.Ores
             panel.anchorMin=panel.anchorMax=panel.pivot=new Vector2(.5f,0);panel.anchoredPosition=new Vector2(0,32);
             var icon=TowerFantasyUi.Rect("Icon",panel,new Vector2(48,48),new Vector2(-170,10)).gameObject.AddComponent<UnityEngine.UI.Image>();icon.sprite=data.icon;icon.preserveAspect=true;icon.raycastTarget=false;
             remainingLabel=TowerFantasyUi.Label(panel,"Remaining",new Vector2(28,12),new Vector2(330,32),24,TowerFantasyUi.Cream,true);
-            TowerFantasyUi.Label(panel,"Hint",new Vector2(0,-22),new Vector2(398,25),15,TowerFantasyUi.Gold,false,TMPro.TextAlignmentOptions.Center).text="Click to place • Right click / Esc to finish";
+            TowerFantasyUi.Label(panel,"Hint",new Vector2(0,-22),new Vector2(398,25),15,TowerFantasyUi.Gold,false,TMPro.TextAlignmentOptions.Center).text=MiningLocalization.Text("Click: place • R: rotate • Right click / Esc: finish","Bấm: đặt • R: xoay • Chuột phải / Esc: hủy");
             footprint=Line("Occupied cells",5,.06f);range=Line("Attack range",129,.04f);
             int cx=Mathf.RoundToInt(player.position.x),cz=Mathf.RoundToInt(player.position.z);
             for(int i=-12;i<=12;i++)
@@ -46,12 +46,14 @@ namespace MiningSimulator.Ores
         {var l=new GameObject(name).AddComponent<LineRenderer>();l.transform.SetParent(root.transform);l.sharedMaterial=material;l.useWorldSpace=true;l.positionCount=count;l.widthMultiplier=width;return l;}
         static Vector3 Surface(Vector3 p){if(TowerPlacementGeometry.GroundBelow(p,out var g))p=g;return p+Vector3.up*.045f;}
         public void Move(Vector3 p,bool valid)
+            => Move(p,valid,Quaternion.identity);
+        public void Move(Vector3 p,bool valid,Quaternion rotation)
         {
-            ghost.SetActive(true);ghost.transform.position=p;material.SetColor("_BaseColor",valid?new Color(.2f,1,.65f,.45f):new Color(1,.22f,.2f,.45f));
-            if((p-last).sqrMagnitude<.0001f)return;last=p;
-            var cells=TowerPlacementGeometry.FootprintCells(body,1);var center=p+new Vector3(body.center.x,0,body.center.z);
+            ghost.SetActive(true);ghost.transform.SetPositionAndRotation(p,rotation);material.SetColor("_BaseColor",valid?new Color(.2f,1,.65f,.45f):new Color(1,.22f,.2f,.45f));
+            if((p-last).sqrMagnitude<.0001f&&Quaternion.Angle(rotation,lastRotation)<.01f)return;last=p;lastRotation=rotation;
+            var cells=TowerPlacementGeometry.FootprintCells(body,1);var center=p+rotation*new Vector3(body.center.x,0,body.center.z);
             var o=new[]{new Vector3(-cells.x*.5f,0,-cells.y*.5f),new Vector3(cells.x*.5f,0,-cells.y*.5f),new Vector3(cells.x*.5f,0,cells.y*.5f),new Vector3(-cells.x*.5f,0,cells.y*.5f)};
-            for(int i=0;i<5;i++)footprint.SetPosition(i,Surface(center+o[i%4]));
+            for(int i=0;i<5;i++)footprint.SetPosition(i,Surface(center+rotation*o[i%4]));
             for(int i=0;i<129;i++){float a=i*2*Mathf.PI/128;range.SetPosition(i,Surface(p+new Vector3(Mathf.Cos(a),0,Mathf.Sin(a))*data.range));}
         }
         public void Hide(){ghost.SetActive(false);footprint.enabled=range.enabled=false;}

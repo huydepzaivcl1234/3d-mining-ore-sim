@@ -6,6 +6,8 @@ namespace MiningSimulator.Ores
     public sealed partial class MonsterDailyForecastHud
     {
         [Header("Forecast presentation")]
+        [Tooltip("Offset from top-right, below the Settings button.")]
+        [SerializeField] private Vector2 panelOffset=new(-24f,-124f);
         [Min(.01f), SerializeField] private float slideSeconds = .6f;
         [Min(.01f), SerializeField] private float numberRollSeconds = .65f;
         [Min(0f), SerializeField] private float rowRevealDelay = .18f;
@@ -68,7 +70,7 @@ namespace MiningSimulator.Ores
             wasDaytime = day;
             slideProgress = Mathf.MoveTowards(slideProgress, day ? 1f : 0f, dt / Mathf.Max(.01f, slideSeconds));
             float eased = slideProgress * slideProgress * (3f - 2f * slideProgress);
-            root.anchoredPosition = shownPosition + Vector2.right * (root.rect.width + offscreenPadding) * (1f - eased);
+            root.anchoredPosition = shownPosition + Vector2.up * (root.rect.height + offscreenPadding) * (1f - eased);
             root.localRotation = Quaternion.Euler(0, 0, rollAngle * Mathf.Sin((1f - eased) * Mathf.PI));
             root.GetComponent<CanvasGroup>().alpha = eased;
             root.gameObject.SetActive(hudRequested && (slideProgress > 0f || day));

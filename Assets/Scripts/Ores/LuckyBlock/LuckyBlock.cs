@@ -186,7 +186,7 @@ namespace MiningSimulator.Ores
             if (actorHealth != null)
             {
                 if (fatalPlayerCrush && actorHealth != null &&
-                    actorHealth.GetComponent<StarterAssets.ThirdPersonController>() != null)
+                    actorHealth.GetComponent<GameData.Player.Script.PlayerController1>() != null)
                     actorHealth.DealDamage(actorHealth.Health, CombatDamageType.True);
                 // Ignore all colliders on this actor, including a corpse after death.
                 Transform actor = actorHealth.transform;

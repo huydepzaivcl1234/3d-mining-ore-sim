@@ -14,6 +14,7 @@ namespace MiningSimulator.Ores
         public uint refreshNumerator, refreshDenominator = 1;
         public int aaMode, aaQuality = 2, msaa = 1, cascades = 4;
         public float renderScale = 1f, shadowDistance = 50f;
+        public float renderDistance = 300f;
         public bool bloom = true, vignette = true, motionBlur, depthOfField, ambientOcclusion = true;
         public float bloomMultiplier = 1f, exposureOffset, gammaOffset;
 
@@ -25,6 +26,7 @@ namespace MiningSimulator.Ores
             cascades = Mathf.Clamp(cascades, 1, 4);
             renderScale = FiniteRange(renderScale, .5f, 1.5f, 1f);
             shadowDistance = FiniteRange(shadowDistance, 0f, 150f, 50f);
+            renderDistance = FiniteRange(renderDistance, 25f, 1000f, 300f);
             bloomMultiplier = FiniteRange(bloomMultiplier, 0f, 3f, 1f);
             exposureOffset = FiniteRange(exposureOffset, -2f, 2f, 0f);
             gammaOffset = FiniteRange(gammaOffset, -.5f, .5f, 0f);

@@ -131,6 +131,7 @@ namespace MiningSimulator.Ores
         public void RefreshPeriods()
         {
             InitializeState();
+            EnsureDefinitionStates();
             string currentDaily = GetDailyStamp(DateTime.Now);
             string currentWeekly = GetWeeklyStamp(DateTime.Now);
             bool dailyChanged = !string.Equals(dailyStamp, currentDaily, StringComparison.Ordinal);
@@ -194,6 +195,25 @@ namespace MiningSimulator.Ores
         private void HandleRebirthCompleted(int completedCount)
         {
             AddProgress(MiningQuestObjective.Rebirth, 1);
+        }
+
+        private void HandleMonsterDefeated(MonsterRewardData species, bool boss)
+        {
+            if (data == null) return;
+            RefreshPeriods();
+            bool changed = false;
+            foreach (var quest in data.Quests)
+            {
+                if (quest == null || !quest.IsValid || !quest.MatchesKill(species, boss) ||
+                    !states.TryGetValue(quest.QuestId, out var state) || state.Claimed ||
+                    state.Progress >= quest.TargetAmount) continue;
+                state.Progress++;
+                changed = true;
+            }
+            if (!changed) return;
+            dirty = true;
+            SaveState(false);
+            QuestsChanged?.Invoke();
         }
 
         private void AddProgress(MiningQuestObjective objective, int amount)
@@ -307,11 +327,13 @@ namespace MiningSimulator.Ores
         private void Subscribe()
         {
             Unsubscribe();
+            MonsterKillCredit.Defeated += HandleMonsterDefeated;
             if (rebirthSystem != null) rebirthSystem.RebirthCompleted += HandleRebirthCompleted;
         }
 
         private void Unsubscribe()
         {
+            MonsterKillCredit.Defeated -= HandleMonsterDefeated;
             if (rebirthSystem != null) rebirthSystem.RebirthCompleted -= HandleRebirthCompleted;
         }
 

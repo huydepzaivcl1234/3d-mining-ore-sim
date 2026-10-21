@@ -18,6 +18,15 @@ namespace MiningSimulator.Ores
         public TowerData Data => data;
         public MiningCharacterHealth Health => health;
         public float PaidPrice => paidPrice;
+        public int Level { get; private set; }
+        public float Damage => data.Scaled(data.damage, data.damageGrowth, Level);
+        public float Range => data.Scaled(data.range, data.rangeGrowth, Level);
+        public float AttackSpeed => data.Scaled(data.attackSpeed, data.attackSpeedGrowth, Level);
+        public float MaximumHealth => data.Scaled(data.health, data.healthGrowth, Level);
+        public float Armor => data.armor + data.armorPerLevel * (Level - Mathf.Max(1, data.level));
+        public float MagicResistance => data.magicResistance + data.magicResistancePerLevel * (Level - Mathf.Max(1, data.level));
+        public bool CanUpgrade => data != null && Level < Mathf.Max(data.level, data.maximumLevel);
+        public float UpgradeCost => CanUpgrade ? data.UpgradeCost(Level) : 0;
         public bool IsAlive => isActiveAndEnabled && health != null && health.Health > 0;
         private TowerStatsPanel statsPanel;
         private Renderer foundation;
@@ -51,13 +60,28 @@ namespace MiningSimulator.Ores
             wallet.AddMoney(paidPrice * .35f);
             gameObject.SetActive(false); Destroy(gameObject);
         }
-        public void Initialize(TowerData definition, float purchasedPrice)
+        public void Initialize(TowerData definition, float purchasedPrice, int savedLevel = 0)
         {
             data = definition; paidPrice = Mathf.Max(0, purchasedPrice);
+            Level = data.ClampLevel(savedLevel);
             health ??= GetComponent<MiningCharacterHealth>();
-            health.ConfigureSpawnHealth(data.health);
-            health.ConfigureDefenses(data.armor, data.magicResistance);
+            health.ConfigureSpawnHealth(MaximumHealth);
+            health.ConfigureDefenses(Armor, MagicResistance);
             health.ConfigureRegeneration(0, 5);
+        }
+        public bool TryUpgrade(PlayerWallet wallet, Transform player)
+        {
+            if (!IsAlive || !CanUpgrade || wallet == null || player == null ||
+                Vector3.Distance(player.position, transform.position) > 4f ||
+                player.GetComponent<MiningCharacterHealth>()?.Health <= 0) return false;
+            float cost = UpgradeCost;
+            if (float.IsNaN(cost) || float.IsInfinity(cost) || cost < 0 || !wallet.TrySpend(cost)) return false;
+            Level++;
+            // Grant only the added HP capacity, not a free full repair.
+            health.ConfigureMaximumHealth(MaximumHealth, true);
+            health.ConfigureDefenses(Armor, MagicResistance);
+            if (!string.IsNullOrEmpty(PlacementId)) { TowerWorldSave.Capture(this); TowerWorldSave.Flush(); }
+            return true;
         }
         private void Awake()
         {
@@ -95,7 +119,11 @@ namespace MiningSimulator.Ores
         private void OnEnable()
         {
             Active.Add(this); health.Died += OnDeath; health.Damaged += SaveDamage;
+            // Distribute scans/collision refreshes instead of waking every cannon on the same frame.
+            float phase = (GetEntityId().GetHashCode() & 1023) / 1024f;
+            nextScan = Time.time + phase * .2f;
             if (Application.isPlaying) RefreshPlayerCollision();
+            nextPlayerCollisionCheck = Time.unscaledTime + phase * .5f;
         }
         private void RefreshPlayerCollision()
         {
@@ -130,7 +158,7 @@ namespace MiningSimulator.Ores
             if (Time.time >= nextScan)
             {
                 nextScan = Time.time + .2f; target = null;
-                float best = data.range * data.range;
+                float best = Range * Range;
                 foreach (var monster in MushroomMonster.Monsters)
                 {
                     if (monster == null || monster.Health.Health <= 0 || !monster.isActiveAndEnabled) continue;
@@ -141,7 +169,7 @@ namespace MiningSimulator.Ores
             if (target == null || target.Health <= 0 || committedTarget != null || Time.time < nextShot) return;
             Vector3 toward = target.transform.position - transform.position; toward.y = 0;
             if (toward.sqrMagnitude > .001f) transform.rotation = Quaternion.LookRotation(toward);
-            nextShot = Time.time + 1f / Mathf.Max(.01f, data.attackSpeed);
+            nextShot = Time.time + 1f / Mathf.Max(.01f, AttackSpeed);
             if (data is CannonTowerData cannon)
             {
                 animator?.SetTrigger(cannon.fireTrigger);
@@ -154,8 +182,9 @@ namespace MiningSimulator.Ores
         {
             Vector3 start = muzzle != null ? muzzle.position : transform.position + Vector3.up;
             Vector3 aim = victim.GetComponent<Collider>() != null ? victim.GetComponent<Collider>().bounds.center : victim.transform.position + Vector3.up*.5f;
-            var ball = data.projectile != null ? Instantiate(data.projectile, start, Quaternion.identity) : new GameObject("Tower projectile");
-            ball.AddComponent<TowerProjectile>().Initialize(this, aim - start, data);
+            var ball = SceneProjectilePool.Rent<TowerProjectile>(data.projectile,start,Quaternion.identity,gameObject.scene,data.projectilePoolCapacity);
+            ball.Initialize(this, aim - start, data);
+            ball.gameObject.SetActive(true);
         }
     }
 }

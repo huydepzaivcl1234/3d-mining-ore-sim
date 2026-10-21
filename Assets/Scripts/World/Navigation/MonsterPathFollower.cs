@@ -17,8 +17,13 @@ namespace MiningSimulator.Ores
         private float clock, nextRequest, pendingSince, blockedSince, sideUntil, nextDirty;
         private int waypoint, generation, candidateIndex, revision = -1, side;
         private bool pending, initialized;
+        private bool crowdBlocked, probeSaturated;
         private Transform victim;
         private MonsterCombatSettings settings;
+        private static readonly Unity.Profiling.ProfilerMarker SteeringMarker=new("Mining.MonsterSteering");
+        private float nextSteering;
+        private Vector3 lastSteeringGoal;
+        private int steeringRevision=-1;
         public string State { get; private set; } = "Idle";
         public IReadOnlyList<Vector3> Route => route;
         public Vector3 Steering { get; private set; }
@@ -43,15 +48,33 @@ namespace MiningSimulator.Ores
             pending = false; route.Clear(); candidates.Clear(); waypoint = 0;
             revision = -1; nextRequest = 0f; initialized = false;
             blockedSince = 0f; previousDirection = Steering = Vector3.zero; State = "Idle";
+            nextSteering=0;steeringRevision=-1;
+            crowdBlocked = probeSaturated = false;
         }
 
         public Vector3 Tick(Vector3 goal, Transform target, float reach, MonsterCombatSettings config, float dt)
         {
-            settings = config; victim = target;
+            using var steeringSample=SteeringMarker.Auto();
             clock += Mathf.Max(0f, dt);
-            grid = WorldNavigationGrid.Instance;
+            var activeGrid=WorldNavigationGrid.Instance;
+            // Reuse steering between spatial probes, not movement or attack updates.
+            // New targets, grid changes, sharp goal changes and reached corners bypass the cache.
+            if(clock<nextSteering&&grid==activeGrid&&grid!=null&&grid.HasBaked&&
+                settings==config&&victim==target&&steeringRevision==grid.Revision&&
+                Flat(goal-lastSteeringGoal).sqrMagnitude<Mathf.Pow(Mathf.Max(.05f,config.targetRepathDistance),2))
+            {
+                if(waypoint>=route.Count||Steering.sqrMagnitude<.0001f)return Steering;
+                float cachedRemaining=Flat(route[waypoint]-profile.Foot(owner.transform.position)).magnitude;
+                if(cachedRemaining>config.waypointTolerance)
+                    return Steering*Mathf.Min(1f,cachedRemaining/Mathf.Max(.001f,config.moveSpeed*Mathf.Max(dt,.001f)));
+            }
+            settings = config; victim = target;
+            grid = activeGrid;
             if (grid == null || !grid.isActiveAndEnabled || !grid.HasBaked)
             { State = "Waiting for A* grid"; return Steering = Vector3.zero; }
+            var performance=GameplayPerformanceData.Current;
+            nextSteering=clock+(performance?Mathf.Max(0,performance.monsterSteeringInterval):0);
+            lastSteeringGoal=goal;steeringRevision=grid.Revision;
             profile = ProfileFor(motor);
             Vector3 foot = profile.Foot(owner.transform.position);
             if (!grid.TryGetGroundPoint(foot, out foot))
@@ -64,7 +87,7 @@ namespace MiningSimulator.Ores
             previousFoot = foot;
             if (clock - blockedSince >= Mathf.Max(.1f, config.stuckRepathSeconds))
             {
-                grid.MarkDirty(new Bounds(foot, Vector3.one * profile.Radius * 4f));
+                if (!crowdBlocked) grid.MarkDirty(new Bounds(foot, Vector3.one * profile.Radius * 4f));
                 CancelPending(); route.Clear(); waypoint = 0; nextRequest = clock;
                 blockedSince = clock; State = "Repath after stalled movement";
             }
@@ -150,6 +173,7 @@ namespace MiningSimulator.Ores
                     pending = false; State = result.Status.ToString(); return;
                 }
                 pending = false; route.Clear(); route.AddRange(result.Route);
+                nextSteering=0;
                 revision = result.Revision; waypoint = 0;
                 routeOrigin = foot; blockedSince = clock;
                 // The actor kept moving while A* searched. Skip already passed/visible corners.
@@ -181,8 +205,12 @@ namespace MiningSimulator.Ores
         private Vector3 Avoid(Vector3 foot, Vector3 preferred, float distance)
         {
             bool straight = ClearAhead(foot, preferred, distance, out Collider obstacle);
+            // Moving actors are excluded from the A* terrain grid. A crowd is a
+            // local avoidance problem, not a change to every cached path in the world.
+            crowdBlocked = probeSaturated || (obstacle != null &&
+                obstacle.GetComponentInParent<CharacterController>() != null);
             if (straight) { State = "Following A*"; return preferred; }
-            if (clock >= nextDirty)
+            if (!crowdBlocked && clock >= nextDirty)
             {
                 // A moved/new obstacle must invalidate the planner's cached clearance.
                 grid.MarkDirty(obstacle != null ? obstacle.bounds :
@@ -214,7 +242,8 @@ namespace MiningSimulator.Ores
             int count = Physics.CapsuleCastNonAlloc(bottom, top, profile.Radius, direction, hits,
                 distance, settings.navigationObstacleLayers, QueryTriggerInteraction.Ignore);
             float nearest = float.PositiveInfinity;
-            if (count == hits.Length) return false;
+            probeSaturated = count == hits.Length;
+            if (probeSaturated) return false;
             for (int i = 0; i < count; i++)
             {
                 var hit = hits[i]; var collider = hit.collider;

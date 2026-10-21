@@ -33,6 +33,8 @@ namespace MiningSimulator.Ores
 
         private MiningTimePeriod currentPeriod;
         private float periodElapsed;
+        private float clearedPeriodElapsed;
+        private bool encounterCleared;
         private float daylight;
         private float transitionFromDaylight;
         private float transitionToDaylight;
@@ -97,8 +99,9 @@ namespace MiningSimulator.Ores
         {
             get
             {
-                float duration = GetPeriodDuration(currentPeriod);
-                return Mathf.Max(0f, duration - periodElapsed);
+                return encounterCleared && data != null
+                    ? Mathf.Max(0f, data.ClearedPeriodDelaySeconds - clearedPeriodElapsed)
+                    : float.PositiveInfinity;
             }
         }
 
@@ -149,6 +152,8 @@ namespace MiningSimulator.Ores
                 clock.DayNumber = 1;
                 clock.currentPeriod = clock.data != null ? clock.data.StartingPeriod : MiningTimePeriod.Day;
                 clock.periodElapsed = 0f;
+                clock.clearedPeriodElapsed = 0f;
+                clock.encounterCleared = false;
                 clock.daylight = clock.currentPeriod == MiningTimePeriod.Day ? 1f : 0f;
                 clock.transitionBellCurve = 0f;
                 clock.ApplyLighting(clock.daylight);
@@ -199,20 +204,14 @@ namespace MiningSimulator.Ores
             InitializeIfNeeded();
             if (data.CycleEnabled)
             {
-                periodElapsed += Time.deltaTime;
-                float duration = GetPeriodDuration(currentPeriod);
-                if (periodElapsed >= duration)
-                {
-                    periodElapsed %= duration;
-                    currentPeriod = currentPeriod == MiningTimePeriod.Day
-                        ? MiningTimePeriod.Night
-                        : MiningTimePeriod.Day;
-                    if (currentPeriod == MiningTimePeriod.Day) DayNumber++;
-                    BeginLightingTransition();
-                    SaveClock();
-                    PeriodChanged?.Invoke(currentPeriod);
-                }
+                // The timeline still releases scheduled waves, but cannot end combat.
+                periodElapsed = Mathf.Min(periodElapsed + Time.deltaTime, GetPeriodDuration(currentPeriod));
+                encounterCleared = MonsterSpawnZone.AreEncountersCleared(this);
+                clearedPeriodElapsed = encounterCleared ? clearedPeriodElapsed + Time.deltaTime : 0f;
+                if (encounterCleared && clearedPeriodElapsed >= data.ClearedPeriodDelaySeconds)
+                    SetPeriod(currentPeriod == MiningTimePeriod.Day ? MiningTimePeriod.Night : MiningTimePeriod.Day);
             }
+            else { clearedPeriodElapsed = 0f; encounterCleared = false; }
 
             // Re-apply every frame instead of only during the ~few-second transition tween,
             // so the sun keeps drifting across the sky and gently shimmering for the whole
@@ -262,6 +261,8 @@ namespace MiningSimulator.Ores
             currentPeriod = period;
             if (currentPeriod == MiningTimePeriod.Day) DayNumber++;
             periodElapsed = 0f;
+            clearedPeriodElapsed = 0f;
+            encounterCleared = false;
             BeginLightingTransition();
             SaveClock();
             PeriodChanged?.Invoke(currentPeriod);

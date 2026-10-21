@@ -1,4 +1,3 @@
-using StarterAssets;
 using UnityEngine;
 
 namespace MiningSimulator.Ores
@@ -6,8 +5,10 @@ namespace MiningSimulator.Ores
     [DefaultExecutionOrder(-1000), DisallowMultipleComponent]
     public sealed class MiningPlayerStats : MonoBehaviour
     {
-        [SerializeField] private MiningPlayerStatsData data;
+        [SerializeField, HideInInspector] private MiningPlayerStatsData data;
+        [SerializeField] private GameData.Player.Script.PlayerCoreStatsData coreData;
         public MiningPlayerStatsData Data => data;
+        public GameData.Player.Script.PlayerCoreStatsData CoreData => coreData;
         private RuneUpgradeProgress runeUpgrades;
         public RuneUpgradeProgress RuneUpgrades => runeUpgrades ??= new RuneUpgradeProgress(
             Resources.Load<RuneUpgradeData>("RuneUpgradeData"),
@@ -19,9 +20,11 @@ namespace MiningSimulator.Ores
         private float DefenseAtLevel(float baseline, float growth) => (float)System.Math.Min(float.MaxValue,
             (double)CombatDamage.NonNegative(baseline) + (double)CombatDamage.NonNegative(growth) * (Level - 1));
         private MiningItemSystem itemEffects;
+        private GameData.Player.Script.GunSpecialUpgrades gunSpecials;
         private float DamagePotionMultiplier => itemEffects != null ? itemEffects.PlayerDamageMultiplier : 1f;
         private float AttackSpeedPotionMultiplier => itemEffects != null ? itemEffects.PlayerAttackSpeedMultiplier : 1f;
-        public float MaxHealth => ((data != null ? Mathf.Max(1, data.maxHealth + Mathf.Max(0, data.healthPerLevel) * (Level - 1)) : 100) * (1f + CardHealthPercent * .01f) + CardHealth) * (1f + RuneUpgrades.Bonus(RuneStat.Health) * .01f) * (itemEffects != null ? itemEffects.PlayerHealthMultiplier : 1f);
+        public float MaxHealth => ((coreData != null ? Mathf.Max(1f, coreData.maxHealth) :
+            data != null ? Mathf.Max(1, data.maxHealth + Mathf.Max(0, data.healthPerLevel) * (Level - 1)) : 100) * (1f + CardHealthPercent * .01f) + CardHealth) * (1f + RuneUpgrades.Bonus(RuneStat.Health) * .01f) * (itemEffects != null ? itemEffects.PlayerHealthMultiplier : 1f) + (gunSpecials?gunSpecials.HunterBonusHealth:0);
         public float ConsumableDamageReduction => itemEffects != null ? itemEffects.PlayerDamageReduction : 0f;
         public float ConsumableMonsterTrueDamageFraction => itemEffects != null ? itemEffects.MonsterTrueDamageFraction : 0f;
         public float Damage => ((data != null ? Mathf.Max(0, data.damage + Mathf.Max(0, data.damagePerLevel) * (Level - 1)) : 1) * (1f + CardDamagePercent * .01f) + CardDamage) * DamagePotionMultiplier * (1f + RuneUpgrades.Bonus(RuneStat.Damage) * .01f);
@@ -36,28 +39,30 @@ namespace MiningSimulator.Ores
         public float CardDamage { get; private set; }
         public float CardHealth { get; private set; }
         public float CardAttackSpeed { get; private set; }
+        public float GunCardDamagePercent { get; private set; }
+        public int GunCardMagazineBonus { get; private set; }
+        public float GunCardBulletSpeedPercent { get; private set; }
+        public float GunDamageMultiplier => 1f + GunCardDamagePercent * .01f;
+        public float GunLevelDamageBonus => Mathf.Max(0, Level - 1) * (CoreData != null ? Mathf.Max(0f, CoreData.damagePerLevel) : 0f);
+        public float CalculateGunDamage(float baseDamage) => (Mathf.Max(0f, baseDamage) + GunLevelDamageBonus) * GunDamageMultiplier;
+        public float GunBulletSpeedMultiplier => 1f + GunCardBulletSpeedPercent * .01f;
         public bool AddCardBonus(MiningCardChoice choice, float amount)
         {
-            if (amount < 0f || float.IsNaN(amount) || float.IsInfinity(amount)) return false;
+            if (amount <= 0f || float.IsNaN(amount) || float.IsInfinity(amount)) return false;
             float current = choice switch
             {
-                MiningCardChoice.Damage => CardDamagePercent,
-                MiningCardChoice.AttackSpeed => CardAttackSpeedPercent,
-                MiningCardChoice.Health => CardHealthPercent,
-                MiningCardChoice.RegenInterval => CardRegenReductionPercent,
-                MiningCardChoice.HealingEffectiveness => CardHealingPercent,
+                MiningCardChoice.GunDamage => GunCardDamagePercent,
+                MiningCardChoice.BulletSpeed => GunCardBulletSpeedPercent,
                 _ => 0f
             };
             if (float.IsInfinity(current + amount)) return false;
             switch (choice)
             {
-                case MiningCardChoice.Damage: CardDamagePercent += amount; break;
-                case MiningCardChoice.AttackSpeed: CardAttackSpeedPercent += amount; break;
-                case MiningCardChoice.Health: CardHealthPercent += amount; break;
-                case MiningCardChoice.RegenInterval:
-                    CardRegenReductionPercent = Mathf.Min(100f, current + amount);
-                    break;
-                case MiningCardChoice.HealingEffectiveness: CardHealingPercent += amount; break;
+                case MiningCardChoice.GunDamage: GunCardDamagePercent += amount; break;
+                case MiningCardChoice.BulletSpeed: GunCardBulletSpeedPercent += amount; break;
+                case MiningCardChoice.Magazine:
+                    if (amount != Mathf.Floor(amount) || amount > int.MaxValue - (double)GunCardMagazineBonus) return false;
+                    GunCardMagazineBonus += (int)amount; break;
                 default: return false;
             }
             dirty = true;
@@ -69,15 +74,15 @@ namespace MiningSimulator.Ores
         public float Experience => progression.Experience;
         public float ExperienceRequired => progression.Required;
         public float ExperienceProgress => Mathf.Clamp01(Experience / Mathf.Max(1, ExperienceRequired));
-        private ThirdPersonController movement;
-        private MiningAudioManager feedbackAudio;
         private const string ProgressSaveKey = "MiningSimulator.PlayerProgress.v1";
         private bool dirty, saveBlocked;
         private float nextSave;
         [System.Serializable]
         private sealed class SavedProgress
         {
-            public int version = 4;
+            public int version = 5;
+            public float gunCardDamagePercent, gunCardBulletSpeedPercent;
+            public int gunCardMagazineBonus;
             public float cardRegenReductionPercent, cardHealingPercent;
             public float cardDamage, cardHealth, cardAttackSpeed;
             public float cardDamagePercent, cardHealthPercent, cardAttackSpeedPercent;
@@ -87,17 +92,12 @@ namespace MiningSimulator.Ores
         }
         private void Awake()
         {
-            movement = GetComponent<ThirdPersonController>();
-            if (movement != null && GetComponent<PlayerCheckpointSave>() == null)
-                gameObject.AddComponent<PlayerCheckpointSave>();
+            gunSpecials=GetComponent<GameData.Player.Script.GunSpecialUpgrades>();
             itemEffects = FindFirstObjectByType<MiningItemSystem>(FindObjectsInactive.Include);
-            if (movement != null && GetComponent<PlayerMonsterHeadDeflection>() == null)
-                gameObject.AddComponent<PlayerMonsterHeadDeflection>();
-            feedbackAudio = FindFirstObjectByType<MiningAudioManager>();
-            if (data != null) SetProgress(data.startingLevel, data.startingExperience, data.experienceRequired);
+            if (coreData != null) SetProgress(coreData.startingLevel, coreData.startingExperience, coreData.experienceRequired);
+            else if (data != null) SetProgress(data.startingLevel, data.startingExperience, data.experienceRequired);
             LoadProgress();
             dirty = false;
-            ApplyMovement();
         }
         public void AddExperience(float amount)
         {
@@ -106,7 +106,7 @@ namespace MiningSimulator.Ores
             // Central player XP boundary: the potion applies once to every XP source.
             amount *= itemEffects != null ? itemEffects.PlayerExperienceMultiplier : 1f;
             if (amount <= 0 || float.IsNaN(amount) || float.IsInfinity(amount)) return;
-            float growth = data != null ? Mathf.Max(1, data.experienceRequirementGrowth) : 1.25f;
+            float growth = coreData != null ? Mathf.Max(1, coreData.experienceRequirementGrowth) : data != null ? Mathf.Max(1, data.experienceRequirementGrowth) : 1.25f;
             progression.Add(amount, growth);
             dirty = true;
         }
@@ -121,7 +121,7 @@ namespace MiningSimulator.Ores
             try
             {
                 var saved = JsonUtility.FromJson<SavedProgress>(GameSave.GetString(ProgressSaveKey));
-                if (saved == null || (saved.version < 1 || saved.version > 4) || saved.level < 1 ||
+                if (saved == null || (saved.version < 1 || saved.version > 5) || saved.level < 1 ||
                     float.IsNaN(saved.experience) || float.IsInfinity(saved.experience) || saved.experience < 0 ||
                     float.IsNaN(saved.requiredExperience) || float.IsInfinity(saved.requiredExperience) || saved.requiredExperience < 1)
                 {
@@ -130,14 +130,13 @@ namespace MiningSimulator.Ores
                     return;
                 }
                 SetProgress(saved.level, saved.experience, saved.requiredExperience);
-                CardDamage = SafeBonus(saved.cardDamage);
-                CardHealth = SafeBonus(saved.cardHealth);
-                CardAttackSpeed = SafeBonus(saved.cardAttackSpeed);
-                CardDamagePercent = SafeBonus(saved.cardDamagePercent);
-                CardHealthPercent = SafeBonus(saved.cardHealthPercent);
-                CardAttackSpeedPercent = SafeBonus(saved.cardAttackSpeedPercent);
-                CardRegenReductionPercent = Mathf.Min(100f, SafeBonus(saved.cardRegenReductionPercent));
-                CardHealingPercent = SafeBonus(saved.cardHealingPercent);
+                // Retired card effects no longer affect player health, melee, regen or attack speed.
+                CardDamage = CardHealth = CardAttackSpeed = 0f;
+                CardDamagePercent = CardHealthPercent = CardAttackSpeedPercent = 0f;
+                CardRegenReductionPercent = CardHealingPercent = 0f;
+                GunCardDamagePercent = SafeBonus(saved.gunCardDamagePercent);
+                GunCardBulletSpeedPercent = SafeBonus(saved.gunCardBulletSpeedPercent);
+                GunCardMagazineBonus = Mathf.Max(0, saved.gunCardMagazineBonus);
             }
             catch (System.ArgumentException)
             {
@@ -147,13 +146,15 @@ namespace MiningSimulator.Ores
         }
         private void SaveProgress()
         {
-            if (!Application.isPlaying || !dirty || saveBlocked || data == null) return;
+            if (!Application.isPlaying || !dirty || saveBlocked || (data == null && coreData == null)) return;
             GameSave.SetString(ProgressSaveKey, JsonUtility.ToJson(new SavedProgress
             { level = Level, experience = Experience, requiredExperience = ExperienceRequired,
                 cardDamage = CardDamage, cardHealth = CardHealth, cardAttackSpeed = CardAttackSpeed,
                 cardDamagePercent = CardDamagePercent, cardHealthPercent = CardHealthPercent,
                 cardAttackSpeedPercent = CardAttackSpeedPercent,
-                cardRegenReductionPercent = CardRegenReductionPercent, cardHealingPercent = CardHealingPercent }));
+                cardRegenReductionPercent = CardRegenReductionPercent, cardHealingPercent = CardHealingPercent,
+                gunCardDamagePercent = GunCardDamagePercent, gunCardMagazineBonus = GunCardMagazineBonus,
+                gunCardBulletSpeedPercent = GunCardBulletSpeedPercent }));
             GameSave.SetInt("MiningSimulator.SaveExists.v1", 1);
             GameSave.Save();
             dirty = false;
@@ -169,9 +170,11 @@ namespace MiningSimulator.Ores
                 player.CardDamage = player.CardHealth = player.CardAttackSpeed = 0f;
                 player.CardDamagePercent = player.CardHealthPercent = player.CardAttackSpeedPercent = 0f;
                 player.CardRegenReductionPercent = player.CardHealingPercent = 0f;
-                player.SetProgress(defaults != null ? defaults.startingLevel : 1,
-                    defaults != null ? defaults.startingExperience : 0,
-                    defaults != null ? defaults.experienceRequired : 100);
+                player.GunCardDamagePercent = player.GunCardBulletSpeedPercent = 0f;
+                player.GunCardMagazineBonus = 0;
+                player.SetProgress(player.coreData != null ? player.coreData.startingLevel : defaults != null ? defaults.startingLevel : 1,
+                    player.coreData != null ? player.coreData.startingExperience : defaults != null ? defaults.startingExperience : 0,
+                    player.coreData != null ? player.coreData.experienceRequired : defaults != null ? defaults.experienceRequired : 100);
                 player.dirty = false; // Do not recreate a deleted save on scene unload.
                 player.saveBlocked = false;
             }
@@ -180,41 +183,17 @@ namespace MiningSimulator.Ores
         private void OnApplicationPause(bool paused) { if (paused) SaveProgress(); }
         private static float SafeBonus(float value) => float.IsNaN(value) || float.IsInfinity(value) ? 0f : Mathf.Max(0f, value);
         private void OnApplicationQuit() => SaveProgress();
-        private void OnEnable()
-        {
-            if (movement != null) movement.Jumped += PlayJumpSound;
-        }
         private void OnDisable()
         {
-            if (movement != null) movement.Jumped -= PlayJumpSound;
             SaveProgress();
         }
-        private void PlayJumpSound()
-        {
-            if (data != null && feedbackAudio != null)
-                feedbackAudio.PlayWorldSfx(data.jumpSfx, transform.position, data.jumpSfxVolume);
-        }
-        // Movement's public fields are compatibility inputs, not a second authoring source.
         private void Update()
         {
-            ApplyMovement();
             if (dirty && Time.unscaledTime >= nextSave)
             {
                 nextSave = Time.unscaledTime + 1;
                 SaveProgress();
             }
-        }
-        private void ApplyMovement()
-        {
-            if (data == null || movement == null) return;
-            movement.MoveSpeed = Mathf.Max(0, data.MoveSpeed + (itemEffects != null ? itemEffects.PlayerMoveSpeedBonus : 0f));
-            movement.SprintSpeed = Mathf.Max(0, data.SprintSpeed + (itemEffects != null ? itemEffects.PlayerMoveSpeedBonus : 0f));
-            movement.RotationSmoothTime = Mathf.Max(0.001f, data.RotationSmoothTime);
-            movement.SpeedChangeRate = Mathf.Max(0, data.SpeedChangeRate);
-            movement.JumpHeight = Mathf.Max(0, data.JumpHeight);
-            movement.Gravity = data.Gravity;
-            movement.JumpTimeout = Mathf.Max(0, data.JumpTimeout);
-            movement.FallTimeout = Mathf.Max(0, data.FallTimeout);
         }
         public static MiningPlayerStatsData For(Component owner)
         {

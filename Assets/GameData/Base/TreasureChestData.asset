@@ -62,9 +62,13 @@ MonoBehaviour:
   statusIncomeIcon: {fileID: 21300000, guid: 78d123784e9541544b15b7d2be645d0e, type: 3}
   statusBodyFont: {fileID: 11400000, guid: 60f29145b3cdd8245a4a736dafa0c126, type: 2}
   statusValueFont: {fileID: 11400000, guid: 638f1cf72654fec409ab1a33667482a8, type: 2}
-  monsterSpawnMinimumDistance: 15
-  monsterSpawnMaximumDistance: 20
+  monsterSpawnMinimumDistance: 30
+  monsterSpawnMaximumDistance: 35
   repairCost: 100
+  emergencyRepairSeconds: 8
+  emergencyRepairRange: 3
+  emergencyRepairHealthFraction: 0.25
+  threatWarningSeconds: 5
   repairButtonSprite: {fileID: 3286163911610860551, guid: 6d9cd5cd0f477744c845b42c96b51fa5, type: 3}
   repairButtonOffset: {x: 0, y: -135}
   openSfx: {fileID: 8300000, guid: 074b323928eb80a48aa07bdb39fd5dfb, type: 3}

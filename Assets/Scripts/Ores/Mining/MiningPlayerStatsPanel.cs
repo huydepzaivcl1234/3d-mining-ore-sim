@@ -22,11 +22,9 @@ namespace MiningSimulator.Ores
         }
         [SerializeField] private StatRow[] statRows;
         [SerializeField] private TMP_Text offenseHeading, survivalHeading, statsFooter;
-        private PlayerCombatInput combat;
         private float nextRefresh;
         private void Awake()
         {
-            if (player != null) combat = player.GetComponent<PlayerCombatInput>();
             if (panel != null) panel.gameObject.SetActive(false);
         }
         private void OnEnable()
@@ -63,13 +61,14 @@ namespace MiningSimulator.Ores
         }
         private void Refresh()
         {
+            if (player == null) player = FindFirstObjectByType<MiningPlayerStats>();
             if (offenseHeading != null) offenseHeading.text = L("PLAYER_STATS_OFFENSE", "OFFENSE & MOVEMENT");
             if (survivalHeading != null) survivalHeading.text = L("PLAYER_STATS_SURVIVAL", "SURVIVAL");
             if (statsFooter != null) statsFooter.text = L("PLAYER_STATS_TOTALS", "CURRENT STATS • INCLUDING EQUIPMENT BONUSES");
             if (title != null) title.text = L("PLAYER_STATS_TITLE", "PLAYER STATS");
             if (openLabel != null) openLabel.text = L("PLAYER_STATS_BUTTON", "STATS");
             if (closeLabel != null) closeLabel.text = L("PLAYER_STATS_CLOSE", "CLOSE");
-            if (player == null || player.Data == null) return;
+            if (player == null) return;
             var d = player.Data;
             if (levelLabel != null) levelLabel.text = $"{L("PLAYER_STATS_LEVEL", "Lv.")} {player.Level}";
             if (experienceLabel != null) experienceLabel.text = $"{player.Experience:0.##} / {player.ExperienceRequired:0.##} XP";
@@ -78,10 +77,49 @@ namespace MiningSimulator.Ores
             // Existing scenes can still show level/XP before running the layout update.
             if (levelLabel == null) Row(text, "LEVEL", "Lv.", player.Level.ToString());
             if (experienceLabel == null) text.Append($"{player.Experience:0.##} / {player.ExperienceRequired:0.##} XP\n\n");
-            Row(text, "DAMAGE", "Damage", (combat != null ? combat.Damage : player.Damage).ToString("0.##"));
-            Row(text, "ATTACK_SPEED", "Attack speed", $"x{(combat != null ? combat.AttackSpeed : player.AttackSpeed):0.##}");
+            if (player.CoreData != null)
+            {
+                if(statsFooter != null) statsFooter.text = "LIVE PLAYER STATS";
+                var core = player.CoreData;
+                var mana = player.GetComponent<GameData.Player.Script.AnimationRunMana>();
+                var hp = player.GetComponent<MiningCharacterHealth>();
+                var gun = player.GetComponent<GameData.Player.Script.PistolShooting>();
+                Row(text, "DAMAGE", "Gun damage", gun != null ? gun.EffectiveDamage.ToString("0.##") : player.GunLevelDamageBonus.ToString("0.##"));
+                Row(text, "MOVEMENT_SPEED", "Walk / run speed", $"{core.walkSpeed:0.##} / {core.runSpeed:0.##} m/s");
+                Row(text, "RANGE", "Jump strength", core.jumpStrength.ToString("0.##"));
+                // Legacy localization keys refer to melee range; these rows now represent core movement.
+                if (statRows != null) foreach(var row in statRows) {
+                    if(row == null || row.label == null) continue;
+                    if(row.key == "MOVEMENT_SPEED") row.label.text = "Walk / Run";
+                    if(row.key == "RANGE") row.label.text = "Jump Strength";
+                }
+                Row(text, "STAMINA", "Stamina", $"{(mana != null ? mana.CurrentMana : core.maxStamina):0} / {core.maxStamina:0}");
+                Row(text, "HEALTH", "Health", $"{(hp != null ? hp.Health : player.MaxHealth):0.##} / {player.MaxHealth:0.##}");
+                if (statRows != null) foreach (var row in statRows)
+                    if (row != null && row.label != null) row.label.transform.parent.gameObject.SetActive(
+                        row.key == "DAMAGE" || row.key == "MOVEMENT_SPEED" || row.key == "RANGE" || row.key == "STAMINA" || row.key == "HEALTH");
+                RectTransform leftStart = null, rightStart = null;
+                if(statRows != null) foreach(var row in statRows) {
+                    if(row == null || row.label == null) continue;
+                    if(row.key == "DAMAGE") leftStart = row.label.transform.parent as RectTransform;
+                    if(row.key == "HEALTH") rightStart = row.label.transform.parent as RectTransform;
+                }
+                if(leftStart && rightStart) foreach(var row in statRows) {
+                    if(row == null || row.label == null) continue;
+                    var rect = row.label.transform.parent as RectTransform;
+                    if(!rect) continue;
+                    if(row.key == "MOVEMENT_SPEED") rect.anchoredPosition=leftStart.anchoredPosition+new Vector2(0,-70);
+                    if(row.key == "RANGE") rect.anchoredPosition=leftStart.anchoredPosition+new Vector2(0,-140);
+                    if(row.key == "STAMINA") rect.anchoredPosition=rightStart.anchoredPosition+new Vector2(0,-70);
+                }
+                if (body != null) body.text = text.ToString().TrimEnd('\n');
+                return;
+            }
+            if (d == null) return;
+            Row(text, "DAMAGE", "Damage", player.Damage.ToString("0.##"));
+            Row(text, "ATTACK_SPEED", "Attack speed", $"x{player.AttackSpeed:0.##}");
             Row(text, "MOVEMENT_SPEED", "Movement speed", $"{d.MoveSpeed:0.##}m/s");
-            Row(text, "RANGE", "Attack range", $"{(combat != null ? combat.AttackRange : d.attackRange):0.##}m");
+            Row(text, "RANGE", "Attack range", $"{d.attackRange:0.##}m");
             var stamina = player.GetComponent<MiningPlayerStamina>();
             Row(text, "STAMINA", "Stamina", $"{(stamina != null ? stamina.Current : d.maxStamina):0} / {d.maxStamina:0}");
             var health = player.GetComponent<MiningCharacterHealth>();

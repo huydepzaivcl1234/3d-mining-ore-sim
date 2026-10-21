@@ -49,8 +49,6 @@ namespace MiningSimulator.Ores
         // Local/spatial channels retain their authored level; settings apply once.
         private readonly Dictionary<AudioSource, float> externalSfxSources = new();
         private readonly List<AudioSource> deadSfxSources = new();
-        private readonly List<StarterAssets.ThirdPersonController> movementAudioOwners = new();
-        private void RegisterMovementAudioSource(AudioSource source) => RegisterWorldSfxSource(source);
         public float SfxGain => (sfxMuted ? 0f : masterVolume * sfxVolume) * (audioData != null ? audioData.SfxVolume : 1f);
 
         public void RegisterSfxSource(AudioSource source, float baseVolume = -1f)
@@ -139,13 +137,6 @@ namespace MiningSimulator.Ores
 
         private void OnEnable()
         {
-            foreach (var movement in FindObjectsByType<StarterAssets.ThirdPersonController>(FindObjectsInactive.Include, FindObjectsSortMode.None))
-            {
-                movement.MovementAudioSourceCreated -= RegisterMovementAudioSource;
-                movement.MovementAudioSourceCreated += RegisterMovementAudioSource;
-                movementAudioOwners.Add(movement);
-                RegisterWorldSfxSource(movement.MovementAudioSource);
-            }
 
 
 
@@ -250,9 +241,6 @@ namespace MiningSimulator.Ores
             if (worldSfxVoices != null)
                 foreach (var voice in worldSfxVoices)
                     if (voice != null) voice.Stop();
-            foreach (var movement in movementAudioOwners)
-                if (movement != null) movement.MovementAudioSourceCreated -= RegisterMovementAudioSource;
-            movementAudioOwners.Clear();
             foreach (var pair in externalSfxSources)
                 if (pair.Key != null) pair.Key.volume = pair.Value;
             externalSfxSources.Clear();

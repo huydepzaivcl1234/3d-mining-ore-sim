@@ -22,7 +22,7 @@ namespace MiningSimulator.Ores
             if (source == null) return;
             var attacker = source.GetComponentInParent<MiningCharacterHealth>();
             if (attacker == null || attacker.Health <= 0f || !attacker.gameObject.activeInHierarchy) return;
-            if (attacker != playerTarget && source.GetComponentInParent<PlayerCombatInput>(true) == null) return;
+            if (attacker != playerTarget && source.GetComponentInParent<GameData.Player.Script.PlayerController1>(true) == null) return;
             bool takeover = !retaliationClock.Active || retaliationTarget != attacker;
             retaliationTarget = playerTarget = attacker;
             returningFromRetaliation = false;

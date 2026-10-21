@@ -14,6 +14,8 @@ namespace MiningSimulator.Ores
     {
         [Header("Cycle")]
         [SerializeField] private bool cycleEnabled = true;
+        [Tooltip("Wait this many gameplay seconds after all monsters and pending spawns are cleared before switching day/night.")]
+        [Min(0f), SerializeField] private float clearedPeriodDelaySeconds = 3f;
         [SerializeField] private MiningTimePeriod startingPeriod = MiningTimePeriod.Day;
         [Min(1f), SerializeField] private float dayDurationSeconds = 120f;
         [Min(1f), SerializeField] private float nightDurationSeconds = 90f;
@@ -150,6 +152,7 @@ namespace MiningSimulator.Ores
         [Range(0.01f, 1f), SerializeField] private float vignetteSmoothness = 0.55f;
 
         public bool CycleEnabled => cycleEnabled;
+        public float ClearedPeriodDelaySeconds => Mathf.Max(0f, clearedPeriodDelaySeconds);
         public MiningTimePeriod StartingPeriod => startingPeriod;
         public float DayDurationSeconds => dayDurationSeconds;
         public float NightDurationSeconds => nightDurationSeconds;

@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d1fa0648ec695e3f892f7138305354ee, type: 3}
+  m_Name: Rifle
+  m_EditorClassIdentifier: Assembly-CSharp::ChestDefense.Fps.FpsWeaponData
+  weaponId: akm
+  nameKey: FPS_RIFLE
+  displayName: AKM
+  viewPrefab: {fileID: 6841627656975916174, guid: 6b5e2d1490fc03448893beda7870827c, type: 3}
+  idle: {fileID: -5115344659993355237, guid: 7d63e52bb45b5d738cff9fbdbe238620, type: 3}
+  shoot: {fileID: 7400000, guid: ff819ecb1637b5d49b44ad0ba7438cb3, type: 2}
+  reload: {fileID: 7400000, guid: 57e7803b8ca951549821052dd15a7bbc, type: 2}
+  hipPosition: {x: 0.33774158, y: -1.6055145, z: 0.34035766}
+  hipEuler: {x: 0.104629114, y: 270.10297, z: 0.6643541}
+  aimPosition: {x: 0.069341674, y: -1.414357, z: -0.041931897}
+  aimEuler: {x: 0.1073288, y: 270.10016, z: 359.1428}
+  alignIronSights: 1
+  aimEyeRelief: 0.14
+  aimSightOffset: {x: 0, y: 0}
+  poseBlendSeconds: 0.15
+  aimFieldOfView: 48
+  animationBlendSeconds: 0.06
+  fireMode: 1
+  roundsPerSecond: 8
+  minimumShotInterval: 0.125
+  usePlayerAttackSpeed: 1
+  range: 100
+  hipSpreadDegrees: 1
+  aimSpreadDegrees: 0.15
+  hitLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  usePlayerDamage: 1
+  damageMultiplier: 0.65
+  flatDamage: 10
+  damageType: 0
+  magazineCapacity: 30
+  startingReserve: 120
+  maximumReserve: 360
+  reloadSeconds: 2.5833335
+  reloadWhenEmpty: 0
+  recoilPitch: 1
+  recoilYaw: 0.25
+  recoilRecovery: 8
+  shotSound: {fileID: 8300000, guid: e616cafe9b0f57acb673a9ff6168efed, type: 3}
+  reloadSound: {fileID: 8300000, guid: c83ec450cc0c54eaa3c6f5e7574673fa, type: 3}
+  emptySound: {fileID: 8300000, guid: 0f4e3f22cd2e56308f84c78a7c75a2b0, type: 3}
+  soundGain: 1
+  impactPrefab: {fileID: 0}
+  impactLifetime: 1

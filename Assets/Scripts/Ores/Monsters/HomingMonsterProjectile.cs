@@ -3,7 +3,7 @@ using UnityEngine;
 namespace MiningSimulator.Ores
 {
     /// <summary>Swept, one-hit projectile. Steering follows the chosen living player or miner.</summary>
-    public sealed class HomingMonsterProjectile : MonoBehaviour
+    public sealed class HomingMonsterProjectile : MonoBehaviour, IPooledProjectile
     {
         [SerializeField, Min(.1f)] [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("speed")] private float legacy_speed = 8f;
         private float speed => data != null ? data.projectileSpeed : legacy_speed;
@@ -41,7 +41,13 @@ namespace MiningSimulator.Ores
         private void Update()
         {
             if (RuneStation.PlayerUsesRuneTime) return;
-            if (Step(Time.deltaTime)) Destroy(gameObject);
+            if (Step(Time.deltaTime)) SceneProjectilePool.Release(gameObject);
+        }
+        private void OnDisable() => ResetForPool();
+        public void ResetForPool()
+        {
+            owner=null;victim=null;victimHealth=null;data=null;age=0;launched=resolved=false;
+            System.Array.Clear(hits,0,hits.Length);
         }
         // Separate the simulation step from destruction for deterministic validation.
         private bool Step(float seconds)

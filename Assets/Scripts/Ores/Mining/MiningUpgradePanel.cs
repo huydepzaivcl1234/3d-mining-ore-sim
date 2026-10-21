@@ -37,23 +37,18 @@ namespace MiningSimulator.Ores
                 var item = FindFirstObjectByType<JuicyUpgradeItem>(FindObjectsInactive.Include);
                 if (item != null) upgradePanel = item.transform.parent.gameObject;
             }
-            worldStation = FindFirstObjectByType<MiningUpgradeStation>(FindObjectsInactive.Include);
-            if (worldStation == null)
-            {
-                var prefab = Resources.Load<MiningUpgradeStation>("MiningUpgradeStation");
-                if (prefab != null) worldStation = Instantiate(prefab);
-            }
-            if (worldStation == null || upgradePanel == null) return;
             RemoveListeners();
             usesCardPurchases = true;
+            TowerBuildHud.Ensure(wallet,panelCoordinator);
+            worldStation = FindFirstObjectByType<MiningUpgradeStation>(FindObjectsInactive.Include);
+            if(worldStation!=null)worldStation.enabled=false;
+            if(upgradePanel==null)return;
+            upgradePanel.SetActive(false);
+            panelCoordinator?.RegisterWorldUpgradePanel(upgradePanel.GetComponent<RectTransform>());
             var oldCarousel = upgradePanel.GetComponent<MiningUpgradeCarousel>();
             if (oldCarousel != null) oldCarousel.enabled = false;
             var oldAuto = upgradePanel.GetComponent<MiningAutoUpgradeButton>();
             if (oldAuto != null) oldAuto.enabled = false;
-            var towerShop = upgradePanel.GetComponent<TowerShopPanel>() ?? upgradePanel.AddComponent<TowerShopPanel>();
-            towerShop.Initialize(wallet, worldStation.Close);
-            panelCoordinator?.RegisterWorldUpgradePanel(upgradePanel.GetComponent<RectTransform>());
-            worldStation.Initialize(this, upgradePanel.GetComponent<RectTransform>(), panelCoordinator);
             if (openButton != null) openButton.gameObject.SetActive(false);
         }
 

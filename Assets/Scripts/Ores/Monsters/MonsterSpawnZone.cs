@@ -29,15 +29,63 @@ namespace MiningSimulator.Ores
     // Retain the script identity/GUID so existing scenes keep their spawn table.
     // This is a mining encounter spawner, not a bounded spawn zone anymore.
     [AddComponentMenu("Mining Simulator/Mining Monster Spawner")]
-    public sealed class MonsterSpawnZone : MonoBehaviour
+    public sealed partial class MonsterSpawnZone : MonoBehaviour
     {
+        private static readonly HashSet<MonsterSpawnZone> activeZones = new();
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetActiveZones() => activeZones.Clear();
+
+        public static bool AreEncountersCleared(DayNightSystem clock)
+        {
+            bool found = false;
+            foreach (var zone in activeZones)
+            {
+                if (!zone || zone.dayNight != clock) continue;
+                found = true;
+                if (!zone.IsCurrentPeriodCleared) return false;
+            }
+            if (!found) return false;
+            // Include summoned/independently spawned enemies, not only the wave budget.
+            foreach (var monster in MushroomMonster.Monsters)
+                if (monster && monster.isActiveAndEnabled && !monster.IsDespawning &&
+                    monster.Health && monster.Health.Health > 0f) return false;
+            return true;
+        }
+
+        public bool IsCurrentPeriodCleared
+        {
+            get
+            {
+                if (!started || dayNight == null || scheduledDay != dayNight.DayNumber) return false;
+                if (godBoss && godBoss.Health && godBoss.Health.Health > 0f) return false;
+                if (IsGodDay && GameSave.GetInt(GodDefeatedDayKey) != SpawnDayNumber) return false;
+                foreach (var monster in alive)
+                    if (monster && monster.isActiveAndEnabled && !monster.IsDespawning &&
+                        monster.Health && monster.Health.Health > 0f) return false;
+                if (dayNight.CurrentPeriod == SpawnPeriod && nextWave < waves.Count) return false;
+                if (!IsGodDay && dayNight.CurrentPeriod == MiningTimePeriod.Night &&
+                    additionalRoster != null && !RuneStation.PlayerUsesRuneTime)
+                {
+                    if (CanSpawnSpecies(additionalRoster.nightThief) &&
+                        spawnedThieves < additionalRoster.thievesPerNight) return false;
+                    var skull = additionalRoster.nightSkullclaw;
+                    if (CanSpawnSpecies(skull) && skull.prefab.SpeciesData is SkullclawData)
+                        if (!skullNights.TryGetValue(additionalRoster, out var roll) ||
+                            !roll.IsRolledFor(dayNight.DayNumber) || roll.Pending) return false;
+                }
+                return true;
+            }
+        }
         [SerializeField] private List<MonsterSpawnEntry> monsters = new();
         [Tooltip("Additional species. Authored scene entries take precedence if the prefab already exists.")]
         [SerializeField] private MonsterSpawnRoster additionalRoster;
         [SerializeField] private NavMeshSurface miningSurface;
-        // Retain old scene fields for serialization; chest GameData now owns the ring.
-        [HideInInspector, SerializeField] private float minimumSpawnDistance = 4f;
-        [HideInInspector, SerializeField] private float maximumSpawnDistance = 7f;
+        [Header("Encounter objective")]
+        [Tooltip("Disable for player-hunt scenes: no chest is created or required; spawn around this zone instead.")]
+        [SerializeField] private bool requireTreasureChest = true;
+        [Min(.5f), SerializeField] private float minimumSpawnDistance = 4f;
+        [Min(.5f), SerializeField] private float maximumSpawnDistance = 7f;
+        public bool PlayerHuntMode => !requireTreasureChest;
         [Min(0f), SerializeField] private float minimumPlayerDistance = 3f;
         [Header("Daily encounters")]
         [SerializeField] private DayNightSystem dayNight;
@@ -104,6 +152,26 @@ namespace MiningSimulator.Ores
         public int ForecastDay => scheduledDay;
         public int SpawnDayNumber => dayNight != null ? Mathf.Max(1, dayNight.DayNumber) : 1;
         public event Action ForecastChanged;
+        public event Action<Vector3> PeriodCleared;
+        private int rewardDay=-1, periodSpawns;private MiningTimePeriod rewardPeriod;
+        private bool periodRewarded, periodHasKill;private Vector3 lastKillPoint;
+        public void NotifyDefeated(Vector3 point){periodHasKill=true;lastKillPoint=point;}
+        public bool IsPeriodClearForReward
+        {
+            get
+            {
+                if(dayNight==null||periodSpawns==0||!periodHasKill||alive.Count>0)return false;
+                if(dayNight.CurrentPeriod==SpawnPeriod&&nextWave<waves.Count)return false;
+                if(dayNight.CurrentPeriod==MiningTimePeriod.Night&&additionalRoster!=null)
+                {
+                    if(CanSpawnSpecies(additionalRoster.nightThief)&&spawnedThieves<additionalRoster.thievesPerNight)return false;
+                    var skull=additionalRoster.nightSkullclaw;
+                    if(CanSpawnSpecies(skull)&&skull.prefab.SpeciesData is SkullclawData)
+                        if(!skullNights.TryGetValue(additionalRoster,out var roll)||!roll.IsRolledFor(dayNight.DayNumber)||roll.Pending)return false;
+                }
+                return true;
+            }
+        }
         public int AliveCount => alive.Count;
         public DayNightSystem DayNight => dayNight;
         public bool HasForecastBoss
@@ -169,14 +237,13 @@ private bool TryGetSpawnCandidate(out Vector3 position)
             position = default;
             var chest = TreasureChest.Active;
             var grid = WorldNavigationGrid.Instance;
-            if (chest == null || !chest.IsAlive || chest.Data == null ||
-                grid == null || !grid.isActiveAndEnabled || !grid.HasBaked) return false;
-            var data = chest.Data;
-            float min = Mathf.Max(.5f, data.monsterSpawnMinimumDistance);
-            float max = Mathf.Max(min, data.monsterSpawnMaximumDistance);
+            if (grid == null || !grid.isActiveAndEnabled || !grid.HasBaked) return false;
+            if (requireTreasureChest && (chest == null || !chest.IsAlive || chest.Data == null)) return false;
+            float min = Mathf.Max(.5f, requireTreasureChest ? chest.Data.monsterSpawnMinimumDistance : minimumSpawnDistance);
+            float max = Mathf.Max(min, requireTreasureChest ? chest.Data.monsterSpawnMaximumDistance : maximumSpawnDistance);
             float radius = Mathf.Sqrt(UnityEngine.Random.Range(min * min, max * max));
             float angle = UnityEngine.Random.Range(0f, Mathf.PI * 2f);
-            position = chest.transform.position + new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * radius;
+            position = (requireTreasureChest ? chest.transform.position : transform.position) + new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * radius;
             return true;
         }
 
@@ -184,12 +251,12 @@ private bool IsValidSpawnDistance(Vector3 position)
         {
             var chest = TreasureChest.Active;
             var grid = WorldNavigationGrid.Instance;
-            if (chest == null || chest.Data == null || grid == null ||
-                !grid.isActiveAndEnabled || !grid.HasBaked || !grid.Contains(position)) return false;
-            Vector3 offset = position - chest.transform.position;
+            if (grid == null || !grid.isActiveAndEnabled || !grid.HasBaked || !grid.Contains(position)) return false;
+            if (requireTreasureChest && (chest == null || chest.Data == null)) return false;
+            Vector3 offset = position - (requireTreasureChest ? chest.transform.position : transform.position);
             offset.y = 0f;
-            float min = Mathf.Max(.5f, chest.Data.monsterSpawnMinimumDistance);
-            float max = Mathf.Max(min, chest.Data.monsterSpawnMaximumDistance);
+            float min = Mathf.Max(.5f, requireTreasureChest ? chest.Data.monsterSpawnMinimumDistance : minimumSpawnDistance);
+            float max = Mathf.Max(min, requireTreasureChest ? chest.Data.monsterSpawnMaximumDistance : maximumSpawnDistance);
             return offset.sqrMagnitude >= min * min && offset.sqrMagnitude <= max * max;
         }
 
@@ -213,7 +280,7 @@ public bool TryGetPatrolPoint(Vector3 origin,out Vector3 point)
         {
             if(WorldNavigationGrid.Instance==null) gameObject.AddComponent<WorldNavigationGrid>();
             var chestData=Resources.Load<TreasureChestData>("TreasureChestData");
-            if(TreasureChest.Active==null && chestData!=null && chestData.prefab!=null)
+            if(requireTreasureChest && TreasureChest.Active==null && chestData!=null && chestData.prefab!=null)
             {
                 Vector3 point=chestData.spawnPosition;
                 if(Terrain.activeTerrain!=null)point.y=Terrain.activeTerrain.SampleHeight(point)+Terrain.activeTerrain.transform.position.y;
@@ -249,6 +316,7 @@ public bool TryGetPatrolPoint(Vector3 origin,out Vector3 point)
         }
         private void OnEnable()
         {
+            activeZones.Add(this);
             // Start runs once; refresh scheduling after re-enabling the zone.
             if (!started) return;
             CheckMonsterUnlocks();
@@ -292,11 +360,14 @@ public bool TryGetPatrolPoint(Vector3 origin,out Vector3 point)
             CheckMonsterUnlocks();
             if (alive.RemoveAll(RemoveInactiveMonster) > 0) ForecastChanged?.Invoke();
             if (dayNight == null || !dayNight.isActiveAndEnabled) return;
+            if(rewardDay!=dayNight.DayNumber||rewardPeriod!=dayNight.CurrentPeriod){rewardDay=dayNight.DayNumber;rewardPeriod=dayNight.CurrentPeriod;periodSpawns=0;periodRewarded=periodHasKill=false;}
             if (scheduledDay != dayNight.DayNumber) BuildDailySchedule();
+            if (TickGodEncounter()) return;
             AnnounceDailyEvent();
-            if (TreasureChest.Active == null || !TreasureChest.Active.IsAlive) return;
+            if (requireTreasureChest && (TreasureChest.Active == null || !TreasureChest.Active.IsAlive)) return;
             TickNightThieves();
             TickNightSkullclaw();
+            if(!periodRewarded&&IsPeriodClearForReward){periodRewarded=true;PeriodCleared?.Invoke(lastKillPoint);}
             if (dayNight.CurrentPeriod != SpawnPeriod)
             {
                 // Night-only waves are deferred during the day, not discarded.
@@ -325,6 +396,7 @@ public bool TryGetPatrolPoint(Vector3 origin,out Vector3 point)
                 ForecastChanged?.Invoke();
             }
             if (wave.Completed == wave.Members.Count) nextWave++;
+            else if(!MonsterSpawnBudget.Available)nextSpawnRetry=Time.time;
         }
 
         private void CheckMonsterUnlocks()
@@ -443,6 +515,8 @@ public bool TryGetPatrolPoint(Vector3 origin,out Vector3 point)
             scheduledDay = dayNight != null ? dayNight.DayNumber : 1;
             if (dayNight == null)
             { ForecastChanged?.Invoke(); return; }
+            if (IsGodDay)
+            { CurrentDailyEvent = DailyEncounterEvent.Normal; dailyAnnouncementPending = false; ForecastChanged?.Invoke(); return; }
             dailyEvents ??= additionalRoster != null ? additionalRoster.DailyEvents : null;
             dailyEvents ??= Resources.Load<DailyEncounterEventData>("DailyEncounterEvents");
             bool bossEligible = monsters.Exists(CanSpawnEventBoss);
@@ -519,6 +593,7 @@ public bool TryGetPatrolPoint(Vector3 origin,out Vector3 point)
         }
         private void OnDisable()
         {
+            activeZones.Remove(this);
             if (forecastHud != null) forecastHud.SetVisible(false);
             // The spawned monsters are owned by this spawner. Destroy without combat
             // rewards so no invisible Ground enemies survive the world switch.
@@ -535,6 +610,7 @@ public bool TryGetPatrolPoint(Vector3 origin,out Vector3 point)
         }
         private bool SpawnOne(MonsterSpawnEntry entry, bool forceBoss = false, bool invasion = false)
         {
+            if(!MonsterSpawnBudget.TryBegin())return false;
             alive.RemoveAll(RemoveInactiveMonster);
             if (LivingCountOnField() >= MaximumLivingMonsters || !CanSpawnSpecies(entry)) return false;
             MushroomMonster prefab = entry.prefab;
@@ -577,6 +653,7 @@ public bool TryGetPatrolPoint(Vector3 origin,out Vector3 point)
                     instance.ApplyEncounterModifiers(extraScale, 1f + Mathf.Max(0, dailyEvents.bossExtraDamagePercent) * 0.01f,
                         1f + Mathf.Max(0, dailyEvents.bossExtraHealthPercent) * .01f);
                 alive.Add(instance);
+                periodSpawns++;
                 liveSpecies[instance] = entry;
                 ForecastChanged?.Invoke();
                 return true;
@@ -629,6 +706,7 @@ public bool TryGetPatrolPoint(Vector3 origin,out Vector3 point)
 
 public static void ResetLoadedEncounters()
         {
+            skullNights.Clear();
             foreach (var zone in FindObjectsByType<MonsterSpawnZone>(FindObjectsInactive.Include, FindObjectsSortMode.None))
             {
                 if (zone.started) zone.ResetEncounter();
@@ -639,6 +717,7 @@ public static void ResetLoadedEncounters()
 
 public void ResetEncounter()
         {
+            ResetGodEncounter();
             // Reset can return to the same day: day-number comparison alone misses it.
             foreach (var monster in alive)
                 if (monster != null)
@@ -652,6 +731,7 @@ public void ResetEncounter()
             announcedBosses.Clear();
             forcedDailyEvent = null;
             thiefDay = -1; spawnedThieves = 0; nextThiefRetry = 0f;
+            rewardDay = -1; periodSpawns = 0; periodRewarded = periodHasKill = false; nextSkullRetry = 0f;
             lastKnownPlayerLevel = playerStats != null ? playerStats.Level : 1;
             BuildDailySchedule();
         }

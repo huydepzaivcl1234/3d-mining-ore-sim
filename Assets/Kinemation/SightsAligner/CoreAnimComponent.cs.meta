@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: e555189548f05b041ab8a5a0595a3c32
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 300
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 237358
+  packageName: 'SightsAligner: FPS Tool'
+  packageVersion: 1.0
+  assetPath: Assets/Kinemation/SightsAligner/CoreAnimComponent.cs
+  uploadId: 538927

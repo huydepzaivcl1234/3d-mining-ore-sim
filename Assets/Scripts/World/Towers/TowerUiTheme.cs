@@ -29,12 +29,14 @@ namespace MiningSimulator.Ores
                 texture.SetPixels(pixels);texture.Apply(false,true);
                 rounded=Sprite.Create(texture,new Rect(0,0,64,64),new Vector2(.5f,.5f),100,0,SpriteMeshType.FullRect,new Vector4(16,16,16,16));
             }
-            var g=rect.gameObject.AddComponent<UnityEngine.UI.Image>();g.sprite=rounded;g.type=UnityEngine.UI.Image.Type.Sliced;g.pixelsPerUnitMultiplier=radius>0?12/radius:1;g.color=color;g.raycastTarget=false;return g;
+            var g=rect.GetComponent<UnityEngine.UI.Image>()??rect.gameObject.AddComponent<UnityEngine.UI.Image>();g.sprite=rounded;g.type=UnityEngine.UI.Image.Type.Sliced;g.pixelsPerUnitMultiplier=radius>0?12/radius:1;g.color=color;g.raycastTarget=false;return g;
         }
         internal static RectTransform Frame(string name,Transform parent,Vector2 size,Vector2 position,Color fill,float radius=10)
         {
             var r=Rect(name,parent,size,position);Box(r,Gold,radius);
-            Box(Rect("Surface",r,size-Vector2.one*2,Vector2.zero),fill,Mathf.Max(0,radius-1));return r;
+            var surface=Rect("Surface",r,Vector2.zero,Vector2.zero);
+            surface.anchorMin=Vector2.zero;surface.anchorMax=Vector2.one;surface.offsetMin=Vector2.one;surface.offsetMax=-Vector2.one;
+            Box(surface,fill,Mathf.Max(0,radius-1));return r;
         }
         internal static TMP_Text Label(Transform parent,string name,Vector2 position,Vector2 size,float font,Color color,bool title=false,TextAlignmentOptions align=TextAlignmentOptions.Left)
         {

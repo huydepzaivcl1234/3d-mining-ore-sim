@@ -15,18 +15,10 @@ namespace MiningSimulator.Ores
         private MiningCharacterHealth health;
         private PlayerWallet wallet;
         private MiningAudioManager audioManager;
-        private MiningOrbitCamera orbit;
         private MiningMainMenu menu;
         private Camera viewCamera;
-        private Animator playerAnimator;
-        private StarterAssets.ThirdPersonController movement;
-        private CharacterController playerController;
-        private float previousStepHeight;
-        private bool stepHeightOverridden;
-        private bool previousMovementTime;
-        private AnimatorUpdateMode previousAnimatorMode;
         private CursorLockMode previousCursorLock;
-        private bool previousCursorVisible, previousShiftLock;
+        private bool previousCursorVisible;
         private float previousTimeScale;
         private bool inside;
         private static RuneStation active;
@@ -39,16 +31,12 @@ namespace MiningSimulator.Ores
             player = FindFirstObjectByType<MiningPlayerStats>();
             if (player != null) player.RuneUpgrades.Configure(data);
             health = player != null ? player.GetComponent<MiningCharacterHealth>() : null;
-            playerAnimator = player != null ? player.GetComponent<Animator>() : null;
-            movement = player != null ? player.GetComponent<StarterAssets.ThirdPersonController>() : null;
-            playerController = player != null ? player.GetComponent<CharacterController>() : null;
             // Convex hulls fill the stairs/platform recesses and create a sloping invisible wall.
             // This shrine is static; keep its actual triangles and retain all authored colliders.
             foreach (var collider in GetComponentsInChildren<MeshCollider>(true))
                 if (collider.attachedRigidbody == null) collider.convex = false;
             wallet = FindFirstObjectByType<PlayerWallet>();
             audioManager = FindFirstObjectByType<MiningAudioManager>();
-            orbit = FindFirstObjectByType<MiningOrbitCamera>();
             menu = FindFirstObjectByType<MiningMainMenu>(FindObjectsInactive.Include);
             viewCamera = Camera.main;
             ConfigurePanel();
@@ -79,7 +67,6 @@ namespace MiningSimulator.Ores
             float distance = Vector3.ProjectOnPlane(player.transform.position - (transform.position + data.zoneOffset), Vector3.up).magnitude;
             bool available = player.isActiveAndEnabled && (health == null || health.Health > 0f) && (menu == null || !menu.IsOpen);
             bool shouldEnter = available && distance <= data.radius;
-            UpdateStepHeight(available && distance <= data.revealDistance);
             if (inside && !shouldEnter) Exit();
             else if (!inside && shouldEnter && active == null && Time.timeScale > 0f) Enter();
             boundary.SetActive(available && distance <= data.revealDistance);
@@ -110,12 +97,7 @@ namespace MiningSimulator.Ores
         {
             inside = true; active = this;
             previousTimeScale = Time.timeScale;
-            if (movement != null) { previousMovementTime = movement.UseUnscaledMovementTime; movement.UseUnscaledMovementTime = true; }
-            previousShiftLock = orbit != null && orbit.IsShiftLocked;
-            if (orbit != null) orbit.SetShiftLocked(false);
             previousCursorLock = Cursor.lockState; previousCursorVisible = Cursor.visible;
-            if (playerAnimator != null)
-            { previousAnimatorMode = playerAnimator.updateMode; playerAnimator.updateMode = AnimatorUpdateMode.UnscaledTime; }
             Time.timeScale = 0f;
             if (audioManager != null) audioManager.BeginRuneAmbience(data.ambience);
             Refresh();
@@ -126,10 +108,7 @@ namespace MiningSimulator.Ores
             inside = false;
             if (active == this) active = null;
             if (Mathf.Approximately(Time.timeScale, 0f)) Time.timeScale = previousTimeScale;
-            if (playerAnimator != null) playerAnimator.updateMode = previousAnimatorMode;
-            if (movement != null) movement.UseUnscaledMovementTime = previousMovementTime;
             Cursor.lockState = previousCursorLock; Cursor.visible = previousCursorVisible;
-            if (orbit != null && (health == null || health.Health > 0f) && (menu == null || !menu.IsOpen)) orbit.SetShiftLocked(previousShiftLock);
             if (audioManager != null) audioManager.EndRuneAmbience();
             if (panelGroup != null) panelGroup.interactable = panelGroup.blocksRaycasts = false;
         }
@@ -145,26 +124,10 @@ namespace MiningSimulator.Ores
             if (player == null || wallet == null) return;
             foreach (var row in rows) if (row != null) row.Refresh(player.RuneUpgrades, wallet.CurrentGems);
         }
-        private void UpdateStepHeight(bool nearby)
-        {
-            if (playerController == null) return;
-            if (nearby && !stepHeightOverridden)
-            {
-                previousStepHeight = playerController.stepOffset;
-                stepHeightOverridden = true;
-                playerController.stepOffset = Mathf.Min(playerController.height, Mathf.Max(previousStepHeight, data.nearbyStepHeight));
-            }
-            else if (!nearby && stepHeightOverridden)
-            {
-                playerController.stepOffset = previousStepHeight;
-                stepHeightOverridden = false;
-            }
-        }
-        private void OnDisable() { Exit(); UpdateStepHeight(false); }
+        private void OnDisable() { Exit(); }
         private void OnDestroy()
         {
             Exit();
-            UpdateStepHeight(false);
             if (player != null) player.RuneUpgrades.Changed -= Refresh;
             if (wallet != null) wallet.GemsChanged -= GemsChanged;
             MiningLocalization.LanguageChanged -= Refresh;

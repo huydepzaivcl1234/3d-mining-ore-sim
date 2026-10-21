@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7ac58b121b51bf74c8e24fd96ed6258c, type: 3}
+  m_Name: OrangeBox
+  m_EditorClassIdentifier: Assembly-CSharp::GameData.Player.Script.OrangeGunUpgradeData
+  boxPrefab: {fileID: 1628059922166312502, guid: 8852adadc5498dd49ba68bc0e6937f84, type: 3}
+  dropChancePercent: 100
+  pickupRadius: 1.5
+  pickupDelay: 1
+  visualScale: 0.7
+  dropOffset: {x: 2, y: 0, z: 0}
+  cantDie: {fileID: 11400000, guid: c6e02c308199cd44aa1b495bd97091d1, type: 2}
+  cannon: {fileID: 11400000, guid: 2bfeb006e5becb44c8e02a55808be635, type: 2}
+  etherealWeapon: {fileID: 11400000, guid: 2679a128514b89c48b6a030b5a3378e7, type: 2}

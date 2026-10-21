@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using MiningSimulator.Ores;
-using StarterAssets;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -41,12 +40,3 @@ public abstract class MiningPlayerStatsBoundEditor : Editor
 [CustomEditor(typeof(MiningCharacterHealth)), CanEditMultipleObjects]
 public sealed class MiningPlayerHealthStatsEditor : MiningPlayerStatsBoundEditor
 { protected override string[] StatFields => new[] { "maxHealth", "regenAmount", "regenInterval", "armor", "magicResistance", "resistanceScale" }; }
-[CustomEditor(typeof(PlayerCombatInput)), CanEditMultipleObjects]
-public sealed class MiningPlayerCombatStatsEditor : MiningPlayerStatsBoundEditor
-{ protected override string[] StatFields => new[] { "damage", "attackRange", "attackAngle", "attackSpeed", "combatBlendSeconds", "hitOriginOffset" }; }
-[CustomEditor(typeof(ThirdPersonController)), CanEditMultipleObjects]
-public sealed class MiningPlayerMovementStatsEditor : MiningPlayerStatsBoundEditor
-{ protected override string[] StatFields => new[] { "MoveSpeed", "SprintSpeed", "RotationSmoothTime", "SpeedChangeRate", "JumpHeight", "Gravity", "JumpTimeout", "FallTimeout" }; }
-[CustomEditor(typeof(PlayerDeathRespawn)), CanEditMultipleObjects]
-public sealed class MiningPlayerRespawnStatsEditor : MiningPlayerStatsBoundEditor
-{ protected override string[] StatFields => new[] { "respawnSeconds" }; }

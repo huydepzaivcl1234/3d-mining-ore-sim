@@ -11,10 +11,11 @@ namespace MiningSimulator.Ores
         [Serializable]
         private sealed class SavedInventory
         {
-            public int version = 4;
+            public int version = 5;
             public string necklaceId;
             public List<string> necklaceIds = new();
             public List<SavedSlot> slots = new();
+            public List<SavedSlot> constructionStock = new();
         }
 
         [Serializable]
@@ -472,6 +473,7 @@ namespace MiningSimulator.Ores
 
         public void ResetAllData()
         {
+            towerStock.Clear();
             EnsureRuntimeSlots();
             foreach (RuntimeSlot slot in slots)
             {
@@ -643,6 +645,12 @@ namespace MiningSimulator.Ores
             {
                 return;
             }
+            towerStock.Clear();
+            if (save.constructionStock != null)
+                foreach (var stock in save.constructionStock)
+                    if (stock != null && !string.IsNullOrEmpty(stock.itemId) && stock.towerReceipts != null)
+                        foreach (float receipt in stock.towerReceipts)
+                            StockReceipts(stock.itemId).Add(float.IsNaN(receipt) || float.IsInfinity(receipt) ? 0f : Mathf.Max(0, receipt));
 
             for (int i = 0; i < necklaces.Length; i++)
             {
@@ -690,6 +698,7 @@ namespace MiningSimulator.Ores
                 }
                 first.paidPrice = first.towerReceipts[0];
             }
+            TransferLegacyTowersToConstruction();
         }
 
         private void SaveInventory()
@@ -700,6 +709,8 @@ namespace MiningSimulator.Ores
                 return;
             }
             var save = new SavedInventory { necklaceId = EquippedNecklace != null ? EquippedNecklace.ItemId : string.Empty };
+            foreach (var stock in towerStock)
+                if (stock.Value.Count > 0) save.constructionStock.Add(new SavedSlot {itemId=stock.Key,count=stock.Value.Count,towerReceipts=new List<float>(stock.Value)});
             foreach (var necklace in necklaces) save.necklaceIds.Add(necklace.item != null ? necklace.item.ItemId : string.Empty);
             foreach (RuntimeSlot slot in slots)
             {

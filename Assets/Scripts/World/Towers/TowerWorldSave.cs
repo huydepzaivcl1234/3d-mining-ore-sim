@@ -11,16 +11,17 @@ namespace MiningSimulator.Ores
         public string id, towerId, scene;
         public Vector3 position;
         public float yaw, health, paidPrice;
+        public int level;
         public bool IsValid => !string.IsNullOrEmpty(id) && !string.IsNullOrEmpty(towerId) &&
             !string.IsNullOrEmpty(scene) && Finite(position.x) && Finite(position.y) && Finite(position.z) &&
-            Finite(yaw) && Finite(health) && health > 0 && Finite(paidPrice) && paidPrice >= 0;
+            Finite(yaw) && Finite(health) && health > 0 && Finite(paidPrice) && paidPrice >= 0 && level >= 0;
         private static bool Finite(float x) => !float.IsNaN(x) && !float.IsInfinity(x);
     }
 
     [Serializable]
     public sealed class TowerSaveDocument
     {
-        public int version = 1;
+        public int version = 2;
         public List<TowerPlacementRecord> towers = new();
         public static bool TryRead(string json, out TowerSaveDocument document)
         {
@@ -28,10 +29,11 @@ namespace MiningSimulator.Ores
             try
             {
                 var parsed = JsonUtility.FromJson<TowerSaveDocument>(json);
-                if (parsed == null || parsed.version != 1 || parsed.towers == null) return false;
+                if (parsed == null || parsed.version < 1 || parsed.version > 2 || parsed.towers == null) return false;
                 var ids = new HashSet<string>();
                 foreach (var record in parsed.towers)
                     if (record == null || !record.IsValid || !ids.Add(record.id)) return false;
+                parsed.version = 2;
                 document = parsed;
                 return true;
             }
@@ -81,7 +83,7 @@ namespace MiningSimulator.Ores
             if (tower.Health == null || tower.Health.Health <= 0) { Remove(tower); return; }
             var record = new TowerPlacementRecord { id = tower.PlacementId, towerId = tower.Data.towerId,
                 scene = SceneKey(tower.gameObject.scene), position = tower.transform.position,
-                yaw = tower.transform.eulerAngles.y, health = tower.Health.Health, paidPrice = tower.PaidPrice };
+                yaw = tower.transform.eulerAngles.y, health = tower.Health.Health, paidPrice = tower.PaidPrice, level = tower.Level };
             if (!record.IsValid) return;
             int index = document.towers.FindIndex(x => x.id == record.id);
             if (index < 0) document.towers.Add(record); else document.towers[index] = record;
@@ -125,7 +127,7 @@ namespace MiningSimulator.Ores
                 var go = UnityEngine.Object.Instantiate(data.prefab, foot, rotation);
                 SceneManager.MoveGameObjectToScene(go, scene);
                 var tower = go.GetComponent<TowerRuntime>();
-                tower.Initialize(data, record.paidPrice); tower.Health.RestoreSavedHealth(record.health);
+                tower.Initialize(data, record.paidPrice, record.level); tower.Health.RestoreSavedHealth(record.health);
                 tower.AlignToGround(); tower.MarkDeployed(record.id); loaded[record.id] = tower;
                 Physics.SyncTransforms();
             }

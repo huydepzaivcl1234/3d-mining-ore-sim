@@ -10,11 +10,12 @@ public sealed class PlayerGraphicsOptionsTests
     [Test]
     public void PartialAndCorruptPreferencesPreserveSafeDefaults()
     {
-        var defaults=new PlayerGraphicsPreferences {shadowDistance=85,msaa=4};
+        var defaults=new PlayerGraphicsPreferences {shadowDistance=85,msaa=4,renderDistance=225};
         var partial=PlayerGraphicsPreferences.Read("{\"version\":1,\"renderScale\":0.75}",defaults);
         Assert.That(partial.renderScale,Is.EqualTo(.75f));
         Assert.That(partial.shadowDistance,Is.EqualTo(85));
         Assert.That(partial.msaa,Is.EqualTo(4));
+        Assert.That(partial.renderDistance,Is.EqualTo(225));
         Assert.That(PlayerGraphicsPreferences.Read("not json",defaults).shadowDistance,Is.EqualTo(85));
         Assert.That(PlayerGraphicsPreferences.Read("{\"version\":9,\"shadowDistance\":0}",defaults).shadowDistance,Is.EqualTo(85));
         Assert.That(defaults.renderScale,Is.EqualTo(1));
@@ -23,13 +24,14 @@ public sealed class PlayerGraphicsOptionsTests
     [Test]
     public void SanitizationRejectsNonFiniteAndUnsupportedValues()
     {
-        var values=new PlayerGraphicsPreferences {renderScale=float.NaN,shadowDistance=float.PositiveInfinity,
+        var values=new PlayerGraphicsPreferences {renderScale=float.NaN,shadowDistance=float.PositiveInfinity,renderDistance=float.NaN,
             aaMode=99,msaa=3,cascades=8,bloomMultiplier=-1,refreshDenominator=0};
         values.Sanitize();
         Assert.That(values.renderScale,Is.EqualTo(1));Assert.That(values.shadowDistance,Is.EqualTo(50));
         Assert.That(values.aaMode,Is.EqualTo(2));Assert.That(values.msaa,Is.EqualTo(4));
         Assert.That(values.cascades,Is.EqualTo(4));Assert.That(values.bloomMultiplier,Is.Zero);
         Assert.That(values.refreshDenominator,Is.EqualTo(1));
+        Assert.That(values.renderDistance,Is.EqualTo(300));
     }
 
     [Test]

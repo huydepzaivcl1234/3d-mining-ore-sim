@@ -44,7 +44,7 @@ namespace MiningSimulator.Ores
         public CombatDamageType attackDamageType = CombatDamageType.Physical;
         [Header("Combat")]
         [Header("Damage number feedback")]
-        public MiningDamagePopupSettings damagePopup = new();
+        [HideInInspector] public MiningDamagePopupSettings damagePopup = new(); // Legacy; live popup settings are in MiningDamagePopupData.
         [Header("Jump / attack feedback")]
         public AudioClip jumpSfx;
         [Range(0, 1)] public float jumpSfxVolume = 0.6f;

@@ -105,6 +105,7 @@ namespace MiningSimulator.Ores
             });
             Choice("VSync", "Đồng bộ VSync",()=>OnOff(options.Values.vsync),()=>options.Values.vsync=!options.Values.vsync);
             Label("QUALITY", "CHẤT LƯỢNG");
+            Slider("Render distance", "Khoảng cách hiển thị",25,1000,()=>options.Values.renderDistance,v=>options.Values.renderDistance=v,"0 m");
             Choice("Post-processing", "Hậu kỳ",()=>OnOff(options.Values.postProcessing),()=>options.Values.postProcessing=!options.Values.postProcessing);
             Choice("Camera AA", "Khử răng cưa",()=>new[]{"None","FXAA","SMAA"}[options.Values.aaMode],()=>options.Values.aaMode=(options.Values.aaMode+1)%3);
             Choice("AA quality", "Chất lượng AA",()=>new[]{"Low","Medium","High"}[options.Values.aaQuality],()=>options.Values.aaQuality=(options.Values.aaQuality+1)%3);
