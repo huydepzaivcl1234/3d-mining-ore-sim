@@ -3,7 +3,27 @@ guid: cc270f8a084bb97409bbe737f864a6df
 ModelImporter:
   serializedVersion: 24501
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Skullclaw - aged ivory
+    second: {fileID: 2100000, guid: 07f24a9545965a7449e14c06464f4d55, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Skullclaw - dusk purple
+    second: {fileID: 2100000, guid: b60f6876c151f18479c89dadc3439567, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Skullclaw - eye cavities
+    second: {fileID: 2100000, guid: 90744c027ddacf34bbbe7b1d217646ce, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Skullclaw - ghost green eyes
+    second: {fileID: 2100000, guid: b65cccba38b1d2947acaf7ae4a6741dd, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

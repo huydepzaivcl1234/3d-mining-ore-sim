@@ -46,3 +46,14 @@ MonoBehaviour:
     spinDegrees: 8
     maximumVisible: 64
     maximumRetained: 16
+    followTarget: 0
+    showDamageTotals: 1
+    accumulatePeriodicDamage: 1
+    accumulateMagicAndTrueDamage: 1
+    accumulatePhysicalDamage: 1
+    periodicQuietSeconds: 3
+    periodicTypeSpacing: 0.25
+    minimumPixelSpacing: 8
+    totalHeadOffset: 0.8
+    totalSizeMultiplier: 0.65
+    totalGapPixels: 12

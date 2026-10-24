@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 51844a5ba57573042a86fab24ae886a4, type: 3}
+  m_Name: BeforeOldHitPresentation-20261024
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningDamagePopupData
+  settings:
+    enabled: 1
+    duration: 1.05
+    riseHeight: 0.95
+    fallDistance: 0.45
+    peakTime: 0.3
+    sidewaysDistance: 0.7
+    worldOffset: {x: 0, y: 0.35, z: 0}
+    worldScale: 0.16
+    fontSize: 20
+    scaleWithDamage: 1
+    damageForMinimumSize: 1
+    damageForMaximumSize: 100
+    minimumFontSize: 14
+    maximumFontSize: 28
+    font: {fileID: 11400000, guid: de7d092f06dfbf346af986cd2870a136, type: 2}
+    material: {fileID: 0}
+    color: {r: 0.91823894, g: 0.08373868, b: 0.123087764, a: 1}
+    physicalColor: {r: 1, g: 0.5, b: 0.08, a: 1}
+    magicColor: {r: 1, g: 0.3, b: 0.85, a: 1}
+    trueColor: {r: 1, g: 1, b: 1, a: 1}
+    outlineColor: {r: 0, g: 0, b: 0, a: 1}
+    outlineWidth: 0.2
+    fadeStart: 0.42
+    scalePunch: 0.4
+    punchFraction: 0.25
+    initialScale: 0.55
+    endScale: 0.85
+    spawnSpread: {x: 0.24, y: 0.12}
+    motionVariation: 0.2
+    randomTiltDegrees: 12
+    spinDegrees: 8
+    maximumVisible: 64
+    maximumRetained: 16
+    followTarget: 1
+    showDamageTotals: 1
+    accumulatePeriodicDamage: 1
+    accumulateMagicAndTrueDamage: 1
+    accumulatePhysicalDamage: 1
+    periodicQuietSeconds: 3
+    periodicTypeSpacing: 0.25
+    minimumPixelSpacing: 8
+    totalHeadOffset: 0.8
+    totalSizeMultiplier: 0.65
+    totalGapPixels: 12

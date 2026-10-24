@@ -1,0 +1,69 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!319 &31900000
+AvatarMask:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Bat_UpperBody
+  m_Mask: 00000000010000000100000000000000000000000100000001000000010000000100000000000000000000000000000000000000
+  m_Elements:
+  - m_Path: 
+    m_Weight: 0
+  - m_Path: mesh
+    m_Weight: 0
+  - m_Path: mesh/eyes
+    m_Weight: 0
+  - m_Path: mesh/fluffy
+    m_Weight: 0
+  - m_Path: mesh/foot
+    m_Weight: 0
+  - m_Path: mesh/head
+    m_Weight: 0
+  - m_Path: mesh/wing
+    m_Weight: 0
+  - m_Path: root
+    m_Weight: 0
+  - m_Path: root/body
+    m_Weight: 0
+  - m_Path: root/body/Damage Hitbox
+    m_Weight: 0
+  - m_Path: root/body/foot_01_L
+    m_Weight: 0
+  - m_Path: root/body/foot_01_L/foot_02_L
+    m_Weight: 0
+  - m_Path: root/body/foot_01_R
+    m_Weight: 0
+  - m_Path: root/body/foot_01_R/foot_02_R
+    m_Weight: 0
+  - m_Path: root/body/head
+    m_Weight: 1
+  - m_Path: root/body/head/Damage Hitbox
+    m_Weight: 1
+  - m_Path: root/body/wing_root
+    m_Weight: 1
+  - m_Path: root/body/wing_root/wing_01_L
+    m_Weight: 1
+  - m_Path: root/body/wing_root/wing_01_L/wing_02_L
+    m_Weight: 1
+  - m_Path: root/body/wing_root/wing_01_L/wing_02_L/wing_03_L
+    m_Weight: 1
+  - m_Path: root/body/wing_root/wing_01_L/wing_02_L/wing_03_L/wing_04_L
+    m_Weight: 1
+  - m_Path: root/body/wing_root/wing_01_L/wing_02_L/wing_03_L/wing_04_L/wing_05_L
+    m_Weight: 1
+  - m_Path: root/body/wing_root/wing_01_L/wing_02_L/wing_03_L/wing_04_L/wing_05_L/wing_06_L
+    m_Weight: 1
+  - m_Path: root/body/wing_root/wing_01_R
+    m_Weight: 1
+  - m_Path: root/body/wing_root/wing_01_R/wing_02_R
+    m_Weight: 1
+  - m_Path: root/body/wing_root/wing_01_R/wing_02_R/wing_03_R
+    m_Weight: 1
+  - m_Path: root/body/wing_root/wing_01_R/wing_02_R/wing_03_R/wing_04_R
+    m_Weight: 1
+  - m_Path: root/body/wing_root/wing_01_R/wing_02_R/wing_03_R/wing_04_R/wing_05_R
+    m_Weight: 1
+  - m_Path: root/body/wing_root/wing_01_R/wing_02_R/wing_03_R/wing_04_R/wing_05_R/wing_06_R
+    m_Weight: 1

@@ -19,14 +19,14 @@ MonoBehaviour:
   damageFalloffStart: 300
   magazineSize: 7
   reserveAmmo: 1000
-  reloadSeconds: 2
+  reloadSeconds: 3.1833334
   automatic: 0
   hitLayers:
     serializedVersion: 2
     m_Bits: 4294967295
   motionProfile: {fileID: 11400000, guid: 0c208cd4ef65e6f4d81bde2fb9ad0459, type: 2}
-  reloadProfile: {fileID: 11400000, guid: 7d92e7a312870ba419a84cdf196249fc, type: 2}
-  recoilDegrees: 0.45
+  reloadProfile: {fileID: 11400000, guid: e7411910724f78e47b0ad4e2edcb1503, type: 2}
+  recoilDegrees: 1.5
   recoilYawDegrees: 0.2
   recoilRollDegrees: 0.35
   recoilRecovery: 12

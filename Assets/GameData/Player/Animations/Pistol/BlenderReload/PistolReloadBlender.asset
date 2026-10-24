@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9d79be03e5a0f1644952e3a96652cb70, type: 3}
+  m_Name: PistolReloadBlender
+  m_EditorClassIdentifier: Assembly-CSharp::GameData.Player.Script.PistolReloadProfile
+  sourceClip: {fileID: -795275024131544319, guid: bacf5c0c91d35b54889df60b5854aa3e, type: 3}
+  authoredClip: {fileID: -795275024131544319, guid: f01a1e3f31dc81a45b468671da1bd836, type: 3}
+  mechanismRestClip: {fileID: 7400000, guid: 9ef2fb90870abff4e8eb33789e7b4f3e, type: 2}
+  mechanismClip: {fileID: 7400000, guid: 127bdce201b280148a451858be3cec2f, type: 2}
+  authoredLayer: Pistol Blender Reload
+  authoredState: Reload
+  useAuthoredCamera: 1
+  cameraVerticalFov: 85
+  cameraNearClip: 0.12
+  cameraAnchorLocalPosition: {x: -0.0000011585653, y: -0.0060468214, z: 0.0912669}
+  targetClip: {fileID: 0}
+  magazinePath: Magazine_Location/M1911 Magazine_Black
+  slidePath: M1911 Handgun_Model/Slider
+  leftGripOffset: {x: 0, y: 0, z: 0}
+  leftGripEuler: {x: 0, y: 0, z: -35}
+  weaponTiltEuler: {x: 5, y: -5, z: -20}
+  weaponPositionOffset: {x: -0.045, y: 0.09, z: 0.02}
+  ejectTime: 0.18
+  newMagazineTime: 0.46
+  insertTime: 0.73
+  slideReleaseTime: 0.86
+  freshMagazineOffset: {x: -0.08, y: -0.22, z: -0.015}
+  magazineInsertionArc: {x: -0.025, y: 0, z: -0.025}
+  pickupHandOffset: {x: -0.16, y: -0.24, z: -0.04}
+  droppedMagazineLifetime: 0.85
+  reloadSound: {fileID: 8300000, guid: 01a2afb7b66c6144c94ae0d43bde8102, type: 3}
+  soundVolume: 0.35

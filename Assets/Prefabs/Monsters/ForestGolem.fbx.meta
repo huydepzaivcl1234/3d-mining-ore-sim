@@ -3,7 +3,42 @@ guid: 99c12788c589d7e45900f77e11da022b
 ModelImporter:
   serializedVersion: 24501
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Dark rooted bark
+    second: {fileID: 2100000, guid: c36f52691a8140c4fa01bd4f0ed7ffea, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Deep stone crevices
+    second: {fileID: 2100000, guid: ccbde25dc17b12848a5f4758bdf774ba, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Earth Stone Moss
+    second: {fileID: 2100000, guid: 404934f4c603ad542a66d33c32b3b793, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Forest leaves
+    second: {fileID: 2100000, guid: 6e4f65e99b0ccc54781effa466118a0a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Living amber green eyes
+    second: {fileID: 2100000, guid: 527cd3613133a45489d843c38a9106dc, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Rich moss
+    second: {fileID: 2100000, guid: 94511c2cbb4e5ba408495a67efefefc1, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Weathered grey granite
+    second: {fileID: 2100000, guid: e3a76158ecbe10e42aa07b042d36dff5, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
@@ -18,34 +53,7 @@ ModelImporter:
     removeConstantScaleCurves: 0
     motionNodeName: 
     animationImportErrors: 
-    animationImportWarnings: "\nClip 'ForestGolem_Rig|ForestGolem_ChargeUp' has import
-      animation warnings that might lower retargeting quality:\nNote: Activate translation
-      DOF on avatar to improve retargeting quality.\n\t'spine_03' is inbetween humanoid
-      transforms and has rotation animation that will be discarded.\n\t'spine_03'
-      has scale animation that will be discarded.\n\t'chest' is inbetween humanoid
-      transforms and has rotation animation that will be discarded.\n\t'chest' has
-      scale animation that will be discarded.\n\nClip 'ForestGolem_Rig|ForestGolem_Damage'
-      has import animation warnings that might lower retargeting quality:\nNote:
-      Activate translation DOF on avatar to improve retargeting quality.\n\t'spine_01'
-      is inbetween humanoid transforms and has rotation animation that will be discarded.\n\nClip
-      'ForestGolem_Rig|ForestGolem_Down' has import animation warnings that might
-      lower retargeting quality:\nNote: Activate translation DOF on avatar to improve
-      retargeting quality.\n\t'spine_01' is inbetween humanoid transforms and has
-      rotation animation that will be discarded.\n\nClip 'ForestGolem_Rig|ForestGolem_Hammer'
-      has import animation warnings that might lower retargeting quality:\nNote:
-      Activate translation DOF on avatar to improve retargeting quality.\n\t'spine_01'
-      is inbetween humanoid transforms and has rotation animation that will be discarded.\n\nClip
-      'ForestGolem_Rig|ForestGolem_Hit' has import animation warnings that might
-      lower retargeting quality:\nNote: Activate translation DOF on avatar to improve
-      retargeting quality.\n\t'spine_01' is inbetween humanoid transforms and has
-      rotation animation that will be discarded.\n\nClip 'ForestGolem_Rig|ForestGolem_Idle'
-      has import animation warnings that might lower retargeting quality:\nNote:
-      Activate translation DOF on avatar to improve retargeting quality.\n\t'spine_01'
-      is inbetween humanoid transforms and has rotation animation that will be discarded.\n\nClip
-      'ForestGolem_Rig|ForestGolem_Walk' has import animation warnings that might
-      lower retargeting quality:\nNote: Activate translation DOF on avatar to improve
-      retargeting quality.\n\t'spine_01' is inbetween humanoid transforms and has
-      rotation animation that will be discarded.\n"
+    animationImportWarnings: 
     animationRetargetingWarnings: 
     animationDoRetargetingWarnings: 0
     importAnimatedCustomProperties: 0

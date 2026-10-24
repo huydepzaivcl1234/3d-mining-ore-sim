@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "fbx": "Pistol_Reload_FingerGrip.fbx",
+  "source": "C:\\Users\\huyancut\\Documents\\ChatGPT\\mining simulator 3d\\Deliverables\\DesertEagleReloadReference\\UnityExport\\BeforeUnityExport.blend",
+  "fps": 60,
+  "frames": [
+    1,
+    192
+  ],
+  "duration": 3.183333333333333,
+  "idleFrame": 192,
+  "cameraVerticalFov": 84.99999667351618,
+  "cameraMatrix": [
+    [
+      -1.0,
+      -1.5099580252808664e-07,
+      -8.742277657347586e-08,
+      -0.006565988529473543
+    ],
+    [
+      -8.742277657347586e-08,
+      4.371137762859689e-08,
+      1.0,
+      -0.1570712774991989
+    ],
+    [
+      -1.5099580252808664e-07,
+      1.0,
+      -4.371138828673793e-08,
+      1.583307147026062
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "bones": 65,
+  "meshes": [
+    "Dropped_Magazine_ContactDemo",
+    "Gun",
+    "CasingExit",
+    "Hammer",
+    "Trigger",
+    "Slider",
+    "HandgunMag",
+    "Alpha_Joints",
+    "Alpha_Surface"
+  ]
+}

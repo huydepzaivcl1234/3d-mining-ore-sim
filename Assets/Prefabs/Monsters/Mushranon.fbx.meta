@@ -3,7 +3,52 @@ guid: 9f6af09c03f052d4bbf9f517dee7affb
 ModelImporter:
   serializedVersion: 24501
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Aged_Brass_Fittings
+    second: {fileID: 2100000, guid: c916806d7fe382d4789561fac906f16d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Blue_Steel_Cannon
+    second: {fileID: 2100000, guid: c2cab57eecf799744a02086890f508d5, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Coral_Mushroom_Cap
+    second: {fileID: 2100000, guid: 10aa361e70d9fae42a02327faa799785, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Cream_Cap_Spots
+    second: {fileID: 2100000, guid: d9080d7e593c68d47a7bc87ddb31c12b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Cream_Mushroom_Flesh
+    second: {fileID: 2100000, guid: 94b0671648d566743bba92eb276bc4dc, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Dark_Bore_And_Pupils
+    second: {fileID: 2100000, guid: bf6f5236473ef144997e9d89e88b120d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Eye_Ivory
+    second: {fileID: 2100000, guid: e1d77fb148f26824c98167c138523dcf, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Spore_Amber
+    second: {fileID: 2100000, guid: 7554ab737d82d42469b24827aaf051c7, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Warm_Mushroom_Gills
+    second: {fileID: 2100000, guid: 204ca9cad064f8d42bee90579415091f, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

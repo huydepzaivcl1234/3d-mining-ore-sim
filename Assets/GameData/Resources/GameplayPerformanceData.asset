@@ -13,6 +13,9 @@ MonoBehaviour:
   m_Name: GameplayPerformanceData
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.GameplayPerformanceData
   renderDistance: 300
+  cullOffscreenActors: 1
+  cullOffscreenAnimation: 1
+  actorBoundsPadding: 0.2
   monsterSteeringInterval: 0.05
   navigationBudgetMilliseconds: 2
   spreadSpawnsAcrossFrames: 1

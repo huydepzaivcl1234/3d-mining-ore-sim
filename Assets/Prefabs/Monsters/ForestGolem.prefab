@@ -897,6 +897,8 @@ MonoBehaviour:
   visibleFill: {fileID: 8200338046682183537}
   coveredWidth: 28
   visibleWidth: 134
+  useAuthoredColor: 0
+  authoredColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &2379590661346216355
 GameObject:
   m_ObjectHideFlags: 0
@@ -2410,6 +2412,7 @@ MonoBehaviour:
   nameLabel: {fileID: 7956845607535012453}
   displayName: ForestGolem
   screenSpaceBar: 0
+  healthValueSuffix: 
 --- !u!114 &6569428935759115125
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2894,13 +2897,13 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 6467348668986469880, guid: 99c12788c589d7e45900f77e11da022b, type: 3}
-  - {fileID: -4857124162171555802, guid: 99c12788c589d7e45900f77e11da022b, type: 3}
-  - {fileID: 1077479661660578390, guid: 99c12788c589d7e45900f77e11da022b, type: 3}
-  - {fileID: -3741714624258349178, guid: 99c12788c589d7e45900f77e11da022b, type: 3}
-  - {fileID: -5946975480520595906, guid: 99c12788c589d7e45900f77e11da022b, type: 3}
-  - {fileID: -8053380335518212517, guid: 99c12788c589d7e45900f77e11da022b, type: 3}
-  - {fileID: 7472854601020602125, guid: 99c12788c589d7e45900f77e11da022b, type: 3}
+  - {fileID: 2100000, guid: 404934f4c603ad542a66d33c32b3b793, type: 2}
+  - {fileID: 2100000, guid: e3a76158ecbe10e42aa07b042d36dff5, type: 2}
+  - {fileID: 2100000, guid: ccbde25dc17b12848a5f4758bdf774ba, type: 2}
+  - {fileID: 2100000, guid: 527cd3613133a45489d843c38a9106dc, type: 2}
+  - {fileID: 2100000, guid: 94511c2cbb4e5ba408495a67efefefc1, type: 2}
+  - {fileID: 2100000, guid: c36f52691a8140c4fa01bd4f0ed7ffea, type: 2}
+  - {fileID: 2100000, guid: 6e4f65e99b0ccc54781effa466118a0a, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -3621,3 +3624,5 @@ MonoBehaviour:
   visibleFill: {fileID: 3840369151087859819}
   coveredWidth: 28
   visibleWidth: 134
+  useAuthoredColor: 0
+  authoredColor: {r: 1, g: 1, b: 1, a: 1}

@@ -382,6 +382,7 @@ MonoBehaviour:
   nameLabel: {fileID: 1683903550674048434}
   displayName: Mushranon
   screenSpaceBar: 0
+  healthValueSuffix: 
 --- !u!143 &2702761323221393413
 CharacterController:
   m_ObjectHideFlags: 0
@@ -420,35 +421,35 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MushroomMonster
   animator: {fileID: 7238409471799946956}
-  attackState: Headbutt
-  secondAttackState: 
-  secondHitMoment: 0.52
-  secondAreaRadius: 1.6
-  secondAreaOffset: {x: 0.3, y: 1.71}
-  attackTurnSpeed: 720
-  trackingEndFraction: 0.85
-  chaseTurnSpeed: 240
-  animationBlendSeconds: 0.15
-  moveSpeed: 2.5
-  detectionRange: 10
-  attackRange: 1.5
-  attackArc: 120
-  damage: 1
-  attackCooldown: 2
-  hitMoment: 0.45
-  hitShape: 0
-  areaRadius: 1.6
-  areaForwardOffset: 1.6
-  areaSideOffset: 0
-  hitHeight: 2.5
-  warningColor: {r: 1, g: 0.08, b: 0.02, a: 0.65}
-  warningShader: {fileID: 4800000, guid: b0d2120fa98d498498f08fd811238915, type: 3}
-  deathDelay: 2
+  legacy_attackState: Headbutt
+  legacy_secondAttackState: 
+  legacy_secondHitMoment: 0.52
+  legacy_secondAreaRadius: 1.6
+  legacy_secondAreaOffset: {x: 0.3, y: 1.71}
+  legacy_attackTurnSpeed: 720
+  legacy_trackingEndFraction: 0.85
+  legacy_chaseTurnSpeed: 240
+  legacy_animationBlendSeconds: 0.15
+  legacy_moveSpeed: 2.5
+  legacy_detectionRange: 10
+  legacy_attackRange: 1.5
+  legacy_attackArc: 120
+  legacy_damage: 1
+  legacy_attackCooldown: 2
+  legacy_hitMoment: 0.45
+  legacy_hitShape: 0
+  legacy_areaRadius: 1.6
+  legacy_areaForwardOffset: 1.6
+  legacy_areaSideOffset: 0
+  legacy_hitHeight: 2.5
+  legacy_warningColor: {r: 1, g: 0.08, b: 0.02, a: 0.65}
+  legacy_warningShader: {fileID: 4800000, guid: b0d2120fa98d498498f08fd811238915, type: 3}
+  legacy_deathDelay: 2
   rewards: {fileID: 11400000, guid: f1a46bad8e4b8d646b884c6fb0c9750d, type: 2}
-  chaseRepathSeconds: 0.4
-  chaseStandDirections: 16
-  chaseStandRangeFraction: 0.75
-  chaseStandMaximumRangeFraction: 0.95
+  legacy_chaseRepathSeconds: 0.4
+  legacy_chaseStandDirections: 16
+  legacy_chaseStandRangeFraction: 0.75
+  legacy_chaseStandMaximumRangeFraction: 0.95
   avoidanceLookAhead: 1.5
   avoidanceHoldSeconds: 0.5
 --- !u!114 &3921999948922058348
@@ -464,10 +465,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MonsterRangedAttack
   muzzle: {fileID: 6245476552346692339}
-  projectile: {fileID: 5961622864036143045, guid: d18d250c869a47b4b9e217f619d3e40f, type: 3}
-  fireState: Fire
-  range: 8
-  releaseMoment: 0.45
+  legacy_projectile: {fileID: 5961622864036143045, guid: d18d250c869a47b4b9e217f619d3e40f, type: 3}
+  legacy_fireState: Fire
+  legacy_range: 8
+  legacy_releaseMoment: 0.45
+  projectilePoolCapacity: 32
 --- !u!1 &1286237552920232150
 GameObject:
   m_ObjectHideFlags: 0
@@ -1121,15 +1123,15 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: -2682179483998787542, guid: 9f6af09c03f052d4bbf9f517dee7affb, type: 3}
-  - {fileID: 7941034421499267882, guid: 9f6af09c03f052d4bbf9f517dee7affb, type: 3}
-  - {fileID: 5816299837123159997, guid: 9f6af09c03f052d4bbf9f517dee7affb, type: 3}
-  - {fileID: 4887199529120684002, guid: 9f6af09c03f052d4bbf9f517dee7affb, type: 3}
-  - {fileID: -9105888666987856920, guid: 9f6af09c03f052d4bbf9f517dee7affb, type: 3}
-  - {fileID: -4352565712501401524, guid: 9f6af09c03f052d4bbf9f517dee7affb, type: 3}
-  - {fileID: 3464590733678017765, guid: 9f6af09c03f052d4bbf9f517dee7affb, type: 3}
-  - {fileID: -5400698215940215822, guid: 9f6af09c03f052d4bbf9f517dee7affb, type: 3}
-  - {fileID: -4159438965995283548, guid: 9f6af09c03f052d4bbf9f517dee7affb, type: 3}
+  - {fileID: 2100000, guid: 94b0671648d566743bba92eb276bc4dc, type: 2}
+  - {fileID: 2100000, guid: d9080d7e593c68d47a7bc87ddb31c12b, type: 2}
+  - {fileID: 2100000, guid: 10aa361e70d9fae42a02327faa799785, type: 2}
+  - {fileID: 2100000, guid: 204ca9cad064f8d42bee90579415091f, type: 2}
+  - {fileID: 2100000, guid: e1d77fb148f26824c98167c138523dcf, type: 2}
+  - {fileID: 2100000, guid: bf6f5236473ef144997e9d89e88b120d, type: 2}
+  - {fileID: 2100000, guid: c916806d7fe382d4789561fac906f16d, type: 2}
+  - {fileID: 2100000, guid: c2cab57eecf799744a02086890f508d5, type: 2}
+  - {fileID: 2100000, guid: 7554ab737d82d42469b24827aaf051c7, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -2144,6 +2146,8 @@ MonoBehaviour:
   visibleFill: {fileID: 4361861114765945344}
   coveredWidth: 28
   visibleWidth: 134
+  useAuthoredColor: 0
+  authoredColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &6162043947732369488
 GameObject:
   m_ObjectHideFlags: 0
@@ -2213,6 +2217,8 @@ MonoBehaviour:
   visibleFill: {fileID: 8378871853345545598}
   coveredWidth: 28
   visibleWidth: 134
+  useAuthoredColor: 0
+  authoredColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &6434279817023629725
 GameObject:
   m_ObjectHideFlags: 0
