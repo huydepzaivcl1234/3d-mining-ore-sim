@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Unity.Burst;
 using Unity.Collections;
@@ -13,7 +13,7 @@ namespace MiningSimulator.Ores
 {
     // CharacterHealth remains authoritative for damage, cards and kill events; no per-actor skeleton or motor.
     [DefaultExecutionOrder(12000), DisallowMultipleComponent]
-    public sealed class SurvivorCrowd : MonoBehaviour
+    public sealed partial class SurvivorCrowd : MonoBehaviour
     {
         public static SurvivorCrowd Current { get; private set; }
         [SerializeField] private Crowd10KData animationData;
@@ -84,12 +84,13 @@ namespace MiningSimulator.Ores
         {
             int count=0;for(int i=0;i<used;i++){var a=actors[i];if(a.living&&a.zone==zone&&(entry==null||a.entry==entry))count++;}return count;
         }
-        public bool TrySpawn(MonsterSpawnZone zone,MonsterSpawnEntry entry,Vector3 point)
+        private int lastSpawnedSlot;
+        public bool TrySpawn(MonsterSpawnZone zone,MonsterSpawnEntry entry,Vector3 point,bool restoring=false)
         {
             if(!CanHandle(entry.prefab)||(!player&&!TryFindPlayer())||used>=capacity&&free.Count==0)return false;
             navigation??=WorldNavigationGrid.Instance;
-            if(!navigation||!navigation.HasBaked||!navigation.IsCapsulePlacementClear(point,.4f,1.4f))return false;
-            for(int n=0;n<used;n++)if(actors[n].living&&math.distancesq(positions[n],(float3)point)<.65f*.65f)return false;
+            if(!restoring&&(!navigation||!navigation.HasBaked||!navigation.IsCapsulePlacementClear(point,.4f,1.4f)))return false;
+            for(int n=0;!restoring&&n<used;n++)if(actors[n].living&&math.distancesq(positions[n],(float3)point)<.65f*.65f)return false;
             int i=free.Count>0?free.Pop():used++;
             var a=actors[i];
             if(a==null){
@@ -106,7 +107,7 @@ namespace MiningSimulator.Ores
             scales[i]=a.scale;positions[i]=next[i]=point;state[i]=1;a.transform.SetPositionAndRotation(point,Quaternion.identity);a.transform.localScale=Vector3.one*a.scale;
             a.health.ConfigureSpawnHealth(a.combat.maxHealth*growth*UnityEngine.Random.Range(low,high));a.health.ConfigureRegeneration(a.combat.regenAmount,a.combat.regenInterval);a.health.ConfigureHealingBonus(a.reward.healingBonusPercent);a.health.ConfigureDefenses(a.reward.ArmorAtLevel(a.level),a.reward.MagicResistanceAtLevel(a.level),a.reward.resistanceScale);
             // A pooled life must not inherit a previous attacker or unfinished burn.
-            a.health.Respawn();a.health.enabled=true;a.health.gameObject.SetActive(true);AliveCount++;
+            a.health.Respawn();a.health.enabled=true;a.health.gameObject.SetActive(true);AliveCount++;lastSpawnedSlot=i;
             return true;
         }
         private bool TryFindPlayer(){var p=FindAnyObjectByType<SurvivorAutoCombat>();if(p)player=p.GetComponent<CharacterHealth>();return player;}
@@ -327,3 +328,4 @@ namespace MiningSimulator.Ores
         }
     }
 }
+

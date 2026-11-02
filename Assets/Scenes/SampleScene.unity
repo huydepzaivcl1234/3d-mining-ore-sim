@@ -622,7 +622,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ac8e7a97eff2f74c9583943707c7b58, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.WorldNavigationGrid
-  autoBounds: 0
+  autoBounds: 1
   areaCenter: {x: 0, y: 0, z: 0}
   areaSize: {x: 98, y: 98}
   cellSize: 0.5

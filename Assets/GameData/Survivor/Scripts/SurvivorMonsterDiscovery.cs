@@ -37,11 +37,15 @@ namespace GameData.Player.Script
             string name=string.IsNullOrWhiteSpace(entry.displayName)?entry.prefab.name:entry.displayName;
             Announce(monster,entry.prefab,name,boss);
         }
+        public static string DiscoveryKey(Object identity,bool boss)=>"Survivor.Discovery.v1/"+identity.name+"/"+(boss?"boss":"normal");
+        public static void Remember(Object identity,bool boss=false){if(identity)GameSave.SetInt(DiscoveryKey(identity,boss),1);}
         public static void Announce(Component monster,Object identity,string name,bool boss)
         {
             if(!monster||!identity)return;
+            if(GameSave.GetInt(DiscoveryKey(identity,boss))!=0)return;
             if(!current)current=new GameObject("Survivor — Monster Discovery").AddComponent<SurvivorMonsterDiscovery>();
             if(!current.seen.Add((identity,boss)))return;
+            Remember(identity,boss);
             current.StartCoroutine(current.PrepareVisual(monster,identity,name,boss));
         }
         private System.Collections.IEnumerator PrepareVisual(Component monster,Object identity,string name,bool boss)
@@ -49,7 +53,7 @@ namespace GameData.Player.Script
             // Let the newly spawned Animator evaluate before baking its visible pose.
             yield return null;
             var visual=monster?CopyVisual(monster):null;
-            if(!visual){seen.Remove((identity,boss));yield break;}
+            if(!visual){seen.Remove((identity,boss));GameSave.DeleteKey(DiscoveryKey(identity,boss));yield break;}
             waiting.Enqueue((visual,boss?"BOSS · "+name:name));
         }
         private GameObject CopyVisual(Component source)

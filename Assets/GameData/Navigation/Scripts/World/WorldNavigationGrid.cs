@@ -1,16 +1,17 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace MiningSimulator.Ores
 {
-    /// <summary>Single-floor Terrain A*. Cell data only; never creates GameObjects for cells.</summary>
+    /// <summary>Single-floor collider-based A*. Cell data only; never creates GameObjects for cells.</summary>
     [DefaultExecutionOrder(-100)]
     public sealed class WorldNavigationGrid : MonoBehaviour
     {
         public static WorldNavigationGrid Instance { get; private set; }
-        [Header("Area: automatic uses Terrain bounds")]
+        [Header("Area: automatic uses 3D Ground colliders")]
+        [Tooltip("Fit the grid to enabled 3D colliders on the Ground layer. Manual Area Center/Size are used when disabled or no ground exists.")]
         [SerializeField] private bool autoBounds = true;
         [SerializeField] private Vector3 areaCenter;
         [SerializeField] private Vector2 areaSize = new(60, 60);
@@ -43,7 +44,6 @@ namespace MiningSimulator.Ores
         [Min(.01f)] [SerializeField] private float standPadding = .2f;
         private struct Cell { public Vector3 point; public float cost; public bool ground, open; }
         private Cell[] cells;
-        private Terrain[] terrains;
         private Vector3 origin;
         private int width, depth, cursor, nextTicket;
         private readonly Collider[] overlaps = new Collider[128];
@@ -141,14 +141,18 @@ namespace MiningSimulator.Ores
             { request.search = null; if (Current(request)) requests.Enqueue(request); }
             searches.Clear(); searchPool.Clear();
             HasBaked = false; dirty.Clear();
-            terrains = Terrain.activeTerrains;
             Vector3 min = areaCenter - new Vector3(areaSize.x, 0, areaSize.y) * .5f;
             Vector3 max = min + new Vector3(areaSize.x, 0, areaSize.y);
-            if (autoBounds && terrains.Length > 0)
+            if (autoBounds)
             {
-                min = terrains[0].transform.position; max = min + terrains[0].terrainData.size;
-                foreach (Terrain terrain in terrains)
-                { min = Vector3.Min(min, terrain.transform.position); max = Vector3.Max(max, terrain.transform.position + terrain.terrainData.size); }
+                bool found=false;Bounds bounds=default;int groundLayer=LayerMask.NameToLayer("Ground");
+                foreach(var collider in FindObjectsByType<Collider>(FindObjectsSortMode.None)){
+                    if(!collider.enabled||collider.isTrigger||!collider.gameObject.activeInHierarchy||
+                        (groundLayers.value&(1<<collider.gameObject.layer))==0||
+                        (groundLayer>=0&&collider.gameObject.layer!=groundLayer)||IsDynamicActor(collider))continue;
+                    if(!found){bounds=collider.bounds;found=true;}else bounds.Encapsulate(collider.bounds);
+                }
+                if(found){min=bounds.min;max=bounds.max;}
             }
             cellSize = Mathf.Max(.1f, cellSize);
             width = Mathf.Max(1, Mathf.CeilToInt((max.x - min.x) / cellSize));
@@ -205,17 +209,6 @@ namespace MiningSimulator.Ores
             slope = 0; layer = 0;
             bool supported = false;
             float supportHeight = float.NegativeInfinity;
-            foreach (Terrain t in terrains)
-            {
-                Vector3 local = p - t.transform.position, size = t.terrainData.size;
-                if (local.x < 0 || local.z < 0 || local.x >= size.x || local.z >= size.z) continue;
-                int holeX = Mathf.Clamp((int)(local.x / size.x * t.terrainData.holesResolution), 0, t.terrainData.holesResolution - 1);
-                int holeZ = Mathf.Clamp((int)(local.z / size.z * t.terrainData.holesResolution), 0, t.terrainData.holesResolution - 1);
-                if (t.terrainData.IsHole(holeX, holeZ)) continue;
-                supportHeight = t.SampleHeight(p) + t.transform.position.y;
-                slope = t.terrainData.GetSteepness(local.x / size.x, local.z / size.z);
-                layer = t.gameObject.layer; supported = true;
-            }
             int count = Physics.RaycastNonAlloc(p + Vector3.up * groundProbeHeight, Vector3.down,
                 hits, groundProbeHeight * 2, groundLayers.value & ~ActorLayers, QueryTriggerInteraction.Ignore);
             float nearest = float.PositiveInfinity;
@@ -224,9 +217,9 @@ namespace MiningSimulator.Ores
                 var hit = hits[i];
                 if (hit.distance >= nearest || (ignoredSupport != null && ignoredSupport.Contains(hit.collider)) || IsDynamicActor(hit.collider) ||
                     Vector3.Angle(hit.normal, Vector3.up) > maximumSlope) continue;
-                // Above Terrain only explicitly authored Ground-layer platforms are support.
+                // Only authored Ground-layer geometry supports actors; roofs on obstacle layers do not.
                 int groundLayer = LayerMask.NameToLayer("Ground");
-                if (!(hit.collider is TerrainCollider) && groundLayer >= 0 && hit.collider.gameObject.layer != groundLayer) continue;
+                if (groundLayer >= 0 && hit.collider.gameObject.layer != groundLayer) continue;
                 if (hit.point.y < supportHeight - .01f) continue;
                 nearest = hit.distance; supportHeight = hit.point.y;
                 slope = Vector3.Angle(hit.normal, Vector3.up); layer = hit.collider.gameObject.layer; supported = true;
@@ -258,7 +251,7 @@ namespace MiningSimulator.Ores
         }
         public bool IsPointClear(Vector3 p, float radius, float height = 0)
         {
-            if (!isActiveAndEnabled || cells == null || Index(p) < 0 || terrains == null || !SampleGround(ref p, out float slope, out _) || slope > maximumSlope) return false;
+            if (!isActiveAndEnabled || cells == null || Index(p) < 0 || !SampleGround(ref p, out float slope, out _) || slope > maximumSlope) return false;
             return IsCapsuleClear(p, radius, height);
         }
         public bool TryGetGroundPoint(Vector3 position, out Vector3 point)

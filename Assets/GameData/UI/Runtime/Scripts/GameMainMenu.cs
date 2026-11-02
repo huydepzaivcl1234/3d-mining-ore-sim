@@ -532,6 +532,7 @@ namespace MiningSimulator.Ores
 
         private void PauseGameplay()
         {
+            if(panelCoordinator){panelCoordinator.SetMainMenuOpen(true);return;}
             if (data == null || !data.PauseGameplay || ownsGameplayPause)
             {
                 return;
@@ -583,6 +584,7 @@ namespace MiningSimulator.Ores
 
         private void ReleaseGameplayPause()
         {
+            if(panelCoordinator){panelCoordinator.SetMainMenuOpen(false);return;}
             if (!ownsGameplayPause)
             {
                 return;

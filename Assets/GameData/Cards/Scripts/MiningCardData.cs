@@ -69,6 +69,8 @@ namespace MiningSimulator.Ores
         public Material sparkleComposite;
         [Min(16)] public float sparkleSize=100;
         public float sparkleInset=28;
+        [Header("Queued card icons")]
+        public Sprite statQueueIcon,abilityQueueIcon;
         [Header("Choice panel")]
         public Vector2 panelSize = new(900,420);
         public Color panelColor = new(.035f,.045f,.07f,.98f);
@@ -77,3 +79,4 @@ namespace MiningSimulator.Ores
         [Min(1f)] public float fontSize = 28f;
     }
 }
+

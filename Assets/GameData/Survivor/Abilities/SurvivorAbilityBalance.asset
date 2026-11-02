@@ -230,6 +230,12 @@ MonoBehaviour:
         perLevel: 1
     chargedCube:
       title: Arcane Cube
+      launchSound: {fileID: 8300000, guid: d61edde471a77be45bf0c016ac2dddfb, type: 3}
+      impactSounds:
+      - {fileID: 8300000, guid: 292977b4f8c56a649b4379538c294978, type: 3}
+      - {fileID: 8300000, guid: f18fbc3856a6a664a9452a7a596548bb, type: 3}
+      launchVolume: 0.8
+      impactVolume: 0.85
       chargeSeconds: 10
       damage:
         baseValue: 150

@@ -88,6 +88,8 @@ MonoBehaviour:
   sparkleComposite: {fileID: 2100000, guid: 78cd9971a1209714aa86b099a08e15d0, type: 2}
   sparkleSize: 100
   sparkleInset: 28
+  statQueueIcon: {fileID: 21300000, guid: 6f0d0ada721cf7d418fba2c4e9d64e04, type: 3}
+  abilityQueueIcon: {fileID: 21300000, guid: 59a7335fbe21b754f99ab2c83b92a818, type: 3}
   panelSize: {x: 900, y: 420}
   panelColor: {r: 0.035, g: 0.045, b: 0.07, a: 0.98}
   buttonColor: {r: 0.1, g: 0.14, b: 0.21, a: 1}

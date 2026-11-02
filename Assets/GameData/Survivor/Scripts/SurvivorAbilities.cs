@@ -77,15 +77,12 @@ namespace GameData.Player.Script
             if(!isActiveAndEnabled||processing||!victim||!victim.IsMonster||source!=gameObject||dealt<=0)return;
             processing=true;
             try{
-                int weaken=Level(SurvivorUpgradeId.Weaken),air=Level(SurvivorUpgradeId.Airborne),frost=Level(SurvivorUpgradeId.Frostbite);
-                if(victim.IsTargetable&&(weaken>0||air>0||frost>0)){
+                int weaken=Level(SurvivorUpgradeId.Weaken),air=Level(SurvivorUpgradeId.Airborne);
+                if(victim.IsTargetable&&(weaken>0||air>0)){
                     var status=victim.GetComponent<SurvivorEnemyStatus>();if(!status)status=victim.gameObject.AddComponent<SurvivorEnemyStatus>();
                     if(weaken>0)status.Weaken(Settings.rare.weaken.damageReduction.At(weaken),Settings.rare.weaken.duration);
                     if(air>0)status.RecordHit(this,air);
-                    if(frost>0){var rule=Settings.epic.frostbite;if(status.Chill(rule.slowPercent,rule.damageTakenPercent.At(frost),rule.duration,rule.tint))combat.PlayFrostbite(victim.transform.position);}
                 }
-                int burn=Level(SurvivorUpgradeId.Burn);
-                if(burn>0&&!victim.IsBurnDamage&&victim.IsTargetable){var b=Settings.common.ignite;victim.ApplyBurn(b.flatDamage.At(burn)+b.enemyMaxHealthPercent*.01f*victim.MaxHealth,Mathf.Max(.1f,b.tickInterval),Mathf.Max(.01f,b.duration),gameObject);}
                 if(basic){
                     int armor=Level(SurvivorUpgradeId.ArmorStrike);
                     if(armor>0&&victim.IsTargetable)victim.DealDamage(Settings.common.armoredStrike.flatDamage.At(armor)+Settings.common.armoredStrike.armorPercent*.01f*health.Armor+Settings.common.armoredStrike.magicResistancePercent*.01f*health.MagicResistance,CombatDamageType.Physical,gameObject);
@@ -101,15 +98,20 @@ namespace GameData.Player.Script
                 }
             }finally{processing=false;}
         }
-        public void ProjectileHit(CharacterHealth target,float originalDamage,float dealt,bool secondary,bool canBounce,Vector3 hitPoint)
+        public void ProjectileHit(CharacterHealth target,float originalDamage,float dealt,bool secondary,bool canBounce,Vector3 hitPoint,ProjectileElement element=ProjectileElement.None)
         {
+            if(target&&target.IsTargetable){
+                int burn=Level(SurvivorUpgradeId.Burn),frost=Level(SurvivorUpgradeId.Frostbite);
+                if(element==ProjectileElement.Fire&&burn>0){var b=Settings.common.ignite;target.ApplyBurn(b.flatDamage.At(burn)+b.enemyMaxHealthPercent*.01f*target.MaxHealth,Mathf.Max(.1f,b.tickInterval),Mathf.Max(.01f,b.duration),gameObject);}
+                if(element==ProjectileElement.Ice&&frost>0){var status=target.GetComponent<SurvivorEnemyStatus>();if(!status)status=target.gameObject.AddComponent<SurvivorEnemyStatus>();var rule=Settings.epic.frostbite;if(status.Chill(rule.slowPercent,rule.damageTakenPercent.At(frost),rule.duration,rule.tint))combat.PlayFrostbite(target.transform.position);}
+            }
             if(!secondary)health.Heal(dealt*(stats?stats.UpgradeBonus(SurvivorUpgradeId.LifeSteal):0)*.01f);
-            if(!secondary&&canBounce){
+            if((!secondary||element!=ProjectileElement.None)&&canBounce){
                 int split=Level(SurvivorUpgradeId.SplitShot);
-                if(split>0){var other=Nearest(hitPoint,combat.AttackRange,target);if(other)combat.Launch(other,Settings.common.chainShot.baseDamagePercent*.01f*combat.BaseDamage+Settings.common.chainShot.flatDamage.At(split),true,CombatDamageType.Physical,false,hitPoint);}
+                if(split>0){var other=Nearest(hitPoint,combat.AttackRange,target);if(other)combat.Launch(other,Settings.common.chainShot.baseDamagePercent*.01f*combat.BaseDamage+Settings.common.chainShot.flatDamage.At(split),true,CombatDamageType.Physical,false,hitPoint,element:element);}
             }
             int lv=Level(SurvivorUpgradeId.Ricochet);
-            if(lv>0&&canBounce){var other=Nearest(hitPoint,combat.AttackRange,target);if(other)combat.Launch(other,Settings.uncommon.ricochet.baseDamagePercent*.01f*combat.BaseDamage+Settings.uncommon.ricochet.flatDamage.At(lv),true,CombatDamageType.Physical,false,hitPoint);}
+            if(lv>0&&canBounce){var other=Nearest(hitPoint,combat.AttackRange,target);if(other)combat.Launch(other,Settings.uncommon.ricochet.baseDamagePercent*.01f*combat.BaseDamage+Settings.uncommon.ricochet.flatDamage.At(lv),true,CombatDamageType.Physical,false,hitPoint,element:element);}
         }
         private void OnDeath(CharacterHealth victim,GameObject source)
         {

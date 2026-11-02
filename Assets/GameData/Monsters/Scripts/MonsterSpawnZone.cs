@@ -321,6 +321,7 @@ public bool TryGetPatrolPoint(Vector3 origin,out Vector3 point)
             lastKnownSpawnDay=SpawnDayNumber;
             BuildDailySchedule();
             started = true;
+            StartWorldRestore();
 
         }
         private void OnEnable()
@@ -365,6 +366,7 @@ public bool TryGetPatrolPoint(Vector3 origin,out Vector3 point)
         }
         private void Update()
         {
+            if(restoringWorld)return;
             CheckMonsterUnlocks();
             if (alive.RemoveAll(RemoveInactiveMonster) > 0) ForecastChanged?.Invoke();
             if (DebugSpawningPaused) return;
@@ -546,7 +548,6 @@ public bool TryGetPatrolPoint(Vector3 origin,out Vector3 point)
         private bool SpawnOne(MonsterSpawnEntry entry, bool forceBoss = false, bool invasion = false)
         {
             if (DebugSpawningPaused) return false;
-            if(!MonsterSpawnBudget.TryBegin())return false;
             alive.RemoveAll(RemoveInactiveMonster);
             if (LivingCountOnField() >= LivingMonsterLimit || !CanSpawnSpecies(entry)) return false;
             MushroomMonster prefab = entry.prefab;

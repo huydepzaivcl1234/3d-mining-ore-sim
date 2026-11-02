@@ -22,6 +22,16 @@ MonoBehaviour:
   hitLayers:
     serializedVersion: 2
     m_Bits: 4294967295
+  projectileAppearance: 0
+  normalProjectilePrefab: {fileID: 3867980405900032135, guid: 51fcc1f810905eb45b997b9fb504131f, type: 3}
+  iceProjectilePrefab: {fileID: 1638838051888062615, guid: 0d4771e965fe2224b8301e559a030bcd, type: 3}
+  fireProjectilePrefab: {fileID: 1560705868787271267, guid: a86fdb8d8408aab4f8d875c993efb017, type: 3}
+  toxicProjectilePrefab: {fileID: 7607663580111539299, guid: 6416e104455f0914e9ab4d9952c602ed, type: 3}
+  chargedCubePrefab: {fileID: 2674268688342109332, guid: 9cbfaaa9ffe75ad4f87ce96d87eceebe, type: 3}
+  projectileTrailSeconds: 0.08
+  projectileTrailWidth: 0.65
+  impactFlashSeconds: 0.09
+  impactFlashSize: 1.8
   magazineCapacity: 9
   reloadSeconds: 1.5
   abilities: {fileID: 11400000, guid: 13917a56e1f8fa64c95ad82cd6ecd04e, type: 2}

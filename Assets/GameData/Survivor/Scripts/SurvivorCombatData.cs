@@ -1,7 +1,8 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace GameData.Player.Script
 {
+    public enum ProjectileAppearance { Automatic, Normal, Ice, Fire, Toxic }
     [CreateAssetMenu(menuName="Survivor/Automatic Combat")]
     public sealed class SurvivorCombatData : ScriptableObject
     {
@@ -14,6 +15,14 @@ namespace GameData.Player.Script
         [Range(1,16)] public int maximumProjectilesPerVolley=8;
         [Min(8)] public int poolCapacity=64;
         public LayerMask hitLayers=~0;
+        [Header("Imported projectile models")]
+        public ProjectileAppearance projectileAppearance=ProjectileAppearance.Automatic;
+        public GameObject normalProjectilePrefab,iceProjectilePrefab,fireProjectilePrefab,toxicProjectilePrefab,chargedCubePrefab;
+        [Header("Projectile feedback — visuals only")]
+        [Min(0),Tooltip("Trail persistence in seconds. Does not change projectile speed or damage.")] public float projectileTrailSeconds=.08f;
+        [Range(.1f,2f)] public float projectileTrailWidth=.65f;
+        [Min(0),Tooltip("Set 0 to disable the small impact flash.")] public float impactFlashSeconds=.09f;
+        [Min(.1f)] public float impactFlashSize=1.8f;
         [HideInInspector]
         [Min(1)] public int magazineCapacity=9;
         [HideInInspector,Min(.1f)] public float reloadSeconds=1.5f;
@@ -67,6 +76,10 @@ namespace GameData.Player.Script
             range = CombatValue(range, 13f, .1f);
             attackInterval = CombatValue(attackInterval, .65f, .08f);
             projectileSpeed = CombatValue(projectileSpeed, 22f, .1f);
+            projectileTrailSeconds=CombatValue(projectileTrailSeconds,.08f,0f);
+            projectileTrailWidth=Mathf.Clamp(CombatValue(projectileTrailWidth,.65f,.1f),.1f,2f);
+            impactFlashSeconds=CombatValue(impactFlashSeconds,.09f,0f);
+            impactFlashSize=CombatValue(impactFlashSize,1.8f,.1f);
             startingLevel = Mathf.Max(1, startingLevel);
             healthPerLevel = Mathf.Max(0, healthPerLevel);
             regenAmount = Mathf.Max(0, regenAmount);

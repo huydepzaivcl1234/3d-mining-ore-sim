@@ -36,7 +36,23 @@ namespace MiningSimulator.Ores
         private Vector2 audioSettingsHome;
         private Vector2 inventoryPanelHome;
         private Vector2 npcProgressHome;
-        private RectTransform activeModal;
+        private RectTransform currentModal;
+        private RectTransform activeModal
+        {
+            get => currentModal;
+            set { currentModal=value; SyncGameplayPause(); }
+        }
+        private bool ownsGameplayPause;
+        private float timeScaleBeforeModal;
+        private void SyncGameplayPause()
+        {
+            if(isActiveAndEnabled && BlocksGameplay){
+                if(!ownsGameplayPause){timeScaleBeforeModal=Time.timeScale;ownsGameplayPause=true;}
+                Time.timeScale=0f;
+            }else if(ownsGameplayPause){
+                ownsGameplayPause=false;Time.timeScale=timeScaleBeforeModal;
+            }
+        }
         private bool initialized;
         private readonly Dictionary<RectTransform, Vector2> additionalPanelHomes = new();
         private CanvasGroup backdropGroup;
@@ -46,7 +62,12 @@ namespace MiningSimulator.Ores
         private readonly List<RectTransform> additionalHudRoots = new();
         private bool suppressingAdditionalHud;
         private float additionalHudHiddenAt;
-        private bool mainMenuOpen;
+        private bool menuOpen;
+        private bool mainMenuOpen
+        {
+            get => menuOpen;
+            set { menuOpen=value; SyncGameplayPause(); }
+        }
         private readonly Dictionary<Renderer, bool> worldBarStates = new();
         private float nextWorldBarScan;
         private sealed class HudState
@@ -449,6 +470,7 @@ namespace MiningSimulator.Ores
         }
         private void LateUpdate()
         {
+            SyncGameplayPause();
             // Keep already captured HUD hidden if another presenter enables it while a modal is open.
             if (!suppressingAdditionalHud) return;
             if (Time.unscaledTime >= nextWorldBarScan)
@@ -469,6 +491,7 @@ namespace MiningSimulator.Ores
         }
         private void OnDisable()
         {
+            SyncGameplayPause();
             StopAllCoroutines();
             SetAdditionalHudVisible(true, true);
         }

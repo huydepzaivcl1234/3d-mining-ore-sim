@@ -30,11 +30,6 @@ namespace MiningSimulator.Ores
         public bool softCrowdSeparation=true;
         [Min(0)] public float crowdSeparationStrength=12;
         [Min(0)] public float crowdPadding=.03f;
-        [Header("Spawn scheduling / Chia tải spawn")]
-        public bool spreadSpawnsAcrossFrames=true;
-        [Min(1)] public int maximumSpawnAttemptsPerFrame=2;
-        [Tooltip("Ngừng bắt đầu spawn mới khi đã dùng hết ngân sách trong frame. Một lần Instantiate không thể bị ngắt giữa chừng.")]
-        [Min(.1f)] public float spawnBudgetMilliseconds=2f;
         private static GameplayPerformanceData current;
         private static bool loaded;
         public static GameplayPerformanceData Current

@@ -52,6 +52,9 @@ namespace GameData.Player.Script
         [Serializable] public sealed class Titan : Ability {[Min(0)]public float maxHealthPercent=35,sizePercent=15,physicalDamagePercent=15;public Scaling flatHealth=new(1,1);}
         [Serializable] public sealed class MissingHealthDefense : Ability {[Min(.01f)]public float missingHealthPerStack=10;public Scaling defensesPerStack=new(1,1);}
         [Serializable] public sealed class Cube : Ability {
+            public AudioClip launchSound;
+            public AudioClip[] impactSounds=Array.Empty<AudioClip>();
+            [Range(0,1)]public float launchVolume=.8f,impactVolume=.85f;
             [Min(.1f)]public float chargeSeconds=10;
             public Scaling damage=new(100,10),radius=new(1,.25f),sizePercent=new(0,1);
             [Min(.01f)]public float fullSize=.65f,startingSize=.1f;
@@ -121,13 +124,13 @@ namespace GameData.Player.Script
         public string Description(SurvivorUpgradeId id)
         {
             switch(id){
-            case SurvivorUpgradeId.CardMagnet:var magnet=common.cardMagnet;return $"Automatically pull dropped stat and ability cards toward you within {magnet.radius} m.";
+            case SurvivorUpgradeId.CardMagnet:var magnet=common.cardMagnet;return $"Pull dropped cards within {magnet.radius} m.";
             case SurvivorUpgradeId.SplitShot:var c=common.chainShot;return $"On hit, bounce once to another nearby enemy. Physical damage: {N(c.baseDamagePercent)}% base damage + ({c.flatDamage}). Requires another enemy; no further bounces.";
             case SurvivorUpgradeId.FleetForce:var m=common.momentum;return $"For every {N(m.bonusSpeedPerStack)} bonus movement speed, gain ({m.damagePerStack}) attack damage. Only speed gained from upgrades, items and other bonuses counts.";
             case SurvivorUpgradeId.ArmorStrike:var a=common.armoredStrike;return $"Attack hits deal extra physical damage: ({a.flatDamage}) + {N(a.armorPercent)}% armor + {N(a.magicResistancePercent)}% magic resistance.";
             case SurvivorUpgradeId.LifeSpring:var h=common.lifeSpring;return $"Every {N(h.interval)}s, heal ({h.flatHealing}) + {N(h.maxHealthPercent)}% of your maximum health.";
             case SurvivorUpgradeId.PowerSurge:var p=common.powerSurge;return $"Gain ({p.flatDamage}) attack damage, plus {N(p.bonusAttackDamagePercent)}% of your bonus attack damage. Base attack damage is not multiplied.";
-            case SurvivorUpgradeId.Burn:var b=common.ignite;return $"Dealing damage burns enemies for {N(b.duration)}s. Every {N(b.tickInterval)}s: ({b.flatDamage}) + {N(b.enemyMaxHealthPercent)}% enemy maximum health as magic damage.";
+            case SurvivorUpgradeId.Burn:var b=common.ignite;return $"+1 fire bolt per attack at every level. Only fire bolts burn; bounces retain burn. For {N(b.duration)}s, every {N(b.tickInterval)}s: ({b.flatDamage}) + {N(b.enemyMaxHealthPercent)}% enemy maximum health as magic damage.";
             case SurvivorUpgradeId.Shield:var s=uncommon.shield;return $"Gain a shield on acquisition, upgrade or respawn: {N(s.maxHealthPercent)}% maximum health + ({s.flatShield}). When broken, fully restores after {N(s.brokenRecovery)}s; hits do not reset this timer.";
             case SurvivorUpgradeId.Airborne:var k=uncommon.airborne;return $"{k.requiredHits} hits within {N(k.hitWindow)}s launch an enemy {N(k.height)} m upward. Landing deals {N(k.enemyMaxHealthPercent)}% enemy maximum health + ({k.landingDamage}) physical damage. Each enemy has a {N(k.cooldown)}s cooldown after landing; hits during cooldown do not build a new combo.";
             case SurvivorUpgradeId.Aura:var u=uncommon.aura;return $"An aura beneath you deals ({u.damage}) magic damage every {N(u.tickInterval)}s to enemies within ({u.radius}) m.";
@@ -144,12 +147,12 @@ namespace GameData.Player.Script
             case SurvivorUpgradeId.DoubleBasics:return $"Receive {rare.doubleChoice.choices} stat-card choices. Each choice can offer sparkling stat cards.";
             case SurvivorUpgradeId.OrbBarrage:var o=common.orbBarrage;return $"Every {o.hitsRequired} damage hits summon {o.orbCount} homing orbs at random enemies within {N(o.range)} m, each dealing {o.damage} physical damage. With one enemy, all orbs target it. Orb hits cannot trigger another barrage.";
             case SurvivorUpgradeId.TripleBasics:var tc=epic.tripleChoice;return $"Receive {tc.choices} stat-card choices; each can be sparkling. While owned, gain +{N(tc.basicDropBonus)} percentage points to stat-card drop chance (does not stack with levels).";
-            case SurvivorUpgradeId.Frostbite:var fr=epic.frostbite;return $"Damage chills enemies blue for {N(fr.duration)}s: -{N(fr.slowPercent)}% movement speed and {fr.damageTakenPercent}% increased damage taken. Hits during Frostbite do not refresh its duration.";
+            case SurvivorUpgradeId.Frostbite:var fr=epic.frostbite;return $"+1 ice bolt per attack at every level. Only ice bolts chill for {N(fr.duration)}s: -{N(fr.slowPercent)}% movement speed, +{fr.damageTakenPercent}% damage taken. Bounces retain chill. Active chill cannot refresh.";
             case SurvivorUpgradeId.CardFortune:return $"Gain {epic.cardFortune.dropBonus} percentage points to both stat-card and ability-card drop chances. Combined drop chance cannot exceed 100%.";
             case SurvivorUpgradeId.TrueBarrage:var tr=epic.trueBarrage;return $"Each attack fires {tr.projectileCount} extra projectiles, each dealing {N(tr.attackDamagePercent)}% of your current attack damage as true damage. Prefer other enemies in attack range; focus the sole enemy when alone.";
             case SurvivorUpgradeId.TitanBlessing:var titan=epic.titanBlessing;return $"While owned, gain {N(titan.maxHealthPercent)}% maximum health, {N(titan.sizePercent)}% body size and {N(titan.physicalDamagePercent)}% physical damage. Also gain {titan.flatHealth} flat maximum health. The percentage bonuses do not stack with levels.";
             case SurvivorUpgradeId.MissingHealthArmor:var mh=epic.missingHealthArmor;return $"For every {N(mh.missingHealthPerStack)} currently missing HP, gain {mh.defensesPerStack} armor and magic resistance per stack. Healing reduces the bonus.";
-            case SurvivorUpgradeId.ChargedCube:var cc=epic.chargedCube;return $"Every {N(cc.chargeSeconds)}s, charge a growing, rotating cube and launch it at the nearest enemy. Deals {cc.damage} {cc.damageType.ToString().ToLowerInvariant()} damage in a {cc.radius} m radius. Cube size bonus: {cc.sizePercent}%. Holds its charge when no target is in range.";
+            case SurvivorUpgradeId.ChargedCube:var cc=epic.chargedCube;return $"Every {N(cc.chargeSeconds)}s, charge a growing, rotating cube and launch it at the nearest enemy. Deals {cc.damage} + 10% of each enemy's missing health as {cc.damageType.ToString().ToLowerInvariant()} damage in a {cc.radius} m radius. Cube size bonus: {cc.sizePercent}%. Holds its charge when no target is in range.";
             default:return "";
             }
         }

@@ -23,6 +23,7 @@ namespace MiningSimulator.Ores
         }
         [SerializeField] private StatRow[] statRows;
         [SerializeField] private TMP_Text offenseHeading, survivalHeading, statsFooter;
+        public RectTransform OpenButtonRect=>openButton?(RectTransform)openButton.transform:null;
         private float nextRefresh;
         private void Awake()
         {

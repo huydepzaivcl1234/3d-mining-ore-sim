@@ -4,6 +4,7 @@ using MiningSimulator.Ores;
 
 namespace GameData.Player.Script
 {
+    public enum ProjectileElement { None, Fire, Ice }
     [DisallowMultipleComponent,RequireComponent(typeof(SurvivorAbilities))]
     public sealed class SurvivorAutoCombat : MonoBehaviour
     {
@@ -52,7 +53,11 @@ namespace GameData.Player.Script
         private readonly List<Bolt> bolts=new();
         private readonly List<CharacterHealth> splash=new();
         private List<CharacterHealth> volleyTargets;
-        private Material material;
+        private Material material,impactMaterial;
+        private readonly List<ImpactFlash> impacts=new();
+        public int ImpactFlashesPlayed {get;private set;}
+        public int ActiveImpactFlashes {get {int count=0;foreach(var flash in impacts)if(flash.go.activeSelf)count++;return count;}}
+        private sealed class ImpactFlash {public GameObject go;public Transform transform;public Renderer renderer;public Color color;public float remaining,duration,size;}
         private MaterialPropertyBlock boltColor;
         private GameObject pool;
         private float nextAttack;
@@ -66,11 +71,12 @@ namespace GameData.Player.Script
         public float AttackInterval=>Mathf.Max(.08f,1f/BaseFireRate/Mathf.Max(.1f,Stats?Stats.AttackSpeed:1));
         public float ShotsPerSecond=>1f/AttackInterval;
         public int TrueProjectileCount=>Stats&&Stats.UpgradeLevel(SurvivorUpgradeId.TrueBarrage)>0?Mathf.Clamp(Mathf.RoundToInt(Stats.AbilityData.epic.trueBarrage.projectileCount.At(Stats.UpgradeLevel(SurvivorUpgradeId.TrueBarrage))),0,SurvivorUpgradeData.LevelCap):0;
-        public int ProjectileCount=>1+(Stats&&Stats.UpgradeLevel(SurvivorUpgradeId.TwinMagic)>0?1:0)+TrueProjectileCount;
+        private int ElementalProjectileCount=>(Stats&&Stats.UpgradeLevel(SurvivorUpgradeId.Burn)>0?1:0)+(Stats&&Stats.UpgradeLevel(SurvivorUpgradeId.Frostbite)>0?1:0);
+        public int ProjectileCount=>1+ElementalProjectileCount+(Stats&&Stats.UpgradeLevel(SurvivorUpgradeId.TwinMagic)>0?1:0)+TrueProjectileCount;
         private int PoolLimit=>Mathf.Max(data.poolCapacity,ProjectileCount*Mathf.CeilToInt(AttackRange/Mathf.Max(.1f,ProjectileSpeed)/AttackInterval+2)+(Stats?Mathf.Clamp(Stats.AbilityData.common.orbBarrage.orbCount,1,99):5));
         public float ProjectileSpeed=>BaseProjectileSpeed*(Stats?Stats.GunBulletSpeedMultiplier:1);
         public bool CanAttack=>enabled&&data&&health&&health.Health>0&&Time.timeScale>0&&!(cards&&cards.IsChoosing)&&!(ui&&ui.BlocksGameplay)&&!(menu&&menu.IsOpen);
-        private sealed class Bolt {public GameObject go;public TrailRenderer trail;public CharacterHealth target;public float damage,remaining;public bool active,secondary,canBounce,abilityProc;public CombatDamageType type;public int spawnFrame;}
+        private sealed class Bolt {public GameObject go,visual,prefab;public Transform transform;public Renderer renderer;public Color color;public TrailRenderer trail;public CharacterHealth target;public float damage,remaining;public bool active,secondary,canBounce,abilityProc;public CombatDamageType type;public ProjectileElement element;public int spawnFrame;}
         private void Awake()
         {
             audioManager=FindAnyObjectByType<MiningAudioManager>();
@@ -80,6 +86,8 @@ namespace GameData.Player.Script
             pool=new GameObject("Survivor Energy Projectiles");
             var shader=Shader.Find("Universal Render Pipeline/Unlit");
             material=new Material(shader){name="Survivor projectile runtime"};material.SetColor("_BaseColor",data.projectileColor);
+            impactMaterial=new Material(shader){name="Survivor impact runtime"};
+            impactMaterial.SetOverrideTag("RenderType","Transparent");impactMaterial.SetFloat("_Surface",1);impactMaterial.SetFloat("_SrcBlend",(float)UnityEngine.Rendering.BlendMode.SrcAlpha);impactMaterial.SetFloat("_DstBlend",(float)UnityEngine.Rendering.BlendMode.One);impactMaterial.SetFloat("_ZWrite",0);impactMaterial.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");impactMaterial.renderQueue=(int)UnityEngine.Rendering.RenderQueue.Transparent;
         }
         private Vector3 Origin=>transform.position+Vector3.up*1.0f;
         private static Vector3 Point(CharacterHealth target)
@@ -88,7 +96,8 @@ namespace GameData.Player.Script
         }
         private void Update()
         {
-            if(!CanAttack){CurrentTarget=null;if(!health||health.Health<=0)ClearBolts();return;}
+            StepImpactFlashes(Time.deltaTime);
+            if(!CanAttack){nextAttack=Time.time;CurrentTarget=null;if(!health||health.Health<=0)ClearBolts();return;}
             StepBolts(Time.deltaTime);
             float nearest=AttackRange*AttackRange;
             CurrentTarget=null;(volleyTargets??=new()).Clear();
@@ -109,7 +118,7 @@ namespace GameData.Player.Script
             if(audioManager&&shotSfx){audioManager.PlayWorldSfx(shotSfx,Origin,shotVolume);ShotSoundsPlayed++;}
             volleyTargets.Sort((a,b)=>(a.transform.position-transform.position).sqrMagnitude.CompareTo((b.transform.position-transform.position).sqrMagnitude));CurrentTarget=volleyTargets[0];
             int twin=Stats?Stats.UpgradeLevel(SurvivorUpgradeId.TwinMagic):0;
-            int extras=TrueProjectileCount+(twin>0?1:0);
+            int extras=TrueProjectileCount+(twin>0?1:0)+ElementalProjectileCount;
             Launch(CurrentTarget,EffectiveDamage,origin:Origin);
             if(twin>0)Launch(volleyTargets.Count>1?volleyTargets[1]:CurrentTarget,Stats.AbilityData.rare.twinMagic.flatDamage+Stats.AbilityData.rare.twinMagic.baseDamagePercent*.01f*BaseDamage,true,CombatDamageType.Magic,false,BonusProjectileOrigin(0,extras,CurrentTarget));
             int extra=TrueProjectileCount;
@@ -117,6 +126,9 @@ namespace GameData.Player.Script
                 var target=volleyTargets.Count>1?volleyTargets[1+i%(volleyTargets.Count-1)]:CurrentTarget;
                 Launch(target,EffectiveDamage*Stats.AbilityData.epic.trueBarrage.attackDamagePercent*.01f,true,CombatDamageType.True,false,BonusProjectileOrigin(i+(twin>0?1:0),extras,CurrentTarget));
             }
+            int elementIndex=TrueProjectileCount+(twin>0?1:0);
+            if(Stats&&Stats.UpgradeLevel(SurvivorUpgradeId.Burn)>0)Launch(CurrentTarget,EffectiveDamage,true,origin:BonusProjectileOrigin(elementIndex++,extras,CurrentTarget),element:ProjectileElement.Fire);
+            if(Stats&&Stats.UpgradeLevel(SurvivorUpgradeId.Frostbite)>0)Launch(CurrentTarget,EffectiveDamage,true,origin:BonusProjectileOrigin(elementIndex,extras,CurrentTarget),element:ProjectileElement.Ice);
         }
         public Vector3 BonusProjectileOrigin(int index,int count,CharacterHealth target)
         {
@@ -140,25 +152,38 @@ namespace GameData.Player.Script
             }
             return closest.collider;
         }
-        public void Launch(CharacterHealth target,float damage,bool secondary=false,CombatDamageType type=CombatDamageType.Physical,bool canBounce=true,Vector3? origin=null,bool abilityProc=false)
+        public GameObject ProjectilePrefab
+        {
+            get{
+                var style=data.projectileAppearance;
+                if(style==ProjectileAppearance.Automatic)style=ProjectileAppearance.Normal;
+                return style==ProjectileAppearance.Ice?data.iceProjectilePrefab:style==ProjectileAppearance.Fire?data.fireProjectilePrefab:style==ProjectileAppearance.Toxic?data.toxicProjectilePrefab:data.normalProjectilePrefab;
+            }
+        }
+        public void Launch(CharacterHealth target,float damage,bool secondary=false,CombatDamageType type=CombatDamageType.Physical,bool canBounce=true,Vector3? origin=null,bool abilityProc=false,ProjectileElement element=ProjectileElement.None)
         {
             if(!target||!target.IsTargetable||!pool)return;
-            Bolt bolt=null;foreach(var b in bolts)if(!b.active){bolt=b;break;}
+            var prefab=element==ProjectileElement.Fire?data.fireProjectilePrefab:element==ProjectileElement.Ice?data.iceProjectilePrefab:ProjectilePrefab;
+            Bolt bolt=null;foreach(var b in bolts)if(!b.active&&b.prefab==prefab){bolt=b;break;}
+            if(bolt==null)foreach(var b in bolts)if(!b.active){bolt=b;break;}
             if(bolt==null)
             {
                 if(bolts.Count>=PoolLimit)return;
                 var go=GameObject.CreatePrimitive(PrimitiveType.Sphere);go.name="Energy bolt";go.transform.SetParent(pool.transform);
                 var collider=go.GetComponent<Collider>();collider.enabled=false;Destroy(collider);
                 go.transform.localScale=Vector3.one*data.projectileRadius*2;go.GetComponent<Renderer>().sharedMaterial=material;
-                var trail=go.AddComponent<TrailRenderer>();trail.sharedMaterial=material;trail.time=.12f;trail.startWidth=data.projectileRadius;trail.endWidth=0;trail.minVertexDistance=.04f;trail.shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;
-                bolt=new Bolt{go=go,trail=trail};bolts.Add(bolt);
+                var trail=go.AddComponent<TrailRenderer>();trail.sharedMaterial=material;trail.time=data.projectileTrailSeconds;trail.startWidth=data.projectileRadius*data.projectileTrailWidth;trail.endWidth=0;trail.minVertexDistance=.04f;trail.shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;
+                bolt=new Bolt{go=go,transform=go.transform,renderer=go.GetComponent<Renderer>(),trail=trail};bolts.Add(bolt);
             }
+            if(bolt.prefab!=prefab){if(bolt.visual)Destroy(bolt.visual);bolt.visual=prefab?Instantiate(prefab,bolt.transform,false):null;bolt.prefab=prefab;}
+            bolt.renderer.enabled=!prefab;bolt.trail.enabled=!prefab;
             Vector3 start=origin??Origin;
-            bolt.active=true;bolt.spawnFrame=Time.frameCount;bolt.go.SetActive(true);bolt.go.transform.position=start;
-            bolt.target=target;bolt.damage=damage;bolt.secondary=secondary;bolt.type=type;bolt.canBounce=canBounce;bolt.abilityProc=abilityProc;
-            bolt.go.transform.localScale=Vector3.one*ProjectileRadius*2;bolt.trail.startWidth=ProjectileRadius;
+            bolt.active=true;bolt.spawnFrame=Time.frameCount;bolt.go.SetActive(true);bolt.transform.position=start;var direction=Point(target)-start;if(direction.sqrMagnitude>.0001f)bolt.transform.rotation=Quaternion.LookRotation(direction);
+            bolt.target=target;bolt.damage=damage;bolt.secondary=secondary;bolt.type=type;bolt.canBounce=canBounce;bolt.abilityProc=abilityProc;bolt.element=element;
+            bolt.transform.localScale=Vector3.one*ProjectileRadius*2;bolt.trail.time=data.projectileTrailSeconds;bolt.trail.startWidth=ProjectileRadius*data.projectileTrailWidth;
             Color color=abilityProc?Color.cyan:type==CombatDamageType.True?Color.white:type==CombatDamageType.Magic?new Color(.55f,.65f,1f):secondary?new Color(1f,.9f,.3f):data.projectileColor;
-            boltColor??=new MaterialPropertyBlock();boltColor.SetColor("_BaseColor",color);bolt.go.GetComponent<Renderer>().SetPropertyBlock(boltColor);
+            if(prefab)color=prefab==data.iceProjectilePrefab?new Color(.5f,.95f,1):prefab==data.fireProjectilePrefab?new Color(1,.6f,.08f):prefab==data.toxicProjectilePrefab?new Color(.5f,1,.08f):new Color(.5f,.7f,1);
+            boltColor??=new MaterialPropertyBlock();boltColor.SetColor("_BaseColor",color);bolt.color=color;bolt.renderer.SetPropertyBlock(boltColor);
             bolt.trail.SetPropertyBlock(boltColor);bolt.trail.startColor=bolt.trail.endColor=Color.white;
             bolt.remaining=Mathf.Max(.03f,Vector3.Distance(Point(target),start)/ProjectileSpeed);bolt.trail.Clear();
         }
@@ -170,25 +195,25 @@ namespace GameData.Player.Script
                 var target=b.target;
                 if(!target||!target.isActiveAndEnabled||!target.IsTargetable){
                     // Bonus bolts can outlive the enemy killed by an earlier bolt.
-                    target=b.secondary?SurvivorAbilities.Nearest(b.go.transform.position,AttackRange,target):null;
+                    target=b.secondary?SurvivorAbilities.Nearest(b.transform.position,AttackRange,target):null;
                     if(!target){b.active=false;b.target=null;b.go.SetActive(false);continue;}
-                    b.target=target;b.remaining=Mathf.Max(.03f,Vector3.Distance(Point(target),b.go.transform.position)/ProjectileSpeed);
+                    b.target=target;b.remaining=Mathf.Max(.03f,Vector3.Distance(Point(target),b.transform.position)/ProjectileSpeed);
                 }
-                Vector3 destination=Point(target);
+                Vector3 destination=Point(target);Vector3 incoming=b.transform.position-destination;if(incoming.sqrMagnitude>.0001f)b.transform.rotation=Quaternion.LookRotation(-incoming);
                 // A locked shot meets its target at the scheduled arrival, even after a sharp turn.
-                b.go.transform.position=Vector3.Lerp(b.go.transform.position,destination,Mathf.Clamp01(dt/Mathf.Max(.001f,b.remaining)));
+                b.transform.position=Vector3.Lerp(b.transform.position,destination,Mathf.Clamp01(dt/Mathf.Max(.001f,b.remaining)));
                 b.remaining-=dt;
-                if(b.remaining>0 && Vector3.SqrMagnitude(b.go.transform.position-destination)>ProjectileRadius*ProjectileRadius)continue;
-                Vector3 hitPoint=b.go.transform.position;
+                if(b.remaining>0 && Vector3.SqrMagnitude(b.transform.position-destination)>ProjectileRadius*ProjectileRadius)continue;
+                Vector3 hitPoint=b.transform.position;Vector3 flashPoint=ImpactSurface(target,destination,incoming);
                 // Damage/death callbacks may remove the victim; release the slot before spawning a bounce.
-                float damage=b.damage;bool secondary=b.secondary,canBounce=b.canBounce,proc=b.abilityProc;var type=b.type;
+                float damage=b.damage;bool secondary=b.secondary,canBounce=b.canBounce,proc=b.abilityProc;var type=b.type;var element=b.element;var impactColor=b.color;
                 b.active=false;b.target=null;b.go.SetActive(false);
                 float dealt=target.DealDamageWithTrueBonus(damage,type,gameObject,0,!secondary,false,proc);
                 if(dealt>0)
                 {
-                    HitsLanded++;
+                    HitsLanded++;ShowImpactFlash(flashPoint,impactColor);
                     if(audioManager&&impactSfx.Length>0){int sample=impactSfx.Length==1?0:Random.Range(0,impactSfx.Length-1);if(impactSfx.Length>1&&sample>=lastImpact)sample++;lastImpact=sample;if(impactSfx[sample]){audioManager.PlayWorldSfx(impactSfx[sample],hitPoint,impactVolume);ImpactSoundsPlayed++;}}
-                    if(abilities)abilities.ProjectileHit(target,damage,dealt,secondary,canBounce,hitPoint);
+                    if(abilities)abilities.ProjectileHit(target,damage,dealt,secondary,canBounce,hitPoint,element);
                     // Larger projectiles damage every target overlapping their impact sphere.
                     if(Stats&&Stats.UpgradeLevel(SurvivorUpgradeId.ProjectileSize)>0)
                     {
@@ -196,6 +221,40 @@ namespace GameData.Player.Script
                         foreach(var other in splash)if(other&&other.IsTargetable)other.DealDamage(damage,type,gameObject);
                     }
                 }
+            }
+        }
+        private static Vector3 ImpactSurface(CharacterHealth target,Vector3 center,Vector3 incoming)
+        {
+            var direction=incoming.sqrMagnitude>.0001f?incoming.normalized:Vector3.back;
+            var collider=target.GetComponent<Collider>();
+            if(collider)return collider.ClosestPoint(center+direction*(collider.bounds.extents.magnitude+1));
+            // GPU actors have no collider; place feedback on their visible front, not inside the mesh.
+            return center+direction*(.45f*Mathf.Max(.1f,target.transform.lossyScale.x));
+        }
+        private void ShowImpactFlash(Vector3 point,Color color)
+        {
+            if(data.impactFlashSeconds<=0||!impactMaterial)return;
+            ImpactFlash flash=null;foreach(var item in impacts)if(!item.go.activeSelf){flash=item;break;}
+            if(flash==null){
+                if(impacts.Count>=Mathf.Max(8,data.poolCapacity))return;
+                var go=GameObject.CreatePrimitive(PrimitiveType.Sphere);go.name="Projectile hit flash";go.transform.SetParent(pool.transform,false);
+                var collider=go.GetComponent<Collider>();collider.enabled=false;Destroy(collider);
+                var renderer=go.GetComponent<Renderer>();renderer.sharedMaterial=impactMaterial;renderer.shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;renderer.receiveShadows=false;
+                flash=new ImpactFlash{go=go,transform=go.transform,renderer=renderer};impacts.Add(flash);
+            }
+            flash.color=Color.Lerp(color,Color.white,.65f);flash.duration=flash.remaining=data.impactFlashSeconds;flash.size=ProjectileRadius*2*data.impactFlashSize;
+            flash.transform.position=point;flash.transform.localScale=Vector3.one*flash.size;flash.go.SetActive(true);SetImpactColor(flash,1);ImpactFlashesPlayed++;
+        }
+        private void SetImpactColor(ImpactFlash flash,float alpha)
+        {
+            boltColor??=new MaterialPropertyBlock();var color=flash.color;color.a=alpha;boltColor.SetColor("_BaseColor",color);flash.renderer.SetPropertyBlock(boltColor);
+        }
+        private void StepImpactFlashes(float dt)
+        {
+            foreach(var flash in impacts){
+                if(!flash.go.activeSelf)continue;flash.remaining=Mathf.Max(0,flash.remaining-dt);
+                if(flash.remaining<=0){flash.go.SetActive(false);continue;}
+                float progress=1-flash.remaining/flash.duration;flash.transform.localScale=Vector3.one*(flash.size*Mathf.Lerp(1,1.45f,progress));SetImpactColor(flash,1-progress);
             }
         }
         private void OnDrawGizmosSelected()
@@ -214,8 +273,8 @@ namespace GameData.Player.Script
             if(CurrentTarget){Gizmos.color=attackRangeColor;Gizmos.DrawLine(Origin,Point(CurrentTarget));}
             Gizmos.color=previous;
         }
-        private void ClearBolts(){foreach(var b in bolts){b.active=false;b.target=null;if(b.go)b.go.SetActive(false);}}
+        private void ClearBolts(){foreach(var flash in impacts)if(flash.go)flash.go.SetActive(false);foreach(var b in bolts){b.active=false;b.target=null;if(b.go)b.go.SetActive(false);}}
         private void OnDisable(){CurrentTarget=null;ClearBolts();if(frostVoice)frostVoice.Stop();}
-        private void OnDestroy(){if(pool)Destroy(pool);if(material)Destroy(material);}
+        private void OnDestroy(){if(pool)Destroy(pool);if(material)Destroy(material);if(impactMaterial)Destroy(impactMaterial);}
     }
 }
