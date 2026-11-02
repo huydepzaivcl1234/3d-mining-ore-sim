@@ -1,9 +1,0 @@
-{
-  "source": "D:\\3d mining sim\\Deliverables\\BodyAnimationReview-20261026\\FullBody_ReloadSmooth_Shoot_Edit.blend",
-  "frames": 145,
-  "duration": 2.4,
-  "mechanismLength": 2.4,
-  "bodyMuscles": 95,
-  "worldClip": "Assets/GameData/Player/Animations/Pistol/BlenderReloadFinal/Reload_Body_User_Final.anim",
-  "fpsClipPreserved": "Assets/GameData/Player/Animations/Pistol/M1911Return/M1911_Reload_Body.anim"
-}

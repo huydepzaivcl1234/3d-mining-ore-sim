@@ -1,3 +1,11 @@
+# Only Unity project inputs and Git configuration belong in this repository.
+/*
+!/.gitignore
+!/.gitattributes
+!/Assets/
+!/Packages/
+!/ProjectSettings/
+
 # Unity .gitignore Template
 # Source: https://github.com/github/gitignore/blob/main/Unity.gitignore
 # Last synced: 2026-07-02

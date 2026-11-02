@@ -1,5 +1,0 @@
-{
-    "version": 1,
-    "payload": "{\"version\":1,\"legacyAllowed\":true,\"sections\":[{\"key\":\"MiningSimulator.DayNight.v1\",\"value\":\"{\\\"version\\\":1,\\\"day\\\":4,\\\"period\\\":0,\\\"elapsed\\\":70.0}\",\"deleted\":false},{\"key\":\"MiningSimulator.Quests.v1\",\"value\":\"{\\\"version\\\":1,\\\"dailyStamp\\\":\\\"20261029\\\",\\\"weeklyStamp\\\":\\\"20261026\\\",\\\"entries\\\":[{\\\"questId\\\":\\\"daily_mushroom\\\",\\\"progress\\\":6,\\\"claimed\\\":false},{\\\"questId\\\":\\\"daily_golem\\\",\\\"progress\\\":0,\\\"claimed\\\":false},{\\\"questId\\\":\\\"daily_bat\\\",\\\"progress\\\":0,\\\"claimed\\\":false},{\\\"questId\\\":\\\"daily_mushranon\\\",\\\"progress\\\":0,\\\"claimed\\\":false},{\\\"questId\\\":\\\"daily_forest_golem\\\",\\\"progress\\\":0,\\\"claimed\\\":false},{\\\"questId\\\":\\\"daily_skullclaw\\\",\\\"progress\\\":0,\\\"claimed\\\":false},{\\\"questId\\\":\\\"weekly_boss\\\",\\\"progress\\\":0,\\\"claimed\\\":false}]}\",\"deleted\":false}]}",
-    "checksum": "cPwS2d5GNHU/OFcn2uRZJ7lJnJroXZ8f2oQh6G9NSp8="
-}
