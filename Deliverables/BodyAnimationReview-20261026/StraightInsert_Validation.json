@@ -1,0 +1,27 @@
+{
+  "unchanged_bone_basis_max_error": 6.556510925292969e-07,
+  "straight_insert_sideways_error_gun_local": 8.499148211042236e-08,
+  "straight_insert_rotation_error_radians": 0,
+  "hand_target_max_error_m": 3.6863436927953305e-07,
+  "insertion_axis_progress": [
+    -0.04527554175911064,
+    -0.04438471785397269,
+    -0.04192174493073253,
+    -0.03820125910351635,
+    -0.03353741340833949,
+    -0.02824476191563008,
+    -0.022637766298430506,
+    -0.017030775600687775,
+    -0.011738133074231882,
+    -0.0070742677880843985,
+    -0.0033536729638399265,
+    -0.0008907829007398504,
+    5.2568230712868314e-08
+  ],
+  "fail": 0,
+  "changed": "Only magazine path and left upper arm/forearm/hand during65-97; fingers, right arm, gun, body, dropped mag preserved",
+  "not_verified": [
+    "Unity",
+    "runtime gameplay"
+  ]
+}

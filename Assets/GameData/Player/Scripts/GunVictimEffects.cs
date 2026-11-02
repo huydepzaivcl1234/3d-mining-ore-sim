@@ -5,11 +5,11 @@ namespace GameData.Player.Script
     [DisallowMultipleComponent]
     public sealed class GunVictimEffects : MonoBehaviour
     {
-        private MiningCharacterHealth health;private BlueGunUpgradeData data;private GameObject source;
+        private CharacterHealth health;private BlueGunUpgradeData data;private GameObject source;
         private double nailStacks;private bool applyingNail;
         private float bleedDamage,bleedRemaining,nextTick;
         public double NailStacks=>nailStacks;
-        public void Configure(MiningCharacterHealth victim,BlueGunUpgradeData settings,GameObject owner)
+        public void Configure(CharacterHealth victim,BlueGunUpgradeData settings,GameObject owner)
         { if(health!=victim){if(health)health.Damaged-=OnDamaged;health=victim;health.Damaged+=OnDamaged;}data=settings;source=owner; }
         public void MarkNail(){if(nailStacks==0&&health.Health>0)nailStacks=1;}
         public void RefreshBleed(float damage)

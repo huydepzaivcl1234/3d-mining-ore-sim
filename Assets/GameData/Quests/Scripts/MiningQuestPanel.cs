@@ -98,7 +98,7 @@ namespace MiningSimulator.Ores
         [Header("Systems")]
         [SerializeField] private MiningQuestData data;
         [SerializeField] private MiningQuestSystem questSystem;
-        [SerializeField] private MiningUiPanelCoordinator panelCoordinator;
+        [SerializeField] private UiPanelCoordinator panelCoordinator;
 
         [Header("Authored UI")]
         [SerializeField] private RectTransform panelRoot;
@@ -153,7 +153,7 @@ namespace MiningSimulator.Ores
         private void ResolveSceneUi()
         {
             if (panelCoordinator == null)
-                panelCoordinator = FindFirstObjectByType<MiningUiPanelCoordinator>(
+                panelCoordinator = FindFirstObjectByType<UiPanelCoordinator>(
                     FindObjectsInactive.Include);
 
             Canvas canvas = GetComponentInParent<Canvas>(true);
@@ -268,7 +268,7 @@ namespace MiningSimulator.Ores
                 {
                     var definition = data != null ? data.GetDefinition(row.QuestId) : null;
                     if (definition == null || definition.Period != MiningQuestPeriod.Weekly || row.Root == null) continue;
-                    ((RectTransform)row.Root.transform).anchoredPosition = new Vector2(0f, -y - 66f);
+                    ((RectTransform)row.Root.transform).anchoredPosition = new Vector2(0f, -y);
                     y += 148f;
                 }
                 dailySection.anchoredPosition = new Vector2(0f, -y);
@@ -277,7 +277,7 @@ namespace MiningSimulator.Ores
                 {
                     var definition = data != null ? data.GetDefinition(row.QuestId) : null;
                     if (definition == null || definition.Period != MiningQuestPeriod.Daily || row.Root == null) continue;
-                    ((RectTransform)row.Root.transform).anchoredPosition = new Vector2(0f, -y - 66f);
+                    ((RectTransform)row.Root.transform).anchoredPosition = new Vector2(0f, -y);
                     y += 148f; dailyCount++;
                 }
                 emptyDailyLabel?.transform.parent.gameObject.SetActive(dailyCount == 0);

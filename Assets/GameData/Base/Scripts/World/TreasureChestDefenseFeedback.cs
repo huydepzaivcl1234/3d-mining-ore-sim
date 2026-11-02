@@ -9,9 +9,9 @@ namespace MiningSimulator.Ores
     public sealed class TreasureChestDefenseFeedback : MonoBehaviour
     {
         private TreasureChest chest;
-        private MiningPlayerStats player;
-        private MiningCharacterHealth playerHealth;
-        private MiningUiPanelCoordinator panels;
+        private PlayerStats player;
+        private CharacterHealth playerHealth;
+        private UiPanelCoordinator panels;
         private Camera viewer;
         private float heldSeconds, nextLookup;
         private bool interrupted;
@@ -62,10 +62,10 @@ namespace MiningSimulator.Ores
         {
             if (player != null || Time.unscaledTime < nextLookup) return;
             nextLookup = Time.unscaledTime + 1;
-            player = FindFirstObjectByType<MiningPlayerStats>();
-            panels = FindFirstObjectByType<MiningUiPanelCoordinator>();
+            player = FindFirstObjectByType<PlayerStats>();
+            panels = FindFirstObjectByType<UiPanelCoordinator>();
             if (player == null) return;
-            playerHealth = player.GetComponent<MiningCharacterHealth>();
+            playerHealth = player.GetComponent<CharacterHealth>();
             if (playerHealth != null) playerHealth.Damaged += Interrupt;
         }
 

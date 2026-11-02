@@ -24,7 +24,6 @@ MonoBehaviour:
   hitLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  motionProfile: {fileID: 11400000, guid: 1d5057ba9f9c455408cbdeaf7faa1f87, type: 2}
   reloadProfile: {fileID: 11400000, guid: f06ce19e587e8eb40ae7e85ded027b77, type: 2}
   recoilDegrees: 1.1
   recoilYawDegrees: 0.16
@@ -32,7 +31,7 @@ MonoBehaviour:
   recoilRecovery: 12
   handKickback: 0.018
   handReturnSeconds: 0.12
-  cameraRecoilDegrees: 0.45
+  cameraRecoilDegrees: 0.25
   cameraReturnSeconds: 0.18
   aimRecoilMultiplier: 0.65
   slideTravel: 0

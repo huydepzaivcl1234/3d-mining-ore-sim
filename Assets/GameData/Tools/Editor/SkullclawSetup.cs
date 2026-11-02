@@ -13,7 +13,7 @@ public static class SkullclawSetup
     public const string DataPath = Folder + "/SkullclawData.asset";
     public const string AnimationFolder = "Assets/Animations/Monsters/Skullclaw";
 
-    [MenuItem("Mining Simulator/Setup/Skullclaw Mutant Animations")]
+    [MenuItem("Survivor/Setup/Skullclaw Mutant Animations")]
     public static void Configure()
     {
         if (EditorApplication.isPlayingOrWillChangePlaymode) throw new InvalidOperationException("Stop Play Mode first.");
@@ -69,7 +69,7 @@ public static class SkullclawSetup
                 if (animator == null) animator = visual.AddComponent<Animator>();
                 animator.runtimeAnimatorController = controller; animator.applyRootMotion = false;
                 animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
-                var health = root.AddComponent<MiningCharacterHealth>();
+                var health = root.AddComponent<CharacterHealth>();
                 var motor = root.AddComponent<CharacterController>();
                 motor.height = 1.8f; motor.radius = .55f; motor.center = new Vector3(0, .9f, 0);
                 motor.skinWidth = .03f; motor.minMoveDistance = 0f; motor.stepOffset = .25f;

@@ -43,13 +43,13 @@ public sealed class MonsterRetaliationTests
         enemy.SetActive(false);
         try
         {
-            var playerHealth = player.AddComponent<MiningCharacterHealth>();
+            var playerHealth = player.AddComponent<CharacterHealth>();
             playerHealth.ConfigureSpawnHealth(100f);
-            var hp = enemy.AddComponent<MiningCharacterHealth>(); hp.ConfigureSpawnHealth(100f);
+            var hp = enemy.AddComponent<CharacterHealth>(); hp.ConfigureSpawnHealth(100f);
             var monster = enemy.AddComponent<MushroomMonster>();
             Set(monster, "health", hp); Set(monster, "playerTarget", playerHealth);
             Set(monster, "legacy_detectionRange", 6f);
-            var chestHealth = chestObject.AddComponent<MiningCharacterHealth>(); chestHealth.ConfigureSpawnHealth(100f);
+            var chestHealth = chestObject.AddComponent<CharacterHealth>(); chestHealth.ConfigureSpawnHealth(100f);
             var chest = chestObject.AddComponent<TreasureChest>();
             Set(chest, "health", chestHealth); Set(chest, "data", chestData); Set(chest, "persistProgress", false);
             activeField.SetValue(null, chest);

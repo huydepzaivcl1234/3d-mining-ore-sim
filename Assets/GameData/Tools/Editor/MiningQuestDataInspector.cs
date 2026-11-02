@@ -76,7 +76,7 @@ namespace MiningSimulator.Ores.Editor
                 Object.FindFirstObjectByType<MiningRebirthSystem>(FindObjectsInactive.Include));
             ConfigureCanvasGroup(panelRoot.gameObject);
             WireQuestPanel(panel, data, questSystem,
-                Object.FindFirstObjectByType<MiningUiPanelCoordinator>(
+                Object.FindFirstObjectByType<UiPanelCoordinator>(
                     FindObjectsInactive.Include), panelRoot,
                 canvas.transform.Find("Quest Menu Button")?.GetComponent<Button>(),
                 FindDescendant(canvas.transform, "Quest Button")?.GetComponent<Button>(),
@@ -97,7 +97,7 @@ namespace MiningSimulator.Ores.Editor
         }
 
         private static void WireQuestPanel(MiningQuestPanel panel, MiningQuestData data,
-            MiningQuestSystem system, MiningUiPanelCoordinator coordinator,
+            MiningQuestSystem system, UiPanelCoordinator coordinator,
             RectTransform root, Button gameplayButton, Button mainMenuButton,
             Button closeButton, RectTransform card)
         {

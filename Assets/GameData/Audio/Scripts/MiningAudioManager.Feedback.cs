@@ -10,7 +10,7 @@ namespace MiningSimulator.Ores
 
 
 
-        private void HandleUpgradePurchased(MiningUpgradeType type)
+        private void HandleUpgradePurchased(EconomyUpgradeType type)
         {
             if (upgradeSystem != null && upgradeSystem.IsAutoUpgradePurchase) return;
             if (audioData != null)

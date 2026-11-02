@@ -1,0 +1,5568 @@
+{
+  "events": [
+    {
+      "f": 65,
+      "fire": true
+    },
+    {
+      "f": 85,
+      "fire": true
+    },
+    {
+      "f": 110,
+      "reload": true
+    }
+  ],
+  "rows": [
+    {
+      "f": 0,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 1,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 2,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 3,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 4,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 5,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 6,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 7,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 8,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 9,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 10,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 11,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 12,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 13,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 14,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 15,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 16,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 17,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 18,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 19,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 20,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 21,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 22,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 23,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 24,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 25,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 26,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 27,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 28,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 29,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 30,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 31,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 32,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 33,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 34,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 35,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 36,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 37,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 38,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 39,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 40,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 41,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 42,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 43,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 44,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 45,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 46,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 47,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 48,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 49,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 50,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 51,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 52,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 53,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 54,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 55,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 56,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 57,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 58,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 59,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 60,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 61,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 62,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 63,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 64,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 65,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 66,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "M1911_Attack_Body"
+      ],
+      "fps": [
+        "M1911_Attack_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 67,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "M1911_Attack_Body"
+      ],
+      "fps": [
+        "M1911_Attack_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 68,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "M1911_Attack_Body"
+      ],
+      "fps": [
+        "M1911_Attack_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 69,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "M1911_Attack_Body"
+      ],
+      "fps": [
+        "M1911_Attack_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 70,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "M1911_Attack_Body"
+      ],
+      "fps": [
+        "M1911_Attack_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 71,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "M1911_Attack_Body"
+      ],
+      "fps": [
+        "M1911_Attack_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 72,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "M1911_Attack_Body"
+      ],
+      "fps": [
+        "M1911_Attack_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 73,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "M1911_Attack_Body"
+      ],
+      "fps": [
+        "M1911_Attack_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 74,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "M1911_Attack_Body"
+      ],
+      "fps": [
+        "M1911_Attack_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 75,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "M1911_Attack_Body"
+      ],
+      "fps": [
+        "M1911_Attack_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 76,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "M1911_Attack_Body"
+      ],
+      "fps": [
+        "M1911_Attack_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 77,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "M1911_Attack_Body"
+      ],
+      "fps": [
+        "M1911_Attack_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 78,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "M1911_Attack_Body"
+      ],
+      "fps": [
+        "M1911_Attack_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 79,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "M1911_Attack_Body"
+      ],
+      "fps": [
+        "M1911_Attack_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 80,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "M1911_Attack_Body"
+      ],
+      "fps": [
+        "M1911_Attack_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 81,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "M1911_Attack_Body"
+      ],
+      "fps": [
+        "M1911_Attack_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 82,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "M1911_Attack_Body"
+      ],
+      "fps": [
+        "M1911_Attack_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 83,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "M1911_Attack_Body"
+      ],
+      "fps": [
+        "M1911_Attack_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 84,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "M1911_Attack_Body"
+      ],
+      "fps": [
+        "M1911_Attack_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 85,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "M1911_Attack_Body"
+      ],
+      "fps": [
+        "M1911_Attack_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 86,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "M1911_Attack_Body"
+      ],
+      "fps": [
+        "M1911_Attack_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 87,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "M1911_Attack_Body"
+      ],
+      "fps": [
+        "M1911_Attack_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 88,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "M1911_Attack_Body"
+      ],
+      "fps": [
+        "M1911_Attack_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 89,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "M1911_Attack_Body"
+      ],
+      "fps": [
+        "M1911_Attack_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 90,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "M1911_Attack_Body"
+      ],
+      "fps": [
+        "M1911_Attack_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 91,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "M1911_Attack_Body"
+      ],
+      "fps": [
+        "M1911_Attack_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 92,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "M1911_Attack_Body"
+      ],
+      "fps": [
+        "M1911_Attack_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 93,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "M1911_Attack_Body"
+      ],
+      "fps": [
+        "M1911_Attack_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 94,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "M1911_Attack_Body"
+      ],
+      "fps": [
+        "M1911_Attack_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 95,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "M1911_Attack_Body"
+      ],
+      "fps": [
+        "M1911_Attack_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 96,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "M1911_Attack_Body"
+      ],
+      "fps": [
+        "M1911_Attack_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 97,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "M1911_Attack_Body"
+      ],
+      "fps": [
+        "M1911_Attack_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 98,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "M1911_Attack_Body"
+      ],
+      "fps": [
+        "M1911_Attack_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 99,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "M1911_Attack_Body"
+      ],
+      "fps": [
+        "M1911_Attack_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 100,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "M1911_Attack_Body"
+      ],
+      "fps": [
+        "M1911_Attack_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 101,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "M1911_Attack_Body"
+      ],
+      "fps": [
+        "M1911_Attack_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 102,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "M1911_Attack_Body"
+      ],
+      "fps": [
+        "M1911_Attack_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 103,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "M1911_Attack_Body"
+      ],
+      "fps": [
+        "M1911_Attack_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 104,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "M1911_Attack_Body"
+      ],
+      "fps": [
+        "M1911_Attack_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 105,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "M1911_Attack_Body"
+      ],
+      "fps": [
+        "M1911_Attack_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 106,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 107,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 108,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 109,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 110,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.7777778,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 111,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.5555556,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 112,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.333333373,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 113,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.111111149,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 114,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 115,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 116,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 117,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 118,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 119,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 120,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 121,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 122,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 123,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 124,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 125,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 126,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 127,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 128,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 129,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 130,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 131,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 132,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 133,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 134,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 135,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 136,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 137,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 138,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 139,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 140,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 141,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 142,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 143,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 144,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 145,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 146,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 147,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 148,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 149,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 150,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 151,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 152,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 153,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 154,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 155,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 156,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 157,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 158,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 159,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 160,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 161,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 162,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 163,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 164,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 165,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 166,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 167,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 168,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 169,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 170,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 171,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 172,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 173,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 174,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 175,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 176,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 177,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 178,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 179,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 180,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 181,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 182,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 183,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 184,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 185,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 186,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 187,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 188,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 189,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 190,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 191,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 192,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 193,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 194,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 195,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 196,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 197,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 198,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 199,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 200,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 201,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 202,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 203,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 204,
+      "Reloading": true,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": true,
+      "fpsReload": true,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 205,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.222222224,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 206,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.444444448,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 207,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.6666667,
+      "body": [
+        "M1911_Reload_Body"
+      ],
+      "fps": [
+        "M1911_Reload_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 208,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.8888889,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 209,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 210,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 211,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 212,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 213,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 214,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 215,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 216,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 217,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 218,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 219,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 220,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 221,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 222,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 223,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 224,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 225,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 226,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 227,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 228,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 229,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 230,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 231,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 232,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 233,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 234,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 235,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 236,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 237,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 238,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 239,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 240,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 241,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 242,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 243,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 244,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 245,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.7777778,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 246,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.5555556,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 247,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.333333373,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 248,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.111111149,
+      "body": [],
+      "fps": [],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 249,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [],
+      "fps": [],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 250,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [],
+      "fps": [],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 251,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [],
+      "fps": [],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 252,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [],
+      "fps": [],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 253,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [],
+      "fps": [],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 254,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [],
+      "fps": [],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 255,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [],
+      "fps": [],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 256,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [],
+      "fps": [],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 257,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [],
+      "fps": [],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 258,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [],
+      "fps": [],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 259,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [],
+      "fps": [],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 260,
+      "Reloading": false,
+      "draw": true,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [],
+      "fps": [],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 261,
+      "Reloading": false,
+      "draw": true,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [],
+      "fps": [],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 262,
+      "Reloading": false,
+      "draw": true,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [],
+      "fps": [],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 263,
+      "Reloading": false,
+      "draw": true,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 264,
+      "Reloading": false,
+      "draw": true,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 265,
+      "Reloading": false,
+      "draw": true,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 266,
+      "Reloading": false,
+      "draw": true,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 267,
+      "Reloading": false,
+      "draw": true,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 268,
+      "Reloading": false,
+      "draw": true,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Draw_Body"
+      ],
+      "fps": [
+        "M1911_Draw_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 269,
+      "Reloading": false,
+      "draw": true,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Draw_Body"
+      ],
+      "fps": [
+        "M1911_Draw_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 270,
+      "Reloading": false,
+      "draw": true,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Draw_Body"
+      ],
+      "fps": [
+        "M1911_Draw_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 271,
+      "Reloading": false,
+      "draw": true,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Draw_Body"
+      ],
+      "fps": [
+        "M1911_Draw_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 272,
+      "Reloading": false,
+      "draw": true,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Draw_Body"
+      ],
+      "fps": [
+        "M1911_Draw_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 273,
+      "Reloading": false,
+      "draw": true,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Draw_Body"
+      ],
+      "fps": [
+        "M1911_Draw_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 274,
+      "Reloading": false,
+      "draw": true,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Draw_Body"
+      ],
+      "fps": [
+        "M1911_Draw_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 275,
+      "Reloading": false,
+      "draw": true,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Draw_Body"
+      ],
+      "fps": [
+        "M1911_Draw_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 276,
+      "Reloading": false,
+      "draw": true,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Draw_Body"
+      ],
+      "fps": [
+        "M1911_Draw_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 277,
+      "Reloading": false,
+      "draw": true,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Draw_Body"
+      ],
+      "fps": [
+        "M1911_Draw_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 278,
+      "Reloading": false,
+      "draw": true,
+      "aim": 0.0,
+      "ik": 0.0,
+      "body": [
+        "M1911_Draw_Body"
+      ],
+      "fps": [
+        "M1911_Draw_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 279,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.222222224,
+      "body": [
+        "M1911_Draw_Body"
+      ],
+      "fps": [
+        "M1911_Draw_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 280,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.444444448,
+      "body": [
+        "M1911_Draw_Body"
+      ],
+      "fps": [
+        "M1911_Draw_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 281,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.6666667,
+      "body": [
+        "M1911_Draw_Body"
+      ],
+      "fps": [
+        "M1911_Draw_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 282,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 0.8888889,
+      "body": [
+        "M1911_Draw_Body"
+      ],
+      "fps": [
+        "M1911_Draw_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 283,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 284,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 285,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 286,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 287,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 288,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 289,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 290,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 291,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 292,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 293,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 294,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 295,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 296,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 297,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 298,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 299,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 300,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 301,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 302,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 303,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 304,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 305,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 306,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 307,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 308,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 309,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 310,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 311,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 312,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 313,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 314,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 315,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 316,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 317,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 318,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 319,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 320,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 321,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 322,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 323,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 324,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 325,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 326,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 327,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 328,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    },
+    {
+      "f": 329,
+      "Reloading": false,
+      "draw": false,
+      "aim": 0.0,
+      "ik": 1.0,
+      "body": [
+        "User_Body_Hold"
+      ],
+      "fps": [
+        "M1911_Idle_Body"
+      ],
+      "bodyReload": false,
+      "fpsReload": false,
+      "worldRootStep": 0.0,
+      "separateHands": true
+    }
+  ]
+}

@@ -17,7 +17,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private TMP_Text buyLabel;
         [SerializeField] private MiningItemSystem items;
         [SerializeField] private PlayerWallet wallet;
-        [SerializeField] private MiningCharacterHealth player;
+        [SerializeField] private CharacterHealth player;
         [SerializeField] private Camera viewCamera;
         [Header("World-space presentation")]
         [Min(0f), SerializeField] private float rotationDegreesPerSecond = 35f;
@@ -35,8 +35,8 @@ namespace MiningSimulator.Ores
         {
             if (items == null) items = FindFirstObjectByType<MiningItemSystem>(FindObjectsInactive.Include);
             if (wallet == null) wallet = FindFirstObjectByType<PlayerWallet>(FindObjectsInactive.Include);
-            var stats = FindFirstObjectByType<MiningPlayerStats>(FindObjectsInactive.Include);
-            if (player == null && stats != null) player = stats.GetComponent<MiningCharacterHealth>();
+            var stats = FindFirstObjectByType<PlayerStats>(FindObjectsInactive.Include);
+            if (player == null && stats != null) player = stats.GetComponent<CharacterHealth>();
             if (viewCamera == null) viewCamera = Camera.main;
             audioManager = FindFirstObjectByType<MiningAudioManager>(FindObjectsInactive.Include);
             if (floatingModel != null)

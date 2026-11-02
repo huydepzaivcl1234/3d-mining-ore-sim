@@ -11,11 +11,13 @@ namespace GameData.Player.Script
         private Progress progress=new(); private bool saveBlocked;
         private BulletFlyVolley bulletFly;
         private GiantBombWaves bombWaves;
-        private MiningCharacterHealth playerHealth;
+        private CharacterHealth playerHealth;
         private PistolShooting shooting;
+        private SurvivorAutoCombat autoCombat;
+        private float PrimaryDamage=>autoCombat&&autoCombat.enabled?autoCombat.EffectiveDamage:shooting?shooting.EffectiveDamage:0;
         private bool progressDirty;
-        private readonly System.Collections.Generic.Dictionary<MiningCharacterHealth,int> bombHits=new();
-        private readonly System.Collections.Generic.List<MiningCharacterHealth> expiredBombTargets=new();
+        private readonly System.Collections.Generic.Dictionary<CharacterHealth,int> bombHits=new();
+        private readonly System.Collections.Generic.List<CharacterHealth> expiredBombTargets=new();
         private float nextBombPrune;
         private const string Key="Player.GunSpecialUpgrades.v1";
         public BlueGunUpgradeData Data=>data;
@@ -33,8 +35,8 @@ namespace GameData.Player.Script
             GunSpecialChoice.BulletFly=>progress.bulletFly,GunSpecialChoice.Hunter=>progress.hunter,
             GunSpecialChoice.BloodTears=>progress.bloodTears,GunSpecialChoice.GiantBomb=>progress.giantBomb,
             GunSpecialChoice.CantDie=>progress.cantDie,GunSpecialChoice.Cannon=>progress.cannon,GunSpecialChoice.EtherealWeapon=>progress.etherealWeapon, _=>false };
-        private void OnEnable(){MiningCharacterHealth.AnyDamaged+=OnAnyDamage;MiningCharacterHealth.AnyDied+=OnAnyDeath;}
-        private void OnDisable(){MiningCharacterHealth.AnyDamaged-=OnAnyDamage;MiningCharacterHealth.AnyDied-=OnAnyDeath;bulletFly?.Clear();bombWaves?.Clear();bombHits.Clear();ClearOrangeEffects();FlushProgress();}
+        private void OnEnable(){CharacterHealth.AnyDamaged+=OnAnyDamage;CharacterHealth.AnyDied+=OnAnyDeath;}
+        private void OnDisable(){CharacterHealth.AnyDamaged-=OnAnyDamage;CharacterHealth.AnyDied-=OnAnyDeath;bulletFly?.Clear();bombWaves?.Clear();bombHits.Clear();ClearOrangeEffects();FlushProgress();}
         private void OnDestroy(){bulletFly?.Dispose();bombWaves?.Dispose();}
         private void Update()
         {
@@ -49,7 +51,7 @@ namespace GameData.Player.Script
         private void FlushProgress(){if(progressDirty){GameSave.Save();progressDirty=false;}}
         private void OnApplicationPause(bool paused){if(paused)FlushProgress();}
         private void OnApplicationQuit()=>FlushProgress();
-        private void OnAnyDeath(MiningCharacterHealth victim,GameObject source)
+        private void OnAnyDeath(CharacterHealth victim,GameObject source)
         {
             bombHits.Remove(victim);
             etherealCooldowns.Remove(victim);
@@ -64,7 +66,7 @@ namespace GameData.Player.Script
             }
             else SaveProgress();
         }
-        private void OnAnyDamage(MiningCharacterHealth victim,float actualDamage,GameObject source,bool basicAttack,CombatDamageType type)
+        private void OnAnyDamage(CharacterHealth victim,float actualDamage,GameObject source,bool basicAttack,CombatDamageType type)
         {
             if(!data||!victim||!victim.IsMonster)return;
             // Reserve before nested damage listeners; one independent gate per victim.
@@ -77,15 +79,15 @@ namespace GameData.Player.Script
                 if(++count>=Mathf.Max(1,data.giantBomb.giantBombHits))
                 {
                     bombHits.Remove(victim);bombWaves??=new GiantBombWaves(data,gameObject);
-                    bombWaves.Play(victim.transform.position,data.giantBomb.giantBombBaseDamage+(shooting?shooting.EffectiveDamage:0));
+                    bombWaves.Play(victim.transform.position,data.giantBomb.giantBombBaseDamage+PrimaryDamage);
                 }
                 else bombHits[victim]=count;
             }
-            if(ethereal)OnBulletHit(victim,shooting?shooting.EffectiveDamage:actualDamage,actualDamage,victim.transform.position,true);
+            if(ethereal)OnBulletHit(victim,PrimaryDamage>0?PrimaryDamage:actualDamage,actualDamage,victim.transform.position,true);
         }
         private void Awake()
         {
-            playerHealth=GetComponent<MiningCharacterHealth>();shooting=GetComponent<PistolShooting>();
+            playerHealth=GetComponent<CharacterHealth>();shooting=GetComponent<PistolShooting>();autoCombat=GetComponent<SurvivorAutoCombat>();
             if(!GameSave.HasKey(Key))return;
             try{var loaded=JsonUtility.FromJson<Progress>(GameSave.GetString(Key));if(loaded==null||loaded.version!=1){saveBlocked=true;return;}progress=loaded;}
             catch(System.ArgumentException){saveBlocked=true;Debug.LogWarning("Gun upgrade save unreadable; preserved.",this);}
@@ -96,7 +98,7 @@ namespace GameData.Player.Script
             switch(choice){case GunSpecialChoice.DoubleHit:progress.doubleHit=true;break;case GunSpecialChoice.SharpRounds:progress.sharpRounds=true;break;case GunSpecialChoice.Nail:progress.nail=true;break;case GunSpecialChoice.FasterMatter:progress.fasterMatter=true;break;case GunSpecialChoice.BulletFly:progress.bulletFly=true;break;case GunSpecialChoice.Hunter:progress.hunter=true;break;case GunSpecialChoice.BloodTears:progress.bloodTears=true;break;case GunSpecialChoice.GiantBomb:progress.giantBomb=true;break;case GunSpecialChoice.CantDie:progress.cantDie=true;break;case GunSpecialChoice.Cannon:progress.cannon=true;break;case GunSpecialChoice.EtherealWeapon:progress.etherealWeapon=true;break;default:return false;}
             SaveProgress();FlushProgress();return true;
         }
-        public void OnBulletHit(MiningCharacterHealth victim,float bulletDamage,float actualDamage,Vector3 point,bool fromEffect=false)
+        public void OnBulletHit(CharacterHealth victim,float bulletDamage,float actualDamage,Vector3 point,bool fromEffect=false)
         {
             if(!data||!victim||actualDamage<=0)return;
             if(!fromEffect)OpenEthereal(victim);

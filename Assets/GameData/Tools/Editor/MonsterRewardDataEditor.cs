@@ -25,7 +25,8 @@ public sealed class MonsterRewardDataEditor : Editor
                 EditorUtility.SetDirty(data);
             }
         }
-        DrawDefaultInspector();
+        if (data is BreadMonsterData) { BreadMonsterInspector.Draw(serializedObject); return; }
+        MonsterSpeciesInspector.Draw(serializedObject);
         if (data.HasCombatData)
             EditorGUILayout.HelpBox($"Attack speed: {data.combat.SafeAttackSpeed:0.##}x. Cooldown: {data.combat.attackCooldown / data.combat.SafeAttackSpeed:0.###}s before boss buffs.", MessageType.Info);
     }

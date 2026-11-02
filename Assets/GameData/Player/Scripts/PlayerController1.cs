@@ -59,11 +59,20 @@ namespace GameData.Player.Script
         private InputManager _inputManager;
 
         private Animator _animator;
-        private MiningSimulator.Ores.MiningPlayerStats _playerStats;
+        private MiningSimulator.Ores.PlayerStats _playerStats;
         private AnimationRunMana _runMana;
-        private PlayerCoreStatsData CoreData => _playerStats != null ? _playerStats.CoreData : null;
+        private PistolShooting _shooting;
+        private FullBodyFirstPerson _fullBodyLook;
+        private TopDownSurvivor _topDown;
+        private SurvivorCombatData CoreData => _playerStats != null ? _playerStats.CoreData : null;
 
         private bool _grounded;
+        public bool IsGrounded => _grounded;
+        public event Action Jumped;
+        public event Action<float> Landed;
+        private bool groundSampleInitialized;
+        private MiningSimulator.Ores.UiPanelCoordinator gameplayUi;
+        private MiningSimulator.Ores.GameMainMenu mainMenu;
 
         private bool _jumpHeldLastStep;
         private bool _jumpPending;
@@ -98,8 +107,13 @@ namespace GameData.Player.Script
             _hasAnimator = TryGetComponent<Animator>(out _animator);
             _playerRigidbody = GetComponent<Rigidbody>();
             _inputManager = GetComponent<InputManager>();
-            _playerStats = GetComponent<MiningSimulator.Ores.MiningPlayerStats>();
+            _playerStats = GetComponent<MiningSimulator.Ores.PlayerStats>();
             _runMana = GetComponent<AnimationRunMana>();
+            _shooting = GetComponent<PistolShooting>();
+            _fullBodyLook = GetComponent<FullBodyFirstPerson>();
+            _topDown=GetComponent<TopDownSurvivor>();
+            gameplayUi=FindAnyObjectByType<MiningSimulator.Ores.UiPanelCoordinator>();
+            mainMenu=FindAnyObjectByType<MiningSimulator.Ores.GameMainMenu>();
 
             _xVelHash = Animator.StringToHash("X_velocity");
             _yVelHash = Animator.StringToHash("Y_velocity");
@@ -123,9 +137,11 @@ namespace GameData.Player.Script
         private float knockbackRemaining, knockbackDuration;
         public void ApplyKnockback(Vector3 velocity, float seconds)
         {
+            var ragdoll=GetComponent<PlayerRagdoll>();
+            if(ragdoll&&ragdoll.IsRagdoll){ragdoll.AddVelocity(velocity);return;}
             knockbackVelocity = new Vector3(velocity.x, 0, velocity.z);
             knockbackDuration = knockbackRemaining = Mathf.Max(.01f, seconds);
-            if (_playerRigidbody) _playerRigidbody.AddForce(velocity, ForceMode.VelocityChange);
+            if(_playerRigidbody&&!_playerRigidbody.isKinematic)_playerRigidbody.linearVelocity+=velocity;
         }
         public void ResetMotion()
         {
@@ -133,6 +149,7 @@ namespace GameData.Player.Script
             _currentVelocity = Vector2.zero;
             _jumpRequested = _jumpPending = _jumpHeldLastStep = false;
             _takeOffGroundChecks = 0;
+            if(_fullBodyLook)_fullBodyLook.ResetLook(transform.eulerAngles.y,0f);
             if (_animator) { _animator.ResetTrigger(_jumpHash); _animator.SetFloat(_xVelHash, 0f); _animator.SetFloat(_yVelHash, 0f); }
             SampleGround();
         }
@@ -153,6 +170,7 @@ namespace GameData.Player.Script
 
         private void OnAnimatorMove()
         {
+            if((_topDown&&_topDown.enabled)||(_fullBodyLook && _fullBodyLook.enabled))return; // Rigidbody Move() owns movement; the new look owns yaw.
             // In-place jump/fall root motion otherwise overwrites Rigidbody horizontal velocity.
             // Keep the existing grounded animation behaviour; physics owns the whole jump.
             if (_hasAnimator && _grounded && !_jumpPending && knockbackRemaining <= 0 && _playerRigidbody.linearVelocity.y <= 0.1f)
@@ -164,16 +182,21 @@ namespace GameData.Player.Script
             if (!_hasAnimator) return;
 
             var coreData = CoreData;
-            float walkSpeed = coreData != null ? coreData.walkSpeed : WalkSpeed;
-            float runSpeed = coreData != null ? coreData.runSpeed : RunSpeed;
+            float walkSpeed = _playerStats != null ? _playerStats.WalkSpeed : coreData != null ? coreData.walkSpeed : WalkSpeed;
+            float runSpeed = _playerStats != null ? _playerStats.RunSpeed : coreData != null ? coreData.runSpeed : RunSpeed;
             bool running = _inputManager.Run && (_runMana == null || _runMana.CanRun);
             float targetSpeed = Mathf.Max(0f, running ? runSpeed : walkSpeed);
             float animationSpeed = running ? RunAnimationSpeed : WalkAnimationSpeed;
             Vector2 movementInput = Vector2.ClampMagnitude(_inputManager.Move, 1f);
 
-            // Keep reading movement in the air, not only while grounded.
-            _currentVelocity.x = Mathf.Lerp(_currentVelocity.x, movementInput.x * animationSpeed, AnimBlendSpeed * Time.fixedDeltaTime);
-            _currentVelocity.y = Mathf.Lerp(_currentVelocity.y, movementInput.y * animationSpeed, AnimBlendSpeed * Time.fixedDeltaTime);
+            // Camera-relative world input is independent of which enemy the actor faces.
+            Vector3 worldMove=_topDown&&_topDown.enabled?_topDown.MovementDirection(movementInput):transform.TransformDirection(new Vector3(movementInput.x,0,movementInput.y));
+            Vector3 localMove=transform.InverseTransformDirection(worldMove);
+            movementInput=new Vector2(localMove.x,localMove.z);
+            _currentVelocity = Vector2.Lerp(_currentVelocity, movementInput * animationSpeed, AnimBlendSpeed * Time.fixedDeltaTime);
+            // Lerp otherwise retains subnormal values such as -2.802597e-45 at rest.
+            if (movementInput.x == 0f && Mathf.Abs(_currentVelocity.x) < .01f) _currentVelocity.x = 0f;
+            if (movementInput.y == 0f && Mathf.Abs(_currentVelocity.y) < .01f) _currentVelocity.y = 0f;
             // Physics responds to input immediately; only the visual blend is smoothed.
             Vector2 desiredVelocity = movementInput * targetSpeed;
             if (knockbackRemaining > 0)
@@ -215,10 +238,16 @@ namespace GameData.Player.Script
 
         private void CamMovements()
         {
+            if (_topDown && _topDown.enabled) return;
             if (!_hasAnimator) return;
 
             var Mouse_x = Cursor.lockState == CursorLockMode.Locked ? _inputManager.Look.x : 0f;
             var Mouse_y = Cursor.lockState == CursorLockMode.Locked ? _inputManager.Look.y : 0f;
+            if(_fullBodyLook && _fullBodyLook.enabled){
+                float scale=_inputManager.LookIsMouse?1f/60f:Time.deltaTime;
+                _fullBodyLook.Look(new Vector2(Mouse_x,Mouse_y)*EffectiveMouseSensitivity*scale);
+                return; // FullBodyFirstPerson alone owns camera and body yaw.
+            }
             Camera.position = CameraRoot.position;
 
             // Preserve the old 60 Hz tuning, without amplifying mouse delta on slow frames.
@@ -226,7 +255,9 @@ namespace GameData.Player.Script
             _xRotation -= Mouse_y * EffectiveMouseSensitivity * lookScale;
             _xRotation = Mathf.Clamp(_xRotation, UpperLimit, BottomLimit);
 
-            Camera.localRotation = Quaternion.Euler(_xRotation, 0, 0);
+            // Visual shot kick returns to zero; it never changes the stored mouse aim.
+            Vector3 shotKick = _shooting != null ? _shooting.CameraShotKick : Vector3.zero;
+            Camera.localRotation = Quaternion.Euler(new Vector3(_xRotation, 0, 0) + shotKick);
             _playerRigidbody.MoveRotation(_playerRigidbody.rotation * Quaternion.Euler(0, Mouse_x * EffectiveMouseSensitivity * lookScale, 0));
         }
 
@@ -236,7 +267,7 @@ namespace GameData.Player.Script
             bool jumpPressed = _jumpRequested || (_inputManager.Jump && !_jumpHeldLastStep);
             _jumpRequested = false;
             _jumpHeldLastStep = _inputManager.Jump;
-            if (!jumpPressed || !_grounded || _jumpPending || Time.timeScale <= 0f || Cursor.lockState != CursorLockMode.Locked) return;
+            if (!jumpPressed || !_grounded || _jumpPending || Time.timeScale <= 0f || (_topDown && _topDown.enabled ? (gameplayUi && gameplayUi.BlocksGameplay || mainMenu && mainMenu.IsOpen) : Cursor.lockState != CursorLockMode.Locked)) return;
 
             _jumpPending = true;
             _animator.ResetTrigger(_jumpHash);
@@ -256,6 +287,7 @@ namespace GameData.Player.Script
             _takeOffGroundChecks = 2;
             _grounded = false;
             SetAnimationGrounding();
+            Jumped?.Invoke();
         }
 
         private void SampleGround()
@@ -263,13 +295,18 @@ namespace GameData.Player.Script
             if(!_hasAnimator) return;
 
 
+            bool wasGrounded=_grounded;
+            bool canNotify=groundSampleInitialized;
+            groundSampleInitialized=true;
+            float fallSpeed=Mathf.Max(0f,-_playerRigidbody.linearVelocity.y);
             RaycastHit hitInfo;
             _animator.SetFloat(_zVelHash, _playerRigidbody.linearVelocity.y);
             bool takingOff = _takeOffGroundChecks > 0;
             if (takingOff) _takeOffGroundChecks--;
-            if (!takingOff && _playerRigidbody.linearVelocity.y <= 0.1f && Physics.Raycast(_playerRigidbody.worldCenterOfMass,Vector3.down,out hitInfo, Dis2Ground + 0.1f, GroundCheck, QueryTriggerInteraction.Ignore))
+            if (!takingOff && _playerRigidbody.linearVelocity.y <= 0.1f && Physics.Raycast(_playerRigidbody.worldCenterOfMass,Vector3.down,out hitInfo, (Dis2Ground + 0.1f) * (_playerStats ? _playerStats.BodySizeMultiplier : 1f), GroundCheck, QueryTriggerInteraction.Ignore))
             {
                 _grounded = true;
+                if(canNotify&&!wasGrounded&&fallSpeed>.6f)Landed?.Invoke(fallSpeed);
                 SetAnimationGrounding();
                 return;
 

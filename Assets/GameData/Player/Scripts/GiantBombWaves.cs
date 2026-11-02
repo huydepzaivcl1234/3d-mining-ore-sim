@@ -12,8 +12,8 @@ namespace GameData.Player.Script
             public Vector3 center;
             public float radius,damage;
             public Vector3[] points;
-            public readonly List<MiningCharacterHealth> targets=new();
-            public readonly HashSet<MiningCharacterHealth> hit=new();
+            public readonly List<CharacterHealth> targets=new();
+            public readonly HashSet<CharacterHealth> hit=new();
         }
         public static bool ApplyingDamage { get; private set; }
         private readonly BlueGunUpgradeData data;
@@ -45,7 +45,7 @@ namespace GameData.Player.Script
             if(wave.points==null||wave.points.Length!=count)wave.points=new Vector3[count];
             wave.line.positionCount=count;
             wave.center=center;wave.radius=0;wave.damage=Mathf.Max(0,damage);wave.hit.Clear();wave.targets.Clear();
-            wave.targets.AddRange(MiningCharacterHealth.ActiveMonsters);
+            wave.targets.AddRange(CharacterHealth.ActiveMonsters);
             // The carrier can die/disable its health during this damage event; its center still emits the wave.
             wave.line.enabled=false;active.Add(wave);WavesStarted++;
         }

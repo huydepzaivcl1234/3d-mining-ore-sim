@@ -4,10 +4,10 @@ namespace GameData.Player.Script
 {
     public sealed class CannonRound : MonoBehaviour
     {
-        private MiningCharacterHealth target;private GameObject source;private CannonUpgradeData data;
+        private CharacterHealth target;private GameObject source;private CannonUpgradeData data;
         private Collider shape;
         private float damage,age;private bool finished;
-        public void Configure(MiningCharacterHealth victim,GameObject owner,CannonUpgradeData settings,float amount)
+        public void Configure(CharacterHealth victim,GameObject owner,CannonUpgradeData settings,float amount)
         {target=victim;source=owner;data=settings;damage=amount;shape=victim?victim.GetComponent<Collider>():null;}
         private void Update()
         {

@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 5e7ec37ef90cbb44293623d6caf35500
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 404472
+  packageName: Anime Star VFX - URP
+  packageVersion: 1.0.1
+  assetPath: Assets/Vefects/Anime Star VFX URP/Demo/Resources/Scripts/Demo_TurningAround.cs
+  uploadId: 988830

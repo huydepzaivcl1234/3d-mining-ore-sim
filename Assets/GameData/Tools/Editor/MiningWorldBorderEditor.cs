@@ -3,7 +3,7 @@ using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 
-[CustomEditor(typeof(MiningWorldBorder)), CanEditMultipleObjects]
+[CustomEditor(typeof(WorldBorder)), CanEditMultipleObjects]
 public sealed class MiningWorldBorderEditor : Editor
 {
     private readonly BoxBoundsHandle boundsHandle = new BoxBoundsHandle();
@@ -12,11 +12,11 @@ public sealed class MiningWorldBorderEditor : Editor
         DrawDefaultInspector();
         EditorGUILayout.HelpBox("Select the border and drag its cyan Scene handles. X/Z = playable width/depth; Y = wall height. Move/rotate/scale the whole object normally.", MessageType.Info);
         if (GUILayout.Button("Create / repair border walls"))
-            foreach (var item in targets) CreateWalls((MiningWorldBorder)item);
+            foreach (var item in targets) CreateWalls((WorldBorder)item);
     }
     private void OnSceneGUI()
     {
-        var border = (MiningWorldBorder)target;
+        var border = (WorldBorder)target;
         using (new Handles.DrawingScope(border.transform.localToWorldMatrix))
         {
             boundsHandle.wireframeColor = Color.cyan;
@@ -40,7 +40,7 @@ public sealed class MiningWorldBorderEditor : Editor
             EditorUtility.SetDirty(border);
         }
     }
-    private static void CreateWalls(MiningWorldBorder border)
+    private static void CreateWalls(WorldBorder border)
     {
         var so = new SerializedObject(border);
         var refs = so.FindProperty("walls");
@@ -53,12 +53,12 @@ public sealed class MiningWorldBorderEditor : Editor
         border.RebuildWalls();
         EditorUtility.SetDirty(border);
     }
-    [MenuItem("Mining Simulator/Setup/Create World Border")]
+    [MenuItem("Survivor/Setup/Create World Border")]
     private static void CreateBorder()
     {
         var go = new GameObject("World Border");
         Undo.RegisterCreatedObjectUndo(go, "Create world border");
-        var border = Undo.AddComponent<MiningWorldBorder>(go);
+        var border = Undo.AddComponent<WorldBorder>(go);
         CreateWalls(border);
         Selection.activeGameObject = go;
     }

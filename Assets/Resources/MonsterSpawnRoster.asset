@@ -28,6 +28,11 @@ MonoBehaviour:
     displayName: ForestGolem
     chance: 25
     minimumPlayerLevel: 1
+  - prefab: {fileID: 1662960491592018415, guid: 601ea56549670a64093ef5e13da424a5, type: 3}
+    icon: {fileID: 0}
+    displayName: Bread Monster
+    chance: 20
+    minimumPlayerLevel: 1
   dailyEvents: {fileID: 11400000, guid: 32ce514a15289e74daf52256f326ba6d, type: 2}
   nightThief:
     prefab: {fileID: 1490377826062534078, guid: 378693c5c3244e64d8033fad728b49bf, type: 3}

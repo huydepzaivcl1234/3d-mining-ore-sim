@@ -4,7 +4,7 @@ namespace MiningSimulator.Ores
 {
     public sealed partial class MushroomMonster
     {
-        private MiningCharacterHealth retaliationTarget;
+        private CharacterHealth retaliationTarget;
         private readonly MonsterRetaliationClock retaliationClock = new();
         private bool returningFromRetaliation;
         public bool IsRetaliating => retaliationClock.Active;
@@ -20,7 +20,7 @@ namespace MiningSimulator.Ores
         {
             var source = health.LastDamageSource;
             if (source == null) return;
-            var attacker = source.GetComponentInParent<MiningCharacterHealth>();
+            var attacker = source.GetComponentInParent<CharacterHealth>();
             if (attacker == null || attacker.Health <= 0f || !attacker.gameObject.activeInHierarchy) return;
             if (attacker != playerTarget && source.GetComponentInParent<GameData.Player.Script.PlayerController1>(true) == null) return;
             bool takeover = !retaliationClock.Active || retaliationTarget != attacker;
@@ -31,7 +31,7 @@ namespace MiningSimulator.Ores
             if (animationState != attackStateHash) nextAttack = Mathf.Min(nextAttack, Time.time);
         }
 
-        private bool PlayerInsideRetaliationRange(MiningCharacterHealth player)
+        private bool PlayerInsideRetaliationRange(CharacterHealth player)
         {
             return player != null && player.Health > 0f && player.gameObject.activeInHierarchy &&
                 Vector3.ProjectOnPlane(player.transform.position - transform.position, Vector3.up).sqrMagnitude <=

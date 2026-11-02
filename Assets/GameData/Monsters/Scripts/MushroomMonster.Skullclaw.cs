@@ -10,7 +10,7 @@ namespace MiningSimulator.Ores
         private float skullJumpProgress;
         private bool skullJumpActive;
         private readonly SkullclawJumpGate skullJumpGate = new();
-        private MiningCharacterHealth skullApproachTarget;
+        private CharacterHealth skullApproachTarget;
         private float SkullclawTargetDistance => targetCollider != null
             ? Vector3.ProjectOnPlane(targetCollider.ClosestPoint(transform.TransformPoint(motor.center)) - transform.position, Vector3.up).magnitude
             : target != null ? Vector3.ProjectOnPlane(target.transform.position - transform.position, Vector3.up).magnitude : float.PositiveInfinity;
@@ -93,7 +93,7 @@ namespace MiningSimulator.Ores
             if (target != playerTarget && target != chestHealth) DamageSkullclawAreaVictim(target);
         }
 
-        private void DamageSkullclawAreaVictim(MiningCharacterHealth victim)
+        private void DamageSkullclawAreaVictim(CharacterHealth victim)
         {
             if (victim == null || victim.Health <= 0f || !victim.gameObject.activeInHierarchy) return;
             if (!ContainsVictim(victim.transform, victim.GetComponent<Collider>())) return;

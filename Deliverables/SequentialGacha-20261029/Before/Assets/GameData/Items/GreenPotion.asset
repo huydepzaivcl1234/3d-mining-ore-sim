@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d697d1ce92e7572c4046ac7b833d40b, type: 3}
+  m_Name: GreenPotion
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningItemData
+  itemId: green_potion
+  displayName: Green Potion
+  description: Temporary player buff. See the effect values below.
+  rarity: 0
+  worldModel: {fileID: 7978770860222979255, guid: ef7216bfc3d933b4892e3a0c56d7ef2b, type: 3}
+  inventoryIcon: {fileID: 21300000, guid: fb51fbd61bda07f479c0104d889b33e4, type: 3}
+  iconFallback: P
+  fallbackColor: {r: 0, g: 1, b: 0, a: 1}
+  worldScale: 0.6
+  modelLocalPosition: {x: 0, y: 0, z: 0}
+  modelLocalEulerAngles: {x: 0, y: 0, z: 0}
+  selectionChancePercent: 10
+  maximumStack: 64
+  traderCanBuy: 1
+  traderCanSell: 1
+  traderMinimumOfferAmount: 1
+  traderMaximumOfferAmount: 3
+  traderBuyValue: 4000
+  traderCoinBuyMaximum: 5000
+  traderGemBuyValue: 4
+  traderGemBuyMaximum: 5
+  traderSellValue: 2
+  traderGemSellMaximum: 3
+  useType: 0
+  effectType: 7
+  effectPercent: 10
+  criticalChancePercent: 15
+  effectDurationSeconds: 120
+  giftRewards: []
+  giftSpinDurationSeconds: 3.5
+  giftSpinRotations: 6

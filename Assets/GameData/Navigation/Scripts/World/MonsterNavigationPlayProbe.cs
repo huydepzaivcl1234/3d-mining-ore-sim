@@ -10,7 +10,7 @@ public sealed class MonsterNavigationPlayProbe : MonoBehaviour
 {
     private WorldNavigationGrid oldGrid, grid;
     private MushroomMonster monster;
-    private MiningCharacterHealth player;
+    private CharacterHealth player;
     private MonsterRewardData data;
     private GameObject wall;
     private float elapsed, maximumSide;
@@ -43,7 +43,7 @@ public static MonsterNavigationPlayProbe Begin(string prefabPath = "Assets/Prefa
         var playerObject = new GameObject("Probe player"); playerObject.transform.SetParent(transform);
         playerObject.transform.position = Center + Vector3.forward*6f;
         playerObject.AddComponent<CapsuleCollider>().center = Vector3.up;
-        player = playerObject.AddComponent<MiningCharacterHealth>(); player.SetDamageEnabled(false);
+        player = playerObject.AddComponent<CharacterHealth>(); player.SetDamageEnabled(false);
         var prefab = AssetDatabase.LoadAssetAtPath<MushroomMonster>(prefabPath);
         monster = Instantiate(prefab,Center+Vector3.back*6f,Quaternion.identity,transform);
         data = Instantiate(prefab.RewardData);

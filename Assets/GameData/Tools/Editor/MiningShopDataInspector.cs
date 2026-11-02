@@ -1,15 +1,8 @@
-#if UNITY_EDITOR
 using UnityEditor;
+using UnityEngine.UIElements;
 namespace MiningSimulator.Ores.Editor
 {
     [CustomEditor(typeof(MiningShopData))]
     public sealed class MiningShopDataInspector : UnityEditor.Editor
-    {
-        public override void OnInspectorGUI()
-        {
-            DrawDefaultInspector();
-            EditorGUILayout.HelpBox("Add products under Shop Products. Existing authored layout is preserved.", MessageType.Info);
-        }
-    }
+    {public override VisualElement CreateInspectorGUI()=>GroupedGachaInspector.Create(this,serializedObject,target);}
 }
-#endif

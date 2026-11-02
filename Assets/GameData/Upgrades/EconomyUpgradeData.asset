@@ -1,0 +1,60 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d59d2ea18fd45178dc7206b6a8c3294, type: 3}
+  m_Name: EconomyUpgradeData
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningUpgradeData
+  autoUpgradeGemCost: 50
+  autoUpgradeInterval: 0.5
+  autoUpgradeSaveKey: MiningSimulator.AutoUpgrade.v1
+  autoUpgradeOrder: 00000000060000000700000009000000
+  moneyReward:
+    displayName: "T\u0103ng ti\u1EC1n nh\u1EADn \u0111\u01B0\u1EE3c th\xEAm"
+    percentPerStack: 5
+    maximumStacks: 100
+    startingCost: 20
+    costGrowthMultiplier: 1.2
+    costIncreasePerPurchase: 50
+  luckyBlockReward:
+    displayName: "T\u0103ng ti\u1EC1n Lucky Block"
+    percentPerStack: 5
+    maximumStacks: 100
+    startingCost: 20
+    costGrowthMultiplier: 1.2
+    costIncreasePerPurchase: 10
+  luckyBlockDropChance:
+    displayName: "T\u0103ng t\u1EC9 l\u1EC7 Lucky Block"
+    percentPerStack: 10
+    maximumStacks: 100
+    startingCost: 20
+    costGrowthMultiplier: 1.2
+    costIncreasePerPurchase: 10
+  itemDropChance:
+    displayName: "T\u0103ng t\u1EC9 l\u1EC7 r\u01A1i v\u1EADt ph\u1EA9m"
+    percentPerStack: 0.05
+    maximumStacks: 100
+    startingCost: 75
+    costGrowthMultiplier: 1.2
+    costIncreasePerPurchase: 50
+  regenIntervalReduction:
+    displayName: "Gi\u1EA3m th\u1EDDi gian h\u1ED3i m\xE1u"
+    percentPerStack: 1
+    maximumStacks: 100
+    startingCost: 25
+    costGrowthMultiplier: 1.2
+    costIncreasePerPurchase: 10
+  healingEffectiveness:
+    displayName: "T\u0103ng hi\u1EC7u qu\u1EA3 h\u1ED3i m\xE1u"
+    percentPerStack: 1
+    maximumStacks: 100
+    startingCost: 25
+    costGrowthMultiplier: 1.2
+    costIncreasePerPurchase: 10

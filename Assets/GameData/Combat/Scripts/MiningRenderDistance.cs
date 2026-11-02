@@ -3,8 +3,8 @@ using UnityEngine.SceneManagement;
 
 namespace MiningSimulator.Ores
 {
-    /// <summary>World-camera frustum clipping only: offscreen enemies remain simulated.</summary>
-    [DefaultExecutionOrder(1000), DisallowMultipleComponent, RequireComponent(typeof(Camera))]
+    /// <summary>World-camera clipping and actor culling after the final camera follow pose.</summary>
+    [DefaultExecutionOrder(11000), DisallowMultipleComponent, RequireComponent(typeof(Camera))]
     public sealed class MiningRenderDistance : MonoBehaviour
     {
         private Camera view;

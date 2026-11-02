@@ -13,12 +13,18 @@ MonoBehaviour:
   m_Name: GodBossData
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.GodBossData
   prefab: {fileID: 662506849978405326, guid: fc0366bbbb555454c8013aefc970160f, type: 3}
-  everyDays: 50
-  health: 20000
-  armor: 50
-  magicResistance: 50
+  everyDays: 20
+  minimumPlayerLevel: 30
+  initialChancePercent: 5
+  dailyChanceIncreasePercent: 5
+  healthIncreasePercent: 25
+  damageIncreasePercent: 25
+  crowdControlResistancePercent: 50
+  health: 100000
+  armor: 100
+  magicResistance: 100
   height: 8
-  spawnDistance: 35
+  spawnDistance: 20
   walkSpeed: 4
   runSpeed: 9
   startRunningDistance: 30
@@ -26,25 +32,25 @@ MonoBehaviour:
   turnSpeed: 180
   punch:
     speed: 1.5
-    damage: 50
+    damage: 100
     hitTime: 0.43
     knockback: 3
   swipe:
     speed: 1
-    damage: 70
+    damage: 150
     hitTime: 0.5
     knockback: 2
   meleeRange: 6
-  lungeDistance: 3
+  lungeDistance: 5
   attackHalfAngle: 65
   recovery: 0.35
-  jumpRange: 10
+  jumpRange: 15
   jumpCooldown: 7
   jumpWindup: 0.5
   jumpSpeed: 1
   jumpTravelSeconds: 0.65
   jumpHeight: 5
-  jumpDamage: 20
+  jumpDamage: 200
   jumpKnockback: 12
   waveRadius: 15
   waveSpeed: 18
@@ -58,6 +64,9 @@ MonoBehaviour:
   summonDamageAtZeroBossHP: 2
   summonBossVariants: 1
   maxLivingSummons: 24
+  summonMinimumDistance: 8
+  summonMaximumDistance: 16
+  summonMinimumPlayerDistance: 3
   bleedMaxHealthPercentPerSecond: 1
   bleedDuration: 2
   idle: {fileID: -203655887218126122, guid: cf8280b0907f32b429f533d08e76667a, type: 3}

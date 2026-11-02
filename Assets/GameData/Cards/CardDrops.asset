@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 06f77ebbec746d04cb9a846a8b2273eb, type: 3}
   m_Name: CardDrops
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningCardData
+  survivorUpgrades: {fileID: 11400000, guid: dbca92068a500964c804a17b038d37d0, type: 2}
   monsterDropPercent: 15
   bossDropPercent: 50
   tiers:
@@ -51,6 +52,20 @@ MonoBehaviour:
     gunDamagePercent: 1
     magazineBonus: 1
     bulletSpeedPercent: 1
+  abilityCard:
+    name: Ability
+    prefab: {fileID: 1344967437184446436, guid: b453a9ecef0606741b4b297324279752, type: 3}
+    color: {r: 0.07, g: 0.4, b: 1, a: 1}
+    weight: 1
+    damage: 1
+    attackSpeed: 5
+    health: 5
+    regenIntervalReduction: 1
+    healingEffectiveness: 1
+    gunDamagePercent: 1
+    magazineBonus: 1
+    bulletSpeedPercent: 1
+  abilityCardPercent: 5
   spawnHeight: 1
   upwardImpulse: 3
   sidewaysImpulse: 1.3
@@ -69,6 +84,10 @@ MonoBehaviour:
   landingLayers:
     serializedVersion: 2
     m_Bits: 4294967295
+  sparkleVfx: {fileID: 4645475155591706760, guid: bc6d67faf57b3a546882906b75b80899, type: 3}
+  sparkleComposite: {fileID: 2100000, guid: 78cd9971a1209714aa86b099a08e15d0, type: 2}
+  sparkleSize: 100
+  sparkleInset: 28
   panelSize: {x: 900, y: 420}
   panelColor: {r: 0.035, g: 0.045, b: 0.07, a: 0.98}
   buttonColor: {r: 0.1, g: 0.14, b: 0.21, a: 1}

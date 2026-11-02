@@ -113,7 +113,7 @@ namespace MiningSimulator.Ores
             // Closed panels have no visual work. Keep this component alive for Show().
             if (!opened && visibility <= .001f) return;
             if (!previewMode && opened && (owner == null || !owner.IsAlive || player == null ||
-                Vector3.Distance(player.position,owner.transform.position)>5f || player.GetComponent<MiningCharacterHealth>()?.Health<=0)) Close();
+                Vector3.Distance(player.position,owner.transform.position)>5f || player.GetComponent<CharacterHealth>()?.Health<=0)) Close();
             visibility = Mathf.MoveTowards(visibility, opened ? 1 : 0, Time.unscaledDeltaTime * 6);
             panel.gameObject.SetActive(visibility > .001f);
             group.alpha=visibility;group.interactable=group.blocksRaycasts=!previewMode&&opened&&visibility>.9f;

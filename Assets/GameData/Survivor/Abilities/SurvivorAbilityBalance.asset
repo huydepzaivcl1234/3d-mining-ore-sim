@@ -1,0 +1,249 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a67f6fcd516f189499d796c3617c6fd0, type: 3}
+  m_Name: SurvivorAbilityBalance
+  m_EditorClassIdentifier: Assembly-CSharp::GameData.Player.Script.SurvivorAbilityData
+  common:
+    cardMagnet:
+      title: Card Magnet
+      radius:
+        baseValue: 2
+        perLevel: 0.25
+      pullSpeed: 8
+    chainShot:
+      title: Chain Shot
+      baseDamagePercent: 20
+      flatDamage:
+        baseValue: 1
+        perLevel: 1
+    momentum:
+      title: Momentum
+      bonusSpeedPerStack: 20
+      damagePerStack:
+        baseValue: 1
+        perLevel: 1
+    armoredStrike:
+      title: Armored Strike
+      flatDamage:
+        baseValue: 5
+        perLevel: 1
+      armorPercent: 1
+      magicResistancePercent: 1
+    lifeSpring:
+      title: Life Spring
+      interval: 5
+      flatHealing:
+        baseValue: 1
+        perLevel: 5
+      maxHealthPercent: 5
+    powerSurge:
+      title: Power Surge
+      flatDamage:
+        baseValue: 1
+        perLevel: 0.5
+      bonusAttackDamagePercent: 10
+    ignite:
+      title: Ignite
+      visual:
+        prefab: {fileID: 4571672527024763902, guid: 5b68eec19e1e6b140aba172ab7014cf4, type: 3}
+        followBodyBounds: 1
+        worldSpace: 0
+        offset: {x: 0, y: 0, z: -0.15}
+        scale: {x: 0.3, y: 0.3, z: 0.3}
+        referenceRadius: 1
+      sounds:
+      - {fileID: 8300000, guid: ba061553227689344bc7e06afe62f875, type: 3}
+      - {fileID: 8300000, guid: 3a26242b98b0ee64eabcd44110c6315f, type: 3}
+      volume: 0.65
+      flatDamage:
+        baseValue: 0.25
+        perLevel: 0.25
+      enemyMaxHealthPercent: 1
+      tickInterval: 1
+      duration: 3
+    orbBarrage:
+      title: Orb Barrage
+      hitsRequired: 10
+      orbCount: 3
+      range: 7
+      damage:
+        baseValue: 1
+        perLevel: 1
+  uncommon:
+    shield:
+      title: Shield
+      visual:
+        prefab: {fileID: 4289823042234617650, guid: a9c4e94dbb3183d40b9e37e608c55004, type: 3}
+        followBodyBounds: 0
+        worldSpace: 0
+        offset: {x: 0, y: 0, z: 0}
+        scale: {x: 0.85, y: 0.85, z: 0.85}
+        referenceRadius: 1
+      maxHealthPercent: 5
+      flatShield:
+        baseValue: 1
+        perLevel: 2
+      brokenRecovery: 15
+    airborne:
+      title: Airborne
+      requiredHits: 10
+      hitWindow: 3
+      height: 2
+      flightDuration: 1.2
+      enemyMaxHealthPercent: 1
+      cooldown: 3
+      landingDamage:
+        baseValue: 1
+        perLevel: 2
+    aura:
+      title: Aura
+      visual:
+        prefab: {fileID: 1989504373915734711, guid: 264c70bcffc353549990227373b796b2, type: 3}
+        followBodyBounds: 0
+        worldSpace: 1
+        offset: {x: 0, y: 0.05, z: 0}
+        scale: {x: 1, y: 1, z: 1}
+        referenceRadius: 1.4438
+      tickInterval: 0.5
+      damage:
+        baseValue: 1
+        perLevel: 1
+      radius:
+        baseValue: 1
+        perLevel: 0.5
+    ricochet:
+      title: Ricochet
+      baseDamagePercent: 15
+      flatDamage:
+        baseValue: 1
+        perLevel: 1
+    invulnerability:
+      title: Invulnerability
+      cooldown:
+        baseValue: 50
+        perLevel: -0.25
+      minimumCooldown: 1
+      duration: 1
+    quickening:
+      title: Quickening
+      bonus:
+        baseValue: 15
+        perLevel: 1
+    flatPower:
+      title: Flat Power
+      bonus:
+        baseValue: 1
+        perLevel: 1
+  rare:
+    twinMagic:
+      title: Twin Magic
+      flatDamage: 1
+      baseDamagePercent: 10
+    reactiveArmor:
+      title: Reactive Armor
+      armorPerEnemy: 1
+      magicResistancePerEnemy: 1
+      quietTime: 2
+      decayInterval: 1
+    weaken:
+      title: Weaken
+      damageReduction:
+        baseValue: 1
+        perLevel: 1
+      duration: 2
+    emergencyHeal:
+      title: Emergency Heal
+      healthThresholdPercent: 30
+      healMaxHealthPercent: 50
+      duration: 3
+      minimumCooldown: 1
+      cooldown:
+        baseValue: 70
+        perLevel: -0.3
+    retaliate:
+      title: Retaliate
+      incomingHits: 5
+      range: 6
+      armorPercent: 15
+      magicResistancePercent: 15
+      flatDamage:
+        baseValue: 1
+        perLevel: 1
+    bossVitality:
+      title: Boss Vitality
+      killsPerReward: 10
+      maxHealthReward:
+        baseValue: 1
+        perLevel: 1
+    doubleChoice:
+      title: Double Choice
+      choices: 2
+  epic:
+    tripleChoice:
+      title: Triple Choice
+      choices: 3
+      basicDropBonus: 15
+    frostbite:
+      title: Frostbite
+      sound: {fileID: 8300000, guid: b2eb8733a7418e247aa1871950890fd6, type: 3}
+      volume: 0.65
+      soundInterval: 0.25
+      slowPercent: 30
+      damageTakenPercent:
+        baseValue: 1
+        perLevel: 1
+      duration: 3
+      tint: {r: 0.25, g: 0.65, b: 1, a: 1}
+    cardFortune:
+      title: Card Fortune
+      dropBonus:
+        baseValue: 5
+        perLevel: 1
+    trueBarrage:
+      title: True Barrage
+      projectileCount:
+        baseValue: 1
+        perLevel: 1
+      attackDamagePercent: 3
+    titanBlessing:
+      title: Titan's Blessing
+      maxHealthPercent: 35
+      sizePercent: 15
+      physicalDamagePercent: 10
+      flatHealth:
+        baseValue: 1
+        perLevel: 1
+    missingHealthArmor:
+      title: Last Stand
+      missingHealthPerStack: 15
+      defensesPerStack:
+        baseValue: 1
+        perLevel: 1
+    chargedCube:
+      title: Arcane Cube
+      chargeSeconds: 10
+      damage:
+        baseValue: 150
+        perLevel: 5
+      radius:
+        baseValue: 1
+        perLevel: 0.25
+      sizePercent:
+        baseValue: 0
+        perLevel: 1
+      fullSize: 0.65
+      startingSize: 0.1
+      chargeOffset: {x: 0.8, y: 1, z: 0}
+      chargeSizeDivisor: 8
+      rotationDegreesPerSecond: 36
+      color: {r: 0.65, g: 0.4, b: 1, a: 1}
+      damageType: 1

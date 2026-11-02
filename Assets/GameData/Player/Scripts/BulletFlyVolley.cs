@@ -9,7 +9,7 @@ namespace GameData.Player.Script
     {
         private sealed class Volley
         {
-            public MiningCharacterHealth victim;
+            public CharacterHealth victim;
             public MushroomMonster monster;
             public LineRenderer[] lines;
             public float[] damage;
@@ -23,14 +23,14 @@ namespace GameData.Player.Script
         public static bool ApplyingDamage { get; private set; }
         private readonly BlueGunUpgradeData data;
         private readonly GameObject owner;
-        private readonly MiningPlayerStats playerStats;
+        private readonly PlayerStats playerStats;
         private readonly List<Volley> active=new();
         private readonly Stack<Volley> spare=new();
         private readonly Stack<LineRenderer> freeLines=new();
         private sealed class TargetProgress { public int survivingHits;public float reduction; }
-        private readonly Dictionary<MiningCharacterHealth,TargetProgress> targetProgress=new();
-        private readonly List<MiningCharacterHealth> expiredTargets=new();
-        private readonly Queue<MiningCharacterHealth> pending=new();
+        private readonly Dictionary<CharacterHealth,TargetProgress> targetProgress=new();
+        private readonly List<CharacterHealth> expiredTargets=new();
+        private readonly Queue<CharacterHealth> pending=new();
         private float nextPrune;
         private Transform root;
         private Material material;
@@ -42,8 +42,8 @@ namespace GameData.Player.Script
         public int HitsApplied { get; private set; }
         public int ActiveVolleys=>active.Count;
 
-        public BulletFlyVolley(BlueGunUpgradeData settings,GameObject source) { data=settings;owner=source;playerStats=source?source.GetComponentInParent<MiningPlayerStats>():null; }
-        public void Play(MiningCharacterHealth victim)
+        public BulletFlyVolley(BlueGunUpgradeData settings,GameObject source) { data=settings;owner=source;playerStats=source?source.GetComponentInParent<PlayerStats>():null; }
+        public void Play(CharacterHealth victim)
         {
             if(data.bulletFly.bulletFlyDamage==null||data.bulletFly.bulletFlyDamage.Length==0)return;
             if(!victim||!victim.isActiveAndEnabled||victim.Health<=0||!owner)return;

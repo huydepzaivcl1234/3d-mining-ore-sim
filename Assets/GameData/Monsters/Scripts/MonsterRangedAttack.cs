@@ -4,7 +4,7 @@ namespace MiningSimulator.Ores
 {
     /// <summary>Optional ranged loadout; movement, melee and rewards stay with the shared AI.</summary>
     [DisallowMultipleComponent]
-    public sealed class MonsterRangedAttack : MonoBehaviour
+    public sealed class MonsterRangedAttack : MonoBehaviour, IMonsterRangedAttack
     {
         [SerializeField] private Transform muzzle;
         [SerializeField] [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("projectile")] private HomingMonsterProjectile legacy_projectile;

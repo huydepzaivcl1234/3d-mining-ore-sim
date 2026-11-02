@@ -1623,7 +1623,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c08874384dfc41f3ab5cfe48a0372797, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningCharacterHealth
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.CharacterHealth
   maxHealth: 100
   armor: 0
   magicResistance: 0

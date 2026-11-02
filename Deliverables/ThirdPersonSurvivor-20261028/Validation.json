@@ -1,0 +1,13 @@
+{
+  "frames": 140,
+  "framing": true,
+  "viewport": [
+    0.5,
+    0.4253698
+  ],
+  "cameraRelativeMovement": true,
+  "orbitRotation": true,
+  "perspective": true,
+  "staleMiningLabels": [],
+  "autoCombat": true
+}

@@ -14,7 +14,7 @@ public static class SkullclawPlayValidation
     [Serializable] private class RootState { public string id; public bool active; }
     [Serializable] private class RootStates { public RootState[] roots; }
     private static MushroomMonster subject;
-    private static MiningCharacterHealth victim;
+    private static CharacterHealth victim;
     private static readonly int[] hits = new int[3];
     private static float began, maxHeight, maxTravel;
     private static Vector3 jumpStart;
@@ -28,7 +28,7 @@ public static class SkullclawPlayValidation
     private static Vector3 deathPosition;
     private static double wallBegan;
     private static DayNightSystem sunriseClock;
-    private static bool dawnTriggered, dissolveObserved;
+    private static bool dawnTriggered;
 
     static SkullclawPlayValidation()
     {
@@ -37,7 +37,7 @@ public static class SkullclawPlayValidation
     }
     public static string Result => SessionState.GetString(Key + ".result", "Not run");
 
-    [MenuItem("Mining Simulator/Validation/Skullclaw Three Attacks (isolated)")]
+    [MenuItem("Survivor/Validation/Skullclaw Three Attacks (isolated)")]
     public static void Begin()
     {
         if (EditorApplication.isPlayingOrWillChangePlaymode) throw new InvalidOperationException("Stop Play Mode first.");
@@ -82,7 +82,7 @@ public static class SkullclawPlayValidation
             player.name = "__Skullclaw Target__";
             player.transform.position = new Vector3(10000, 1, 10001.9f);
             if (SessionState.GetBool(Key + ".approach", false)) player.transform.position = new Vector3(10000, 1, 10004);
-            victim = player.AddComponent<MiningCharacterHealth>(); victim.ConfigureSpawnHealth(1000f);
+            victim = player.AddComponent<CharacterHealth>(); victim.ConfigureSpawnHealth(1000f);
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(SkullclawSetup.PrefabPath);
             var test = UnityEngine.Object.Instantiate(prefab);
             test.name = "__Skullclaw Test__";
@@ -108,7 +108,7 @@ public static class SkullclawPlayValidation
                 typeof(MushroomMonster).GetField("playerTarget", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).SetValue(subject, null);
                 subject.Health.ConfigureSpawnHealth(5000f);
             }
-            dawnTriggered = dissolveObserved = false;
+            dawnTriggered = false;
             if (SessionState.GetBool(Key + ".sunrise", false))
             {
                 var clockObject = new GameObject("__Isolated No-Save Clock__"); clockObject.SetActive(false);
@@ -117,7 +117,6 @@ public static class SkullclawPlayValidation
                 typeof(DayNightSystem).GetField("initialized", flags).SetValue(sunriseClock, true);
                 typeof(DayNightSystem).GetField("currentPeriod", flags).SetValue(sunriseClock, MiningTimePeriod.Night);
                 clockObject.SetActive(true); // No Data: no lighting or save writes; initialized avoids restoring saved clock.
-                typeof(MonsterEncounterVisuals).GetField("dayNight", flags).SetValue(test.GetComponent<MonsterEncounterVisuals>(), sunriseClock);
                 data.dissolveSeconds = 1f;
             }
             if (SessionState.GetBool(Key + ".retaliation", false))
@@ -141,7 +140,7 @@ public static class SkullclawPlayValidation
         if (subject == null)
         {
             if (SessionState.GetBool(Key + ".sunrise", false) && dawnTriggered)
-                Complete((dissolveObserved ? "PASS" : "FAIL") + ": Skullclaw night -> daylight starts dissolve, disables combat without kill damage, then removes monster");
+                Complete("FAIL: Skullclaw disappeared at sunrise");
             return;
         }
         if (EditorApplication.isPaused) { wallBegan = EditorApplication.timeSinceStartup; return; }
@@ -154,10 +153,8 @@ public static class SkullclawPlayValidation
                 typeof(DayNightSystem).GetField("currentPeriod", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
                     .SetValue(sunriseClock, MiningTimePeriod.Day);
             }
-            if (subject.IsDespawning)
-                dissolveObserved = subject.Health.Health > 0f && !subject.GetComponent<CharacterController>().enabled &&
-                    subject.GetComponentsInChildren<SkinnedMeshRenderer>().Any(x => x.sharedMaterials.Any(m => m != null && m.HasProperty("_DissolveAmount")));
-            if (age > 5f) Complete("FAIL: sunrise did not remove Skullclaw");
+            if(subject.IsDespawning){Complete("FAIL: sunrise started despawn");return;}
+            if(age>3f)Complete("PASS: Skullclaw remains alive and in combat after sunrise");
             return;
         }
         if (age > 25f || EditorApplication.timeSinceStartup - wallBegan > 40)
@@ -236,7 +233,7 @@ public static class SkullclawPlayValidation
         }
         if (!killed && SessionState.GetBool(Key + ".death", false) && state.IsName("Jump Attack") && state.normalizedTime > .26f)
         {
-            subject.GetComponent<MiningCharacterHealth>().DealDamage(10000f, CombatDamageType.True);
+            subject.GetComponent<CharacterHealth>().DealDamage(10000f, CombatDamageType.True);
             killed = true; killedAt = Time.time; deathPosition = subject.transform.position;
         }
         if (killed)

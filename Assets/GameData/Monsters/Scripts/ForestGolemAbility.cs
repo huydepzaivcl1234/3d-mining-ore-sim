@@ -30,7 +30,7 @@ namespace MiningSimulator.Ores
     {
         private MushroomMonster owner;
         private Animator animator;
-        private MiningCharacterHealth player, chargeVictim;
+        private CharacterHealth player, chargeVictim;
         private Collider playerCollider;
         private readonly HashSet<UnityEngine.Object> struck = new();
         private LineRenderer ring;
@@ -43,7 +43,7 @@ namespace MiningSimulator.Ores
         public bool IsCharging { get; private set; }
         private ForestGolemSettings Settings => owner != null && owner.SpeciesData is ForestGolemData data ? data.forestGolem : null;
         private void Awake() { owner = GetComponent<MushroomMonster>(); animator = GetComponentInChildren<Animator>(); }
-        public void Initialize(MiningCharacterHealth target)
+        public void Initialize(CharacterHealth target)
         {
             Cancel(); player = target; playerCollider = target != null ? target.GetComponent<Collider>() : null;
         }
@@ -86,7 +86,7 @@ namespace MiningSimulator.Ores
             else { EnsureRing(); ring.enabled = true; DrawRing(0); }
         }
         public void RememberHit(UnityEngine.Object victim) { if (wave && victim != null) struck.Add(victim); }
-        public void NotifyPlayerHit(MiningCharacterHealth victim, float dealt)
+        public void NotifyPlayerHit(CharacterHealth victim, float dealt)
         {
             if (Settings == null || !Settings.enabled || dealt <= 0 || victim == null || IsCharging || chargePending) return;
             if (++playerHits < Mathf.Max(1, Settings.hitsToCharge)) return;
@@ -124,6 +124,7 @@ namespace MiningSimulator.Ores
                 int hash = Animator.StringToHash(Settings.chargeState);
                 if (!animator.HasState(0, hash)) { chargeVictim = null; return; }
                 IsCharging = true;
+                owner.ClearHitReaction();
                 animator.speed = 1f;
                 animator.CrossFadeInFixedTime(hash, owner.CombatData.animationBlendSeconds, 0, 0);
                 // CrossFade is evaluated next animation update; the old completed

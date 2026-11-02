@@ -1,0 +1,156 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4be055377601f7543bb693cab43d450d, type: 3}
+  m_Name: BreadMonsterData
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.BreadMonsterData
+  minimumPlayerLevelToSpawn: 10
+  minimumSpawnDay: 30
+  combat:
+    maxHealth: 5
+    regenAmount: 0
+    regenInterval: 5
+    attackSpeed: 2
+    attackState: Attack
+    secondAttackState: 
+    secondHitMoment: 0.52
+    secondAreaRadius: 1.6
+    secondAreaOffset: {x: 0.3, y: 1.71}
+    attackTurnSpeed: 720
+    trackingEndFraction: 0.85
+    chaseTurnSpeed: 240
+    animationBlendSeconds: 0.12
+    moveSpeed: 3
+    detectionRange: 18
+    attackRange: 2
+    attackArc: 140
+    damage: 10
+    knockbackSpeed: 0
+    knockbackLift: 0
+    attackCooldown: 3.1
+    hitMoment: 0.48
+    hitShape: 0
+    areaRadius: 1.6
+    areaForwardOffset: 1.6
+    areaSideOffset: 0
+    hitHeight: 2.5
+    warningColor: {r: 1, g: 0.08, b: 0.02, a: 0.65}
+    warningShader: {fileID: 0}
+    deathDelay: 3
+    chaseRepathSeconds: 0.4
+    chaseStandDirections: 16
+    chaseStandRangeFraction: 0.75
+    chaseStandMaximumRangeFraction: 0.95
+    targetScanSeconds: 0.25
+    targetMemorySeconds: 2
+    retaliationForgetSeconds: 3
+    detectionHysteresis: 1
+    targetRepathDistance: 0.75
+    waypointTolerance: 0.2
+    avoidanceLookAhead: 1.2
+    avoidanceHoldSeconds: 0.5
+    stuckRepathSeconds: 1.2
+    pathRequestTimeout: 5
+    navigationObstacleLayers:
+      serializedVersion: 2
+      m_Bits: 4294967295
+    projectile: {fileID: 0}
+    fireState: Throw
+    rangedRange: 20
+    releaseMoment: 0.46153846
+    projectileSpeed: 8
+    projectileTurnDegreesPerSecond: 540
+    projectileRadius: 0.18
+    projectileLifetime: 8
+    projectileCollisionLayers:
+      serializedVersion: 2
+      m_Bits: 4294967295
+  combatSettingsVersion: 1
+  boss:
+    enabled: 1
+    chancePercent: 5
+    minimumPlayerLevel: 25
+    sizeIncreasePercent: 35
+    healthMultiplier: 3
+    damageMultiplier: 1.5
+    goldMultiplier: 5
+    experienceMultiplier: 3
+    rewardOverride: {fileID: 11400000}
+    effectColor: {r: 1, g: 0.2, b: 0.06, a: 1}
+    combatSeconds: 120
+    skill: 0
+    healTriggerHealthPercent: 20
+    healMaxHealthPercent: 50
+    healSeconds: 5
+    slowEveryStrikes: 3
+    slowRadius: 5
+    slowPercent: 30
+    slowSeconds: 3
+    hasteDamageThresholdPercent: 5
+    hasteAttackSpeedPercent: 100
+    hasteStacks: 0
+  combatSeconds: 0
+  dissolveSeconds: 2
+  dissolveColor: {r: 1, g: 0.6, b: 0.1, a: 1}
+  dissolveShader: {fileID: 0}
+  usePlayerRelativeLevels: 1
+  minimumLevelsBelowPlayer: 1
+  maximumLevelsBelowPlayer: 4
+  maximumLevelsAbovePlayer: 1
+  weakerLevelWeight: 0.2
+  equalLevelWeight: 0.7
+  strongerLevelWeight: 0.1
+  minimumLevel: 1
+  addPlayerLevelAtSpawn: 0
+  playerLevelContribution: 1
+  higherLevelChance: 0.35
+  higherLevelIncreasePerDayPercent: 0.01
+  maximumHigherLevelChancePercent: 50
+  statGrowthPerLevel: 0.75
+  goldGrowthPerLevel: 0.75
+  randomStatMultiplier: {x: 0.9, y: 1.1}
+  experience: 25
+  gold: 50
+  armor: 1
+  magicResistance: 1
+  armorPerLevel: 1
+  magicResistancePerLevel: 1
+  resistanceScale: 100
+  attackDamageType: 1
+  burnDamagePerTick: 0
+  burnTickSeconds: 1
+  burnDurationSeconds: 0
+  lifeStealPercent: 0
+  healingBonusPercent: 0
+  drops: []
+  iconSize: 0.45
+  launchUpSpeed: 4
+  launchOutSpeed: 2
+  groundWaitSeconds: 0.6
+  attractionRadius: 30
+  attractionSpeed: 2
+  attractionAcceleration: 3
+  sliceProjectile: {fileID: 1253903472542323183, guid: e5436d767c044cf4ab3d691396e4ec2a, type: 3}
+  flightSeconds: 1.25
+  arcHeight: 3
+  arcSideways: 1
+  spinDegreesPerSecond: 540
+  healingRadius: 20
+  healingInterval: 5
+  healingFlat: 5
+  healingPerLevel: 1
+  healingMaxHealthPercent: 3
+  healSelf: 1
+  healingFlightSeconds: 0.65
+  sugarMaxHealthPercent: 2
+  sugarDamagePerMonsterLevel: 1
+  sugarDuration: 5
+  sugarTickSeconds: 1

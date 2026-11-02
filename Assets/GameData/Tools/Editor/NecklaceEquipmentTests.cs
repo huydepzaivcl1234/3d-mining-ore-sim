@@ -89,9 +89,9 @@ public sealed class NecklaceEquipmentTests
     {
         const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
         string key = "NecklaceTests.Gems." + System.Guid.NewGuid();
-        var data = ScriptableObject.CreateInstance<MiningGameData>();
+        var data = ScriptableObject.CreateInstance<GameEconomyData>();
         var wallet = root.AddComponent<PlayerWallet>();
-        typeof(MiningGameData).GetField("gemSaveKey", flags).SetValue(data, key);
+        typeof(GameEconomyData).GetField("gemSaveKey", flags).SetValue(data, key);
         typeof(PlayerWallet).GetField("gameData", flags).SetValue(wallet, data);
         try
         {
@@ -185,11 +185,11 @@ public sealed class NecklaceEquipmentTests
     public void GreenNecklaceChangesHealingAndIntervalOnlyWhileEquipped()
     {
         const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
-        var data = ScriptableObject.CreateInstance<MiningPlayerStatsData>();
-        var stats = root.AddComponent<MiningPlayerStats>();
-        typeof(MiningPlayerStats).GetField("data", flags).SetValue(stats, data);
-        var health = root.AddComponent<MiningCharacterHealth>();
-        typeof(MiningCharacterHealth).GetField("equipmentItems", flags).SetValue(health, items);
+        var data = ScriptableObject.CreateInstance<PlayerStatsData>();
+        var stats = root.AddComponent<PlayerStats>();
+        typeof(PlayerStats).GetField("data", flags).SetValue(stats, data);
+        var health = root.AddComponent<CharacterHealth>();
+        typeof(CharacterHealth).GetField("equipmentItems", flags).SetValue(health, items);
         float initialInterval = health.RegenInterval;
         float initialHealing = health.HealingMultiplier;
         try

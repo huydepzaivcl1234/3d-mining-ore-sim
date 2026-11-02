@@ -1,0 +1,50 @@
+[
+  {
+    "name": "run back 1",
+    "length": true,
+    "curves": true,
+    "events": 2
+  },
+  {
+    "name": "right walk",
+    "length": true,
+    "curves": true,
+    "events": 2
+  },
+  {
+    "name": "Walking",
+    "length": true,
+    "curves": true,
+    "events": 2
+  },
+  {
+    "name": "walk back",
+    "length": true,
+    "curves": true,
+    "events": 2
+  },
+  {
+    "name": "run right",
+    "length": true,
+    "curves": true,
+    "events": 2
+  },
+  {
+    "name": "run 1",
+    "length": true,
+    "curves": true,
+    "events": 2
+  },
+  {
+    "name": "left run",
+    "length": true,
+    "curves": true,
+    "events": 2
+  },
+  {
+    "name": "left walk",
+    "length": true,
+    "curves": true,
+    "events": 2
+  }
+]

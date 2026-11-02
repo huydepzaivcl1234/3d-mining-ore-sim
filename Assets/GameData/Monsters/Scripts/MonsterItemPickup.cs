@@ -9,7 +9,7 @@ namespace MiningSimulator.Ores
         private MiningItemData item;
         private int amount;
         private MiningItemSystem inventory;
-        private MiningCharacterHealth player;
+        private CharacterHealth player;
         private MiningAudioManager audio;
         private Vector3 velocity;
         private float groundY, landedTime, pullSpeed;
@@ -17,7 +17,7 @@ namespace MiningSimulator.Ores
         private Camera view;
         private void Start() => WorldActorVisibility.Attach(gameObject);
         public static void Spawn(MonsterRewardData settings, MonsterItemDrop drop, int count,
-            Vector3 origin, MiningCharacterHealth player, MiningItemSystem inventory,
+            Vector3 origin, CharacterHealth player, MiningItemSystem inventory,
             LayerMask groundLayers, MiningAudioManager audio)
         {
             var obj = new GameObject("Monster Drop " + drop.item.name);
@@ -33,7 +33,7 @@ namespace MiningSimulator.Ores
             float closest = float.MaxValue;
             foreach (var hit in Physics.RaycastAll(origin + Vector3.up * 2, Vector3.down, 100, groundLayers, QueryTriggerInteraction.Ignore))
             {
-                if (hit.normal.y < 0.5f || hit.collider.GetComponentInParent<MiningCharacterHealth>() != null || hit.distance >= closest) continue;
+                if (hit.normal.y < 0.5f || hit.collider.GetComponentInParent<CharacterHealth>() != null || hit.distance >= closest) continue;
                 closest = hit.distance; pickup.groundY = hit.point.y;
             }
             var canvasObject = new GameObject("Icon", typeof(RectTransform), typeof(Canvas));
@@ -55,11 +55,14 @@ namespace MiningSimulator.Ores
         }
         private void LateUpdate()
         {
+            if(WorldActorVisibility.ShouldPause(this))return;
             if (view == null) view = Camera.main;
             if (view != null) transform.rotation = view.transform.rotation;
         }
+        public void ResumeVisibilityTimers(float seconds){landedTime+=seconds;}
         private void Update()
         {
+            if(WorldActorVisibility.ShouldPause(this))return;
             if (settings == null) return;
             float floor = groundY + Mathf.Max(0.01f, settings.iconSize) * 0.5f;
             if (!landed)
@@ -68,7 +71,7 @@ namespace MiningSimulator.Ores
                 Vector3 step = velocity * Time.deltaTime;
                 float distance = step.magnitude;
                 if (distance > 0 && Physics.SphereCast(transform.position, 0.05f, step / distance, out var hit, distance,
-                    ~0, QueryTriggerInteraction.Ignore) && hit.collider.GetComponentInParent<MiningCharacterHealth>() == null)
+                    ~0, QueryTriggerInteraction.Ignore) && hit.collider.GetComponentInParent<CharacterHealth>() == null)
                 {
                     transform.position = hit.point + hit.normal * 0.06f;
                     if (hit.normal.y > 0.5f) Land();

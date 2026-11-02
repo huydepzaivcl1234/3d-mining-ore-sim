@@ -10,25 +10,25 @@ public sealed class CombatPresentationTests
     public void PeriodicContextSurvivesNestedDirectDamageAndDoesNotLeak()
     {
         var root = new GameObject("Periodic context test"); root.SetActive(false);
-        var health = root.AddComponent<MiningCharacterHealth>(); health.Respawn();
+        var health = root.AddComponent<CharacterHealth>(); health.Respawn();
         bool nested = false; var events = new List<bool>();
         System.Action listener = () => { if (!nested) { nested = true; health.DealDamage(1, CombatDamageType.True, null); } };
-        System.Action<MiningCharacterHealth, float, GameObject, bool, CombatDamageType> observer = (victim, amount, source, basic, type) => { if (victim == health) events.Add(victim.IsPeriodicDamage); };
+        System.Action<CharacterHealth, float, GameObject, bool, CombatDamageType> observer = (victim, amount, source, basic, type) => { if (victim == health) events.Add(victim.IsPeriodicDamage); };
         try
         {
-            health.Damaged += listener; MiningCharacterHealth.AnyDamaged += observer;
+            health.Damaged += listener; CharacterHealth.AnyDamaged += observer;
             health.DealPeriodicDamage(2, CombatDamageType.True, null);
             Assert.That(events, Is.EqualTo(new[] { false, true }));
             Assert.That(health.IsPeriodicDamage, Is.False);
             Assert.That(health.Health, Is.EqualTo(97));
         }
-        finally { health.Damaged -= listener; MiningCharacterHealth.AnyDamaged -= observer; Object.DestroyImmediate(root); }
+        finally { health.Damaged -= listener; CharacterHealth.AnyDamaged -= observer; Object.DestroyImmediate(root); }
     }
     [Test]
     public void PeriodicContextRestoresWhenObserverThrows()
     {
         var root = new GameObject("Periodic exception test"); root.SetActive(false);
-        var health = root.AddComponent<MiningCharacterHealth>(); health.Respawn();
+        var health = root.AddComponent<CharacterHealth>(); health.Respawn();
         System.Action listener = () => throw new System.InvalidOperationException("Test listener");
         try
         {
@@ -55,7 +55,7 @@ public sealed class CombatPresentationTests
     {
         var target = new GameObject("Gun context target"); target.SetActive(false);
         var source = new GameObject("Gun context source"); source.SetActive(false);
-        var health = target.AddComponent<MiningCharacterHealth>(); health.ConfigureSpawnHealth(1000);
+        var health = target.AddComponent<CharacterHealth>(); health.ConfigureSpawnHealth(1000);
         source.AddComponent<GameData.Player.Script.PistolShooting>();
         var values = new List<bool>(); bool nested = false;
         System.Action listener = () =>

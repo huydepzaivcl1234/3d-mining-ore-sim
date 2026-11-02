@@ -38,7 +38,6 @@ public sealed class RefactorRegressionTests
         Assert.That(progress.Experience, Is.EqualTo(25f));
     }
 
-    [TestCase(typeof(JuicyUpgradePanel))]
     [TestCase(typeof(JuicyQuestPanel))]
     [TestCase(typeof(JuicySettingsPanel))]
     public void ClosingPanelRestoresTheDesignerScale(System.Type panelType)

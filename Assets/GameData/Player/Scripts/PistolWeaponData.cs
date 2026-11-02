@@ -25,8 +25,7 @@ namespace GameData.Player.Script
         [Min(.1f)] public float reloadSeconds = 1.5f;
         public bool automatic;
         public LayerMask hitLayers = ~0;
-        [Header("Procedural presentation - optional")]
-        public FpsWeaponMotionProfile motionProfile;
+        [Header("Animation and shot feedback")]
         public PistolReloadProfile reloadProfile;
         [Min(0f)] public float recoilDegrees = 2f;
         [Min(0f)] public float recoilYawDegrees = .20f;

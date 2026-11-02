@@ -1,0 +1,53 @@
+Plan Game
+
+xóa hết gun,aim,góc nhìn fps -> đổi sang góc nhìn từ trên xuống góc 85 độ(chưa đủ kinh nghiệm làm fps)
+cơ chế game là auto aim -> lấy cảm hứng mega bonk,có thẻ bài nâng cấp
+player nhận sức mạnh từ nâng cấp
+xp h không tăng máu va dame nữa
+
+ko vũ khi nên ko có nạp đạn và bang đạn
+tốc độ đánh là tốc độ bắn đạn
+
+*cơ chế thẻ là cho player them chỉ số và các năng lực
+
+-basic card:cap lv 99
+*thẻ lấp lánh:các chỉ số cơ bản nhận thêm 20% chỉ số gốc
++Tăng công vật lý
++Tăng tốc đánh
++Tăng tầm đánh
++tăng kích thước của đạn thêm 1% (kích thước càng to phạm vi sát thương càng lớn)
++Tăng tốc độ đạn bay
++Tăng giáp
++Tăng giáp phép
++Tăng tốc độ di chuyển
++Tăng sức chứa băng đạn
++Tăng hút máu
++Tăng hồi máu
++Tăng máu tối đa
+
+-Ability card(all cap 99 lv)
+-> nâng tất cả cho đến khi max,cái nào max rồi sẽ không nhận đc nâng cấp đó nữa
+~Common raity
++bắn them một đường đạn lên quái gần đó gây 20% dame gốc + 1 + (20 mỗi cấp) (không hoạt động nếu xung quanh chỉ có 1 quái)
++mỗi 20 tốc chạy nhận đc gây them 1 +(10 mỗi cấp) (chỉ tính tốc chạy nhận them từ các nguồn như nâng cấp,vật phẩm)
++gây sát thương bằng(5 + 1 mỗi cấp) + 2% giáp và giáp phép)
++hồi (1 + 5 mỗi cấp) + 5% máu tối đa của bản thân mỗi 5s
++nhận thêm (1 + 0.5 mỗi cấp) + 20% công vật lý hiện tại (công vật lý nhận thêm sẽ đc nhân thêm chứ không công vật lý hiện tại)
++gây sát thương sẽ thiêu đốt quái gây (0,25 + 0,25 mỗi cấp) + 2% máu tối đa của quái thành sát thương phép trong 3s
+Continues...
+~Uncommon raity
++nhận lớp khiên bằng 15% máu tối đa của bản than + 10 mỗi cấp 
++khi quái nhận sát thương 10 lần liên tục trong 3s sẽ hất tung quái lên trời 4m khi rơi xuống quái nhận sát thương tương đương 1% máu tối đa của quái + 5 mỗi cấp
++bản thân nhận vòng hào quang dưới chân mỗi 0,5s gây 1 + 1 mỗi cấp và + 0,25 radius
++đạn khi trúng mục tiêu sẽ nảy sang them 1 con nữa gây 25% dame gốc + 2 mỗi cấp (chỉ nảy 1 ko nảy vô hạn)
++sau 50s nhận bất tử trong 1s (mỗi cấp giảm 0,25s)
++nhận thêm 15% tốc độ đánh (mỗi cấp + 1% )
++nhận thêm 1 công vật lý + 2 mỗi cấp 
+~rare raity
++bắn một lúc 2 viên cùng lúc viên thứ 2 gây (1 + 15% dame gốc) sát thương phép
++mỗi 1 con quái gây sát thương vào bản thân nhận thêm 1 giáp và giáp phép trong 2s (nếu trong 2s không nhận sát thương sẽ giảm dần )
++gây sát thương lên quái sẽ khiến nó giảm 1 sát thương gây ra (mỗi cấp + 1) không cộng dồn tồn tại trong 3s -> nếu trong tg đó bị gây sát thương sẽ không đặt lại bộ đếm
++khi máu tụt xuống 30% lập tức hồi lại 50% máu trong 3s (hồi chiêu 70S) mỗi cấp giảm 0,3s
++mỗi khi dính 5 lần sát thương bản thân sẽ phản đòn lên con quái gần nhất bán kính 6m gây (15% giáp + 15% giáp phép + 1 mỗi cấp)
++mỗi 5 con boss giết được, bản thân nhận thêm 1 + 1 mỗi cấp
++nhận 2 thẻ bài chỉ số,có tỉ lệ ra thẻ bài chỉ số lấp lánh

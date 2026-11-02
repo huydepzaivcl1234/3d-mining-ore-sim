@@ -16,17 +16,17 @@ namespace MiningSimulator.Ores
         public static bool CanBeginPlacement(MiningItemSystem inventory,MiningItemData item)
         {
             if(item?.Tower?.prefab==null||inventory==null||IsPlacing)return false;
-            var player=FindFirstObjectByType<MiningPlayerStats>();
+            var player=FindFirstObjectByType<PlayerStats>();
             return player!=null&&player.gameObject.activeInHierarchy&&Camera.main!=null&&
-                !(player.GetComponent<MiningCharacterHealth>()?.Health<=0);
+                !(player.GetComponent<CharacterHealth>()?.Health<=0);
         }
         public static bool BeginPlacement(MiningItemSystem inventory,MiningItemData item,int index)
         {
             if(item?.Tower?.prefab==null||inventory==null)return false;
             inventory.TransferLegacyTowersToConstruction();
             if(inventory.GetTowerStockCount(item)==0)return false;
-            var player=FindFirstObjectByType<MiningPlayerStats>();var camera=Camera.main;
-            if(player==null||camera==null||player.GetComponent<MiningCharacterHealth>()?.Health<=0)return false;
+            var player=FindFirstObjectByType<PlayerStats>();var camera=Camera.main;
+            if(player==null||camera==null||player.GetComponent<CharacterHealth>()?.Health<=0)return false;
             if(active!=null)active.Cancel();
             var p=inventory.GetComponent<TowerPlacement>()??inventory.gameObject.AddComponent<TowerPlacement>();
             p.inventory=inventory;p.item=item;p.slotIndex=index;p.player=player.transform;p.cameraView=camera;p.focus=player.transform.position;
@@ -63,7 +63,7 @@ namespace MiningSimulator.Ores
             int remaining=inventory!=null?inventory.GetTowerStockCount(item):0;
             if(remaining<=0){Cancel();return;}
             visuals.SetRemaining(remaining);
-            if(player==null||player.GetComponent<MiningCharacterHealth>()?.Health<=0||cameraView==null||Keyboard.current?.escapeKey.wasPressedThisFrame==true||Mouse.current?.rightButton.wasPressedThisFrame==true){Cancel();return;}
+            if(player==null||player.GetComponent<CharacterHealth>()?.Health<=0||cameraView==null||Keyboard.current?.escapeKey.wasPressedThisFrame==true||Mouse.current?.rightButton.wasPressedThisFrame==true){Cancel();return;}
             if(Mouse.current==null||Time.unscaledTime-started<.35f)return;
             if(Keyboard.current?.rKey.wasPressedThisFrame==true)placementRotation*=Quaternion.Euler(0,90,0);
             bool valid=PreviewAt(cameraView.ScreenPointToRay(Mouse.current.position.ReadValue()),out var foot);

@@ -1,93 +1,45 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.Interactions;
 
 namespace GameData.Player.Manager
 {
+    [DefaultExecutionOrder(-100)]
     public class InputManager : MonoBehaviour
     {
-
-
         [SerializeField] private PlayerInput PlayerInput;
-
         public Vector2 Move { get; private set; }
-
         public Vector2 Look { get; private set; }
-        // Pointer delta is already displacement this frame; stick input is a rate.
         public bool LookIsMouse => _lookAction?.activeControl == null || _lookAction.activeControl.device is Mouse;
-
         public bool Run { get; private set; }
-
         public bool Jump { get; private set; }
         public event System.Action JumpPressed;
+        [System.NonSerialized] private InputActionMap _currentMap;
+        [System.NonSerialized] private InputAction _moveAction, _lookAction, _runAction, _jumpAction;
 
-        private InputActionMap _currentMap;
-
-        private InputAction _moveAction;
-
-        private InputAction _lookAction;
-
-        private InputAction _runActiion;
-
-        private InputAction _jumpAction;
-
-        private void Awake()
+        private void Start()
         {
-
-            HideCusor();
-            _currentMap = PlayerInput.currentActionMap;
-            _moveAction = _currentMap.FindAction("Move");
-            _lookAction = _currentMap.FindAction("Look");
-            _runActiion = _currentMap.FindAction("Run");
-            _jumpAction = _currentMap.FindAction("Jump");
-
-            _moveAction.performed += OnMove;
-            _lookAction.performed += OnLook;
-            _runActiion.performed += OnRun;
-            _jumpAction.performed += OnJump;
-
-            _moveAction.canceled += OnMove;
-            _lookAction.canceled += OnLook;
-            _runActiion.canceled += OnRun;
-            _jumpAction.canceled += OnJump;
+            bool topDown=GetComponent<GameData.Player.Script.TopDownSurvivor>()!=null;
+            Cursor.lockState=topDown?CursorLockMode.None:CursorLockMode.Locked;
+            Cursor.visible=topDown;
         }
-
-        private void HideCusor()
+        private void Update()
         {
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
+            if(!PlayerInput)PlayerInput=GetComponent<PlayerInput>();
+            var map=PlayerInput&&PlayerInput.inputIsActive?PlayerInput.currentActionMap:null;
+            // PlayerInput owns the map lifetime; cached maps become stale after a script reload.
+            if(map!=_currentMap){
+                _currentMap=map;
+                _moveAction=map?.FindAction("Move");_lookAction=map?.FindAction("Look");
+                _runAction=map?.FindAction("Run");_jumpAction=map?.FindAction("Jump");
+            }
+            if(map==null||!map.enabled){Move=Look=Vector2.zero;Run=Jump=false;return;}
+            Move=_moveAction?.ReadValue<Vector2>()??Vector2.zero;
+            Look=_lookAction?.ReadValue<Vector2>()??Vector2.zero;
+            Run=_runAction?.IsPressed()??false;Jump=_jumpAction?.IsPressed()??false;
+            if(_jumpAction?.WasPressedThisFrame()==true)JumpPressed?.Invoke();
         }
-
-        private void OnMove(InputAction.CallbackContext context)
-        {
-            Move = context.ReadValue<Vector2>();
-        }
-
-        private void OnLook(InputAction.CallbackContext context)
-        {
-            Look = context.ReadValue<Vector2>();
-        }
-
-        private void OnRun(InputAction.CallbackContext context)
-        {
-            Run = context.ReadValueAsButton();
-        }
-
-        private void OnJump(InputAction.CallbackContext context)
-        {
-            
-               Jump = context.ReadValueAsButton();
-               if (context.performed && Jump) JumpPressed?.Invoke();
-        }
-
-        private void OnEnable()
-        {
-            _currentMap.Enable();
-        }
-
-        private void OnDisable()
-        {
-            _currentMap.Disable();
-        }
+        private void OnEnable(){_currentMap=null;_moveAction=_lookAction=_runAction=_jumpAction=null;}
+        private void OnDisable(){OnEnable();Move=Look=Vector2.zero;Run=Jump=false;}
     }
 }
+

@@ -1,0 +1,10 @@
+{
+  "source": "D:\\3d mining sim\\Deliverables\\BodyAnimationReview-20261026\\UserShoot_Recoil_Ready.blend",
+  "frames": 41,
+  "duration": 0.6666667,
+  "body": "Assets/GameData/Player/Animations/Pistol/UserShootFinal/Shoot_User_Hands_Body.anim",
+  "targets": "Assets/GameData/Player/Animations/Pistol/UserShootFinal/Shoot_User_Hands_Targets.anim",
+  "mechanism": "Assets/GameData/Player/Animations/Pistol/UserShootFinal/Shoot_User_Mechanism.anim",
+  "cameraRecoilDegrees": 0.85,
+  "cameraReturnSeconds": 0.16
+}

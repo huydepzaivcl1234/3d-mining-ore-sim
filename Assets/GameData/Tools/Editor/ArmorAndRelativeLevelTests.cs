@@ -26,7 +26,7 @@ public sealed class ArmorAndRelativeLevelTests
         root.SetActive(false);
         try
         {
-            var health = root.AddComponent<MiningCharacterHealth>();
+            var health = root.AddComponent<CharacterHealth>();
             health.ConfigureDefenses(100, 300);
             health.Respawn();
             Assert.That(health.DealDamage(100, CombatDamageType.Physical), Is.EqualTo(50));
@@ -43,9 +43,9 @@ public sealed class ArmorAndRelativeLevelTests
     {
         var root = new GameObject("Isolated player defense test");
         root.SetActive(false);
-        var data = ScriptableObject.CreateInstance<MiningPlayerStatsData>();
-        var player = root.AddComponent<MiningPlayerStats>();
-        var field = typeof(MiningPlayerStats).GetField("data", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+        var data = ScriptableObject.CreateInstance<PlayerStatsData>();
+        var player = root.AddComponent<PlayerStats>();
+        var field = typeof(PlayerStats).GetField("data", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
         try
         {
             data.armor = 10; data.magicResistance = 20;

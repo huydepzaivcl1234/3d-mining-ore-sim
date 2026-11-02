@@ -8,6 +8,10 @@ namespace GameData.Player.Script
         private sealed class Slot
         {
             public LineRenderer line;
+            public LineRenderer worldLine;
+            public Camera worldCamera, weaponCamera;
+            public Transform muzzle;
+            public Vector3 worldStart;
             public ParticleSystem impact;
             public Vector3 start, end, normal;
             public float age, distance;
@@ -15,7 +19,7 @@ namespace GameData.Player.Script
         }
         private readonly Slot[] slots = new Slot[12];
         private readonly PistolWeaponData data;
-        private readonly MiningSimulator.Ores.MiningPlayerStats stats;
+        private readonly MiningSimulator.Ores.PlayerStats stats;
         private float Speed => Mathf.Max(1f, data.tracerSpeed * (stats ? stats.GunBulletSpeedMultiplier : 1f));
         private readonly Transform root;
         private int cursor;
@@ -23,7 +27,7 @@ namespace GameData.Player.Script
         public int ImpactsPlayed { get; private set; }
         public int ActiveTracers { get { int count = 0; foreach (var slot in slots) if (slot != null && slot.active) count++; return count; } }
 
-        public PistolShotVfx(PistolWeaponData data, MiningSimulator.Ores.MiningPlayerStats stats = null)
+        public PistolShotVfx(PistolWeaponData data, MiningSimulator.Ores.PlayerStats stats = null)
         {
             this.data = data;
             this.stats = stats;
@@ -37,6 +41,11 @@ namespace GameData.Player.Script
                 line.sharedMaterial = data.shotVfxMaterial; line.positionCount = 2;
                 line.useWorldSpace = true; line.numCapVertices = 3; line.enabled = false;
                 line.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; line.receiveShadows = false;
+                var worldGo = new GameObject("World Tracer " + i); worldGo.transform.SetParent(root, false);
+                var worldLine = worldGo.AddComponent<LineRenderer>();
+                worldLine.sharedMaterial=data.shotVfxMaterial;worldLine.positionCount=2;
+                worldLine.useWorldSpace=true;worldLine.numCapVertices=3;worldLine.enabled=false;
+                worldLine.shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;worldLine.receiveShadows=false;
                 var effect = new GameObject("Impact " + i); effect.transform.SetParent(root, false);
                 var particle = effect.AddComponent<ParticleSystem>();
                 var main = particle.main; main.playOnAwake = false; main.loop = false;
@@ -50,21 +59,58 @@ namespace GameData.Player.Script
                 var gradient = new Gradient(); gradient.SetKeys(new[] { new GradientColorKey(Color.white, 0), new GradientColorKey(Color.white, 1) },
                     new[] { new GradientAlphaKey(1, 0), new GradientAlphaKey(0, 1) }); color.color = gradient;
                 particle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-                slots[i] = new Slot { line = line, impact = particle };
+                slots[i] = new Slot { line = line, worldLine=worldLine, impact = particle };
             }
         }
 
-        public void Play(Vector3 start, Vector3 end, Vector3 normal, bool hit)
+        public void Play(Vector3 start, Vector3 end, Vector3 normal, bool hit,
+            Camera worldCamera=null,Camera weaponCamera=null,Transform muzzle=null,Transform worldMuzzle=null)
         {
             if (!root) return;
             var slot = slots[cursor]; cursor = (cursor + 1) % slots.Length;
             slot.impact.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
             slot.start = start; slot.end = end; slot.normal = normal;
+            slot.worldCamera=worldCamera;slot.weaponCamera=weaponCamera;slot.muzzle=muzzle;
+            slot.worldStart=worldMuzzle ? worldMuzzle.position : start;
+            slot.line.gameObject.layer=weaponCamera && muzzle ? muzzle.gameObject.layer : 0;
+            slot.worldLine.gameObject.layer=worldMuzzle ? worldMuzzle.gameObject.layer : 0;
+            slot.worldLine.enabled=worldMuzzle && worldCamera && weaponCamera;
             slot.distance = Vector3.Distance(start, end); slot.age = 0; slot.hit = hit; slot.impacted = false; slot.active = true;
             slot.line.startWidth = data.tracerWidth; slot.line.endWidth = data.tracerWidth * .5f;
             slot.line.startColor = slot.line.endColor = data.tracerColor;
-            slot.line.SetPosition(0, start); slot.line.SetPosition(1, Vector3.Lerp(start, end, Mathf.Min(1f, .05f / Mathf.Max(.001f, slot.distance))));
+            slot.worldLine.startWidth=data.tracerWidth;slot.worldLine.endWidth=data.tracerWidth*.5f;
+            slot.worldLine.startColor=slot.worldLine.endColor=data.tracerColor;
+            Draw(slot);
             slot.line.enabled = true; TracersPlayed++;
+        }
+
+        // Run after the camera and animated FPS muzzle have moved this frame.
+        public void Present()
+        {
+            if(!root)return;
+            foreach(var slot in slots)if(slot.active)Draw(slot);
+        }
+        private void Draw(Slot slot)
+        {
+            float head=Mathf.Min(slot.distance,Mathf.Max(Mathf.Min(.25f,data.tracerLength),slot.age*Speed));
+            float tail=Mathf.Max(0f,head-data.tracerLength);
+            var direction=(slot.end-slot.start).normalized;
+            var a=slot.start+direction*tail;var b=slot.start+direction*head;
+            if(slot.worldCamera && slot.weaponCamera)
+            {
+                a=slot.weaponCamera.ViewportToWorldPoint(slot.worldCamera.WorldToViewportPoint(a));
+                b=slot.weaponCamera.ViewportToWorldPoint(slot.worldCamera.WorldToViewportPoint(b));
+                if(tail==0f && slot.muzzle)a=slot.muzzle.position;
+            }
+            slot.line.SetPosition(0,a);slot.line.SetPosition(1,b);
+            if(slot.worldLine.enabled)
+            {
+                float distance=Vector3.Distance(slot.worldStart,slot.end);
+                var dir=(slot.end-slot.worldStart).normalized;
+                float worldHead=Mathf.Min(distance,head);
+                slot.worldLine.SetPosition(0,slot.worldStart+dir*Mathf.Max(0f,worldHead-data.tracerLength));
+                slot.worldLine.SetPosition(1,slot.worldStart+dir*worldHead);
+            }
         }
 
         public void Step(float dt)
@@ -75,9 +121,6 @@ namespace GameData.Player.Script
                 if (!slot.active) continue;
                 slot.age += dt;
                 float head = Mathf.Min(slot.distance, slot.age * Speed);
-                Vector3 direction = (slot.end - slot.start).normalized;
-                slot.line.SetPosition(0, slot.start + direction * Mathf.Max(0f, head - data.tracerLength));
-                slot.line.SetPosition(1, slot.start + direction * head);
                 if (head >= slot.distance && !slot.impacted)
                 {
                     slot.impacted = true;
@@ -89,14 +132,14 @@ namespace GameData.Player.Script
                     }
                 }
                 if (slot.age >= Mathf.Max(.06f, slot.distance / Speed + .03f))
-                { slot.active = false; slot.line.enabled = false; }
+                { slot.active = false; slot.line.enabled = slot.worldLine.enabled = false; }
             }
         }
 
         public void Clear()
         {
             if (!root) return;
-            foreach (var slot in slots) { slot.active = false; slot.line.enabled = false; slot.impact.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear); }
+            foreach (var slot in slots) { slot.active = false; slot.line.enabled = slot.worldLine.enabled = false; slot.impact.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear); }
         }
         public void Dispose() { if (root) Object.Destroy(root.gameObject); }
     }

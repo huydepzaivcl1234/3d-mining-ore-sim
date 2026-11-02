@@ -69,8 +69,8 @@ namespace MiningSimulator.Ores
 
         [Header("References")]
         [SerializeField] private MiningItemDatabase database;
-        [SerializeField] private LuckyBlockDropSystem luckyBlockSystem;
-        [SerializeField] private MiningUpgradeSystem upgradeSystem;
+
+        [SerializeField] private EconomyUpgradeSystem upgradeSystem;
         [SerializeField] private Transform droppedItemParent;
 
         private readonly RuntimeSlot[] slots = new RuntimeSlot[MiningItemDatabase.InventoryCapacity];
@@ -106,7 +106,7 @@ namespace MiningSimulator.Ores
         public float PlayerHealthMultiplier => GetEffectMultiplier(MiningItemEffectType.PlayerMaxHealth);
         public float PlayerDamageReduction => Mathf.Clamp01(GetActiveEffectPercent(MiningItemEffectType.PlayerDamageReduction) * .01f);
         public float MonsterTrueDamageFraction => GetActiveEffectPercent(MiningItemEffectType.MonsterMaxHealthTrueDamage) * .01f;
-        private MiningCharacterHealth consumablePlayer;
+        private CharacterHealth consumablePlayer;
 
         public float RollOreLuckyDamage(float baseDamage)
         {
@@ -131,27 +131,27 @@ namespace MiningSimulator.Ores
 
         private void OnEnable()
         {
-            Subscribe();
+
         }
 
         private void Start()
         {
             // Editor setup may finish references after OnEnable in an already-open Scene.
             FindReferencesIfMissing();
-            Subscribe();
+
         }
 
         private void OnDisable()
         {
-            Unsubscribe();
+
         }
 
         private void Update()
         {
             if (consumablePlayer == null)
             {
-                var player = FindFirstObjectByType<MiningPlayerStats>();
-                if (player != null) consumablePlayer = player.GetComponent<MiningCharacterHealth>();
+                var player = FindFirstObjectByType<PlayerStats>();
+                if (player != null) consumablePlayer = player.GetComponent<CharacterHealth>();
             }
             if (consumablePlayer != null && activeEffects.TryGetValue(MiningItemEffectType.PlayerHealing, out var heal) && heal.item != null)
             {
@@ -490,9 +490,9 @@ namespace MiningSimulator.Ores
                 GameSave.Save();
             }
 
-            MiningWorldItem[] worldItems = FindObjectsByType<MiningWorldItem>(
+            WorldItemPickup[] worldItems = FindObjectsByType<WorldItemPickup>(
                 FindObjectsInactive.Include, FindObjectsSortMode.None);
-            foreach (MiningWorldItem worldItem in worldItems)
+            foreach (WorldItemPickup worldItem in worldItems)
             {
                 if (worldItem != null && worldItem.gameObject.scene.IsValid())
                 {
@@ -560,19 +560,12 @@ namespace MiningSimulator.Ores
 
 
 
-        private void HandleLuckyBlockRewardGranted(LuckyBlock block, float reward)
-        {
-            if (block != null && database != null && database.TryRoll(true,
-                GetItemDropChanceBonus(), out MiningItemData item))
-            {
-                SpawnWorldItem(item, block.GetWorldTopCenter());
-            }
-        }
+
 
         private float GetItemDropChanceBonus()
         {
             return upgradeSystem != null
-                ? upgradeSystem.GetAddedPercent(MiningUpgradeType.ItemDropChance)
+                ? upgradeSystem.GetAddedPercent(EconomyUpgradeType.ItemDropChance)
                 : 0f;
         }
 
@@ -584,40 +577,21 @@ namespace MiningSimulator.Ores
                 root.transform.SetParent(droppedItemParent, true);
             }
             root.transform.position = sourcePosition + Vector3.up * database.SpawnHeight;
-            MiningWorldItem worldItem = root.AddComponent<MiningWorldItem>();
+            WorldItemPickup worldItem = root.AddComponent<WorldItemPickup>();
             worldItem.Initialize(this, item, database);
         }
 
-        private void Subscribe()
-        {
 
-            if (luckyBlockSystem != null)
-            {
-                luckyBlockSystem.LuckyBlockRewardGranted -= HandleLuckyBlockRewardGranted;
-                luckyBlockSystem.LuckyBlockRewardGranted += HandleLuckyBlockRewardGranted;
-            }
-        }
 
-        private void Unsubscribe()
-        {
 
-            if (luckyBlockSystem != null)
-            {
-                luckyBlockSystem.LuckyBlockRewardGranted -= HandleLuckyBlockRewardGranted;
-            }
-        }
 
         private void FindReferencesIfMissing()
         {
 
-            if (luckyBlockSystem == null)
-            {
-                luckyBlockSystem = FindFirstObjectByType<LuckyBlockDropSystem>(
-                    FindObjectsInactive.Include);
-            }
+
             if (upgradeSystem == null)
             {
-                upgradeSystem = FindFirstObjectByType<MiningUpgradeSystem>(
+                upgradeSystem = FindFirstObjectByType<EconomyUpgradeSystem>(
                     FindObjectsInactive.Include);
             }
         }

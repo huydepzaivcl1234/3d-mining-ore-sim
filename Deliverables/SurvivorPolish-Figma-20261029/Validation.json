@@ -1,0 +1,64 @@
+{
+  "oneStatsAsset": true,
+  "survivorCombatSettings": {
+    "BaseDamage": 20.0,
+    "BaseFireRate": 1.53846157,
+    "BaseProjectileSpeed": 22.0,
+    "AttackRange": 13.0
+  },
+  "survivorValuesApplied": true,
+  "buttonTrace0": {
+    "opened": true,
+    "choosing": false,
+    "scale": 1.0,
+    "previous": 0,
+    "actual": 1,
+    "active": true,
+    "interactable": false
+  },
+  "button0": true,
+  "buttonTrace1": {
+    "opened": true,
+    "choosing": false,
+    "scale": 1.0,
+    "previous": 0,
+    "actual": 1,
+    "active": true,
+    "interactable": false
+  },
+  "button1": true,
+  "buttonTrace2": {
+    "opened": true,
+    "choosing": false,
+    "scale": 1.0,
+    "previous": 3,
+    "actual": 4,
+    "active": true,
+    "interactable": false
+  },
+  "button2": true,
+  "headingFont": "Anton",
+  "bodyFont": "Roboto",
+  "offerRectangles": [
+    {
+      "name": "Damage",
+      "size": "(1004.00, 178.00)"
+    },
+    {
+      "name": "AttackSpeed",
+      "size": "(1004.00, 178.00)"
+    },
+    {
+      "name": "Health",
+      "size": "(1004.00, 178.00)"
+    }
+  ],
+  "skipResumes": true,
+  "liveMonsterCount": 1,
+  "deduplicated": true,
+  "rotates": true,
+  "hidesAfterOneSecond": true,
+  "noGameplayScriptsInPreview": true,
+  "noRoster": true,
+  "framesAdvanced": 951
+}

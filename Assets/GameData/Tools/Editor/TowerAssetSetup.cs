@@ -64,7 +64,7 @@ public static class TowerAssetSetup
                 Assign(visual,material);var bounds=BoundsOf(visual);visual.transform.localPosition-=Vector3.up*bounds.min.y;
                 bounds=BoundsOf(visual);
                 var box=root.AddComponent<BoxCollider>();box.center=bounds.center;box.size=bounds.size;
-                var hp=root.AddComponent<MiningCharacterHealth>();var runtime=root.AddComponent<TowerRuntime>();
+                var hp=root.AddComponent<CharacterHealth>();var runtime=root.AddComponent<TowerRuntime>();
                 var anim=visual.GetComponent<Animator>();if(anim==null)anim=visual.AddComponent<Animator>();anim.runtimeAnimatorController=controller;anim.applyRootMotion=false;
                 var ser=new SerializedObject(runtime);ser.FindProperty("data").objectReferenceValue=cannon;ser.FindProperty("animator").objectReferenceValue=anim;
                 ser.FindProperty("muzzle").objectReferenceValue=visual.GetComponentsInChildren<Transform>().First(t=>t.name=="Muzzle");ser.ApplyModifiedPropertiesWithoutUndo();

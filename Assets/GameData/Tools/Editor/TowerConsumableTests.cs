@@ -136,7 +136,7 @@ public sealed class TowerConsumableTests
     {
         var go=new GameObject("True damage test");go.SetActive(false);
         try {
-            var hp=go.AddComponent<MiningCharacterHealth>();hp.ConfigureSpawnHealth(1000);hp.ConfigureDefenses(100,100);
+            var hp=go.AddComponent<CharacterHealth>();hp.ConfigureSpawnHealth(1000);hp.ConfigureDefenses(100,100);
             int events=0;hp.Damaged+=()=>events++;
             float dealt=hp.DealDamageWithTrueBonus(100,CombatDamageType.Physical,null,5);
             Assert.That(dealt,Is.EqualTo(CombatDamage.Resolve(100,CombatDamageType.Physical,hp.Armor,hp.MagicResistance,hp.ResistanceScale)+5).Within(.001f));
@@ -152,13 +152,13 @@ public sealed class TowerConsumableTests
         var active=typeof(TreasureChest).GetField("<Active>k__BackingField",BindingFlags.Static|BindingFlags.NonPublic);
         var previous=active.GetValue(null); TowerRuntime tower=null;
         try {
-            var hp=enemy.AddComponent<MiningCharacterHealth>();hp.ConfigureSpawnHealth(100);
+            var hp=enemy.AddComponent<CharacterHealth>();hp.ConfigureSpawnHealth(100);
             var monster=enemy.AddComponent<MushroomMonster>();Set(monster,"health",hp);
             chestObject.transform.position=Vector3.forward*10;
             var chestShape=chestObject.AddComponent<BoxCollider>();
-            var chestHp=chestObject.AddComponent<MiningCharacterHealth>();chestHp.ConfigureSpawnHealth(100);
+            var chestHp=chestObject.AddComponent<CharacterHealth>();chestHp.ConfigureSpawnHealth(100);
             var chest=chestObject.AddComponent<TreasureChest>();Set(chest,"health",chestHp);Set(chest,"data",definition);Set(chest,"body",chestShape);Set(chest,"persistProgress",false);active.SetValue(null,chest);
-            tower=towerObject.AddComponent<TowerRuntime>();var towerHp=towerObject.GetComponent<MiningCharacterHealth>();
+            tower=towerObject.AddComponent<TowerRuntime>();var towerHp=towerObject.GetComponent<CharacterHealth>();
             towerHp.ConfigureSpawnHealth(100);Set(tower,"health",towerHp);TowerRuntime.Active.Add(tower);
             var update=typeof(MushroomMonster).GetMethod("UpdatePlayerTarget",Flags);
             var target=typeof(MushroomMonster).GetField("target",Flags);

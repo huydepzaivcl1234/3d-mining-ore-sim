@@ -76,11 +76,11 @@ namespace MiningSimulator.Ores
         private static readonly Stack<MiningDamagePopup> pool=new();
         private static readonly LinkedList<MiningDamagePopup> active=new();
         private static Transform poolRoot;
-        private static readonly Dictionary<(MiningCharacterHealth, CombatDamageType), MiningDamagePopup> periodic = new();
+        private static readonly Dictionary<(CharacterHealth, CombatDamageType), MiningDamagePopup> periodic = new();
         private static bool clearing, destroyImmediately;
         private static bool layoutRegistered;
         private static readonly List<Rect> occupied = new();
-        private static readonly HashSet<MiningCharacterHealth> laidOutTotals = new();
+        private static readonly HashSet<CharacterHealth> laidOutTotals = new();
         private static readonly List<MiningDamagePopup> totalRow = new(3);
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetPool()=>ClearAll();
@@ -131,7 +131,7 @@ namespace MiningSimulator.Ores
         private Material ownedMaterial, sourceMaterial;
         private float motionScale, tilt, spin;
         private Color hitColor;
-        private MiningCharacterHealth target;
+        private CharacterHealth target;
         private Collider targetBody;
         private Renderer headRenderer;
         private CombatDamageType damageType;
@@ -142,7 +142,7 @@ namespace MiningSimulator.Ores
         public bool IsAccumulating => accumulating;
         public bool IsTotal => accumulating;
         public float TotalDamage => totalDamage;
-        public static void ShowForTarget(float damage, MiningCharacterHealth victim, MiningDamagePopupSettings settings, CombatDamageType type, bool isPeriodic)
+        public static void ShowForTarget(float damage, CharacterHealth victim, MiningDamagePopupSettings settings, CombatDamageType type, bool isPeriodic)
         {
             if (!victim || !Application.isPlaying || settings == null || !settings.enabled || damage <= 0 || float.IsNaN(damage) || float.IsInfinity(damage)) return;
             // Never replace a hit number with a total, including rapid DOT ticks.
@@ -170,7 +170,7 @@ namespace MiningSimulator.Ores
             periodic[key] = popup;
             popup.ApplyHeld();
         }
-        private void Anchor(MiningCharacterHealth victim)
+        private void Anchor(CharacterHealth victim)
         {
             target = victim;
             var hitbox = victim.GetComponent<MonsterHitbox>();

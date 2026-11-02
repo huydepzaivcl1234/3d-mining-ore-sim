@@ -1,0 +1,17 @@
+{
+  "definitions": 18,
+  "rarityCounts45000": [
+    36052,
+    7624,
+    1324
+  ],
+  "commonPercent": 80.1155548,
+  "uncommonPercent": 16.9422226,
+  "rarePercent": 2.942222,
+  "mixedRarityExists": true,
+  "uniqueOffers": true,
+  "documentedAbilitiesCommonOnly": true,
+  "all18Cap99": true,
+  "allMaxNoOffers": true,
+  "invalidRejected": true
+}

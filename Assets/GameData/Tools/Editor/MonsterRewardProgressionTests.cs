@@ -6,11 +6,11 @@ using UnityEngine;
 public sealed class MonsterRewardProgressionTests
 {
     private GameObject player;
-    private MiningPlayerStats stats;
+    private PlayerStats stats;
     [SetUp] public void SetUp()
     {
         player = new GameObject("Progression Test");
-        stats = player.AddComponent<MiningPlayerStats>();
+        stats = player.AddComponent<PlayerStats>();
         stats.SetProgress(1, 0, 100);
     }
     [TearDown] public void TearDown() => Object.DestroyImmediate(player);
@@ -102,10 +102,10 @@ public sealed class MonsterRewardProgressionTests
     }
     [Test] public void PlayerLevelAddsHealthAndDamage()
     {
-        var data = ScriptableObject.CreateInstance<MiningPlayerStatsData>();
+        var data = ScriptableObject.CreateInstance<PlayerStatsData>();
         try
         {
-            typeof(MiningPlayerStats).GetField("data", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).SetValue(stats, data);
+            typeof(PlayerStats).GetField("data", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).SetValue(stats, data);
             stats.SetProgress(3, 0, 100);
             Assert.That(stats.MaxHealth, Is.EqualTo(120));
             Assert.That(stats.Damage, Is.EqualTo(3));

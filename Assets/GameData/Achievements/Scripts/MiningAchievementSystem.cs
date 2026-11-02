@@ -33,7 +33,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private MiningAchievementData achievementData;
         [SerializeField] private PlayerWallet wallet;
         [SerializeField] private MiningRebirthSystem rebirthSystem;
-        [SerializeField] private MiningUpgradeSystem upgradeSystem;
+        [SerializeField] private EconomyUpgradeSystem upgradeSystem;
         [SerializeField] private MiningUnlockNotifier unlockNotifier;
 
         private readonly Dictionary<string, RuntimeProgress> progressById = new();
@@ -419,7 +419,7 @@ namespace MiningSimulator.Ores
             }
             if (upgradeSystem == null)
             {
-                upgradeSystem = FindFirstObjectByType<MiningUpgradeSystem>(
+                upgradeSystem = FindFirstObjectByType<EconomyUpgradeSystem>(
                     FindObjectsInactive.Include);
             }
             if (unlockNotifier == null)

@@ -15,10 +15,10 @@ public abstract class MiningPlayerStatsBoundEditor : Editor
         var root = new VisualElement();
         bool bound = true;
         foreach (Object obj in targets)
-            bound &= obj is Component component && MiningPlayerStats.For(component) != null;
+            bound &= obj is Component component && PlayerStats.For(component) != null;
         bool monsterBound = true;
         foreach (Object obj in targets)
-            monsterBound &= obj is MiningCharacterHealth health &&
+            monsterBound &= obj is CharacterHealth health &&
                 health.GetComponent<MushroomMonster>() != null &&
                 health.GetComponent<MushroomMonster>().CombatData != null;
         if (monsterBound) root.Add(new HelpBox("Monster combat and health are edited on its Monster Reward Data asset.", HelpBoxMessageType.Info));
@@ -37,6 +37,6 @@ public abstract class MiningPlayerStatsBoundEditor : Editor
         return root;
     }
 }
-[CustomEditor(typeof(MiningCharacterHealth)), CanEditMultipleObjects]
+[CustomEditor(typeof(CharacterHealth)), CanEditMultipleObjects]
 public sealed class MiningPlayerHealthStatsEditor : MiningPlayerStatsBoundEditor
 { protected override string[] StatFields => new[] { "maxHealth", "regenAmount", "regenInterval", "armor", "magicResistance", "resistanceScale" }; }

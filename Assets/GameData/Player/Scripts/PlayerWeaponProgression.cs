@@ -17,19 +17,60 @@ namespace GameData.Player.Script
             public PistolShooting.ViewFrame frame = new();
             public string animationLayer;
             [System.NonSerialized] public int ammo = -1, reserve;
+            [System.NonSerialized] public DroppedWeapon dropped;
         }
         [SerializeField] private Loadout pistol = new(), rifle = new();
         [SerializeField, Min(1)] private int godBossDay = 50;
         private const string SaveKey = "Player.Weapons.RifleUnlocked.v1";
         private PistolShooting shooting;
-        private PistolShooting presentation;
-        private PistolShooting feedback;
-        private Animator animator;
         private Loadout selected;
         private DayNightSystem dayNight;
         public bool RifleUnlocked { get; private set; }
         public bool UsingRifle => selected == rifle;
         public int GodBossDay => Mathf.Max(1, godBossDay);
+        public bool CanCollectDroppedWeapon => isActiveAndEnabled && shooting && shooting.CanChangeWeapon;
+
+        public bool DropEquippedWeapon()
+        {
+            if (selected == null || !shooting || !shooting.CanFire || shooting.Reloading) return false;
+            Transform view = shooting.ViewCamera.transform;
+            Vector3 forward = Vector3.ProjectOnPlane(view.forward, Vector3.up).normalized;
+            if (forward.sqrMagnitude < .001f) forward = transform.forward;
+            float distance = 2.2f;
+            foreach (var hit in Physics.SphereCastAll(view.position, .14f, forward, distance, ~0, QueryTriggerInteraction.Ignore))
+                if (!hit.transform.IsChildOf(transform)) distance = Mathf.Min(distance, Mathf.Max(.35f, hit.distance - .2f));
+            Vector3 ground = transform.position + forward * distance;
+            bool found = false; float nearest = float.MaxValue;
+            foreach (var hit in Physics.RaycastAll(ground + Vector3.up * 3f, Vector3.down, 20f, ~0, QueryTriggerInteraction.Ignore))
+            {
+                if (hit.transform.IsChildOf(transform) || hit.collider.GetComponentInParent<CharacterHealth>() || hit.normal.y < .5f) continue;
+                if (hit.distance < nearest) { nearest = hit.distance; ground = hit.point; found = true; }
+            }
+            if (!found) return false;
+            var pickup = DroppedWeapon.Create(this, selected.worldGun ? selected.worldGun : selected.gun,
+                view.position + forward * .4f - Vector3.up * .18f, ground);
+            if (!pickup) return false;
+            selected.ammo = shooting.Ammo; selected.reserve = shooting.Reserve;
+            selected.dropped = pickup; selected = null;
+            shooting.SetWeaponAvailable(false);
+            return true;
+        }
+
+        public bool PickupDroppedWeapon(DroppedWeapon pickup)
+        {
+            if (!pickup || !CanCollectDroppedWeapon) return false;
+            Loadout loadout = pistol.dropped == pickup ? pistol : rifle.dropped == pickup ? rifle : null;
+            if (loadout == null) return false;
+            loadout.dropped = null;
+            if (SelectLoadout(loadout == rifle, false)) return true;
+            loadout.dropped = pickup;
+            return false;
+        }
+        private void OnDestroy()
+        {
+            if (pistol.dropped) Destroy(pistol.dropped.gameObject);
+            if (rifle.dropped) Destroy(rifle.dropped.gameObject);
+        }
 
         private void OnEnable()
         {
@@ -43,24 +84,23 @@ namespace GameData.Player.Script
         }
         public void RefillAmmo()
         {
-            pistol.ammo=rifle.ammo=-1;
-            pistol.reserve=pistol.data?Mathf.Max(0,pistol.data.reserveAmmo):0;
-            rifle.reserve=rifle.data?Mathf.Max(0,rifle.data.reserveAmmo):0;
-            if(!shooting)return;
+            if(!pistol.dropped){pistol.ammo=-1;pistol.reserve=pistol.data?Mathf.Max(0,pistol.data.reserveAmmo):0;}
+            if(!rifle.dropped){rifle.ammo=-1;rifle.reserve=rifle.data?Mathf.Max(0,rifle.data.reserveAmmo):0;}
+            if(!shooting || selected==null)return;
             shooting.ResetState();
             if(selected!=null){selected.ammo=shooting.Ammo;selected.reserve=shooting.Reserve;}
         }
 
         private void Start()
         {
-            shooting = GetComponent<PistolShooting>(); presentation = shooting;
-            feedback = shooting; animator = GetComponent<Animator>();
+            shooting = GetComponent<PistolShooting>();
             RifleUnlocked = GameSave.GetInt(SaveKey) == 1;
             Select(false); // Each session starts holding the pistol, even after the rifle has been earned.
         }
         private void Update()
         {
-            if (!presentation.CanFire || Keyboard.current == null) return;
+            if (!shooting || !shooting.CanChangeWeapon || Keyboard.current == null) return;
+            if (Keyboard.current.eKey.wasPressedThisFrame) { DropEquippedWeapon(); return; }
             if (Keyboard.current.digit1Key.wasPressedThisFrame) Select(false);
             else if (Keyboard.current.digit2Key.wasPressedThisFrame) Select(true);
         }
@@ -72,19 +112,17 @@ namespace GameData.Player.Script
         {
             if (!shooting || useRifle && !RifleUnlocked && !debug) return false;
             var next = useRifle ? rifle : pistol;
-            if (next == selected) return true;
-            if (!next.gun || !next.muzzle || !next.data || animator.GetLayerIndex(next.animationLayer) < 0)
+            if (next.dropped) return false;
+            if (next == selected) { shooting.SetEquipped(true); return true; }
+            if (!next.gun || !next.muzzle || !next.data || !shooting.PoseAnimator || (!shooting.UsesFullBody && shooting.PoseAnimator.GetLayerIndex(next.animationLayer) < 0))
             { Debug.LogError("Weapon loadout is incomplete; previous weapon preserved.", this); return false; }
             if (selected != null) { selected.ammo = shooting.Ammo; selected.reserve = shooting.Reserve; }
             shooting.SetWeaponData(next.data, next.ammo, next.ammo < 0 ? -1 : next.reserve);
-            presentation.ConfigureWeapon(next.gun, next.frame, next.animationLayer, next.worldGun);
-            if (presentation.UsesViewmodel)
-            {
-                animator.SetLayerWeight(animator.GetLayerIndex(pistol.animationLayer), useRifle ? 0f : 1f);
-                animator.SetLayerWeight(animator.GetLayerIndex(rifle.animationLayer), useRifle ? 1f : 0f);
-            }
-            feedback.ConfigureWeapon(next.muzzle, next.slide);
+            shooting.ConfigureWeapon(next.gun, next.frame, next.animationLayer, next.worldGun);
+            shooting.ConfigureWeapon(next.muzzle, next.slide);
             selected = next;
+            shooting.SetWeaponAvailable(true);
+            shooting.SetEquipped(true);
             return true;
         }
         public bool TryGrantRifle(GodBossRifleReward defeated)

@@ -18,7 +18,7 @@ namespace MiningSimulator.Ores
         [Tooltip("Optional separate loot, level and status-effect settings for this species' boss.")]
         public MonsterRewardData rewardOverride;
         public Color effectColor = new Color(1f, .2f, .06f, 1f);
-        [Min(1)] public float combatSeconds = 120f;
+        [HideInInspector] public float combatSeconds = 120f; // Legacy field: living bosses no longer expire.
         [Header("Species boss skill (normal monsters do not use this)")]
         public BossSkillKind skill;
         [Range(0, 100)] public float healTriggerHealthPercent = 20f;
@@ -49,6 +49,9 @@ namespace MiningSimulator.Ores
     /// <summary>Common stats/rewards only. Author a concrete species GameData from the Monsters menu.</summary>
     public class MonsterRewardData : ScriptableObject
     {
+        [Header("Day required to unlock this species")]
+        [HideInInspector,Min(1)] public int minimumPlayerLevelToSpawn=1; // Retained for old assets; migrated to day unlocks.
+        [Min(1),Tooltip("First world day on which this species can spawn. Independent of player level and monster combat level.")] public int minimumSpawnDay=1;
         [Tooltip("Species combat loadout. Null only for legacy assets not yet migrated.")]
         public MonsterCombatSettings combat = new MonsterCombatSettings();
         [HideInInspector] public int combatSettingsVersion;
@@ -56,7 +59,7 @@ namespace MiningSimulator.Ores
         [Header("Boss variant (same species)")]
         public MonsterBossSettings boss = new();
         [Header("Encounter expiry")]
-        [Tooltip("Normal monster lifetime after spawning. 0 means unlimited. Bosses use Boss Combat Seconds.")]
+        [Tooltip("Normal monster lifetime after spawning. 0 means unlimited. Bosses never expire.")]
         [Min(0)] public float combatSeconds;
         [Min(.1f)] public float dissolveSeconds = 2f;
         public Color dissolveColor = new Color(1f, .6f, .1f, 1f);

@@ -4,18 +4,6 @@ using UnityEngine;
 
 namespace MiningSimulator.Ores
 {
-    /// <summary>Designer-owned multiplier applied to every item of one rarity during selection.</summary>
-    [Serializable]
-    public sealed class MiningItemRaritySelectionRule
-    {
-        [SerializeField] private MiningItemRarity rarity;
-        [Tooltip("Multiplies every item of this rarity's Selection Chance before the drop roll. 1 = unchanged.")]
-        [Min(0f), SerializeField] private float dropChanceMultiplier = 1f;
-
-        public MiningItemRarity Rarity => rarity;
-        public float DropChanceMultiplier => dropChanceMultiplier;
-    }
-
     /// <summary>Drop, pickup, inventory and save tuning shared by all mining items.</summary>
     [CreateAssetMenu(fileName = "MiningItemDatabase", menuName = "Mining Simulator/Game Data/Item Database")]
     public sealed class MiningItemDatabase : ScriptableObject
@@ -29,9 +17,7 @@ namespace MiningSimulator.Ores
         [Range(0f, 100f), SerializeField] private float luckyBlockDropChancePercent = 35f;
         [SerializeField] private List<MiningItemData> items = new();
 
-        [Header("Rarity Drop Chance")]
-        [Tooltip("Per-rarity multiplier applied to each item's Selection Chance (Common, Uncommon, Rare, Epic, Legendary). Leave at 1 to keep authored per-item chances unchanged.")]
-        [SerializeField] private List<MiningItemRaritySelectionRule> rarityRules = new();
+        public SequentialRaritySettings rarityChances=new();
 
         [Header("World Drop")]
         [Min(0f), SerializeField] private float spawnHeight = 0.65f;
@@ -53,7 +39,6 @@ namespace MiningSimulator.Ores
         public float OreDropChancePercent => oreDropChancePercent;
         public float LuckyBlockDropChancePercent => luckyBlockDropChancePercent;
         public IReadOnlyList<MiningItemData> Items => items;
-        public IReadOnlyList<MiningItemRaritySelectionRule> RarityRules => rarityRules;
         public float SpawnHeight => spawnHeight;
         public Vector2 HorizontalImpulseRange => horizontalImpulseRange;
         public Vector2 UpwardImpulseRange => upwardImpulseRange;
@@ -67,24 +52,6 @@ namespace MiningSimulator.Ores
         public float AutoPickupDelay => autoPickupDelay;
         public float MaximumWorldLifetime => maximumWorldLifetime;
         public string InventorySaveKey => inventorySaveKey;
-
-        public MiningItemRaritySelectionRule GetRarityRule(MiningItemRarity rarity)
-        {
-            foreach (MiningItemRaritySelectionRule rule in rarityRules)
-            {
-                if (rule != null && rule.Rarity == rarity)
-                {
-                    return rule;
-                }
-            }
-            return null;
-        }
-
-        public float GetRarityDropChanceMultiplier(MiningItemRarity rarity)
-        {
-            MiningItemRaritySelectionRule rule = GetRarityRule(rarity);
-            return rule != null ? Mathf.Max(0f, rule.DropChanceMultiplier) : 1f;
-        }
 
         public MiningItemData FindById(string itemId)
         {
@@ -122,44 +89,10 @@ namespace MiningSimulator.Ores
                 return false;
             }
 
-            float total = 0f;
-            foreach (MiningItemData candidate in items)
-            {
-                if (candidate != null)
-                {
-                    total += GetWeightedSelectionChance(candidate);
-                }
-            }
-            if (total <= 0f)
-            {
-                return false;
-            }
-
-            float roll = UnityEngine.Random.value * total;
-            foreach (MiningItemData candidate in items)
-            {
-                if (candidate == null)
-                {
-                    continue;
-                }
-                if (GetWeightedSelectionChance(candidate) <= 0f) continue;
-                roll -= GetWeightedSelectionChance(candidate);
-                if (roll <= 0f)
-                {
-                    item = candidate;
-                    return true;
-                }
-            }
-
-            return false;
+            if(!SequentialRarity.TryRoll(items,rarityChances,i=>i?i.Rarity:MiningItemRarity.Common,i=>i?i.SelectionWeight:0,out int index))return false;
+            item=items[index];return true;
         }
-
-        private float GetWeightedSelectionChance(MiningItemData candidate)
-        {
-            float baseChance = Mathf.Max(0f, candidate.SelectionChancePercent);
-            float rarityMultiplier = GetRarityDropChanceMultiplier(candidate.Rarity);
-            return baseChance * rarityMultiplier;
-        }
+        public float ItemSelectionPercent(int index)=>SequentialRarity.DisplayPercent(items,rarityChances,i=>i?i.Rarity:MiningItemRarity.Common,i=>i?i.SelectionWeight:0,index);
 
         private void OnValidate()
         {

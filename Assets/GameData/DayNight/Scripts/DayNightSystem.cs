@@ -179,12 +179,7 @@ namespace MiningSimulator.Ores
             InitializeIfNeeded();
             if (data.CycleEnabled)
             {
-                // The timeline still releases scheduled waves, but cannot end combat.
-                periodElapsed = Mathf.Min(periodElapsed + Time.deltaTime, GetPeriodDuration(currentPeriod));
-                encounterCleared = MonsterSpawnZone.AreEncountersCleared(this);
-                clearedPeriodElapsed = encounterCleared ? clearedPeriodElapsed + Time.deltaTime : 0f;
-                if (encounterCleared && clearedPeriodElapsed >= data.ClearedPeriodDelaySeconds)
-                    SetPeriod(currentPeriod == MiningTimePeriod.Day ? MiningTimePeriod.Night : MiningTimePeriod.Day);
+                TickCycle(Time.deltaTime);
             }
             else { clearedPeriodElapsed = 0f; encounterCleared = false; }
 
@@ -277,6 +272,17 @@ namespace MiningSimulator.Ores
             {
                 Debug.LogWarning("Invalid saved day/night clock: " + exception.Message, this);
             }
+        }
+
+        private void TickCycle(float seconds)
+        {
+            periodElapsed+=Mathf.Max(0,seconds);
+            while(periodElapsed>=GetPeriodDuration(currentPeriod)){
+                float remaining=periodElapsed-GetPeriodDuration(currentPeriod);
+                SetPeriod(currentPeriod==MiningTimePeriod.Day?MiningTimePeriod.Night:MiningTimePeriod.Day);
+                periodElapsed=remaining;
+            }
+            clearedPeriodElapsed=0;encounterCleared=false;
         }
 
         private float GetPeriodDuration(MiningTimePeriod period)

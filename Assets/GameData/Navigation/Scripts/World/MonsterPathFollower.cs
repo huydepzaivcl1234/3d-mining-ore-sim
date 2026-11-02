@@ -18,6 +18,7 @@ namespace MiningSimulator.Ores
         private int waypoint, generation, candidateIndex, revision = -1, side;
         private bool pending, initialized;
         private bool crowdBlocked, probeSaturated;
+        private readonly int actorLayers;
         private Transform victim;
         private MonsterCombatSettings settings;
         private static readonly Unity.Profiling.ProfilerMarker SteeringMarker=new("Mining.MonsterSteering");
@@ -30,7 +31,7 @@ namespace MiningSimulator.Ores
         private static Vector3 Flat(Vector3 v) => Vector3.ProjectOnPlane(v, Vector3.up);
 
         public MonsterPathFollower(MushroomMonster owner, CharacterController motor)
-        { this.owner = owner; this.motor = motor; side = (owner.GetHashCode() & 1) == 0 ? 1 : -1; }
+        { this.owner = owner; this.motor = motor; actorLayers=LayerMask.GetMask("Enemy"); side = (owner.GetHashCode() & 1) == 0 ? 1 : -1; }
 
         public static NavigationProfile ProfileFor(CharacterController controller)
         {
@@ -73,7 +74,9 @@ namespace MiningSimulator.Ores
             if (grid == null || !grid.isActiveAndEnabled || !grid.HasBaked)
             { State = "Waiting for A* grid"; return Steering = Vector3.zero; }
             var performance=GameplayPerformanceData.Current;
-            nextSteering=clock+(performance?Mathf.Max(0,performance.monsterSteeringInterval):0);
+            float interval=performance?performance.SteeringInterval(owner.IsBoss?0:Flat(goal-owner.transform.position).magnitude):0;
+            // Spread spatial probes across frames instead of synchronizing the whole spawn batch.
+            nextSteering=clock+interval*(initialized?1:1+(owner.GetHashCode()&1023)/1024f);
             lastSteeringGoal=goal;steeringRevision=grid.Revision;
             profile = ProfileFor(motor);
             Vector3 foot = profile.Foot(owner.transform.position);
@@ -121,12 +124,19 @@ namespace MiningSimulator.Ores
             return Steering = steered * speedFactor;
         }
 
+        public bool CanReuseMovement(Vector3 goal,float minimumCornerDistance)
+        {
+            if(!grid||!grid.isActiveAndEnabled||!grid.HasBaked||revision!=grid.Revision||waypoint>=route.Count||Steering.sqrMagnitude<.001f)return false;
+            return Flat(goal-lastSteeringGoal).sqrMagnitude<settings.targetRepathDistance*settings.targetRepathDistance&&
+                Flat(route[waypoint]-profile.Foot(owner.transform.position)).sqrMagnitude>minimumCornerDistance*minimumCornerDistance;
+        }
         private void CancelPending()
         { generation++; grid?.Cancel(owner); pending = false; }
 
         private void BeginRequest(Vector3 foot, Vector3 goal, float reach)
         {
             requestedGoal = goal; candidates.Clear(); candidateIndex = 0;
+            nextRequest = clock + Mathf.Max(.05f, settings.chaseRepathSeconds);
             if (victim == null)
             {
                 if (grid.TryProject(goal, grid.StandProjectionRadius, out var projected, profile.Radius, profile.Height))
@@ -149,7 +159,15 @@ namespace MiningSimulator.Ores
                     float maximumStandDistance = Mathf.Min(reach * settings.chaseStandMaximumRangeFraction,
                         reach - Mathf.Max(.05f, settings.waypointTolerance));
                     if (Flat(projected - goal).magnitude > maximumStandDistance) continue;
-                    if (ApproachVisible(projected, goal)) candidates.Add(projected);
+                    if (!ApproachVisible(projected, goal)) continue;
+                    // Open ground needs one approach, not sixteen projections and a queued A* search.
+                    if (grid.IsShortcutClear(foot, projected, profile.Radius, profile.Height))
+                    {
+                        route.Clear(); route.Add(projected); waypoint=0; routeOrigin=foot;
+                        revision=grid.Revision; blockedSince=clock; State="Following direct route";
+                        return;
+                    }
+                    candidates.Add(projected);
                 }
             }
             nextRequest = clock + Mathf.Max(.05f, settings.chaseRepathSeconds);
@@ -240,7 +258,7 @@ namespace MiningSimulator.Ores
             Vector3 bottom = foot + Vector3.up * (profile.Radius + clearance);
             Vector3 top = foot + Vector3.up * Mathf.Max(profile.Radius + clearance, profile.Height - profile.Radius);
             int count = Physics.CapsuleCastNonAlloc(bottom, top, profile.Radius, direction, hits,
-                distance, settings.navigationObstacleLayers, QueryTriggerInteraction.Ignore);
+                distance, settings.navigationObstacleLayers.value & ~actorLayers, QueryTriggerInteraction.Ignore);
             float nearest = float.PositiveInfinity;
             probeSaturated = count == hits.Length;
             if (probeSaturated) return false;
@@ -272,10 +290,10 @@ namespace MiningSimulator.Ores
             Vector3 origin = stand + Vector3.up * (profile.Height * .5f);
             Vector3 delta = goal + Vector3.up * .5f - origin;
             int count = Physics.RaycastNonAlloc(origin, delta.normalized, hits, delta.magnitude,
-                settings.navigationObstacleLayers, QueryTriggerInteraction.Ignore);
+                settings.navigationObstacleLayers.value & ~actorLayers, QueryTriggerInteraction.Ignore);
             var obstructions = count == hits.Length
                 ? Physics.RaycastAll(origin, delta.normalized, delta.magnitude,
-                    settings.navigationObstacleLayers, QueryTriggerInteraction.Ignore) : hits;
+                    settings.navigationObstacleLayers.value & ~actorLayers, QueryTriggerInteraction.Ignore) : hits;
             if (obstructions != hits) count = obstructions.Length;
             for (int i = 0; i < count; i++)
             {

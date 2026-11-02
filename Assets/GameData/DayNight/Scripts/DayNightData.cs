@@ -14,11 +14,11 @@ namespace MiningSimulator.Ores
     {
         [Header("Cycle")]
         [SerializeField] private bool cycleEnabled = true;
-        [Tooltip("Wait this many gameplay seconds after all monsters and pending spawns are cleared before switching day/night.")]
+        [HideInInspector] // Legacy field: the cycle now advances on time alone.
         [Min(0f), SerializeField] private float clearedPeriodDelaySeconds = 3f;
         [SerializeField] private MiningTimePeriod startingPeriod = MiningTimePeriod.Day;
-        [Min(1f), SerializeField] private float dayDurationSeconds = 120f;
-        [Min(1f), SerializeField] private float nightDurationSeconds = 90f;
+        [Min(1f), SerializeField] private float dayDurationSeconds = 30f;
+        [Min(1f), SerializeField] private float nightDurationSeconds = 30f;
         [Min(0f), SerializeField] private float transitionDurationSeconds = 8f;
         [SerializeField]
         private AnimationCurve transitionCurve =

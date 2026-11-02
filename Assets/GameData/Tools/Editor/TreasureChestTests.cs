@@ -12,14 +12,14 @@ public sealed class TreasureChestTests
         var other = new GameObject("Other source");
         try
         {
-            var health = root.AddComponent<MiningCharacterHealth>();
-            typeof(MiningCharacterHealth).GetMethod("Awake", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(health, null);
+            var health = root.AddComponent<CharacterHealth>();
+            typeof(CharacterHealth).GetMethod("Awake", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(health, null);
             health.ConfigureSpawnHealth(100);
             health.DealDamage(1, CombatDamageType.True, player);
             Assert.That(health.LastDamageSource, Is.EqualTo(player));
             health.ApplyBurn(100, .1f, 1, player);
             health.ApplyBurn(1, .1f, 1, other);
-            typeof(MiningCharacterHealth).GetMethod("ApplyBurnDamage", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(health, new object[]{100f});
+            typeof(CharacterHealth).GetMethod("ApplyBurnDamage", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(health, new object[]{100f});
             Assert.That(health.Health, Is.Zero);
             Assert.That(health.LastDamageSource, Is.EqualTo(player));
             health.Respawn();
@@ -189,9 +189,9 @@ public sealed class TreasureChestTests
     [TestCase(2, 2)]
     [TestCase(49, 49)]
     [TestCase(50, 50)]
-    [TestCase(51, 50)]
-    [TestCase(int.MaxValue, 50)]
-    public void DailyBudgetIsDayNumberCappedAtFifty(int day, int expected)
+    [TestCase(51, 51)]
+    [TestCase(int.MaxValue, int.MaxValue)]
+    public void DailyBudgetDefaultGrowsBeyondFifty(int day, int expected)
     {
         var root = new GameObject("Isolated daily budget"); root.SetActive(false);
         try
@@ -265,7 +265,7 @@ public sealed class TreasureChestTests
         {
             var wallet=root.AddComponent<PlayerWallet>();
             var chest=root.AddComponent<TreasureChest>();
-            var health=root.GetComponent<MiningCharacterHealth>();
+            var health=root.GetComponent<CharacterHealth>();
             var flags=BindingFlags.NonPublic|BindingFlags.Instance;
             typeof(TreasureChest).GetField("persistProgress",flags).SetValue(chest,false);
             typeof(TreasureChest).GetField("data",flags).SetValue(chest,d);

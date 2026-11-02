@@ -8,10 +8,12 @@ namespace MiningSimulator.Ores
     [CreateAssetMenu(menuName = "Mining Simulator/Card Drops")]
     public sealed class MiningCardData : ScriptableObject
     {
+        public GameData.Player.Script.SurvivorUpgradeData survivorUpgrades;
         [Serializable]
         public sealed class Tier
         {
             public string name;
+
             public GameObject prefab;
             public Color color = Color.red;
             [Min(0f)] public float weight = 1f;
@@ -41,6 +43,9 @@ namespace MiningSimulator.Ores
             new() {name="Uncommon",color=Color.green,weight=25,damage=3,attackSpeed=6,health=15},
             new() {name="Rare",color=Color.yellow,weight=5,damage=6,attackSpeed=12,health=30}
         };
+        [Header("Blue ability card") ]
+        public Tier abilityCard=new(){name="Ability",color=new Color(.1f,.5f,1f)};
+        [Range(0,100),Tooltip("Among successful card drops. Does not change the overall monster/boss drop chance.")] public float abilityCardPercent=20;
         [Header("World drop")]
         [Min(0)] public float spawnHeight = 1f;
         [Min(0)] public float upwardImpulse = 3f;
@@ -59,6 +64,11 @@ namespace MiningSimulator.Ores
         [Min(0)] public float hoverLiftDuration = .35f;
         [Range(0,1)] public float groundNormalMinimum = .6f;
         public LayerMask landingLayers = ~0;
+        [Header("Sparkling upgrade button — Anime Star VFX")]
+        public GameObject sparkleVfx;
+        public Material sparkleComposite;
+        [Min(16)] public float sparkleSize=100;
+        public float sparkleInset=28;
         [Header("Choice panel")]
         public Vector2 panelSize = new(900,420);
         public Color panelColor = new(.035f,.045f,.07f,.98f);

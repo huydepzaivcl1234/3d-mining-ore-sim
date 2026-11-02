@@ -12,6 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f63bd3c82ebde9c41beb794f32d40403, type: 3}
   m_Name: BatRewards
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.BatData
+  minimumPlayerLevelToSpawn: 7
+  minimumSpawnDay: 15
   combat:
     maxHealth: 25
     regenAmount: 0
@@ -31,6 +33,8 @@ MonoBehaviour:
     attackRange: 1.3
     attackArc: 60
     damage: 0.5
+    knockbackSpeed: 0
+    knockbackLift: 0
     attackCooldown: 0.75
     hitMoment: 0.48
     hitShape: 0
@@ -47,6 +51,7 @@ MonoBehaviour:
     chaseStandMaximumRangeFraction: 0.95
     targetScanSeconds: 0.25
     targetMemorySeconds: 2
+    retaliationForgetSeconds: 3
     detectionHysteresis: 1
     targetRepathDistance: 0.75
     waypointTolerance: 0.2

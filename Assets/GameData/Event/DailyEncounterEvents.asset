@@ -12,8 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b3e98f1fa791a7845aa529c0bfcec0aa, type: 3}
   m_Name: DailyEncounterEvents
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.DailyEncounterEventData
+  dailyMonsterCount: 1
+  extraMonstersPerDay: 1
+  dailyMonsterLimit: 0
+  maximumLivingMonsters: 1000
   enabled: 1
-  nightOnlyChancePercent: 4
+  nightOnlyChancePercent: 0
   bossInvasionChancePercent: 1
   bossExtraSizePercent: 50
   bossExtraDamagePercent: 30

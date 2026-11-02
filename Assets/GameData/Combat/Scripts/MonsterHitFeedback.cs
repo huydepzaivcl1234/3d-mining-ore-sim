@@ -4,10 +4,10 @@ using UnityEngine;
 namespace MiningSimulator.Ores
 {
     /// <summary>Visual-only pulse: never scales the movement motor or interrupts an attack.</summary>
-    [DisallowMultipleComponent, RequireComponent(typeof(MiningCharacterHealth))]
+    [DisallowMultipleComponent, RequireComponent(typeof(CharacterHealth))]
     public sealed class MonsterHitFeedback : MonoBehaviour
     {
-        private MiningCharacterHealth health;
+        private CharacterHealth health;
         private Transform visual;
         private Vector3 baseScale;
         private sealed class Slot
@@ -26,7 +26,7 @@ namespace MiningSimulator.Ores
         private static readonly int EmissionMap = Shader.PropertyToID("_EmissionMap");
         private float elapsed;
         private bool pulsing, initialized;
-        private void Awake() { health = GetComponent<MiningCharacterHealth>(); block = new MaterialPropertyBlock(); }
+        private void Awake() { health = GetComponent<CharacterHealth>(); block = new MaterialPropertyBlock(); }
         private void OnEnable() => health.Damaged += Pulse;
         private void OnDisable() { health.Damaged -= Pulse; Restore(); }
         private void Pulse()

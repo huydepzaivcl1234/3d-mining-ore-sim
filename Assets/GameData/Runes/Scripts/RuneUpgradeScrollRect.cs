@@ -9,7 +9,7 @@ namespace MiningSimulator.Ores
         private RuneUpgradeData settings;
         private RectTransform[] cards;
         private CanvasGroup[] groups;
-        private MiningUpgradeCardHover[] hover;
+        private UpgradeCardHover[] hover;
         private UnityEngine.UI.Scrollbar bar;
         private int first;
         public int FirstVisibleIndex => first;
@@ -19,7 +19,7 @@ namespace MiningSimulator.Ores
             settings = data;
             cards = new RectTransform[rows.Length];
             groups = new CanvasGroup[rows.Length];
-            hover = new MiningUpgradeCardHover[rows.Length];
+            hover = new UpgradeCardHover[rows.Length];
             float height = data.barSize.y * data.visibleRows + data.panelSpacing * (data.visibleRows - 1);
             viewport = Rect("Viewport", transform, new Vector2(data.barSize.x + 16, height), new Vector2(-12,0));
             var background = viewport.gameObject.AddComponent<UnityEngine.UI.Image>();
@@ -37,8 +37,8 @@ namespace MiningSimulator.Ores
                 cards[i].anchoredPosition = new Vector2(0,-i * (data.barSize.y + data.panelSpacing));
                 groups[i] = rows[i].GetComponent<CanvasGroup>();
                 if (groups[i] == null) groups[i] = rows[i].gameObject.AddComponent<CanvasGroup>();
-                hover[i] = rows[i].GetComponent<MiningUpgradeCardHover>();
-                if (hover[i] == null) hover[i] = rows[i].gameObject.AddComponent<MiningUpgradeCardHover>();
+                hover[i] = rows[i].GetComponent<UpgradeCardHover>();
+                if (hover[i] == null) hover[i] = rows[i].gameObject.AddComponent<UpgradeCardHover>();
             }
             var track = Rect("Scrollbar",transform,new Vector2(18,height),new Vector2(data.barSize.x*.5f+18,0));
             var trackImage = track.gameObject.AddComponent<UnityEngine.UI.Image>();

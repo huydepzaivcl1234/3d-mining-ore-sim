@@ -12,6 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3e0f084b95aa0074c9ce8052e3b4e34a, type: 3}
   m_Name: SkullclawData
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.SkullclawData
+  minimumPlayerLevelToSpawn: 1
+  minimumSpawnDay: 10
   combat:
     maxHealth: 80
     regenAmount: 0
@@ -75,7 +77,7 @@ MonoBehaviour:
   boss:
     enabled: 1
     chancePercent: 5
-    minimumPlayerLevel: 35
+    minimumPlayerLevel: 20
     sizeIncreasePercent: 35
     healthMultiplier: 3
     damageMultiplier: 1.5

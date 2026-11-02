@@ -1,0 +1,26 @@
+{
+  "gun_second_difference_rms_before_m": 0.010586805627833104,
+  "gun_second_difference_rms_after_m": 0.004772903955607589,
+  "acceleration_reduction_percent": 54.91648639454145,
+  "finger_basis_max_error": 2.384185791015625e-07,
+  "straight_insert_sideways_error": 1.1434053099940705e-07,
+  "hand_target_max_error_m": 0.0005093879060965597,
+  "shoot_slide_travel_local": null,
+  "fail": 0,
+  "reload": [
+    1,
+    145
+  ],
+  "shoot": [
+    181,
+    221
+  ],
+  "run_blender": "NOT RUN - live Blender MCP",
+  "mesh_validator": "NOT RUN - existing topology unchanged",
+  "warnings": [
+    "Inherited rig scale retained",
+    "Unity not updated by this script"
+  ],
+  "shoot_slide_travel_m": 0.03200000941781449,
+  "shoot_gun_recoil_m": 0.09674360894955385
+}

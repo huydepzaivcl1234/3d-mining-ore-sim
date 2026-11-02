@@ -18,7 +18,7 @@ namespace MiningSimulator.Editor
         private string output = "Press Refresh Status to inspect the repository.";
         private bool isRunning;
 
-        [MenuItem("Mining Simulator/Git/Repository Tool")]
+        [MenuItem("Survivor/Git/Repository Tool")]
         public static void Open()
         {
             GetWindow<MiningGitWindow>("Mining Git");

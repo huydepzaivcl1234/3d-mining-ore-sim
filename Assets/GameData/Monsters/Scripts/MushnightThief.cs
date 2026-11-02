@@ -25,7 +25,7 @@ namespace MiningSimulator.Ores
         private MushnightStamina stamina;
         private MonsterCombatSettings movement;
         private MonsterPathFollower path;
-        private MiningCharacterHealth player;
+        private CharacterHealth player;
         private Collider playerBody;
         private TreasureChest chest;
         private Collider chestBody;
@@ -35,7 +35,7 @@ namespace MiningSimulator.Ores
         private int animationHash;
         private bool initialized, theftCompleted;
 
-        public void Initialize(MushroomMonster monster, MiningCharacterHealth playerTarget)
+        public void Initialize(MushroomMonster monster, CharacterHealth playerTarget)
         {
             owner = monster;
             config = (owner.SpeciesData as MushnightData)?.mushnight;
@@ -120,7 +120,7 @@ namespace MiningSimulator.Ores
                 { ChooseFleeGoal(playerDistance); fleeClock = Mathf.Max(.05f, config.fleeRepathSeconds); }
                 movement.moveSpeed = Mathf.Max(0f, config.escapeSpeed);
                 if (!IsResting) velocity = path.Tick(fleeGoal, null, 0f, movement, dt) * movement.moveSpeed;
-                if (State == ThiefState.Escaping && escapeClock >= config.minimumEscapeSeconds &&
+                if (!owner.IsBoss && State == ThiefState.Escaping && escapeClock >= config.minimumEscapeSeconds &&
                     (chest == null || Flat(transform.position - ChestCenter).magnitude >= config.escapeDistanceFromChest) &&
                     playerDistance >= config.safeFromPlayerRange)
                 {

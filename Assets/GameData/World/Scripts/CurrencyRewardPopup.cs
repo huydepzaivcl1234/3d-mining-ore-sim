@@ -13,7 +13,7 @@ namespace MiningSimulator.Ores
         [Tooltip("Optional reward icon shown beside the amount. Assign the default coin Sprite in the prefab.")]
         [SerializeField] private SpriteRenderer coinIcon;
 
-        private MiningUiData uiData;
+        private GameUiData uiData;
         private Camera targetCamera;
         private Vector3 startPosition;
         private Vector3 restingScale;
@@ -21,7 +21,7 @@ namespace MiningSimulator.Ores
         private Color iconStartColor;
         private Sequence animationSequence;
 
-        public void Initialize(float amount, Vector3 worldPosition, MiningUiData targetUiData,
+        public void Initialize(float amount, Vector3 worldPosition, GameUiData targetUiData,
             Sprite rewardIconOverride = null)
         {
             uiData = targetUiData;

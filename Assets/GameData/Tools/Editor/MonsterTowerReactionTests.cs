@@ -21,7 +21,7 @@ public class MonsterTowerReactionTests
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/GameData/Monsters/Skullclaw/Skullclaw.prefab");
             var actor = Object.Instantiate(prefab, root.transform);
             var monster = actor.GetComponent<MushroomMonster>();
-            var health = actor.GetComponent<MiningCharacterHealth>();
+            var health = actor.GetComponent<CharacterHealth>();
             var type = typeof(MushroomMonster);
             type.GetField("health", Flags).SetValue(monster, health);
             type.GetField("animator", Flags).SetValue(monster, actor.GetComponentInChildren<Animator>());

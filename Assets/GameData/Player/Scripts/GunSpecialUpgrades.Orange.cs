@@ -5,9 +5,9 @@ namespace GameData.Player.Script
 {
     public sealed partial class GunSpecialUpgrades
     {
-        private readonly Dictionary<MiningCharacterHealth,float> etherealCooldowns=new();
-        private readonly Dictionary<MiningCharacterHealth,float> etherealWindows=new();
-        private readonly List<MiningCharacterHealth> expiredEthereal=new();
+        private readonly Dictionary<CharacterHealth,float> etherealCooldowns=new();
+        private readonly Dictionary<CharacterHealth,float> etherealWindows=new();
+        private readonly List<CharacterHealth> expiredEthereal=new();
         private readonly List<CannonRound> cannonRounds=new();
         private float reprieveRemaining,reprieveReady,reprieveHealingRate,nextEtherealPrune;
         private Material cannonMaterial;
@@ -24,7 +24,7 @@ namespace GameData.Player.Script
             reprieveHealingRate=Mathf.Max(0,max*s.recoveryHealthFraction-Mathf.Min(1,max))/reprieveRemaining;
             return true;
         }
-        private bool TryEthereal(MiningCharacterHealth victim)
+        private bool TryEthereal(CharacterHealth victim)
         {
             if(!data.orange||!data.orange.etherealWeapon)return false;
             if(!etherealWindows.TryGetValue(victim,out float end)||Time.time>=end)return false;
@@ -32,14 +32,14 @@ namespace GameData.Player.Script
             etherealCooldowns[victim]=Time.time+Mathf.Max(.01f,data.orange.etherealWeapon.perTargetCooldown);
             return true;
         }
-        private void OpenEthereal(MiningCharacterHealth victim)
+        private void OpenEthereal(CharacterHealth victim)
         {
             var s=data.orange?data.orange.etherealWeapon:null;
             if(!progress.etherealWeapon||!s||!victim.IsMonster||victim.Health<=0)return;
             if(etherealWindows.TryGetValue(victim,out float end)&&Time.time<end+Mathf.Max(0,s.reactivationCooldown))return;
             etherealWindows[victim]=Time.time+Mathf.Max(.01f,s.activeSeconds);
         }
-        private void TryCannon(MiningCharacterHealth victim,float damage)
+        private void TryCannon(CharacterHealth victim,float damage)
         {
             var s=data.orange?data.orange.cannon:null;
             if(!s||s.chancePercent<=0||s.chancePercent<100&&Random.value*100>=s.chancePercent)return;

@@ -1,0 +1,47 @@
+[
+  {
+    "name": "ForestGolem",
+    "visiblePixels": 10566,
+    "visible": true,
+    "panelActive": true,
+    "AnnouncementsShown": 1,
+    "PreviewAngle": 96.45951,
+    "duplicateNotQueued": true
+  },
+  {
+    "name": "MushroomMonster",
+    "visiblePixels": 24707,
+    "visible": true,
+    "panelActive": true,
+    "AnnouncementsShown": 2,
+    "PreviewAngle": 95.02748,
+    "duplicateNotQueued": true
+  },
+  {
+    "name": "GolemMonster",
+    "visiblePixels": 9628,
+    "visible": true,
+    "panelActive": true,
+    "AnnouncementsShown": 3,
+    "PreviewAngle": 93.96284,
+    "duplicateNotQueued": true
+  },
+  {
+    "name": "BatMonster",
+    "visiblePixels": 16279,
+    "visible": true,
+    "panelActive": true,
+    "AnnouncementsShown": 4,
+    "PreviewAngle": 93.19806,
+    "duplicateNotQueued": true
+  },
+  {
+    "name": "MushranonMonster",
+    "visiblePixels": 17389,
+    "visible": true,
+    "panelActive": true,
+    "AnnouncementsShown": 5,
+    "PreviewAngle": 93.82468,
+    "duplicateNotQueued": true
+  }
+]

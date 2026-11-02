@@ -15,9 +15,9 @@ MonoBehaviour:
   cycleEnabled: 1
   clearedPeriodDelaySeconds: 3
   startingPeriod: 0
-  dayDurationSeconds: 70
-  nightDurationSeconds: 40
-  transitionDurationSeconds: 8
+  dayDurationSeconds: 30
+  nightDurationSeconds: 30
+  transitionDurationSeconds: 3
   transitionCurve:
     serializedVersion: 2
     m_Curve:

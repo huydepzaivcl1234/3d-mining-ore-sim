@@ -12,6 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 36973a08ba8edcc4bbb66de1a1b0eb2e, type: 3}
   m_Name: GolemRewards
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.GolemData
+  minimumPlayerLevelToSpawn: 5
+  minimumSpawnDay: 10
   combat:
     maxHealth: 80
     regenAmount: 0
@@ -49,6 +51,7 @@ MonoBehaviour:
     chaseStandMaximumRangeFraction: 0.95
     targetScanSeconds: 0.25
     targetMemorySeconds: 2
+    retaliationForgetSeconds: 3
     detectionHysteresis: 1
     targetRepathDistance: 0.75
     waypointTolerance: 0.2

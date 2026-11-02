@@ -9,9 +9,8 @@ namespace MiningSimulator.Ores
         public static bool IsSupport(Collider collider)
         {
             return collider != null && !collider.isTrigger &&
-                collider.GetComponentInParent<MiningCharacterHealth>() == null &&
+                collider.GetComponentInParent<CharacterHealth>() == null &&
                 collider.GetComponentInParent<CharacterController>() == null &&
-                collider.GetComponentInParent<LuckyBlock>() == null &&
                 (collider.attachedRigidbody == null || collider.attachedRigidbody.isKinematic);
         }
         public static bool RayGround(Ray ray, float distance, out RaycastHit hit)

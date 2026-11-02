@@ -2,7 +2,7 @@ using UnityEngine;
 using MiningGame.Vfx;
 namespace MiningSimulator.Ores
 {
-    [RequireComponent(typeof(MiningCharacterHealth))]
+    [RequireComponent(typeof(CharacterHealth))]
     [DisallowMultipleComponent]
     public sealed class TreasureChest : MonoBehaviour
     {
@@ -16,7 +16,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private Collider body;
         [SerializeField] private string saveKey = "BaseTreasureChest.v1";
         [SerializeField] private bool persistProgress = true;
-        private MiningCharacterHealth health;
+        private CharacterHealth health;
         private Quaternion closed;
         private float payoutClock, visualClock;
         private int pendingTicks;
@@ -39,7 +39,7 @@ private bool opening;
         public int Level { get; private set; } = 1;
         public float Experience { get; private set; }
         public float ExperienceRequired => data.RequiredExperience(Level);
-        public MiningCharacterHealth Health => health;
+        public CharacterHealth Health => health;
         public TreasureChestData Data => data;
         public PlayerWallet Wallet => wallet;
         public float RepairCost => data != null ? Mathf.Max(0f, data.repairCost) : 0f;
@@ -53,7 +53,7 @@ private bool opening;
         public float LastAttackTime { get; private set; } = float.NegativeInfinity;
         private void Awake()
         {
-            health = GetComponent<MiningCharacterHealth>();
+            health = GetComponent<CharacterHealth>();
             health.ConfigureRegeneration(0f,1f);
             if (body == null) body = GetComponent<Collider>();
             if (lid != null) closed = lid.localRotation;
@@ -395,7 +395,7 @@ public void ResetProgress()
             payoutClock = visualClock = 0f;
             pendingTicks = 0;
             opening = rewarded = false;
-            if (health == null) health = GetComponent<MiningCharacterHealth>();
+            if (health == null) health = GetComponent<CharacterHealth>();
             if (data != null)
             {
                 health.ConfigureSpawnHealth(data.MaxHealth(1));

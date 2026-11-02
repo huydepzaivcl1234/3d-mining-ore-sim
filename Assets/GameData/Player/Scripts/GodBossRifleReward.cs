@@ -4,16 +4,16 @@ using UnityEngine;
 namespace GameData.Player.Script
 {
     /// <summary>Add only to the future God Boss, not to ordinary boss variants. No model/attacks/spawn policy.</summary>
-    [DisallowMultipleComponent, RequireComponent(typeof(MiningCharacterHealth))]
+    [DisallowMultipleComponent, RequireComponent(typeof(CharacterHealth))]
     public sealed class GodBossRifleReward : MonoBehaviour
     {
         [SerializeField] private DayNightSystem clock;
-        private MiningCharacterHealth health;
+        private CharacterHealth health;
         public int EncounterDay { get; private set; }
         public bool DefeatedByPlayer => health && health.Health <= 0f && MonsterKillCredit.IsPlayerOwned(health.LastDamageSource);
         private void OnEnable()
         {
-            health = GetComponent<MiningCharacterHealth>();
+            health = GetComponent<CharacterHealth>();
             if (!clock) clock = FindAnyObjectByType<DayNightSystem>();
             EncounterDay = clock ? clock.DayNumber : 0;
             health.Died += OnDeath;

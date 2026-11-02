@@ -10,17 +10,17 @@ namespace MiningSimulator.EditorTools
     /// <summary>Renders prefab geometry only; never instantiates gameplay in the user's scene.</summary>
     public static class TransparentPrefabIcon
     {
-        [MenuItem("Assets/Mining Simulator/Export Transparent Icon", true)]
+        [MenuItem("Assets/Survivor/Export Transparent Icon", true)]
         private static bool CanExport() => Selection.activeObject is GameObject &&
             AssetDatabase.GetAssetPath(Selection.activeObject).EndsWith(".prefab") && !EditorApplication.isPlaying;
 
-        [MenuItem("Assets/Mining Simulator/Export Transparent Icon")]
+        [MenuItem("Assets/Survivor/Export Transparent Icon")]
         private static void ExportSelected() => ExportSelected(1.3f);
 
-        [MenuItem("Assets/Mining Simulator/Export Transparent Icon (Bright)", true)]
+        [MenuItem("Assets/Survivor/Export Transparent Icon (Bright)", true)]
         private static bool CanExportBright() => CanExport();
 
-        [MenuItem("Assets/Mining Simulator/Export Transparent Icon (Bright)")]
+        [MenuItem("Assets/Survivor/Export Transparent Icon (Bright)")]
         private static void ExportBright() => ExportSelected(5f);
 
         private static void ExportSelected(float lighting)

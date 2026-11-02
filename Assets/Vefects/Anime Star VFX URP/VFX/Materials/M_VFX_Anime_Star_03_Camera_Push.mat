@@ -1,0 +1,87 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: M_VFX_Anime_Star_03_Camera_Push
+  m_Shader: {fileID: 4800000, guid: 94211c2260e71384e82c132c09545f07, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords:
+  - _ELLIPSEGRADIENT_ON
+  - _ISADDITIVE_ON
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 1
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _CutoutTexture:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MainTexture:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MainTexture1:
+        m_Texture: {fileID: 2800000, guid: ad3d33bcd25b0b6409e4f8c40928b06d, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_Lightmaps:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_LightmapsInd:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_ShadowMasks:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _CameraPush: 0.2
+    - _Cull1: 2
+    - _CutoutErosion: 0
+    - _CutoutErosionSmoothness: 0.1
+    - _DepthFade: 0.01
+    - _Desaturate: 0
+    - _Dst1: 1
+    - _EllipseCurvature: -0.777
+    - _EllipseGradient: 1
+    - _EllipseInvert: 0
+    - _EllipseRotation: 0
+    - _EllipseRotationSpeed: 0
+    - _EllipseScale: 1
+    - _EmissiveMult: 1
+    - _ErosionSmoothness: 0.001
+    - _HueShift: 0
+    - _HueShiftSpeed: 0
+    - _IsAdditive: 1
+    - _QueueControl: 0
+    - _QueueOffset: 0
+    - _RealColor: 1
+    - _ReceiveShadows: 1
+    - _Src1: 1
+    - _UVDLerp: 0
+    - _UseHueShift: 0
+    - _ZTest1: 2
+    - _ZWrite1: 0
+    m_Colors:
+    - _EllipseSize: {r: 1, g: 1, b: 0, a: 0}
+    - _UVDPan: {r: 0, g: 0, b: 0, a: 0}
+    - _UVDScale: {r: 1, g: 1, b: 0, a: 0}
+    - _UVPan: {r: 0, g: 0, b: 0, a: 0}
+    - _UVScale: {r: 1, g: 1, b: 0, a: 0}
+  m_BuildTextureStacks: []

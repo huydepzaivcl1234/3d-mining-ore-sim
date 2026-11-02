@@ -1,0 +1,10 @@
+{
+  "reach_error_m": 3.688648819212326e-07,
+  "two_hand_relative_position_error_m": 5.540171774822802e-07,
+  "authored_base_pose": "UserShoot_LiveEdits_Backup.blend",
+  "back_m": 0.025,
+  "pitch_deg": 3.2,
+  "peak_seconds": 0.035,
+  "source_action": "RELOAD_SMOOTH_AND_SHOOT_EDIT",
+  "fail": 0
+}

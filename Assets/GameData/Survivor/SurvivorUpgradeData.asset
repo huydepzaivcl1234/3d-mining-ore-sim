@@ -1,0 +1,586 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 161303915ee854940bbbeb752b592d52, type: 3}
+  m_Name: SurvivorUpgradeData
+  m_EditorClassIdentifier: Assembly-CSharp::GameData.Player.Script.SurvivorUpgradeData
+  abilityData: {fileID: 11400000, guid: 13917a56e1f8fa64c95ad82cd6ecd04e, type: 2}
+  commonWeight: 80
+  uncommonWeight: 17
+  rareWeight: 3
+  commonColor: {r: 0.65, g: 0.7, b: 0.66, a: 1}
+  uncommonColor: {r: 0.45, g: 0.83, b: 0.69, a: 1}
+  rareColor: {r: 0.36, g: 0.65, b: 1, a: 1}
+  definitions:
+  - id: 0
+    title: Attack Damage
+    description: Increase attack damage
+    amount: 1
+    unit: ' damage'
+    icon: {fileID: 21300000, guid: 06f4a0d2b5594f1892a1afb71aba5062, type: 3}
+  - id: 1
+    title: Attack Speed
+    description: Increase attacks per second
+    amount: 5
+    unit: '%'
+    icon: {fileID: 21300000, guid: a5f5fcd96d8b4862895011c8277e0065, type: 3}
+  - id: 2
+    title: Quick Reload
+    description: Reduce automatic reload time
+    amount: 10
+    unit: '%'
+    icon: {fileID: 21300000, guid: a5f5fcd96d8b4862895011c8277e0065, type: 3}
+  - id: 3
+    title: Attack Range
+    description: Increase automatic targeting range
+    amount: 5
+    unit: '%'
+    icon: {fileID: 21300000, guid: 1cb168e5987b4e668b0b477497cac81f, type: 3}
+  - id: 4
+    title: Projectile Speed
+    description: Increase homing projectile speed
+    amount: 5
+    unit: '%'
+    icon: {fileID: 21300000, guid: a5f5fcd96d8b4862895011c8277e0065, type: 3}
+  - id: 5
+    title: Armor
+    description: Gain physical armor
+    amount: 5
+    unit: '%'
+    icon: {fileID: 21300000, guid: 525cce04295c4163bd0c90e8496d2a9e, type: 3}
+  - id: 6
+    title: Magic Resistance
+    description: Gain magic resistance
+    amount: 5
+    unit: '%'
+    icon: {fileID: 21300000, guid: bea5366b6b084684a121f7c20699f11f, type: 3}
+  - id: 7
+    title: Movement Speed
+    description: Increase walking and running speed
+    amount: 3
+    unit: '%'
+    icon: {fileID: 21300000, guid: 27a040bdefe147a8b9d148f766405abd, type: 3}
+  - id: 8
+    title: Magazine
+    description: Gain attacks before reloading
+    amount: 1
+    unit: 
+    icon: {fileID: 21300000, guid: a5f5fcd96d8b4862895011c8277e0065, type: 3}
+  - id: 9
+    title: Life Steal
+    description: Heal for a percentage of attack damage dealt
+    amount: 5
+    unit: '%'
+    icon: {fileID: 21300000, guid: 15593fcaa5d4412182a183e226758152, type: 3}
+  - id: 10
+    title: Regeneration
+    description: Increase base health restored per regeneration tick
+    amount: 5
+    unit: '%'
+    icon: {fileID: 21300000, guid: 77a8b0a282464bdebd402329dfc4aef2, type: 3}
+  - id: 11
+    title: Vitality
+    description: Increase maximum health
+    amount: 5
+    unit: '%'
+    icon: {fileID: 21300000, guid: 15593fcaa5d4412182a183e226758152, type: 3}
+  - id: 12
+    title: Chain Shot
+    description: 'On hit, bounce once to another nearby enemy. Physical damage: 20%
+      base damage + (1 (+1 per upgrade)). Requires another enemy; no further bounces.'
+    amount: 1
+    unit: '%'
+    icon: {fileID: 21300000, guid: a5f5fcd96d8b4862895011c8277e0065, type: 3}
+  - id: 13
+    title: Momentum
+    description: For every 20 bonus movement speed, gain (1 (+10 per upgrade)) attack
+      damage. Only speed gained from upgrades, items and other bonuses counts.
+    amount: 1
+    unit: '%'
+    icon: {fileID: 21300000, guid: 27a040bdefe147a8b9d148f766405abd, type: 3}
+  - id: 14
+    title: Armored Strike
+    description: 'Attack hits deal extra physical damage: (5 (+1 per upgrade)) +
+      2% armor + 2% magic resistance.'
+    amount: 1
+    unit: '%'
+    icon: {fileID: 21300000, guid: 525cce04295c4163bd0c90e8496d2a9e, type: 3}
+  - id: 15
+    title: Life Spring
+    description: Every 5s, heal (1 (+5 per upgrade)) + 5% of your maximum health.
+    amount: 1
+    unit: '%'
+    icon: {fileID: 21300000, guid: 77a8b0a282464bdebd402329dfc4aef2, type: 3}
+  - id: 16
+    title: Power Surge
+    description: Gain (1 (+0.5 per upgrade)) attack damage, plus 20% of your bonus
+      attack damage. Base attack damage is not multiplied.
+    amount: 1
+    unit: '%'
+    icon: {fileID: 21300000, guid: 06f4a0d2b5594f1892a1afb71aba5062, type: 3}
+  - id: 17
+    title: Ignite
+    description: 'Dealing damage burns enemies for 3s. Every 1s: (0.25 (+0.25 per
+      upgrade)) + 2% enemy maximum health as magic damage.'
+    amount: 1
+    unit: '%'
+    icon: {fileID: 21300000, guid: bea5366b6b084684a121f7c20699f11f, type: 3}
+  - id: 18
+    title: Projectile Size
+    description: Increase projectile size and impact area
+    amount: 5
+    unit: '%'
+    icon: {fileID: 0}
+  - id: 19
+    title: Shield
+    description: 'Gain a shield on acquisition, upgrade or respawn: 15% maximum health
+      + (10 (+10 per upgrade)). When broken, fully restores after 15s; hits do not
+      reset this timer.'
+    amount: 1
+    unit: 
+    icon: {fileID: 0}
+  - id: 20
+    title: Airborne
+    description: 10 hits within 3s launch an enemy 4 m upward. Landing deals 1% enemy
+      maximum health + (5 (+5 per upgrade)) physical damage.
+    amount: 1
+    unit: 
+    icon: {fileID: 0}
+  - id: 21
+    title: Aura
+    description: An aura beneath you deals (1 (+1 per upgrade)) magic damage every
+      0.5s to enemies within (3 (+0.5 per upgrade)) m.
+    amount: 1
+    unit: 
+    icon: {fileID: 0}
+  - id: 22
+    title: Ricochet
+    description: On hit, bounce once to another enemy for 25% base damage + (2 (+2
+      per upgrade)) physical damage. Only one bounce; cannot loop.
+    amount: 1
+    unit: 
+    icon: {fileID: 0}
+  - id: 23
+    title: Invulnerability
+    description: 'Every (50 (-0.25 per upgrade))s, become invulnerable for 1s. Minimum
+      cooldown: 1s.'
+    amount: 1
+    unit: 
+    icon: {fileID: 0}
+  - id: 24
+    title: Quickening
+    description: Gain (15 (+1 per upgrade))% attack speed.
+    amount: 1
+    unit: 
+    icon: {fileID: 0}
+  - id: 25
+    title: Flat Power
+    description: Gain (1 (+2 per upgrade)) attack damage.
+    amount: 1
+    unit: 
+    icon: {fileID: 0}
+  - id: 26
+    title: Twin Magic
+    description: Fire two projectiles simultaneously at two different enemies in
+      attack range (both target the same enemy when only one is available). The second
+      deals 1 + 15% base damage as magic damage.
+    amount: 1
+    unit: 
+    icon: {fileID: 0}
+  - id: 27
+    title: Reactive Armor
+    description: Each distinct enemy that hits you grants 1 armor and 1 magic resistance.
+      After 2s without hits, lose one stack every 1s.
+    amount: 1
+    unit: 
+    icon: {fileID: 0}
+  - id: 28
+    title: Weaken
+    description: Damage reduces enemy damage dealt by (1 (+1 per upgrade)) for 3s.
+      Does not stack; hits while active do not reset its duration.
+    amount: 1
+    unit: 
+    icon: {fileID: 0}
+  - id: 29
+    title: Emergency Heal
+    description: 'At 30% HP or less, heal 50% maximum health over 3s. Cooldown: (70
+      (-0.3 per upgrade))s, minimum 1s.'
+    amount: 1
+    unit: 
+    icon: {fileID: 0}
+  - id: 30
+    title: Retaliate
+    description: Every 5 enemy hits, strike the nearest enemy within 6 m for 15%
+      armor + 15% magic resistance + (1 (+1 per upgrade)) physical damage.
+    amount: 1
+    unit: 
+    icon: {fileID: 0}
+  - id: 31
+    title: Boss Vitality
+    description: Every 5 boss kills, permanently gain (1 (+1 per upgrade)) maximum
+      health. Boss-kill progress is saved.
+    amount: 1
+    unit: 
+    icon: {fileID: 0}
+  - id: 32
+    title: Double Choice
+    description: Receive 2 stat-card choices. Each choice can offer sparkling stat
+      cards.
+    amount: 1
+    unit: 
+    icon: {fileID: 0}
+  - id: 33
+    title: Orb Barrage
+    description: Every 5 damage hits summon 5 homing orbs at random enemies within
+      7 m, each dealing 1 (+1 per upgrade) physical damage. With one enemy, all orbs
+      target it. Orb hits cannot trigger another barrage.
+    amount: 1
+    unit: 
+    icon: {fileID: 0}
+  - id: 34
+    title: Triple Choice
+    description: Receive 3 stat-card choices; each can be sparkling. While owned,
+      gain +10 percentage points to stat-card drop chance (does not stack with levels).
+    amount: 1
+    unit: 
+    icon: {fileID: 0}
+  - id: 35
+    title: Frostbite
+    description: 'Damage chills enemies blue for 3s: -20% movement speed and 1 (+1
+      per upgrade)% increased damage taken. Refreshes duration; does not stack.'
+    amount: 1
+    unit: 
+    icon: {fileID: 0}
+  - id: 36
+    title: Card Fortune
+    description: Gain 5 (+1 per upgrade) percentage points to both stat-card and
+      ability-card drop chances. Combined drop chance cannot exceed 100%.
+    amount: 1
+    unit: 
+    icon: {fileID: 0}
+  - id: 37
+    title: True Barrage
+    description: Each attack fires 1 (+1 per upgrade) extra projectiles, each dealing
+      5% of your current attack damage as true damage. Prefer other enemies in attack
+      range; focus the sole enemy when alone.
+    amount: 1
+    unit: 
+    icon: {fileID: 0}
+  - id: 38
+    title: Titan's Blessing
+    description: Gain maximum health, body size and physical damage; add flat health
+      per upgrade
+    amount: 1
+    unit: 
+    icon: {fileID: 0}
+  - id: 39
+    title: Last Stand
+    description: Gain armor and magic resistance for every 10 missing health
+    amount: 1
+    unit: 
+    icon: {fileID: 0}
+  - id: 40
+    title: Arcane Cube
+    description: Charge a growing cube for 10 seconds, then launch it at the nearest
+      enemy
+    amount: 1
+    unit: 
+    icon: {fileID: 0}
+  - id: 41
+    title: Card Magnet
+    description: Automatically pull dropped cards toward you.
+    amount: 1
+    unit: 
+    icon: {fileID: 21300000, guid: 15593fcaa5d4412182a183e226758152, type: 3}
+  basicRarityBonusPercent:
+  - 0
+  - 3
+  - 5
+  - 10
+  - 20
+  shinyPercent: 5
+  basicCards:
+    rarityChances:
+      legendaryPercent: 1
+      epicPercent: 5
+      rarePercent: 3
+      uncommonPercent: 17
+    legendary:
+    - id: 0
+      weight: 1
+      amountMultiplier: 1
+    - id: 1
+      weight: 1
+      amountMultiplier: 1
+    - id: 3
+      weight: 1
+      amountMultiplier: 1
+    - id: 4
+      weight: 1
+      amountMultiplier: 1
+    - id: 5
+      weight: 1
+      amountMultiplier: 1
+    - id: 6
+      weight: 1
+      amountMultiplier: 1
+    - id: 7
+      weight: 1
+      amountMultiplier: 1
+    - id: 9
+      weight: 1
+      amountMultiplier: 1
+    - id: 10
+      weight: 1
+      amountMultiplier: 1
+    - id: 11
+      weight: 1
+      amountMultiplier: 1
+    - id: 18
+      weight: 1
+      amountMultiplier: 1
+    epic:
+    - id: 0
+      weight: 1
+      amountMultiplier: 1
+    - id: 1
+      weight: 1
+      amountMultiplier: 1
+    - id: 3
+      weight: 1
+      amountMultiplier: 1
+    - id: 4
+      weight: 1
+      amountMultiplier: 1
+    - id: 5
+      weight: 1
+      amountMultiplier: 1
+    - id: 6
+      weight: 1
+      amountMultiplier: 1
+    - id: 7
+      weight: 1
+      amountMultiplier: 1
+    - id: 9
+      weight: 1
+      amountMultiplier: 1
+    - id: 10
+      weight: 1
+      amountMultiplier: 1
+    - id: 11
+      weight: 1
+      amountMultiplier: 1
+    - id: 18
+      weight: 1
+      amountMultiplier: 1
+    rare:
+    - id: 0
+      weight: 1
+      amountMultiplier: 1
+    - id: 1
+      weight: 1
+      amountMultiplier: 1
+    - id: 3
+      weight: 1
+      amountMultiplier: 1
+    - id: 4
+      weight: 1
+      amountMultiplier: 1
+    - id: 5
+      weight: 1
+      amountMultiplier: 1
+    - id: 6
+      weight: 1
+      amountMultiplier: 1
+    - id: 7
+      weight: 1
+      amountMultiplier: 1
+    - id: 9
+      weight: 1
+      amountMultiplier: 1
+    - id: 10
+      weight: 1
+      amountMultiplier: 1
+    - id: 11
+      weight: 1
+      amountMultiplier: 1
+    - id: 18
+      weight: 1
+      amountMultiplier: 1
+    uncommon:
+    - id: 0
+      weight: 1
+      amountMultiplier: 1
+    - id: 1
+      weight: 1
+      amountMultiplier: 1
+    - id: 3
+      weight: 1
+      amountMultiplier: 1
+    - id: 4
+      weight: 1
+      amountMultiplier: 1
+    - id: 5
+      weight: 1
+      amountMultiplier: 1
+    - id: 6
+      weight: 1
+      amountMultiplier: 1
+    - id: 7
+      weight: 1
+      amountMultiplier: 1
+    - id: 9
+      weight: 1
+      amountMultiplier: 1
+    - id: 10
+      weight: 1
+      amountMultiplier: 1
+    - id: 11
+      weight: 1
+      amountMultiplier: 1
+    - id: 18
+      weight: 1
+      amountMultiplier: 1
+    common:
+    - id: 0
+      weight: 1
+      amountMultiplier: 1
+    - id: 1
+      weight: 1
+      amountMultiplier: 1
+    - id: 3
+      weight: 1
+      amountMultiplier: 1
+    - id: 4
+      weight: 1
+      amountMultiplier: 1
+    - id: 5
+      weight: 1
+      amountMultiplier: 1
+    - id: 6
+      weight: 1
+      amountMultiplier: 1
+    - id: 7
+      weight: 1
+      amountMultiplier: 1
+    - id: 9
+      weight: 1
+      amountMultiplier: 1
+    - id: 10
+      weight: 1
+      amountMultiplier: 1
+    - id: 11
+      weight: 1
+      amountMultiplier: 1
+    - id: 18
+      weight: 1
+      amountMultiplier: 1
+  abilityCards:
+    rarityChances:
+      legendaryPercent: 1
+      epicPercent: 5
+      rarePercent: 3
+      uncommonPercent: 17
+    legendary: []
+    epic:
+    - id: 34
+      weight: 1
+      amountMultiplier: 1
+    - id: 35
+      weight: 1
+      amountMultiplier: 1
+    - id: 36
+      weight: 1
+      amountMultiplier: 1
+    - id: 37
+      weight: 1
+      amountMultiplier: 1
+    - id: 38
+      weight: 1
+      amountMultiplier: 1
+    - id: 39
+      weight: 1
+      amountMultiplier: 1
+    - id: 40
+      weight: 1
+      amountMultiplier: 1
+    rare:
+    - id: 26
+      weight: 1
+      amountMultiplier: 1
+    - id: 27
+      weight: 1
+      amountMultiplier: 1
+    - id: 28
+      weight: 1
+      amountMultiplier: 1
+    - id: 29
+      weight: 1
+      amountMultiplier: 1
+    - id: 30
+      weight: 1
+      amountMultiplier: 1
+    - id: 31
+      weight: 1
+      amountMultiplier: 1
+    - id: 32
+      weight: 1
+      amountMultiplier: 1
+    uncommon:
+    - id: 19
+      weight: 1
+      amountMultiplier: 1
+    - id: 20
+      weight: 1
+      amountMultiplier: 1
+    - id: 21
+      weight: 1
+      amountMultiplier: 1
+    - id: 22
+      weight: 1
+      amountMultiplier: 1
+    - id: 23
+      weight: 1
+      amountMultiplier: 1
+    - id: 24
+      weight: 1
+      amountMultiplier: 1
+    - id: 25
+      weight: 1
+      amountMultiplier: 1
+    common:
+    - id: 12
+      weight: 1
+      amountMultiplier: 1
+    - id: 13
+      weight: 1
+      amountMultiplier: 1
+    - id: 14
+      weight: 1
+      amountMultiplier: 1
+    - id: 15
+      weight: 1
+      amountMultiplier: 1
+    - id: 16
+      weight: 1
+      amountMultiplier: 1
+    - id: 17
+      weight: 1
+      amountMultiplier: 1
+    - id: 33
+      weight: 1
+      amountMultiplier: 1
+    - id: 41
+      weight: 1
+      amountMultiplier: 1
+  poolsConfigured: 1
+  epicColor: {r: 0.7, g: 0.6, b: 0.93, a: 1}
+  legendaryColor: {r: 1, g: 0.72, b: 0.22, a: 1}

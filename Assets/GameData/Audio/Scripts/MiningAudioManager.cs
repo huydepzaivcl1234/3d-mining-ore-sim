@@ -15,8 +15,8 @@ namespace MiningSimulator.Ores
 
         [Header("References")]
         [SerializeField] private MiningAudioData audioData;
-        [SerializeField] private MiningUpgradeSystem upgradeSystem;
-        [SerializeField] private MiningUpgradePanel upgradePanel;
+        [SerializeField] private EconomyUpgradeSystem upgradeSystem;
+
         [SerializeField] private MiningRebirthSystem rebirthSystem;
         [SerializeField] private MiningRebirthPanel rebirthPanel;
         [SerializeField] private MiningAudioSettingsPanel audioSettingsPanel;
@@ -39,7 +39,7 @@ namespace MiningSimulator.Ores
         private bool shopThemeActive;
         private bool mainMenuMusicActive;
         private bool ambienceFadedForPeriodChange;
-        private MiningMainMenu mainMenu;
+        private GameMainMenu mainMenu;
         private Tween ambienceFade;
         private Tween musicFade;
         private Coroutine ambiencePlaylist;
@@ -102,12 +102,9 @@ namespace MiningSimulator.Ores
 
             if (upgradeSystem == null)
             {
-                upgradeSystem = FindFirstObjectByType<MiningUpgradeSystem>(FindObjectsInactive.Include);
+                upgradeSystem = FindFirstObjectByType<EconomyUpgradeSystem>(FindObjectsInactive.Include);
             }
-            if (upgradePanel == null)
-            {
-                upgradePanel = FindFirstObjectByType<MiningUpgradePanel>(FindObjectsInactive.Include);
-            }
+
             if (rebirthSystem == null)
             {
                 rebirthSystem = FindFirstObjectByType<MiningRebirthSystem>(FindObjectsInactive.Include);
@@ -130,7 +127,7 @@ namespace MiningSimulator.Ores
             }
             if (mainMenu == null)
             {
-                mainMenu = FindFirstObjectByType<MiningMainMenu>(FindObjectsInactive.Include);
+                mainMenu = FindFirstObjectByType<GameMainMenu>(FindObjectsInactive.Include);
             }
         }
 
@@ -148,13 +145,7 @@ namespace MiningSimulator.Ores
                 upgradeSystem.UpgradePurchased += HandleUpgradePurchased;
             }
 
-            if (upgradePanel != null)
-            {
-                upgradePanel.PanelOpened -= HandlePanelOpened;
-                upgradePanel.PanelOpened += HandlePanelOpened;
-                upgradePanel.PanelClosed -= HandlePanelClosed;
-                upgradePanel.PanelClosed += HandlePanelClosed;
-            }
+
 
             if (rebirthSystem != null)
             {
@@ -256,11 +247,7 @@ namespace MiningSimulator.Ores
                 upgradeSystem.UpgradePurchased -= HandleUpgradePurchased;
             }
 
-            if (upgradePanel != null)
-            {
-                upgradePanel.PanelOpened -= HandlePanelOpened;
-                upgradePanel.PanelClosed -= HandlePanelClosed;
-            }
+
 
             if (rebirthSystem != null)
             {
@@ -454,7 +441,7 @@ namespace MiningSimulator.Ores
 
         private bool IsMainMenuVisible()
         {
-            mainMenu ??= FindFirstObjectByType<MiningMainMenu>(FindObjectsInactive.Include);
+            mainMenu ??= FindFirstObjectByType<GameMainMenu>(FindObjectsInactive.Include);
             return mainMenu != null && mainMenu.IsOpen;
         }
 

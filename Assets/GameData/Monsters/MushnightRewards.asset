@@ -12,6 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7e87185b852dc0948996ba374fb5f265, type: 3}
   m_Name: MushnightRewards
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MushnightData
+  minimumPlayerLevelToSpawn: 1
+  minimumSpawnDay: 1
   combat:
     maxHealth: 10
     regenAmount: 0
@@ -31,6 +33,8 @@ MonoBehaviour:
     attackRange: 1.5
     attackArc: 120
     damage: 0
+    knockbackSpeed: 0
+    knockbackLift: 0
     attackCooldown: 2
     hitMoment: 0.45
     hitShape: 0
@@ -47,6 +51,7 @@ MonoBehaviour:
     chaseStandMaximumRangeFraction: 0.95
     targetScanSeconds: 0.25
     targetMemorySeconds: 2
+    retaliationForgetSeconds: 3
     detectionHysteresis: 1
     targetRepathDistance: 0.75
     waypointTolerance: 0.2

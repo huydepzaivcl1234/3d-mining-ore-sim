@@ -12,6 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2fab0bc80f39b6b4a8a05fb5e077e8ae, type: 3}
   m_Name: MushroomRewards
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MushroomData
+  minimumPlayerLevelToSpawn: 1
+  minimumSpawnDay: 1
   combat:
     maxHealth: 10
     regenAmount: 0

@@ -121076,7 +121076,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0878c164e70148048e49068e4f704d52, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningPlayerStatsPanel
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.PlayerStatsPanel
   player: {fileID: 0}
   panel: {fileID: 2147357732}
   openButton: {fileID: 293678398}
@@ -171982,7 +171982,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c08874384dfc41f3ab5cfe48a0372797, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningCharacterHealth
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.CharacterHealth
   maxHealth: 100
   armor: 0
   magicResistance: 0
@@ -172008,7 +172008,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5bb1e08b2077470487082403dcf49565, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningPlayerStats
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.PlayerStats
   data: {fileID: 0}
   coreData: {fileID: 11400000, guid: 4b7fd66a3c9775444a542f61dbdda14e, type: 2}
 --- !u!114 &7504308574959937446

@@ -2,11 +2,11 @@ using UnityEngine;
 
 namespace MiningSimulator.Ores
 {
-    [DefaultExecutionOrder(-900), DisallowMultipleComponent, RequireComponent(typeof(MiningPlayerStats))]
+    [DefaultExecutionOrder(-900), DisallowMultipleComponent, RequireComponent(typeof(PlayerStats))]
     public sealed class MiningPlayerStamina : MonoBehaviour
     {
-        private MiningPlayerStats stats;
-        private MiningCharacterHealth health;
+        private PlayerStats stats;
+        private CharacterHealth health;
         private MiningAudioManager audioManager;
         private AudioSource fallbackSource;
         private AudioClip generatedBreathing;
@@ -17,8 +17,8 @@ namespace MiningSimulator.Ores
         public bool Exhausted { get; private set; }
         private void Awake()
         {
-            stats = GetComponent<MiningPlayerStats>();
-            health = GetComponent<MiningCharacterHealth>();
+            stats = GetComponent<PlayerStats>();
+            health = GetComponent<CharacterHealth>();
             audioManager = FindAnyObjectByType<MiningAudioManager>();
             Current = Maximum;
         }

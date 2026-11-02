@@ -1,0 +1,1886 @@
+{
+  "sawAds": true,
+  "sawReload": true,
+  "reloadFrames": 145,
+  "sawPulled": true,
+  "sawClosed": true,
+  "heldAimAfter": false,
+  "finalAmmo": 9,
+  "MagazineCapacity": 9,
+  "rootTravel": 0.006070435,
+  "flags": [],
+  "rows": [
+    {
+      "tick": 0,
+      "frame": 3,
+      "reloading": false,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.03666666,
+      "root": [
+        -6.011336E-08,
+        -0.00797097,
+        0.0
+      ]
+    },
+    {
+      "tick": 3,
+      "frame": 6,
+      "reloading": false,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.08666666,
+      "root": [
+        -7.27176257E-08,
+        -0.009958883,
+        0.0
+      ]
+    },
+    {
+      "tick": 6,
+      "frame": 9,
+      "reloading": false,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.136666656,
+      "root": [
+        -7.27179241E-08,
+        -0.009993832,
+        0.0
+      ]
+    },
+    {
+      "tick": 9,
+      "frame": 12,
+      "reloading": false,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.186666653,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 12,
+      "frame": 15,
+      "reloading": false,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.205128208,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 15,
+      "frame": 18,
+      "reloading": false,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.2820513,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 18,
+      "frame": 21,
+      "reloading": false,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.358974367,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 21,
+      "frame": 24,
+      "reloading": false,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.43589744,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 24,
+      "frame": 27,
+      "reloading": false,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.512820542,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 27,
+      "frame": 30,
+      "reloading": false,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.5897436,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 30,
+      "frame": 33,
+      "reloading": false,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.6666667,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 33,
+      "frame": 36,
+      "reloading": false,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.743589759,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 36,
+      "frame": 39,
+      "reloading": false,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.820512831,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 39,
+      "frame": 42,
+      "reloading": false,
+      "ads": true,
+      "aimWeight": 0.188614562,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.8974359,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 42,
+      "frame": 45,
+      "reloading": false,
+      "ads": true,
+      "aimWeight": 0.5829904,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.0833333358,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 45,
+      "frame": 48,
+      "reloading": false,
+      "ads": true,
+      "aimWeight": 0.92592597,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.13333334,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 48,
+      "frame": 51,
+      "reloading": false,
+      "ads": true,
+      "aimWeight": 1.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.183333337,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 51,
+      "frame": 54,
+      "reloading": false,
+      "ads": true,
+      "aimWeight": 1.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.233333334,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 54,
+      "frame": 57,
+      "reloading": false,
+      "ads": true,
+      "aimWeight": 1.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.283333361,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 57,
+      "frame": 60,
+      "reloading": false,
+      "ads": true,
+      "aimWeight": 1.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.3333334,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 60,
+      "frame": 63,
+      "reloading": false,
+      "ads": true,
+      "aimWeight": 1.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.383333445,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 63,
+      "frame": 66,
+      "reloading": false,
+      "ads": true,
+      "aimWeight": 1.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.4333335,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 66,
+      "frame": 69,
+      "reloading": true,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.0115290573,
+      "worldTime": 0.0069444445,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 69,
+      "frame": 72,
+      "reloading": true,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.0115291253,
+      "worldTime": 0.027777778,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 72,
+      "frame": 75,
+      "reloading": true,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.0115290135,
+      "worldTime": 0.0486111119,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 75,
+      "frame": 78,
+      "reloading": true,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.0115290079,
+      "worldTime": 0.06944445,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 78,
+      "frame": 81,
+      "reloading": true,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.0115290619,
+      "worldTime": 0.09027779,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 81,
+      "frame": 84,
+      "reloading": true,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.0115290629,
+      "worldTime": 0.111111134,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 84,
+      "frame": 87,
+      "reloading": true,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.0115291048,
+      "worldTime": 0.131944478,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 87,
+      "frame": 90,
+      "reloading": true,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.0115291057,
+      "worldTime": 0.152777821,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 90,
+      "frame": 93,
+      "reloading": true,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.0115290629,
+      "worldTime": 0.173611164,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 93,
+      "frame": 96,
+      "reloading": true,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.01152905,
+      "worldTime": 0.1944445,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 96,
+      "frame": 99,
+      "reloading": true,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.0115289586,
+      "worldTime": 0.215277851,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 99,
+      "frame": 102,
+      "reloading": true,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.0115289465,
+      "worldTime": 0.2361112,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 102,
+      "frame": 105,
+      "reloading": true,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.01152907,
+      "worldTime": 0.256944537,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 105,
+      "frame": 108,
+      "reloading": true,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.0115289688,
+      "worldTime": 0.27777788,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 108,
+      "frame": 111,
+      "reloading": true,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.0115292,
+      "worldTime": 0.298611224,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 111,
+      "frame": 114,
+      "reloading": true,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.011529142,
+      "worldTime": 0.319444567,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 114,
+      "frame": 117,
+      "reloading": true,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.0115289334,
+      "worldTime": 0.3402779,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 117,
+      "frame": 120,
+      "reloading": true,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.0115290731,
+      "worldTime": 0.361111253,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 120,
+      "frame": 123,
+      "reloading": true,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.0115290862,
+      "worldTime": 0.3819446,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 123,
+      "frame": 126,
+      "reloading": true,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.0115289185,
+      "worldTime": 0.40277794,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 126,
+      "frame": 129,
+      "reloading": true,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.0115288682,
+      "worldTime": 0.423611283,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 129,
+      "frame": 132,
+      "reloading": true,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.0115290694,
+      "worldTime": 0.444444627,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 132,
+      "frame": 135,
+      "reloading": true,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.0115289846,
+      "worldTime": 0.46527797,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 135,
+      "frame": 138,
+      "reloading": true,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.01152897,
+      "worldTime": 0.4861113,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 138,
+      "frame": 141,
+      "reloading": true,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.0115289781,
+      "worldTime": 0.5069446,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 141,
+      "frame": 144,
+      "reloading": true,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.0115290536,
+      "worldTime": 0.527777851,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 144,
+      "frame": 147,
+      "reloading": true,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.0115291011,
+      "worldTime": 0.5486111,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 147,
+      "frame": 150,
+      "reloading": true,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.01152893,
+      "worldTime": 0.569444358,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 150,
+      "frame": 153,
+      "reloading": true,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.01152897,
+      "worldTime": 0.5902776,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 153,
+      "frame": 156,
+      "reloading": true,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.0115291774,
+      "worldTime": 0.611110866,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 156,
+      "frame": 159,
+      "reloading": true,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.0115290638,
+      "worldTime": 0.6319441,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 159,
+      "frame": 162,
+      "reloading": true,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.011529007,
+      "worldTime": 0.6527774,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 162,
+      "frame": 165,
+      "reloading": true,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.00754295755,
+      "worldTime": 0.6736106,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 165,
+      "frame": 168,
+      "reloading": true,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.000899182865,
+      "worldTime": 0.6944439,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 168,
+      "frame": 171,
+      "reloading": true,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": -0.001069375,
+      "worldTime": 0.715277135,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 171,
+      "frame": 174,
+      "reloading": true,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.008262877,
+      "worldTime": 0.7361104,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 174,
+      "frame": 177,
+      "reloading": true,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.0115461927,
+      "worldTime": 0.756943643,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 177,
+      "frame": 180,
+      "reloading": true,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.01159719,
+      "worldTime": 0.7777769,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 180,
+      "frame": 183,
+      "reloading": true,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.0115971444,
+      "worldTime": 0.798610151,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 183,
+      "frame": 186,
+      "reloading": true,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.0115971891,
+      "worldTime": 0.8194434,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 186,
+      "frame": 189,
+      "reloading": true,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.01159719,
+      "worldTime": 0.840276659,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 189,
+      "frame": 192,
+      "reloading": true,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.0115971612,
+      "worldTime": 0.8611099,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 192,
+      "frame": 195,
+      "reloading": true,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.0115971332,
+      "worldTime": 0.881943166,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 195,
+      "frame": 198,
+      "reloading": true,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.0115971547,
+      "worldTime": 0.9027764,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 198,
+      "frame": 201,
+      "reloading": true,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.01159714,
+      "worldTime": 0.9236097,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 201,
+      "frame": 204,
+      "reloading": true,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.0115971565,
+      "worldTime": 0.9444429,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 204,
+      "frame": 207,
+      "reloading": true,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.0115971016,
+      "worldTime": 0.9652762,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 207,
+      "frame": 210,
+      "reloading": true,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 8,
+      "Reserve": 1000,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.0115971453,
+      "worldTime": 0.986109436,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 210,
+      "frame": 213,
+      "reloading": false,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 9,
+      "Reserve": 999,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 1.00694275,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 213,
+      "frame": 216,
+      "reloading": false,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 9,
+      "Reserve": 999,
+      "fpsReload": true,
+      "bodyReload": true,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 1.027776,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 216,
+      "frame": 219,
+      "reloading": false,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 9,
+      "Reserve": 999,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.1,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 219,
+      "frame": 222,
+      "reloading": false,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 9,
+      "Reserve": 999,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.15,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 222,
+      "frame": 225,
+      "reloading": false,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 9,
+      "Reserve": 999,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.2,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 225,
+      "frame": 228,
+      "reloading": false,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 9,
+      "Reserve": 999,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.25,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 228,
+      "frame": 231,
+      "reloading": false,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 9,
+      "Reserve": 999,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.300000042,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 231,
+      "frame": 234,
+      "reloading": false,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 9,
+      "Reserve": 999,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.350000083,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 234,
+      "frame": 237,
+      "reloading": false,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 9,
+      "Reserve": 999,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.400000125,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 237,
+      "frame": 240,
+      "reloading": false,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 9,
+      "Reserve": 999,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.450000167,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 240,
+      "frame": 243,
+      "reloading": false,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 9,
+      "Reserve": 999,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.5000002,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 243,
+      "frame": 246,
+      "reloading": false,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 9,
+      "Reserve": 999,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.550000131,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 246,
+      "frame": 249,
+      "reloading": false,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 9,
+      "Reserve": 999,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.6000001,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 249,
+      "frame": 252,
+      "reloading": false,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 9,
+      "Reserve": 999,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.650000036,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 252,
+      "frame": 255,
+      "reloading": false,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 9,
+      "Reserve": 999,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.7,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 255,
+      "frame": 258,
+      "reloading": false,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 9,
+      "Reserve": 999,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.74999994,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 258,
+      "frame": 261,
+      "reloading": false,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 9,
+      "Reserve": 999,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.7999999,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 261,
+      "frame": 264,
+      "reloading": false,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 9,
+      "Reserve": 999,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.849999845,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 264,
+      "frame": 267,
+      "reloading": false,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 9,
+      "Reserve": 999,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.8999998,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 267,
+      "frame": 270,
+      "reloading": false,
+      "ads": false,
+      "aimWeight": 0.0,
+      "Ammo": 9,
+      "Reserve": 999,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.94999975,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 270,
+      "frame": 273,
+      "reloading": false,
+      "ads": true,
+      "aimWeight": 0.0241325032,
+      "Ammo": 9,
+      "Reserve": 999,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.9999997,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 273,
+      "frame": 276,
+      "reloading": false,
+      "ads": true,
+      "aimWeight": 0.309912145,
+      "Ammo": 9,
+      "Reserve": 999,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 1.04999971,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 276,
+      "frame": 279,
+      "reloading": false,
+      "ads": true,
+      "aimWeight": 0.715719163,
+      "Ammo": 9,
+      "Reserve": 999,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.1,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 279,
+      "frame": 282,
+      "reloading": false,
+      "ads": true,
+      "aimWeight": 0.984352,
+      "Ammo": 9,
+      "Reserve": 999,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.15,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 282,
+      "frame": 285,
+      "reloading": false,
+      "ads": true,
+      "aimWeight": 1.0,
+      "Ammo": 9,
+      "Reserve": 999,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.2,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 285,
+      "frame": 288,
+      "reloading": false,
+      "ads": true,
+      "aimWeight": 1.0,
+      "Ammo": 9,
+      "Reserve": 999,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.25,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 288,
+      "frame": 291,
+      "reloading": false,
+      "ads": true,
+      "aimWeight": 1.0,
+      "Ammo": 9,
+      "Reserve": 999,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.300000042,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 291,
+      "frame": 294,
+      "reloading": false,
+      "ads": true,
+      "aimWeight": 1.0,
+      "Ammo": 9,
+      "Reserve": 999,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.350000083,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 294,
+      "frame": 297,
+      "reloading": false,
+      "ads": true,
+      "aimWeight": 1.0,
+      "Ammo": 9,
+      "Reserve": 999,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.400000125,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 297,
+      "frame": 300,
+      "reloading": false,
+      "ads": true,
+      "aimWeight": 1.0,
+      "Ammo": 9,
+      "Reserve": 999,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.450000167,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 300,
+      "frame": 303,
+      "reloading": false,
+      "ads": true,
+      "aimWeight": 1.0,
+      "Ammo": 9,
+      "Reserve": 999,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.5000002,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 303,
+      "frame": 306,
+      "reloading": false,
+      "ads": true,
+      "aimWeight": 1.0,
+      "Ammo": 9,
+      "Reserve": 999,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.550000131,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 306,
+      "frame": 309,
+      "reloading": false,
+      "ads": true,
+      "aimWeight": 1.0,
+      "Ammo": 9,
+      "Reserve": 999,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.6000001,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    },
+    {
+      "tick": 309,
+      "frame": 312,
+      "reloading": false,
+      "ads": true,
+      "aimWeight": 1.0,
+      "Ammo": 9,
+      "Reserve": 999,
+      "fpsReload": false,
+      "bodyReload": false,
+      "worldSlideZ": 0.011820131,
+      "worldTime": 0.650000036,
+      "root": [
+        -7.27179241E-08,
+        -0.009994447,
+        0.0
+      ]
+    }
+  ]
+}

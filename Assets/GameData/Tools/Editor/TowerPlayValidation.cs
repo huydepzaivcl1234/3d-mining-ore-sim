@@ -15,7 +15,7 @@ public static class TowerPlayValidation
     [Serializable] private class RootState { public string id; public bool active; }
     [Serializable] private class Roots { public RootState[] roots; }
     private static TowerRuntime tower;
-    private static MiningCharacterHealth victim;
+    private static CharacterHealth victim;
     private static Animator animator;
     private static float start;
     private static double wallStart;
@@ -67,7 +67,7 @@ public static class TowerPlayValidation
             floor.transform.position=tower.transform.position+Vector3.down*.5f;floor.transform.localScale=new Vector3(60,1,60);
             var playerObject=new GameObject("Stats distance fixture");statsPlayer=playerObject.transform;
             statsPlayer.position=tower.transform.position+Vector3.right*2;
-            var playerHealth=playerObject.AddComponent<MiningCharacterHealth>();playerHealth.ConfigureSpawnHealth(100);
+            var playerHealth=playerObject.AddComponent<CharacterHealth>();playerHealth.ConfigureSpawnHealth(100);
             Physics.SyncTransforms();
             VerifySaveRoundTrip(d);
             var body=tower.GetComponent<BoxCollider>();var foot=tower.transform.position+Vector3.forward*3;
@@ -83,7 +83,7 @@ public static class TowerPlayValidation
             var target=new GameObject("Tower test victim"); target.SetActive(false);
             target.transform.position=tower.transform.position+new Vector3(0,0,5);
             var shape=target.AddComponent<BoxCollider>(); shape.center=Vector3.up; shape.size=new Vector3(1,2,1);
-            victim=target.AddComponent<MiningCharacterHealth>();
+            victim=target.AddComponent<CharacterHealth>();
             var monster=target.AddComponent<MushroomMonster>(); monster.enabled=false;
             typeof(MushroomMonster).GetField("health",Flags).SetValue(monster,victim);
             target.SetActive(true); victim.ConfigureSpawnHealth(100); victim.ConfigureRegeneration(0,5);
@@ -139,8 +139,8 @@ public static class TowerPlayValidation
         {
             if(Time.time-start<=5.3f)return;
             if(Mathf.Abs(victim.Health-60)>.05f){Finish("FAIL apple total HP="+victim.Health);return;}
-            var playerStats=statsPlayer.gameObject.AddComponent<MiningPlayerStats>();
-            typeof(MiningPlayerStats).GetField("saveBlocked",Flags).SetValue(playerStats,true);
+            var playerStats=statsPlayer.gameObject.AddComponent<PlayerStats>();
+            typeof(PlayerStats).GetField("saveBlocked",Flags).SetValue(playerStats,true);
             placementInventory=UnityEngine.Object.FindObjectsByType<MiningItemSystem>(FindObjectsSortMode.None).First(x=>x.name=="Isolated consumable inventory");
             var item=tower.Data.inventoryItem;placementInventory.TryAddItem(item,3);
             originalCameraPosition=testCamera.transform.position;originalCameraRotation=testCamera.transform.rotation;
@@ -282,7 +282,7 @@ public static class TowerPlayValidation
         try
         {
             var shape=goal.AddComponent<BoxCollider>();shape.center=Vector3.up*.6f;shape.size=new Vector3(.4f,1.2f,.4f);
-            var hp=goal.AddComponent<MiningCharacterHealth>();hp.ConfigureSpawnHealth(10000);hp.ConfigureRegeneration(0,5);
+            var hp=goal.AddComponent<CharacterHealth>();hp.ConfigureSpawnHealth(10000);hp.ConfigureRegeneration(0,5);
             var monster=actor.GetComponent<MushroomMonster>();monster.Initialize(null,hp);monster.enabled=false;
             monster.Health.ConfigureSpawnHealth(10000);monster.Health.ConfigureRegeneration(0,5);
             var anim=actor.GetComponentInChildren<Animator>();anim.cullingMode=AnimatorCullingMode.AlwaysAnimate;

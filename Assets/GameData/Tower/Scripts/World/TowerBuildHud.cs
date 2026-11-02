@@ -14,10 +14,10 @@ namespace MiningSimulator.Ores
         Button button;
         TMP_Text buttonText;
         TowerShopPanel shop;
-        MiningUiPanelCoordinator panels;
-        MiningPlayerStats player;
+        UiPanelCoordinator panels;
+        PlayerStats player;
         PlayerInput input;
-        InputAction buildAction;
+        [System.NonSerialized] InputAction buildAction;
         CursorLockMode cursor;
         bool cursorVisible, shiftLocked, opened;
         float visibility;
@@ -26,7 +26,7 @@ namespace MiningSimulator.Ores
         public bool IsOpen=>opened;
         public TowerShopPanel Shop=>shop;
 
-        public static TowerBuildHud Ensure(PlayerWallet wallet,MiningUiPanelCoordinator coordinator)
+        public static TowerBuildHud Ensure(PlayerWallet wallet,UiPanelCoordinator coordinator)
         {
             var hud=FindFirstObjectByType<TowerBuildHud>();
             if(hud!=null)return hud;
@@ -36,10 +36,10 @@ namespace MiningSimulator.Ores
             scaler.referenceResolution=new Vector2(1920,1080);scaler.matchWidthOrHeight=.5f;
             hud=go.AddComponent<TowerBuildHud>();hud.Initialize(wallet,coordinator);return hud;
         }
-        void Initialize(PlayerWallet wallet,MiningUiPanelCoordinator coordinator)
+        void Initialize(PlayerWallet wallet,UiPanelCoordinator coordinator)
         {
-            panels=coordinator!=null?coordinator:FindFirstObjectByType<MiningUiPanelCoordinator>();
-            player=FindFirstObjectByType<MiningPlayerStats>();
+            panels=coordinator!=null?coordinator:FindFirstObjectByType<UiPanelCoordinator>();
+            player=FindFirstObjectByType<PlayerStats>();
             input=player!=null?player.GetComponent<PlayerInput>():null;
             buildAction=input!=null?input.actions.FindAction("Player/Build",false):null;
             drawer=TowerFantasyUi.Frame("Construction Drawer",transform,new Vector2(520,624),Vector2.zero,TowerFantasyUi.Background,16);
@@ -57,7 +57,7 @@ namespace MiningSimulator.Ores
             buttonText=TowerFantasyUi.Label(r,"Build label",new Vector2(24,0),new Vector2(155,56),21,TowerFantasyUi.Cream,true,TextAlignmentOptions.Center);
             RefreshLanguage();Resize();
         }
-        void OnEnable()=>MiningLocalization.LanguageChanged+=RefreshLanguage;
+        void OnEnable(){MiningLocalization.LanguageChanged+=RefreshLanguage;buildAction=input!=null?input.actions?.FindAction("Player/Build",false):null;}
         void OnDisable(){MiningLocalization.LanguageChanged-=RefreshLanguage;CloseImmediately();}
         void RefreshLanguage()
         {
@@ -69,7 +69,7 @@ namespace MiningSimulator.Ores
         public void Open()
         {
             if(drawer==null||opened||TowerPlacement.IsPlacing||player==null||!player.gameObject.activeInHierarchy||
-                player.GetComponent<MiningCharacterHealth>()?.Health<=0||panels!=null&&panels.BlocksGameplay)return;
+                player.GetComponent<CharacterHealth>()?.Health<=0||panels!=null&&panels.BlocksGameplay)return;
             cursor=Cursor.lockState;cursorVisible=Cursor.visible;
             opened=true;drawer.gameObject.SetActive(true);shop.ShowCatalog();
             panels?.NotifyExternalPanelOpened(drawer);
@@ -104,7 +104,7 @@ namespace MiningSimulator.Ores
         void Update()
         {
             if(drawer==null)return;
-            if(opened&&(!drawer.gameObject.activeSelf||player==null||player.GetComponent<MiningCharacterHealth>()?.Health<=0))CloseImmediately();
+            if(opened&&(!drawer.gameObject.activeSelf||player==null||player.GetComponent<CharacterHealth>()?.Health<=0))CloseImmediately();
             if(buildAction?.WasPressedThisFrame()==true)Toggle();
             if(opened&&Keyboard.current?.escapeKey.wasPressedThisFrame==true)Close();
             visibility=Mathf.MoveTowards(visibility,opened?1:0,Time.unscaledDeltaTime/transitionSeconds);
@@ -112,7 +112,7 @@ namespace MiningSimulator.Ores
             if(!opened&&visibility==0)drawer.gameObject.SetActive(false);
             Resize();
             button.gameObject.SetActive(!opened&&visibility==0&&!TowerPlacement.IsPlacing&&player!=null&&player.gameObject.activeInHierarchy&&
-                !(player.GetComponent<MiningCharacterHealth>()?.Health<=0)&&(panels==null||!panels.BlocksGameplay));
+                !(player.GetComponent<CharacterHealth>()?.Health<=0)&&(panels==null||!panels.BlocksGameplay));
             if(Time.unscaledTime>=nextBindingRefresh)
             {
                 nextBindingRefresh=Time.unscaledTime+.2f;
@@ -121,3 +121,4 @@ namespace MiningSimulator.Ores
         }
     }
 }
+

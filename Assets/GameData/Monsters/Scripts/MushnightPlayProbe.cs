@@ -12,7 +12,7 @@ public sealed class MushnightPlayProbe : MonoBehaviour
     public string Result { get; private set; } = "Running";
     private TreasureChest chest;
     private PlayerWallet wallet;
-    private MiningCharacterHealth player;
+    private CharacterHealth player;
     private MonsterSpawnZone zone;
     private DayNightSystem night;
     private MushroomMonster monster;
@@ -36,7 +36,7 @@ public sealed class MushnightPlayProbe : MonoBehaviour
         Set(chest, "persistProgress", false); Set(chest, "data", chestData); Set(chest, "wallet", wallet);
         var p = new GameObject("Thief test player"); p.transform.SetParent(transform); p.transform.position = new Vector3(25, .02f, 8);
         p.AddComponent<CapsuleCollider>().center = Vector3.up;
-        player = p.AddComponent<MiningCharacterHealth>(); player.ConfigureSpawnHealth(100);
+        player = p.AddComponent<CharacterHealth>(); player.ConfigureSpawnHealth(100);
         var clock = new GameObject("Inactive unsaved test night clock"); clock.transform.SetParent(transform); clock.SetActive(false);
         night = clock.AddComponent<DayNightSystem>(); Set(night, "periodElapsed", .2f);
         roster = Instantiate(AssetDatabase.LoadAssetAtPath<MonsterSpawnRoster>("Assets/Resources/MonsterSpawnRoster.asset"));

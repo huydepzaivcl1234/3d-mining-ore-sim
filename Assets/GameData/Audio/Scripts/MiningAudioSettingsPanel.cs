@@ -12,7 +12,7 @@ namespace MiningSimulator.Ores
     {
         [SerializeField] private MiningAudioManager audioManager;
         [SerializeField] private GameObject settingsPanel;
-        [SerializeField] private MiningUiPanelCoordinator panelCoordinator;
+        [SerializeField] private UiPanelCoordinator panelCoordinator;
         [SerializeField] private Button openButton;
         [SerializeField] private Button closeButton;
         [SerializeField] private Slider masterSlider;
@@ -24,13 +24,13 @@ namespace MiningSimulator.Ores
         [SerializeField] private TextMeshProUGUI masterValueLabel;
         [SerializeField] private TextMeshProUGUI musicValueLabel;
         [SerializeField] private TextMeshProUGUI sfxValueLabel;
-        [SerializeField] private MiningUiData uiData;
+        [SerializeField] private GameUiData uiData;
         [SerializeField] private MiningRebirthSystem rebirthSystem;
         [SerializeField] private Button resetDataButton;
         [SerializeField] private TextMeshProUGUI resetDataLabel;
         [SerializeField] private Button languageButton;
         [SerializeField] private TextMeshProUGUI languageLabel;
-        [SerializeField] private MiningMainMenu mainMenu;
+        [SerializeField] private GameMainMenu mainMenu;
         [SerializeField] private Button returnToMenuButton;
         [SerializeField] private TextMeshProUGUI returnToMenuLabel;
         [SerializeField] private Button englishButton;

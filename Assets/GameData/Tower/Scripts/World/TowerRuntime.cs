@@ -2,8 +2,8 @@ using System.Collections.Generic;
 using UnityEngine;
 namespace MiningSimulator.Ores
 {
-    [RequireComponent(typeof(MiningCharacterHealth), typeof(BoxCollider))]
-    public sealed class TowerRuntime : MonoBehaviour, IMiningInteractable
+    [RequireComponent(typeof(CharacterHealth), typeof(BoxCollider))]
+    public sealed class TowerRuntime : MonoBehaviour
     {
         public static readonly HashSet<TowerRuntime> Active = new();
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -12,11 +12,11 @@ namespace MiningSimulator.Ores
         [SerializeField] private Transform muzzle;
         [SerializeField] private Animator animator;
         [SerializeField] private float paidPrice;
-        private MiningCharacterHealth health;
+        private CharacterHealth health;
         private float nextScan, nextShot, releaseAt;
-        private MiningCharacterHealth target, committedTarget;
+        private CharacterHealth target, committedTarget;
         public TowerData Data => data;
-        public MiningCharacterHealth Health => health;
+        public CharacterHealth Health => health;
         public float PaidPrice => paidPrice;
         public int Level { get; private set; }
         public float Damage => data.Scaled(data.damage, data.damageGrowth, Level);
@@ -28,33 +28,21 @@ namespace MiningSimulator.Ores
         public bool CanUpgrade => data != null && Level < Mathf.Max(data.level, data.maximumLevel);
         public float UpgradeCost => CanUpgrade ? data.UpgradeCost(Level) : 0;
         public bool IsAlive => isActiveAndEnabled && health != null && health.Health > 0;
-        private TowerStatsPanel statsPanel;
         private Renderer foundation;
         private Transform visualMount;
         private Vector3 foundationFoot;
         private bool hasFoundationFoot;
-        private MiningPlayerStats collisionPlayer;
+        private PlayerStats collisionPlayer;
         private float nextPlayerCollisionCheck;
         private readonly List<Collider> towerColliders = new();
         private readonly List<Collider> playerColliders = new();
         public string PlacementId { get; private set; }
         public void MarkDeployed(string id) => PlacementId = id;
-        public string InteractionLabel => $"{data?.displayName} • Stats";
-        public bool CanInteract => IsAlive;
-        public void SetInteractionFocused(bool focused) { }
-        public void Interact()
-        {
-            var player = FindFirstObjectByType<MiningPlayerStats>();
-            if (!IsAlive || player == null) return;
-            statsPanel ??= GetComponent<TowerStatsPanel>();
-            if (statsPanel == null) statsPanel = gameObject.AddComponent<TowerStatsPanel>();
-            statsPanel.Bind(this);statsPanel.Show(player.transform);
-        }
         public void Sell()
         {
             var wallet = FindFirstObjectByType<PlayerWallet>();
             if (!IsAlive || wallet == null) return;
-            var player = FindFirstObjectByType<MiningPlayerStats>();
+            var player = FindFirstObjectByType<PlayerStats>();
             if (player == null || Vector3.Distance(player.transform.position, transform.position) > 4f) return;
             TowerWorldSave.Remove(this);
             wallet.AddMoney(paidPrice * .35f);
@@ -64,7 +52,7 @@ namespace MiningSimulator.Ores
         {
             data = definition; paidPrice = Mathf.Max(0, purchasedPrice);
             Level = data.ClampLevel(savedLevel);
-            health ??= GetComponent<MiningCharacterHealth>();
+            health ??= GetComponent<CharacterHealth>();
             health.ConfigureSpawnHealth(MaximumHealth);
             health.ConfigureDefenses(Armor, MagicResistance);
             health.ConfigureRegeneration(0, 5);
@@ -73,7 +61,7 @@ namespace MiningSimulator.Ores
         {
             if (!IsAlive || !CanUpgrade || wallet == null || player == null ||
                 Vector3.Distance(player.position, transform.position) > 4f ||
-                player.GetComponent<MiningCharacterHealth>()?.Health <= 0) return false;
+                player.GetComponent<CharacterHealth>()?.Health <= 0) return false;
             float cost = UpgradeCost;
             if (float.IsNaN(cost) || float.IsInfinity(cost) || cost < 0 || !wallet.TrySpend(cost)) return false;
             Level++;
@@ -85,7 +73,7 @@ namespace MiningSimulator.Ores
         }
         private void Awake()
         {
-            health = GetComponent<MiningCharacterHealth>();
+            health = GetComponent<CharacterHealth>();
             if (data != null) Initialize(data, paidPrice);
             animator ??= GetComponentInChildren<Animator>();
             if (Application.isPlaying) WorldNavigationObstacle.Ensure(this);
@@ -129,7 +117,7 @@ namespace MiningSimulator.Ores
         {
             nextPlayerCollisionCheck = Time.unscaledTime + .5f;
             if (collisionPlayer == null || !collisionPlayer.gameObject.activeInHierarchy)
-                collisionPlayer = FindFirstObjectByType<MiningPlayerStats>() ?? FindFirstObjectByType<MiningPlayerStats>(FindObjectsInactive.Include);
+                collisionPlayer = FindFirstObjectByType<PlayerStats>() ?? FindFirstObjectByType<PlayerStats>(FindObjectsInactive.Include);
             if (collisionPlayer == null) return;
             GetComponentsInChildren(true, towerColliders);
             collisionPlayer.GetComponentsInChildren(true, playerColliders);
@@ -178,7 +166,7 @@ namespace MiningSimulator.Ores
             else releaseAt = Time.time;
             committedTarget = target;
         }
-        private void Fire(MiningCharacterHealth victim)
+        private void Fire(CharacterHealth victim)
         {
             Vector3 start = muzzle != null ? muzzle.position : transform.position + Vector3.up;
             Vector3 aim = victim.GetComponent<Collider>() != null ? victim.GetComponent<Collider>().bounds.center : victim.transform.position + Vector3.up*.5f;

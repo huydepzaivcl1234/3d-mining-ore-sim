@@ -8,7 +8,7 @@ namespace MiningSimulator.Ores
     public sealed class MiningRebirthSystem : MonoBehaviour
     {
         [SerializeField] private PlayerWallet wallet;
-        [SerializeField] private MiningUpgradeSystem upgradeSystem;
+        [SerializeField] private EconomyUpgradeSystem upgradeSystem;
         [SerializeField] private MiningRebirthData rebirthData;
         [SerializeField] private MiningItemSystem itemSystem;
         [SerializeField] private MiningAchievementSystem achievementSystem;
@@ -74,7 +74,6 @@ namespace MiningSimulator.Ores
             ApplyPermanentBoost();
             upgradeSystem?.ResetAllUpgrades();
 
-            MiningComputerStation.ResetAllLoadedStations();
             wallet.ResetMoney();
             RebirthCompleted?.Invoke(completedRebirths);
             StateChanged?.Invoke();
@@ -90,7 +89,7 @@ namespace MiningSimulator.Ores
                 return false;
             }
             FindResetTargetsIfMissing();
-            MiningPlayerStats.ResetSavedProgress();
+            PlayerStats.ResetSavedProgress();
             MiningDamagePopup.ClearAll();
             upgradeSystem?.ResetAutoUpgrade();
             DayNightSystem.ResetSavedClock();
@@ -110,7 +109,6 @@ namespace MiningSimulator.Ores
             itemSystem?.ResetAllData();
             achievementSystem?.ResetAllData();
             questSystem?.ResetAllData();
-            MiningComputerStation.ResetAllLoadedStations();
             wallet?.ResetMoney();
             wallet?.ResetGems();
             GameSave.Flush();

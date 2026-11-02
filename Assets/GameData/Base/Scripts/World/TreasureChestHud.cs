@@ -48,7 +48,7 @@ public void Bind(TreasureChest owner)
             BindRepairWallet();
             chest.Changed+=Refresh;chest.Paid+=ShowMoney;
             MiningLocalization.LanguageChanged+=Refresh;
-            var stats=FindAnyObjectByType<MiningPlayerStats>();player=stats!=null?stats.transform:null;
+            var stats=FindAnyObjectByType<PlayerStats>();player=stats!=null?stats.transform:null;
             Refresh();
         }
         private RectTransform Rect(string name,Transform parent,Vector2 size,Vector2 position)

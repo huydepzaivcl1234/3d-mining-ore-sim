@@ -1,0 +1,30 @@
+{
+  "rig_conversion_max_matrix_error": 3.822147846221924e-06,
+  "worst": [
+    167,
+    "M1911 Magazine.013"
+  ],
+  "new_controls": [
+    "Gun_Root",
+    "Gun_Slide",
+    "Gun_Hammer",
+    "Gun_Trigger",
+    "Gun_Magazine",
+    "Gun_CasingExit"
+  ],
+  "bones": 72,
+  "old_25_26_jump_m": 0.21008435131975556,
+  "new_25_26_jump_m": 0.01925103199917925,
+  "transition_frames": [
+    23,
+    32
+  ],
+  "fail": 0,
+  "warn": [
+    "Unity export not tested",
+    "Inherited negative scale retained",
+    "Runtime camera shake is not part of this clip"
+  ],
+  "run_blender": "NOT RUN - live Blender MCP",
+  "mesh_validator": "NOT RUN - no topology changes"
+}

@@ -8,11 +8,11 @@ using UnityEngine;
 public sealed class MiningHudModalTests
 {
     private GameObject canvas;
-    private MiningUiPanelCoordinator coordinator;
+    private UiPanelCoordinator coordinator;
     [SetUp] public void Setup()
     {
         canvas = new GameObject("Test HUD", typeof(RectTransform), typeof(Canvas));
-        coordinator = canvas.AddComponent<MiningUiPanelCoordinator>();
+        coordinator = canvas.AddComponent<UiPanelCoordinator>();
         var shop = Make("NPC Shop");
         var settings = new SerializedObject(coordinator);
         settings.FindProperty("shopPanel").objectReferenceValue = shop;
@@ -24,7 +24,7 @@ public sealed class MiningHudModalTests
         obj.transform.SetParent(canvas.transform, false);
         return (RectTransform)obj.transform;
     }
-    private void SetVisible(bool visible) => typeof(MiningUiPanelCoordinator)
+    private void SetVisible(bool visible) => typeof(UiPanelCoordinator)
         .GetMethod("SetBasePanelsImmediately", BindingFlags.NonPublic | BindingFlags.Instance)
         .Invoke(coordinator, new object[] { visible });
     [TearDown] public void Cleanup() => Object.DestroyImmediate(canvas);
@@ -46,7 +46,7 @@ public sealed class MiningHudModalTests
     [Test] public void ActiveModalAndInactiveHudAreNotHiddenOrActivated()
     {
         var modal = Make("Custom Panel");
-        typeof(MiningUiPanelCoordinator).GetField("activeModal", BindingFlags.NonPublic | BindingFlags.Instance)
+        typeof(UiPanelCoordinator).GetField("activeModal", BindingFlags.NonPublic | BindingFlags.Instance)
             .SetValue(coordinator, modal);
         var hidden = Make("Hidden Toast"); hidden.gameObject.SetActive(false);
         SetVisible(false);

@@ -12,7 +12,7 @@ using UnityEngine.SceneManagement;
 
 public static class MiningAutoBindTMP
 {
-    [MenuItem("Mining Simulator/Localization/Auto Bind Scene TMP")]
+    [MenuItem("Survivor/Localization/Auto Bind Scene TMP")]
     private static void Run()
     {
         Scene scene = SceneManager.GetActiveScene();

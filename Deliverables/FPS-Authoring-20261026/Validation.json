@@ -1,0 +1,67 @@
+{
+  "status": "AUTHORING TOOL - NOT A GAMEPLAY FIX",
+  "checks": [
+    {
+      "ads": 0,
+      "pitch": 0,
+      "yaw": 0,
+      "handErrors": [
+        1.9082797281243946e-07,
+        2.864600483620829e-07
+      ],
+      "fingerError": 5.513429641723633e-07
+    },
+    {
+      "ads": 0,
+      "pitch": 65,
+      "yaw": 0,
+      "handErrors": [
+        3.1150199413846245e-07,
+        3.1150199413846245e-07
+      ],
+      "fingerError": 5.513429641723633e-07
+    },
+    {
+      "ads": 1,
+      "pitch": 0,
+      "yaw": 0,
+      "handErrors": [
+        1.8083013444158808e-07,
+        3.1150199413846245e-07
+      ],
+      "fingerError": 5.066394805908203e-07
+    },
+    {
+      "ads": 1,
+      "pitch": 65,
+      "yaw": 90,
+      "handErrors": [
+        1.8258673489966975e-07,
+        1.564621925354004e-07
+      ],
+      "fingerError": 5.066394805908203e-07
+    },
+    {
+      "ads": 0,
+      "pitch": -70,
+      "yaw": -90,
+      "handErrors": [
+        1.4466410755327046e-07,
+        6.361008180875028e-07
+      ],
+      "fingerError": 5.513429641723633e-07
+    }
+  ],
+  "fail": 0,
+  "warn": 3,
+  "offsetPersists": true,
+  "mouseModal": "synthetic mouse-delta/RNA registration checked; physical UI mouse session not tested",
+  "unityChanges": false,
+  "run_blender.py": "NOT RUN: live MCP session",
+  "meshValidator": "NOT RUN: inherited model geometry, pose-only duplication",
+  "warnings": [
+    "Not a full Unity Animator/physics/recoil simulator.",
+    "Controls use recovered settled idle/ADS snapshots; dynamic elbow hints are approximate.",
+    "After reopening, run embedded FPS_Controls.py if script auto-run is disabled."
+  ]
+}

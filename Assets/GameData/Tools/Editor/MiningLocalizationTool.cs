@@ -10,7 +10,7 @@ public sealed class MiningLocalizationTool : EditorWindow
 {
     private string phraseKey = "UI_Inventory";
 
-    [MenuItem("Mining Simulator/Localization/Open Tool")]
+    [MenuItem("Survivor/Localization/Open Tool")]
     private static void Open()
     {
         GetWindow<MiningLocalizationTool>("Mining Localization");

@@ -17,7 +17,7 @@ public sealed class SkullclawTests
         {
             obj.transform.position = new Vector3(12000, 0, 12000);
             tower.transform.position = obj.transform.position + Vector3.forward * 4f;
-            var health = tower.AddComponent<MiningCharacterHealth>(); health.ConfigureSpawnHealth(1000f);
+            var health = tower.AddComponent<CharacterHealth>(); health.ConfigureSpawnHealth(1000f);
             var shape = tower.AddComponent<BoxCollider>(); shape.center = Vector3.up; shape.size = new Vector3(1, 2, 1);
             var monster = obj.GetComponent<MushroomMonster>();
             var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
@@ -55,7 +55,7 @@ public sealed class SkullclawTests
     }
     [Test] public void SkullclawHasTheSameBoundHealthBarAsOtherMonsters()
     {
-        var hp = AssetDatabase.LoadAssetAtPath<GameObject>(SkullclawSetup.PrefabPath).GetComponent<MiningCharacterHealth>();
+        var hp = AssetDatabase.LoadAssetAtPath<GameObject>(SkullclawSetup.PrefabPath).GetComponent<CharacterHealth>();
         Assert.That(hp.HealthBar, Is.Not.Null);
         var so = new SerializedObject(hp);
         Assert.That(so.FindProperty("microBar").objectReferenceValue, Is.Not.Null);

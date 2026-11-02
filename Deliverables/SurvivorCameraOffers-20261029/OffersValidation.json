@@ -1,0 +1,16 @@
+{
+  "paused0": true,
+  "resumed0": true,
+  "opened1": true,
+  "paused1": true,
+  "resumed1": true,
+  "opened2": true,
+  "paused2": true,
+  "resumed2": true,
+  "damageApplied": true,
+  "projectileApplied": true,
+  "speedApplied": true,
+  "rateUnchanged": true,
+  "skipResumes": true,
+  "fontPreserved": true
+}

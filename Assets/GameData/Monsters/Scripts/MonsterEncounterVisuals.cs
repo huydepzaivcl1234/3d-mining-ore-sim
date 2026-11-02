@@ -12,7 +12,6 @@ namespace MiningSimulator.Ores
         private Color color;
         private float deadline, dissolveStarted;
         private bool dissolving;
-        private DayNightSystem dayNight;
         private ParticleSystem aura;
         private Material auraMaterial;
         private Texture2D auraTexture;
@@ -23,8 +22,7 @@ namespace MiningSimulator.Ores
         public void Configure(MushroomMonster owner, MonsterRewardData data, MonsterBossSettings boss)
         {
             monster = owner; settings = data;
-            if (data is SkullclawData) dayNight = owner != null && owner.SpawnClock != null ? owner.SpawnClock : FindAnyObjectByType<DayNightSystem>();
-            float seconds = boss != null ? Mathf.Max(1f, boss.combatSeconds) : Mathf.Max(0f, data.combatSeconds);
+            float seconds = boss != null || data is SkullclawData || data is MushnightData ? 0f : Mathf.Max(0f, data.combatSeconds);
             deadline = seconds > 0f ? Time.time + seconds : 0f;
             color = boss != null ? boss.effectColor : data.dissolveColor;
             if (boss != null) CreateAura();
@@ -38,11 +36,10 @@ namespace MiningSimulator.Ores
 
         private void Update()
         {
-            if (monster == null || settings == null) return;
+            if (monster == null || settings == null || monster.IsBoss) return;
             if (!dissolving)
             {
-                bool sunrise = settings is SkullclawData && dayNight != null && dayNight.isActiveAndEnabled && dayNight.CurrentPeriod == MiningTimePeriod.Day;
-                if ((!sunrise && (deadline <= 0f || Time.time < deadline)) || monster.Health.Health <= 0f) return;
+                if (deadline <= 0f || Time.time < deadline || monster.Health.Health <= 0f) return;
                 monster.BeginDespawn();
                 if (!monster.IsDespawning) return;
                 dissolving = true;
@@ -137,3 +134,4 @@ namespace MiningSimulator.Ores
         }
     }
 }
+

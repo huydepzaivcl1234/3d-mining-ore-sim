@@ -22,7 +22,7 @@ namespace GameData.Player.Script
         private static readonly int VelocityY = Animator.StringToHash("Y_velocity");
         private bool hasAirParameters;
         private PlayerController1 controller;
-        private MiningSimulator.Ores.MiningCharacterHealth health;
+        private MiningSimulator.Ores.CharacterHealth health;
 
         // Legacy fallback values; configured players use only Player Stats Core Data.
         [SerializeField, HideInInspector] private float maximumMana = 100f;
@@ -39,8 +39,8 @@ namespace GameData.Player.Script
         private bool exhausted;
         private int lastDisplayedMana = -1;
         private int lastDisplayedMaximum = -1;
-        private MiningSimulator.Ores.MiningPlayerStats playerStats;
-        private PlayerCoreStatsData CoreData => playerStats != null ? playerStats.CoreData : null;
+        private MiningSimulator.Ores.PlayerStats playerStats;
+        private SurvivorCombatData CoreData => playerStats != null ? playerStats.CoreData : null;
 
         public float CurrentMana { get; private set; }
         public float MaximumMana => Mathf.Max(1f, CoreData != null ? CoreData.maxStamina : maximumMana);
@@ -57,9 +57,9 @@ namespace GameData.Player.Script
         private void Awake()
         {
             if (playerAnimator == null) playerAnimator = GetComponent<Animator>();
-            playerStats = GetComponent<MiningSimulator.Ores.MiningPlayerStats>();
+            playerStats = GetComponent<MiningSimulator.Ores.PlayerStats>();
             controller = GetComponent<PlayerController1>();
-            health = GetComponent<MiningSimulator.Ores.MiningCharacterHealth>();
+            health = GetComponent<MiningSimulator.Ores.CharacterHealth>();
             if (playerAnimator != null) {
                 bool grounded = false, x = false, y = false;
                 foreach (var p in playerAnimator.parameters) {

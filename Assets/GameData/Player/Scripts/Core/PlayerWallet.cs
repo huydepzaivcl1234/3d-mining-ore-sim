@@ -8,7 +8,7 @@ namespace MiningSimulator.Ores
     public sealed class PlayerWallet : MonoBehaviour
     {
         [Header("Game Data")]
-        [SerializeField] private MiningGameData gameData;
+        [SerializeField] private GameEconomyData gameData;
 
         [Header("Money")]
         [Tooltip("The single authoritative balance. You can change it in the Inspector during Play Mode.")]
@@ -20,7 +20,7 @@ namespace MiningSimulator.Ores
 
         public float CurrentMoney => currentMoney;
         public float CurrentGems => currentGems;
-        public MiningGameData GameData => gameData;
+        public GameEconomyData GameData => gameData;
         public event Action<float> MoneyChanged;
         public event Action<float> MoneySpent;
         public event Action<float> GemsChanged;
@@ -157,7 +157,7 @@ namespace MiningSimulator.Ores
 
         private string GemSaveKey => gameData != null
             ? gameData.GemSaveKey
-            : MiningGameData.DefaultGemSaveKey;
+            : GameEconomyData.DefaultGemSaveKey;
 
         private float LoadGems()
         {

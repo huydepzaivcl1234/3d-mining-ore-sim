@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace MiningSimulator.Ores
 {
-    [RequireComponent(typeof(CharacterController), typeof(MiningCharacterHealth), typeof(GodBossRifleReward))]
+    [RequireComponent(typeof(CharacterController), typeof(CharacterHealth), typeof(GodBossRifleReward))]
     public sealed class GodBossController : MonoBehaviour
     {
         public enum Action { Chase, Punch, Swipe, Windup, Jump, Roar, Dead }
@@ -13,7 +13,7 @@ namespace MiningSimulator.Ores
         private CharacterController motor;
         private Collider playerBody;
         private bool landingIgnoresPlayer, originalPlayerIgnore;
-        private MiningCharacterHealth health, player;
+        private CharacterHealth health, player;
         private PlayerController1 playerMotor;
         private MonsterSpawnZone zone;
         private float elapsed, duration, nextJump, nextRoar, nextRoarCheck, nextPath, gravity;
@@ -29,14 +29,16 @@ namespace MiningSimulator.Ores
         private readonly Vector3[] ring = new Vector3[65];
         public Action CurrentAction { get; private set; }
         public GodBossData Data => data;
-        public MiningCharacterHealth Health => health;
+        public CharacterHealth Health => health;
         public int EncounterDay { get; private set; }
+        public int AppearanceNumber {get;private set;}=1;
+        public float DamageMultiplier=>data?data.DamageMultiplier(AppearanceNumber):1;
         public Vector3 JumpTarget => jumpTarget;
         public event System.Action<GodBossController> Defeated;
 
         private void Awake()
         {
-            motor = GetComponent<CharacterController>(); health = GetComponent<MiningCharacterHealth>();
+            motor = GetComponent<CharacterController>(); health = GetComponent<CharacterHealth>();
             if (!animator) animator = GetComponentInChildren<Animator>();
             if (animator) animator.applyRootMotion = false;
             health.Died += Die;
@@ -58,13 +60,14 @@ namespace MiningSimulator.Ores
             if (motor && playerBody) Physics.IgnoreCollision(motor, playerBody, originalPlayerIgnore);
             landingIgnoresPlayer = false;
         }
-        public void Initialize(MonsterSpawnZone owner, MiningCharacterHealth target, int day)
+        public void Initialize(MonsterSpawnZone owner, CharacterHealth target, int day,int appearance=1)
         {
             RestorePlayerCollision();
             zone = owner; player = target; EncounterDay = day;
             playerBody = player ? player.GetComponent<Collider>() : null;
             playerMotor = player ? player.GetComponent<PlayerController1>() : null;
-            health.ConfigureSpawnHealth(data.health);
+            AppearanceNumber=Mathf.Max(1,appearance);
+            health.ConfigureSpawnHealth(data.health*data.HealthMultiplier(AppearanceNumber));
             health.ConfigureRegeneration(0, 5);
             health.ConfigureDefenses(data.armor, data.magicResistance);
             float oldHeight = motor.height;
@@ -80,8 +83,11 @@ namespace MiningSimulator.Ores
             nextRoarCheck = Time.time + data.roarCheckSeconds;
             SetAnimation("Idle", 1);
         }
+        public void ResumeVisibilityTimers(float seconds){nextJump+=seconds;nextRoar+=seconds;nextRoarCheck+=seconds;nextPath+=seconds;}
         private void Update()
         {
+            if(WorldActorVisibility.ShouldPause(this))return;
+            if(TryGetComponent<GameData.Player.Script.SurvivorEnemyStatus>(out var abilityStatus)&&abilityStatus.Airborne)return;
             if (!data || Time.deltaTime <= 0) return;
             // Re-enabling collisions while overlapping would push the player or
             // put the boss back onto their head. Wait until both bodies separate.
@@ -124,8 +130,7 @@ namespace MiningSimulator.Ores
                     var strike = CurrentAction == Action.Punch ? data.punch : data.swipe;
                     float hitAt = duration * strike.hitTime;
                     Face(player.transform.position);
-                    if (elapsed <= hitAt && FlatDistance(player.transform.position) > motor.radius + .75f)
-                        motor.Move(transform.forward * (data.lungeDistance / Mathf.Max(.01f, hitAt)) * Time.deltaTime);
+                    Pursue(false);
                     if (!impacted && elapsed >= hitAt) { impacted = true; Melee(strike); }
                 }
                 else if (CurrentAction == Action.Roar && !impacted && elapsed >= duration * .5f)
@@ -174,9 +179,15 @@ namespace MiningSimulator.Ores
                 Begin(punch ? Action.Punch : Action.Swipe, punch ? "Punch" : "Swipe", strike.speed,
                     ClipSeconds(punch ? data.punchClip : data.swipeClip, strike.speed)); return;
             }
+            Pursue(true);
+        }
+        private void Pursue(bool animate)
+        {
+            float distance=FlatDistance(player.transform.position);
+            if(distance<=motor.radius+.75f)return;
             if (distance >= data.startRunningDistance) running = true;
             else if (distance <= data.stopRunningDistance) running = false;
-            SetAnimation(running ? "Run" : "Walk", 1);
+            if(animate)SetAnimation(running ? "Run" : "Walk", 1);
             var navigation = WorldNavigationGrid.Instance;
             if (navigation && navigation.HasBaked && !pathPending && Time.time >= nextPath)
             {
@@ -191,7 +202,7 @@ namespace MiningSimulator.Ores
             }
             Face(destination);
             Vector3 direction = destination - transform.position; direction.y = 0;
-            motor.Move(direction.normalized * (running ? data.runSpeed : data.walkSpeed) * Time.deltaTime);
+            motor.Move(direction.normalized * (running ? data.runSpeed : data.walkSpeed) * (TryGetComponent<SurvivorEnemyStatus>(out var status)?status.MovementMultiplier:1) * Time.deltaTime);
         }
         private void OnPath(bool success, List<Vector3> points)
         {
@@ -226,7 +237,7 @@ namespace MiningSimulator.Ores
             if (Mathf.Abs(delta.y) > data.height || FlatDistance(player.transform.position) > data.meleeRange) return;
             delta.y = 0;
             if (Vector3.Angle(transform.forward, delta) > data.attackHalfAngle) return;
-            if (player.DealDamage(strike.damage, CombatDamageType.Physical, gameObject) <= 0) return;
+            if (player.DealDamage(strike.damage*DamageMultiplier, CombatDamageType.Physical, gameObject) <= 0) return;
             if (playerMotor && strike.knockback > 0) playerMotor.ApplyKnockback(delta.normalized * strike.knockback, .3f);
             if (CurrentAction == Action.Swipe)
             {
@@ -266,7 +277,7 @@ namespace MiningSimulator.Ores
                 if (Mathf.Abs(y) < 1.5f && distance >= previous - data.waveThickness && distance <= waveDistance + data.waveThickness)
                 {
                     waveHit = true;
-                    if (player.DealDamage(data.jumpDamage, CombatDamageType.Physical, gameObject) > 0 && playerMotor)
+                    if (player.DealDamage(data.jumpDamage*DamageMultiplier, CombatDamageType.Physical, gameObject) > 0 && playerMotor)
                         playerMotor.ApplyKnockback(delta.normalized * data.jumpKnockback + Vector3.up * 3, .7f);
                 }
             }

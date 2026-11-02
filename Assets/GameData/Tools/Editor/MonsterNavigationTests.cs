@@ -210,5 +210,34 @@ public sealed class MonsterNavigationTests
         }
         finally { instance.SetValue(null, previous); }
     }
+    [Test] public void DenseEnemyCrowdDoesNotBecomeStaticNavigationWall()
+    {
+        int layer=LayerMask.NameToLayer("Enemy");Assert.That(layer,Is.GreaterThanOrEqualTo(0));
+        for(int i=0;i<160;i++){
+            var actor=new GameObject("Crowd collider");actor.transform.SetParent(root.transform);
+            actor.transform.position=Center+new Vector3((i%10)*.01f,.9f,(i/10)*.01f);actor.layer=layer;
+            actor.AddComponent<CapsuleCollider>();
+        }
+        Physics.SyncTransforms();
+        Assert.That(grid.IsCapsulePlacementClear(Center,.25f,1.8f),Is.True);
+        var wall=Box("Real wall",Center+Vector3.up,new Vector3(1,2,1));Physics.SyncTransforms();
+        Assert.That(grid.IsCapsulePlacementClear(Center,.25f,1.8f),Is.False,"Static walls must still block inside a crowd");
+    }
+    [Test] public void OpenGroundChaseDoesNotQueueAStarOrSteerAroundEnemy()
+    {
+        var instance=typeof(WorldNavigationGrid).GetProperty("Instance");var previous=instance.GetValue(null);
+        try{
+            instance.SetValue(null,grid);
+            var obj=new GameObject("Inactive chase fixture");obj.SetActive(false);obj.transform.SetParent(root.transform);obj.transform.position=Center+Vector3.back*6;
+            var motor=obj.AddComponent<CharacterController>();motor.radius=.25f;motor.height=1.8f;motor.center=Vector3.up*.9f;
+            var monster=obj.AddComponent<MushroomMonster>();var follower=new MonsterPathFollower(monster,motor);
+            var victim=new GameObject("Target");victim.transform.SetParent(root.transform);victim.transform.position=Center;
+            var crowd=Box("Moving enemy",Center+new Vector3(0,.9f,-5),new Vector3(.7f,1.8f,.7f));crowd.layer=LayerMask.NameToLayer("Enemy");Physics.SyncTransforms();
+            var direction=follower.Tick(Center,victim.transform,1.5f,new MonsterCombatSettings(),.05f);
+            Assert.That(direction.z,Is.GreaterThan(.9f));Assert.That(Mathf.Abs(direction.x),Is.LessThan(.1f),"Grid projection may offset a quarter cell; it must not turn sideways around an enemy");
+            Assert.That(grid.PendingRequests,Is.Zero,"Open plane should not queue a path behind hundreds of actors");
+        }finally{instance.SetValue(null,previous);}
+    }
+
 }
 #endif

@@ -16,7 +16,7 @@ MonoBehaviour:
   authoredClip: {fileID: -795275024131544319, guid: f01a1e3f31dc81a45b468671da1bd836, type: 3}
   mechanismRestClip: {fileID: 7400000, guid: 9ef2fb90870abff4e8eb33789e7b4f3e, type: 2}
   mechanismClip: {fileID: 7400000, guid: 127bdce201b280148a451858be3cec2f, type: 2}
-  authoredLayer: Pistol Blender Reload
+  authoredLayer: Pistol Presentation
   authoredState: Reload
   useAuthoredCamera: 1
   cameraVerticalFov: 85

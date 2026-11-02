@@ -6,7 +6,7 @@ namespace MiningSimulator.Ores
     public sealed class TowerDamageHealthBar : MonoBehaviour
     {
         [SerializeField,Min(0)] float secondsAfterDamage=3;
-        TowerRuntime owner;MiningCharacterHealth health;BoxCollider body;Camera viewer;
+        TowerRuntime owner;CharacterHealth health;BoxCollider body;Camera viewer;
         RectTransform panel;TMP_Text nameLabel,hpLabel;UnityEngine.UI.Image fill;
         float expires=float.NegativeInfinity,displayedFraction=1;
         public bool IsVisible=>panel!=null&&panel.gameObject.activeSelf;

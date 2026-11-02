@@ -1,0 +1,20 @@
+{
+  "frames": 600,
+  "rotationSmoothed": true,
+  "maxYawDegreesPerFrame": 0.7200012,
+  "zoomBefore": 9.5,
+  "zoomNear": 8.7,
+  "zoomAfter": 9.5,
+  "wheelZoomWorks": true,
+  "nearestTarget": true,
+  "switchDuringCooldown": true,
+  "rangeEntry": true,
+  "expectedInterval": 1.0,
+  "measuredIntervals": [
+    1.0,
+    1.0,
+    1.0
+  ],
+  "cadenceStable": true,
+  "rangePreserved": 4.0
+}

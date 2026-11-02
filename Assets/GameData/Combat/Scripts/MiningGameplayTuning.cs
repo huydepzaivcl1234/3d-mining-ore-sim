@@ -23,11 +23,11 @@ namespace MiningSimulator.Ores
         [SerializeField] private MonsterSpawnZone monsterSpawner;
         [SerializeField] private MushroomMonster debugBossPrefab;
         [Header("Player progression - source asset and live player")]
-        [SerializeField] private MiningPlayerStats player;
-        [SerializeField, HideInInspector] private MiningPlayerStatsData playerData;
-        public GameData.Player.Script.PlayerCoreStatsData PlayerCoreData => player != null ? player.CoreData : null;
-        public MiningPlayerStats Player => player;
-        public MiningPlayerStatsData PlayerData => playerData;
+        [SerializeField] private PlayerStats player;
+        [SerializeField, HideInInspector] private PlayerStatsData playerData;
+        public GameData.Player.Script.SurvivorCombatData PlayerCoreData => player != null ? player.CoreData : null;
+        public PlayerStats Player => player;
+        public PlayerStatsData PlayerData => playerData;
         [Header("Live Play Mode progress edit (applies automatically, saved)")]
         [Min(1), SerializeField] private int editPlayerLevel = 1;
         [Min(0), SerializeField] private float editPlayerExperience;
@@ -47,7 +47,7 @@ namespace MiningSimulator.Ores
         private void OnDisable() { if (Current == this) Current = null; }
         private void Start()
         {
-            if (player == null) player = FindFirstObjectByType<MiningPlayerStats>(FindObjectsInactive.Include);
+            if (player == null) player = FindFirstObjectByType<PlayerStats>(FindObjectsInactive.Include);
             ReadPlayerProgress();
             progressReady = true;
             progressEditPending = false;

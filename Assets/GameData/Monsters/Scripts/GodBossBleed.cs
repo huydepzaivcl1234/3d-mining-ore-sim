@@ -5,12 +5,12 @@ namespace MiningSimulator.Ores
     // Refreshes rather than stacking; a lethal hit/respawn clears the old effect.
     public sealed class GodBossBleed : MonoBehaviour
     {
-        private MiningCharacterHealth health;
+        private CharacterHealth health;
         private GameObject source;
         private double elapsed, duration;
         private int nextTick;
         private float percent;
-        private void Awake() { health = GetComponent<MiningCharacterHealth>(); health.Died += Clear; }
+        private void Awake() { health = GetComponent<CharacterHealth>(); health.Died += Clear; }
         public void Apply(float percentPerSecond, float seconds, GameObject attacker)
         { percent = Mathf.Max(0, percentPerSecond); duration = Mathf.Max(0, seconds); elapsed = 0; nextTick = 1; source = attacker; }
         private void Update()

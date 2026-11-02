@@ -21,7 +21,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private MiningRebirthSystem rebirthSystem;
         [SerializeField] private PlayerWallet wallet;
         [SerializeField] private GameObject confirmationPanel;
-        [SerializeField] private MiningUiPanelCoordinator panelCoordinator;
+        [SerializeField] private UiPanelCoordinator panelCoordinator;
         [SerializeField] private Button openButton;
         [SerializeField] private Button confirmButton;
         [SerializeField] private Button cancelButton;
@@ -30,7 +30,7 @@ namespace MiningSimulator.Ores
         [SerializeField] private TextMeshProUGUI warningLabel;
         [SerializeField] private TextMeshProUGUI nextBoostLabel;
         [SerializeField] private MicroBar progressBar;
-        [SerializeField] private MiningUiData uiData;
+        [SerializeField] private GameUiData uiData;
         [SerializeField] private Image rebirthFlashImage;
 
         private TextMeshProUGUI openButtonLabel;

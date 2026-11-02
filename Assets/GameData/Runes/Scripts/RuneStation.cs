@@ -11,11 +11,11 @@ namespace MiningSimulator.Ores
         [SerializeField] private CanvasGroup panelGroup;
         [SerializeField] private RuneUpgradeRow[] rows;
         [SerializeField] private GameObject boundary;
-        private MiningPlayerStats player;
-        private MiningCharacterHealth health;
+        private PlayerStats player;
+        private CharacterHealth health;
         private PlayerWallet wallet;
         private MiningAudioManager audioManager;
-        private MiningMainMenu menu;
+        private GameMainMenu menu;
         private Camera viewCamera;
         private CursorLockMode previousCursorLock;
         private bool previousCursorVisible;
@@ -28,16 +28,16 @@ namespace MiningSimulator.Ores
         private static void ResetStatics() => active = null;
         private void Start()
         {
-            player = FindFirstObjectByType<MiningPlayerStats>();
+            player = FindFirstObjectByType<PlayerStats>();
             if (player != null) player.RuneUpgrades.Configure(data);
-            health = player != null ? player.GetComponent<MiningCharacterHealth>() : null;
+            health = player != null ? player.GetComponent<CharacterHealth>() : null;
             // Convex hulls fill the stairs/platform recesses and create a sloping invisible wall.
             // This shrine is static; keep its actual triangles and retain all authored colliders.
             foreach (var collider in GetComponentsInChildren<MeshCollider>(true))
                 if (collider.attachedRigidbody == null) collider.convex = false;
             wallet = FindFirstObjectByType<PlayerWallet>();
             audioManager = FindFirstObjectByType<MiningAudioManager>();
-            menu = FindFirstObjectByType<MiningMainMenu>(FindObjectsInactive.Include);
+            menu = FindFirstObjectByType<GameMainMenu>(FindObjectsInactive.Include);
             viewCamera = Camera.main;
             ConfigurePanel();
             panel.worldCamera = viewCamera;

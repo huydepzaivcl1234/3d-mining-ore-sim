@@ -7,6 +7,46 @@ using UnityEngine;
 
 public sealed class MonsterAnimationLayerTests
 {
+    [TestCase("Assets/Prefabs/Monsters/GolemMonster.prefab")]
+    [TestCase("Assets/Prefabs/Monsters/ForestGolem.prefab")]
+    [TestCase("Assets/Prefabs/Monsters/MushnightMonster.prefab")]
+    public void AttackReleasesPreviousHitPose(string prefabPath)
+    {
+        var scene = UnityEditor.SceneManagement.EditorSceneManager.NewPreviewScene();
+        var root = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath), scene);
+        MiningSimulator.Ores.MonsterRewardData testData = null;
+        try
+        {
+            root.hideFlags = HideFlags.HideAndDontSave;
+            foreach (var behaviour in root.GetComponentsInChildren<MonoBehaviour>(true)) behaviour.enabled = false;
+            var monster = root.GetComponent<MiningSimulator.Ores.MushroomMonster>();
+            var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+            // This EditMode fixture tests animation, not the runtime warning quad.
+            // Clone the data so the authored asset is never modified.
+            testData = Object.Instantiate(monster.SpeciesData);
+            testData.hideFlags = HideFlags.HideAndDontSave;
+            testData.combat.warningShader = null;
+            typeof(MiningSimulator.Ores.MushroomMonster).GetField("rewards", flags).SetValue(monster, testData);
+            typeof(MiningSimulator.Ores.MushroomMonster).GetMethod("Awake", flags).Invoke(monster, null);
+            var animator = root.GetComponentInChildren<Animator>();
+            animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+            animator.Rebind(); animator.Update(0);
+            int layer = animator.GetLayerIndex("Hit Reaction");
+            animator.SetLayerWeight(layer, 1f);
+            animator.Play("Hit Reaction.Damage", layer, .3f); animator.Update(.1f);
+            typeof(MiningSimulator.Ores.MushroomMonster).GetMethod("BeginAttack", flags).Invoke(monster, null);
+            animator.Update(.2f); animator.Update(.2f);
+            Assert.That(animator.GetLayerWeight(layer), Is.Zero, "Old reaction pose must not override the attack");
+            Assert.That(animator.GetCurrentAnimatorStateInfo(0).IsName(monster.CombatData.attackState), Is.True);
+        }
+        finally
+        {
+            Object.DestroyImmediate(root);
+            if (testData != null) Object.DestroyImmediate(testData);
+            UnityEditor.SceneManagement.EditorSceneManager.ClosePreviewScene(scene);
+        }
+    }
+
     [TestCase("Bat", "Assets/Prefabs/Monsters/BatMonster.prefab", true)]
     [TestCase("ForestGolem", "Assets/Prefabs/Monsters/ForestGolem.prefab", true)]
     [TestCase("Golem", "Assets/Prefabs/Monsters/GolemMonster.prefab", true)]
@@ -24,8 +64,16 @@ public sealed class MonsterAnimationLayerTests
         var controller = animator.runtimeAnimatorController as AnimatorController;
         Assert.That(AssetDatabase.GetAssetPath(controller), Is.EqualTo(folder + "/" + species + ".controller"));
         Assert.That(controller.animationClips.All(c => c != null && AssetDatabase.GetAssetPath(c).StartsWith(folder + "/Clips/")), Is.True);
+        var monster = prefab.GetComponent<MiningSimulator.Ores.MushroomMonster>();
+        if (monster != null && monster.CombatData != null)
+        {
+            var stateNames = controller.layers[0].stateMachine.states.Select(s => s.state.name).ToArray();
+            Assert.That(stateNames, Does.Contain(monster.CombatData.attackState), "Missing primary attack state");
+            if (!string.IsNullOrEmpty(monster.CombatData.secondAttackState))
+                Assert.That(stateNames, Does.Contain(monster.CombatData.secondAttackState), "Missing secondary attack state");
+        }
         var layer = controller.layers.Single(l => l.name == "Hit Reaction");
-        Assert.That(layer.defaultWeight, Is.EqualTo(1f));
+        Assert.That(layer.defaultWeight, Is.EqualTo(hasDamage ? 1f : 0f));
         Assert.That(layer.blendingMode, Is.EqualTo(AnimatorLayerBlendingMode.Override));
         Assert.That(layer.stateMachine.defaultState.name, Is.EqualTo("Empty"));
         var mask = layer.avatarMask;

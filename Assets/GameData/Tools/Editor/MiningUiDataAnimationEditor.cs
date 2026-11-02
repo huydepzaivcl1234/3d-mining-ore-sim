@@ -5,10 +5,10 @@ using UnityEngine;
 namespace MiningSimulator.Ores.Editor
 {
     /// <summary>
-    /// Keeps authored scene layout as the source of truth. MiningUiData retains its legacy
+    /// Keeps authored scene layout as the source of truth. GameUiData retains its legacy
     /// serialized fields for compatibility, but designers only edit runtime motion here.
     /// </summary>
-    [CustomEditor(typeof(MiningUiData))]
+    [CustomEditor(typeof(GameUiData))]
     public sealed class MiningUiDataAnimationEditor : UnityEditor.Editor
     {
         private static readonly string[] ExperienceAnimation =

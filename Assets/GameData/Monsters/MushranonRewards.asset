@@ -12,6 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6c96954a7781b1a48b4e526a632370dc, type: 3}
   m_Name: MushranonRewards
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MushranonData
+  minimumPlayerLevelToSpawn: 9
+  minimumSpawnDay: 9
   combat:
     maxHealth: 5
     regenAmount: 0
@@ -31,6 +33,8 @@ MonoBehaviour:
     attackRange: 1.5
     attackArc: 120
     damage: 1
+    knockbackSpeed: 0
+    knockbackLift: 0
     attackCooldown: 2
     hitMoment: 0.45
     hitShape: 0
@@ -47,6 +51,7 @@ MonoBehaviour:
     chaseStandMaximumRangeFraction: 0.95
     targetScanSeconds: 0.25
     targetMemorySeconds: 2
+    retaliationForgetSeconds: 3
     detectionHysteresis: 1
     targetRepathDistance: 0.75
     waypointTolerance: 0.2

@@ -49,20 +49,23 @@ namespace MiningSimulator.Ores
     public sealed class MiningGiftReward
     {
         [SerializeField] private MiningGiftRewardType rewardType;
-        [Min(0f), SerializeField] private float chancePercent = 1f;
+        [InspectorName("Weight"),Min(0f), SerializeField] private float chancePercent = 1f;
         [Min(0f), SerializeField] private float moneyAmount = 1000f;
         [SerializeField] private MiningItemData item;
         [Min(1), SerializeField] private int itemAmount = 1;
         [SerializeField] private Color wheelColor = Color.white;
 
         public MiningGiftRewardType RewardType => rewardType;
-        public float ChancePercent => chancePercent;
+        public float ChancePercent => Weight;
+        public float Weight => (float)SequentialRarity.Weight(chancePercent);
+        [SerializeField] private MiningItemRarity currencyRarity;
+        public MiningItemRarity Rarity => rewardType==MiningGiftRewardType.Item&&item?item.Rarity:currencyRarity;
         public float MoneyAmount => moneyAmount;
         public MiningItemData Item => item;
         public int ItemAmount => Mathf.Max(1, itemAmount);
         public Color WheelColor => wheelColor;
 
-        public bool IsValid => chancePercent > 0f &&
+        public bool IsValid => Weight > 0f &&
                                (rewardType == MiningGiftRewardType.Money
                                    ? moneyAmount > 0f
                                    : item != null && itemAmount > 0);
@@ -98,8 +101,8 @@ namespace MiningSimulator.Ores
         [SerializeField] private Vector3 modelLocalEulerAngles;
 
         [Header("Drop And Stack")]
-        [Tooltip("Relative chance inside the item table after a successful source drop roll.")]
-        [Range(0f, 100f), SerializeField] private float selectionChancePercent = 33.33f;
+        [Tooltip("Relative weight within this item’s rarity table. Does not affect rarity chance.")]
+        [UnityEngine.Serialization.FormerlySerializedAs("selectionChancePercent"),Min(0),SerializeField] private float selectionWeight=33.33f;
         [Range(1, 64), SerializeField] private int maximumStack = 64;
 
         [Header("Wandering Trader Shop")]
@@ -148,7 +151,8 @@ namespace MiningSimulator.Ores
         [Min(0.1f), SerializeField] private float effectDurationSeconds = 30f;
 
         [Header("Gift Box")]
-        [Tooltip("Relative reward chances. Values are normalized automatically and do not need to total 100.")]
+        public SequentialRaritySettings giftRarityChances=new();
+        [Tooltip("Weights are normalized within each rarity. Rarity chances are rolled separately, top to bottom.")]
         [SerializeField] private List<MiningGiftReward> giftRewards = new();
         [Min(0.1f), SerializeField] private float giftSpinDurationSeconds = 3.5f;
         [Range(1, 12), SerializeField] private int giftSpinRotations = 6;
@@ -164,7 +168,8 @@ namespace MiningSimulator.Ores
         public float WorldScale => worldScale;
         public Vector3 ModelLocalPosition => modelLocalPosition;
         public Vector3 ModelLocalEulerAngles => modelLocalEulerAngles;
-        public float SelectionChancePercent => selectionChancePercent;
+        public float SelectionChancePercent => SelectionWeight;
+        public float SelectionWeight => (float)SequentialRarity.Weight(selectionWeight);
         public int MaximumStack => IsEquipment ? 1 : useType == MiningItemUseType.Tower ? 999 : maximumStack;
         public bool TraderCanBuy => traderCanBuy;
         public bool TraderCanSell => traderCanSell;
@@ -214,59 +219,13 @@ namespace MiningSimulator.Ores
                 : $"{ShortEffectName} +{effectPercent:0.##}%";
         }
 
-        public bool TryRollGiftReward(out int rewardIndex, out MiningGiftReward reward)
+        public bool TryRollGiftReward(out int rewardIndex,out MiningGiftReward reward)
         {
-            rewardIndex = -1;
-            reward = null;
-            float total = 0f;
-            foreach (MiningGiftReward candidate in giftRewards)
-            {
-                if (candidate != null && candidate.IsValid)
-                {
-                    total += candidate.ChancePercent;
-                }
-            }
-            if (total <= 0f)
-            {
-                return false;
-            }
-
-            float roll = UnityEngine.Random.value * total;
-            for (int index = 0; index < giftRewards.Count; index++)
-            {
-                MiningGiftReward candidate = giftRewards[index];
-                if (candidate == null || !candidate.IsValid)
-                {
-                    continue;
-                }
-                roll -= candidate.ChancePercent;
-                if (roll <= 0f)
-                {
-                    rewardIndex = index;
-                    reward = candidate;
-                    return true;
-                }
-            }
-
-            return false;
+            reward=null;
+            if(!SequentialRarity.TryRoll(giftRewards,giftRarityChances,r=>r!=null?r.Rarity:MiningItemRarity.Common,r=>r!=null&&r.IsValid?r.Weight:0,out rewardIndex))return false;
+            reward=giftRewards[rewardIndex];return true;
         }
-
-        public float GetGiftRewardDisplayPercent(MiningGiftReward reward)
-        {
-            if (reward == null || !reward.IsValid)
-            {
-                return 0f;
-            }
-            float total = 0f;
-            foreach (MiningGiftReward candidate in giftRewards)
-            {
-                if (candidate != null && candidate.IsValid)
-                {
-                    total += candidate.ChancePercent;
-                }
-            }
-            return total > 0f ? reward.ChancePercent / total * 100f : 0f;
-        }
+        public float GetGiftRewardDisplayPercent(MiningGiftReward reward)=>SequentialRarity.DisplayPercent(giftRewards,giftRarityChances,r=>r!=null?r.Rarity:MiningItemRarity.Common,r=>r!=null&&r.IsValid?r.Weight:0,giftRewards.IndexOf(reward));
 
         private void OnValidate()
         {
@@ -288,7 +247,7 @@ namespace MiningSimulator.Ores
             traderGemBuyMaximum = Mathf.Max(traderGemBuyValue, traderGemBuyMaximum);
             traderSellValue = Mathf.Max(0f, traderSellValue);
             traderGemSellMaximum = Mathf.Max(traderSellValue, traderGemSellMaximum);
-            selectionChancePercent = Mathf.Clamp(selectionChancePercent, 0f, 100f);
+            selectionWeight = (float)SequentialRarity.Weight(selectionWeight);
             effectPercent = Mathf.Max(0f, effectPercent);
             effectDurationSeconds = Mathf.Max(0.1f, effectDurationSeconds);
             giftSpinDurationSeconds = Mathf.Max(0.1f, giftSpinDurationSeconds);

@@ -8,7 +8,8 @@ namespace MiningSimulator.Ores
         private MiningCardData data;
         private MiningCardData.Tier tier;
         private float ready;
-        private bool collected;
+        private bool collected, attracting;
+        private Collider playerBody;
         private LineRenderer beam;
         private bool landed;
         private Vector3 groundAnchor, landingPosition;
@@ -19,7 +20,7 @@ namespace MiningSimulator.Ores
         {
             if (landed || data == null || (data.landingLayers.value & (1 << collision.gameObject.layer)) == 0) return;
             // Enemies, players and ore are not a landing surface.
-            if (collision.collider.GetComponentInParent<MiningCharacterHealth>() != null ||
+            if (collision.collider.GetComponentInParent<CharacterHealth>() != null ||
                 collision.collider.GetComponentInParent<MiningWorldCard>() != null) return;
             for (int i = 0; i < collision.contactCount; i++)
             {
@@ -41,6 +42,7 @@ namespace MiningSimulator.Ores
         public void Configure(MiningCardSystem system, MiningCardData settings, MiningCardData.Tier definition)
         {
             owner=system; data=settings; tier=definition;
+            playerBody=owner.Player?owner.Player.GetComponent<Collider>():null;
             ready=Time.time + data.pickupDelay;
             var beamObject=new GameObject("Card Light Pillar");
             beamObject.transform.SetParent(transform,false);
@@ -53,7 +55,7 @@ namespace MiningSimulator.Ores
         private void LateUpdate()
         {
             if (owner == null || data == null) return;
-            if (landed)
+            if (landed && !attracting)
             {
                 float elapsed = Time.time - landedAt;
                 float lift = data.hoverLiftDuration > 0f ? Mathf.Clamp01(elapsed / data.hoverLiftDuration) : 1f;
@@ -70,7 +72,18 @@ namespace MiningSimulator.Ores
             if (beam != null) { beam.SetPosition(0,anchor); beam.SetPosition(1,anchor+Vector3.up*data.beamHeight); }
             if (collected || !landed || Time.time < ready || !owner.CanCollect) return;
             Vector3 delta=owner.Player.transform.position-groundAnchor;
-            if (delta.sqrMagnitude > data.pickupRadius*data.pickupRadius) return;
+            if(!attracting){
+                Vector3 horizontal=delta;horizontal.y=0;
+                float radius=owner.Player.CardAttractionRadius;
+                attracting=radius>0&&horizontal.sqrMagnitude<=radius*radius;
+                if(!attracting&&delta.sqrMagnitude>data.pickupRadius*data.pickupRadius)return;
+            }
+            if(attracting){
+                if(beam)beam.enabled=false;
+                Vector3 target=playerBody?playerBody.bounds.center:owner.Player.transform.position+Vector3.up*.8f;
+                transform.position=Vector3.MoveTowards(transform.position,target,Mathf.Max(.1f,owner.Player.AbilityData.common.cardMagnet.pullSpeed)*Time.deltaTime);
+                if((transform.position-target).sqrMagnitude>.15f*.15f)return;
+            }
             if (!owner.Collect(tier)) return;
             collected=true;
             Destroy(gameObject);

@@ -9,6 +9,8 @@ namespace GameData.Player.Script
         public AnimationClip authoredClip;
         public AnimationClip mechanismRestClip;
         public AnimationClip mechanismClip;
+        [Tooltip("Optional world-body mechanism clip; FPS keeps its authored reload.")]
+        public AnimationClip worldMechanismClip;
         public string authoredLayer = "Pistol Blender Reload";
         public string authoredState = "Reload";
         public bool useAuthoredCamera;

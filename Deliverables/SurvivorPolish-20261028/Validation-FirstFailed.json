@@ -1,0 +1,27 @@
+{
+  "idleFootstepsSilent": true,
+  "stepsPlayed": 0,
+  "spaceJump": false,
+  "jumpHeight": 0.0,
+  "jumpSfx": 0,
+  "landingSfx": 0,
+  "walkRunEvents": false,
+  "cameraRelativeUvDrift": 0.0,
+  "cameraFollowStable": true,
+  "volleys": 0,
+  "shotSfx": 0,
+  "impactSfx": 0,
+  "offscreenPaused": false,
+  "offscreenMotion": 0.0,
+  "offscreenStatic": true,
+  "onscreenResumed": true,
+  "clipsPlayed": [
+    "ItemPickupChime",
+    "splat3",
+    "morning",
+    "MorningBirdsong"
+  ],
+  "motionBlurOff": true,
+  "boxesDisabled": true,
+  "frames": 660
+}

@@ -22,15 +22,15 @@ namespace MiningSimulator.Ores
             foreach (var box in Loaded<BlueGunUpgradeBox>()) Remove(box);
             foreach (var special in Loaded<GunSpecialUpgrades>()) special.ResetProgress();
             foreach (var weapons in Loaded<PlayerWeaponProgression>()) weapons.ResetProgress();
-            MiningPlayerStats.ResetSavedProgress();
-            foreach (var upgrades in Loaded<MiningUpgradeSystem>()) { upgrades.SetPermanentMoneyMultiplier(1f); upgrades.SetPermanentExperienceMultiplier(1f); upgrades.ResetAutoUpgrade(); upgrades.ResetAllUpgrades(); }
+            PlayerStats.ResetSavedProgress();
+            foreach (var upgrades in Loaded<EconomyUpgradeSystem>()) { upgrades.SetPermanentMoneyMultiplier(1f); upgrades.SetPermanentExperienceMultiplier(1f); upgrades.ResetAutoUpgrade(); upgrades.ResetAllUpgrades(); }
             foreach (var items in Loaded<MiningItemSystem>()) items.ResetAllData();
             foreach (var achievements in Loaded<MiningAchievementSystem>()) achievements.ResetAllData();
             foreach (var quests in Loaded<MiningQuestSystem>()) quests.ResetAllData();
-            MiningComputerStation.ResetAllLoadedStations();
             TreasureChest.ResetSavedProgress(); TowerWorldSave.ResetAllProgress();
             foreach (var wallet in Loaded<PlayerWallet>()) { wallet.ResetMoney(); wallet.ResetGems(); }
             foreach (var player in Loaded<PlayerRespawn>()) player.RespawnNow();
+            foreach(var loot in Loaded<SurvivorDailyLoot>())loot.ResetProgress();
             DayNightSystem.ResetSavedClock(); MonsterSpawnZone.ResetLoadedEncounters();
             GameSave.Flush();
             return true;

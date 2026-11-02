@@ -19,7 +19,7 @@ public static class ChestDefensePlayValidation
     [Serializable] private class Snapshot { public Root[] roots; }
     private static TreasureChest chest;
     private static TreasureChestDefenseFeedback feedback;
-    private static MiningCharacterHealth playerHealth;
+    private static CharacterHealth playerHealth;
     private static MiningQuestSystem quests;
     private static Keyboard keyboard;
     private static GameObject fixture;
@@ -75,8 +75,8 @@ public static class ChestDefensePlayValidation
             typeof(TreasureChest).GetField("persistProgress", Flags).SetValue(chest, false);
             chest.transform.position = new Vector3(15000, 0, 15000);
             var player = new GameObject("Repair test player"); player.SetActive(false); player.transform.SetParent(fixture.transform);
-            var stats = player.AddComponent<MiningPlayerStats>(); stats.enabled = false;
-            playerHealth = player.AddComponent<MiningCharacterHealth>();
+            var stats = player.AddComponent<PlayerStats>(); stats.enabled = false;
+            playerHealth = player.AddComponent<CharacterHealth>();
             player.transform.position = chest.transform.position + Vector3.back * 2;
             var camera = new GameObject("Defense test camera").AddComponent<Camera>(); camera.transform.SetParent(fixture.transform);
             camera.tag = "MainCamera"; camera.transform.position = chest.transform.position + new Vector3(0, 3, -7);

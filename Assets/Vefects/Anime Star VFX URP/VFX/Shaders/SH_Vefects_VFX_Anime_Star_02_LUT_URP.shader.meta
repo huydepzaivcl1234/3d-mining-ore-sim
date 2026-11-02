@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: 89140d959505e6341b7444b91afb021b
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures:
+  - _LUTTexture: {fileID: 2800000, guid: 0714bd23a673ddd48af24f353559553a, type: 3}
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 404472
+  packageName: Anime Star VFX - URP
+  packageVersion: 1.0.1
+  assetPath: Assets/Vefects/Anime Star VFX URP/VFX/Shaders/SH_Vefects_VFX_Anime_Star_02_LUT_URP.shader
+  uploadId: 988830

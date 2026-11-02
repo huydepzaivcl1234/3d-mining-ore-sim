@@ -20,7 +20,7 @@ public sealed class TowerUpgradeTests
             var first=Make("First");var second=Make("Second");
             var wallet=root.AddComponent<PlayerWallet>();
             typeof(PlayerWallet).GetField("currentMoney",BindingFlags.Instance|BindingFlags.NonPublic).SetValue(wallet,1000f);
-            var player=new GameObject("Player");player.transform.SetParent(root.transform);player.AddComponent<MiningCharacterHealth>().ConfigureSpawnHealth(100);
+            var player=new GameObject("Player");player.transform.SetParent(root.transform);player.AddComponent<CharacterHealth>().ConfigureSpawnHealth(100);
             // IsAlive intentionally requires an active tower; lifecycle must run before exercising upgrade.
             root.SetActive(true);
             wallet.enabled=false;

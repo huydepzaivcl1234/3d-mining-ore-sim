@@ -47,6 +47,8 @@ namespace MiningSimulator.Ores
         private Vector3 origin;
         private int width, depth, cursor, nextTicket;
         private readonly Collider[] overlaps = new Collider[128];
+        private int actorLayers=-1;
+        private int ActorLayers=>actorLayers<0?actorLayers=LayerMask.GetMask("Enemy"):actorLayers;
         private readonly RaycastHit[] hits = new RaycastHit[128];
         private readonly HashSet<int> dirty = new();
         private readonly Queue<Request> requests = new();
@@ -77,6 +79,16 @@ namespace MiningSimulator.Ores
         private float lastSearchWork;
         public bool HasBaked { get; private set; }
         public int Revision { get; private set; }
+        public Bounds AreaBounds=>new Bounds(origin+new Vector3(width*cellSize*.5f,0,depth*cellSize*.5f),new Vector3(width*cellSize,0,depth*cellSize));
+        internal int CrowdColumns=>width;
+        internal int CrowdRows=>depth;
+        internal float CrowdCellSize=>cellSize;
+        internal Vector3 CrowdOrigin=>origin;
+        internal void CopyCrowdCells(Vector3[] points,byte[] open)
+        {
+            if(points.Length!=CellCount||open.Length!=CellCount)throw new ArgumentException("Crowd grid size mismatch");
+            for(int i=0;i<CellCount;i++){points[i]=cells[i].point;open[i]=(byte)(cells[i].ground&&cells[i].open?1:0);}
+        }
         public int CellCount => cells?.Length ?? 0;
         public float BuildProgress => CellCount == 0 ? 0 : (float)cursor / CellCount;
         public int PendingRequests => requests.Count + searches.Count;
@@ -101,6 +113,7 @@ namespace MiningSimulator.Ores
         }
         private void Awake()
         {
+            actorLayers=LayerMask.GetMask("Enemy");
             if (Instance != null && Instance != this) { Destroy(this); return; }
             Instance = this;
         }
@@ -145,8 +158,6 @@ namespace MiningSimulator.Ores
             origin = min; cells = new Cell[width * depth]; cursor = 0; Revision++; clearanceCaches.Clear();
             if (Application.isPlaying)
             {
-                foreach (MiningChest chest in FindObjectsByType<MiningChest>(FindObjectsSortMode.None)) WorldNavigationObstacle.Ensure(chest);
-                foreach (LuckyBlock block in FindObjectsByType<LuckyBlock>(FindObjectsSortMode.None)) WorldNavigationObstacle.Ensure(block);
             }
         }
         public void Rebake()
@@ -206,12 +217,12 @@ namespace MiningSimulator.Ores
                 layer = t.gameObject.layer; supported = true;
             }
             int count = Physics.RaycastNonAlloc(p + Vector3.up * groundProbeHeight, Vector3.down,
-                hits, groundProbeHeight * 2, groundLayers, QueryTriggerInteraction.Ignore);
+                hits, groundProbeHeight * 2, groundLayers.value & ~ActorLayers, QueryTriggerInteraction.Ignore);
             float nearest = float.PositiveInfinity;
             for (int i = 0; i < count; i++)
             {
                 var hit = hits[i];
-                if (hit.distance >= nearest || (ignoredSupport != null && ignoredSupport.Contains(hit.collider)) || IsActorOrMineable(hit.collider) ||
+                if (hit.distance >= nearest || (ignoredSupport != null && ignoredSupport.Contains(hit.collider)) || IsDynamicActor(hit.collider) ||
                     Vector3.Angle(hit.normal, Vector3.up) > maximumSlope) continue;
                 // Above Terrain only explicitly authored Ground-layer platforms are support.
                 int groundLayer = LayerMask.NameToLayer("Ground");
@@ -225,7 +236,7 @@ namespace MiningSimulator.Ores
         }
         private static readonly Dictionary<Collider, bool> actorCache = new();
         private static int actorCacheFrame = -1;
-        private static bool IsActorOrMineable(Collider c)
+        private static bool IsDynamicActor(Collider c)
         {
             // Crowd controllers dominate overlap results. Avoid repeated hierarchy walks
             // for the same collider in hundreds of path probes during one frame.
@@ -233,7 +244,7 @@ namespace MiningSimulator.Ores
             if (actorCacheFrame != Time.frameCount)
             { actorCacheFrame = Time.frameCount; actorCache.Clear(); }
             if (actorCache.TryGetValue(c, out bool actor)) return actor;
-            actor = c.GetComponentInParent<MiningChest>() != null || c.GetComponentInParent<LuckyBlock>() != null ||
+            actor =
                 c.GetComponentInParent<CharacterController>() != null ||
                 (c.attachedRigidbody != null && !c.attachedRigidbody.isKinematic);
             actorCache[c] = actor;
@@ -243,9 +254,7 @@ namespace MiningSimulator.Ores
         {
             if (c is CharacterController) return false;
             if (c is TerrainCollider || c.bounds.max.y <= ground + probeGroundClearance) return false;
-            MiningChest chest = c.GetComponentInParent<MiningChest>(); if (chest != null) return chest.CanMine;
-            LuckyBlock block = c.GetComponentInParent<LuckyBlock>(); if (block != null) return !block.IsResolved;
-            return !IsActorOrMineable(c);
+            return !IsDynamicActor(c);
         }
         public bool IsPointClear(Vector3 p, float radius, float height = 0)
         {
@@ -273,7 +282,7 @@ namespace MiningSimulator.Ores
             radius = Mathf.Max(.05f, radius);
             Vector3 bottom = p + Vector3.up * (radius + probeGroundClearance);
             Vector3 top = p + Vector3.up * Mathf.Max(radius + probeGroundClearance, (height > 0 ? height : probeHeight) - radius);
-            int count = Physics.OverlapCapsuleNonAlloc(bottom, top, radius, overlaps, obstacleLayers, QueryTriggerInteraction.Ignore);
+            int count = Physics.OverlapCapsuleNonAlloc(bottom, top, radius, overlaps, obstacleLayers.value & ~ActorLayers, QueryTriggerInteraction.Ignore);
             if (count == overlaps.Length) return false;
             for (int i = 0; i < count; i++) if (Blocks(overlaps[i], p.y)) return false;
             return true;

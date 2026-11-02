@@ -1,0 +1,53 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d697d1ce92e7572c4046ac7b833d40b, type: 3}
+  m_Name: Necklace_Green
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningItemData
+  itemId: necklace_green
+  displayName: Green Necklace
+  description: 
+  rarity: 0
+  worldModel: {fileID: 3741853646839841002, guid: a106aaae3aec2844387496c088652d90, type: 3}
+  inventoryIcon: {fileID: 21300000, guid: 5ec124af7a2988844a92d39d528edacb, type: 3}
+  iconFallback: N
+  fallbackColor: {r: 0.2, g: 1, b: 0.4, a: 1}
+  worldScale: 0.7
+  modelLocalPosition: {x: 0, y: 0, z: 0}
+  modelLocalEulerAngles: {x: 0, y: 0, z: 0}
+  selectionChancePercent: 0
+  maximumStack: 1
+  traderCanBuy: 0
+  traderCanSell: 0
+  traderMinimumOfferAmount: 1
+  traderMaximumOfferAmount: 3
+  traderBuyValue: 4000
+  traderCoinBuyMaximum: 5000
+  traderGemBuyValue: 4
+  traderGemBuyMaximum: 5
+  traderSellValue: 2
+  traderGemSellMaximum: 3
+  useType: 2
+  equipmentBonuses:
+    lifeStealPercent: 0
+    healingBonusPercent: 25
+    regenIntervalReductionPercent: 20
+    burnDamagePerTick: 0
+    burnTickSeconds: 1
+    burnDurationSeconds: 0
+  equipmentGemPrice: 15
+  effectType: 0
+  effectPercent: 25
+  criticalChancePercent: 15
+  effectDurationSeconds: 30
+  giftRewards: []
+  giftSpinDurationSeconds: 3.5
+  giftSpinRotations: 6

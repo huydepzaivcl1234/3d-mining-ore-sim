@@ -19,7 +19,7 @@ namespace MiningSimulator.Ores
         private readonly RaycastHit[] hits = new RaycastHit[32];
         private MushroomMonster owner;
         private Transform victim;
-        private MiningCharacterHealth victimHealth;
+        private CharacterHealth victimHealth;
         private float age;
         private bool launched, resolved;
 
@@ -33,7 +33,7 @@ namespace MiningSimulator.Ores
             owner = attacker;
             data = attacker != null ? attacker.CombatData : null;
             victim = target;
-            victimHealth = target != null ? target.GetComponent<MiningCharacterHealth>() : null;
+            victimHealth = target != null ? target.GetComponent<CharacterHealth>() : null;
             age = 0f;
             resolved = false;
             launched = true;

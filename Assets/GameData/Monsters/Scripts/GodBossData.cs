@@ -6,7 +6,17 @@ namespace MiningSimulator.Ores
     public sealed class GodBossData : ScriptableObject
     {
         public GodBossController prefab;
-        [Min(1)] public int everyDays = 50;
+        [HideInInspector] public int everyDays = 50; // Legacy serialized field; encounters now use daily rolls.
+        [Header("Daily encounter after reaching the required player level")]
+        [Min(1)] public int minimumPlayerLevel=15;
+        [Range(0,100)] public float initialChancePercent=5,dailyChanceIncreasePercent=5;
+        [Header("Added strength per later appearance (not per day)")]
+        [Min(0)] public float healthIncreasePercent=25,damageIncreasePercent=25;
+        [Header("Crowd-control resistance")]
+        [Range(0,100),Tooltip("Reduces control duration. At 100%, immune to slow and airborne; does not reduce burn damage.")] public float crowdControlResistancePercent=50;
+        public float SpawnChancePercent(int day,int firstEligibleDay,int lastAppearanceDay=0)=>firstEligibleDay<1||day<firstEligibleDay?0:lastAppearanceDay>0?Mathf.Clamp(dailyChanceIncreasePercent*Mathf.Max(0,day-lastAppearanceDay),0,100):Mathf.Clamp(initialChancePercent+dailyChanceIncreasePercent*(day-firstEligibleDay),0,100);
+        public float HealthMultiplier(int appearance)=>1+Mathf.Max(0,appearance-1)*healthIncreasePercent*.01f;
+        public float DamageMultiplier(int appearance)=>1+Mathf.Max(0,appearance-1)*damageIncreasePercent*.01f;
         [Min(1)] public float health = 5000;
         [Min(0)] public float armor = 10, magicResistance = 10;
         [Min(1)] public float height = 8;
@@ -32,11 +42,14 @@ namespace MiningSimulator.Ores
         [Min(1)] public float summonHealthAtZeroBossHP = 3, summonDamageAtZeroBossHP = 2;
         public bool summonBossVariants = true;
         [Min(1)] public int maxLivingSummons = 24;
+        [Header("Minion placement around God Boss (metres)")]
+        [Min(0)] public float summonMinimumDistance = 8, summonMaximumDistance = 16;
+        [Min(0)] public float summonMinimumPlayerDistance = 3;
         [Min(0)] public float bleedMaxHealthPercentPerSecond = 1, bleedDuration = 2;
         [Header("Animation")]
         public AnimationClip idle, walk, run, punchClip, swipeClip, jump, roar, dying;
         [Min(.01f)] public float crossfade = .12f, deathSpeed = 1;
-        public bool IsEncounterDay(int day) => day > 0 && day % Mathf.Max(1, everyDays) == 0;
+        public bool IsEncounterDay(int day) => day > 0;
         [System.Serializable] public sealed class Strike
         {
             [Min(.01f)] public float speed = 1;
