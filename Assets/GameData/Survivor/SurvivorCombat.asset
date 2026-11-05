@@ -14,6 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameData.Player.Script.SurvivorCombatData
   damage: 1
   attackInterval: 3
+  attackSpeed: 0.33333334
+  attackSpeedRatio: 0.33333334
+  baseBonusAttackSpeedPercent: 0
+  maximumAttackSpeed: 12.5
+  attackSpeedVersion: 1
   range: 4
   projectileSpeed: 5
   projectileRadius: 0.1

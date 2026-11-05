@@ -3,7 +3,7 @@ using MiningSimulator.Ores;
 namespace GameData.Player.Script
 {
     [DisallowMultipleComponent]
-    public sealed class SurvivorLootBox : MonoBehaviour
+    public sealed partial class SurvivorLootBox : MonoBehaviour
     {
         public GameObject shinyEffects;
         private SurvivorDailyLoot owner;

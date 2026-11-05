@@ -24,7 +24,7 @@ public sealed class PlayerStatsInspector : Editor
                 var field=new FloatField(label){isDelayed=true,tooltip=hint};
                 source.Update();field.SetValueWithoutNotify(source.FindProperty(path).floatValue);
                 field.RegisterValueChangedCallback(e=>{
-                    if(!data)return;source.Update();float value=float.IsNaN(e.newValue)||float.IsInfinity(e.newValue)?source.FindProperty(path).floatValue:e.newValue;source.FindProperty(path).floatValue=Mathf.Max(path=="damage"?0f:.1f,value);
+                    if(!data)return;source.Update();float value=float.IsNaN(e.newValue)||float.IsInfinity(e.newValue)?source.FindProperty(path).floatValue:e.newValue;source.FindProperty(path).floatValue=Mathf.Max(path=="damage"?0f:path=="attackSpeed"?.01f:.1f,value);
                     source.ApplyModifiedProperties();source.Update();field.SetValueWithoutNotify(source.FindProperty(path).floatValue);
                     SceneView.RepaintAll();
                 });
@@ -32,7 +32,7 @@ public sealed class PlayerStatsInspector : Editor
             }
             Add("damage","Sát thương gốc","Sát thương mỗi viên, chưa cộng level và nâng cấp.");
             Add("range","Tầm đánh (m)","Bán kính chọn mục tiêu; chọn PlayerArmature và bật Gizmos để xem.");
-            Add("attackInterval","Nhịp bắn (giây/lần)","0.65 giây/lần = 1.54 lần/s. Tốc độ thực tế hiển thị bên dưới.");
+            Add("attackSpeed","Tốc đánh gốc (lần/s)","Base AS + AS Ratio × tổng bonus %.");
             Add("projectileSpeed","Tốc độ đạn (m/s)","Tốc độ bay, khác với số lần bắn mỗi giây.");
             void RefreshFields(){if(!data)return;source.Update();foreach(var entry in fields)entry.field.SetValueWithoutNotify(source.FindProperty(entry.path).floatValue);}
             content.RegisterCallback<AttachToPanelEvent>(_=>Undo.undoRedoPerformed+=RefreshFields);

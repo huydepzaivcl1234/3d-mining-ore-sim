@@ -130,6 +130,10 @@ MonoBehaviour:
   burnDurationSeconds: 0
   lifeStealPercent: 0
   healingBonusPercent: 0
+  lootProfileOnly: 0
+  cardDropPercent: 2
+  bossCardDropPercent: 5
+  abilityCardSharePercent: 1
   drops: []
   iconSize: 0.45
   launchUpSpeed: 4

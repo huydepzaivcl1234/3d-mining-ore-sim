@@ -5,7 +5,7 @@ namespace MiningSimulator.Ores
     /// <summary>One physical item drop that bounces briefly before entering the inventory.</summary>
     [DisallowMultipleComponent]
     [UnityEngine.Scripting.APIUpdating.MovedFrom(true,"MiningSimulator.Ores","Assembly-CSharp","MiningWorldItem")]
-    public sealed class WorldItemPickup : MonoBehaviour
+    public sealed partial class WorldItemPickup : MonoBehaviour
     {
         private MiningItemSystem itemSystem;
         private MiningItemData item;

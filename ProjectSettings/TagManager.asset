@@ -16,12 +16,12 @@ TagManager:
   - 
   - LocalPlayerBody
   - FPSViewmodel
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
+  - Grass
+  - Stone
+  - Iron
+  - Wood
+  - MapObstacle
+  - Ragdoll
   - 
   - 
   - 

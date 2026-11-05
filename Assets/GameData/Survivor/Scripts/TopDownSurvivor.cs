@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.EventSystems;
+using System.Collections.Generic;
 using MiningSimulator.Ores;
 
 namespace GameData.Player.Script
@@ -23,6 +24,46 @@ namespace GameData.Player.Script
         private Rigidbody body;
         private PlayerRagdoll ragdoll;
         private bool initialized, orbiting;
+        [Header("Death orbit")]
+        [SerializeField,Min(1)] private float deathDistance=3.2f;
+        [SerializeField,Range(10,70)] private float deathPitch=28f;
+        [SerializeField,Range(30,80)] private float deathFov=50f;
+        private bool deathView;
+        private float deathDuration,deathElapsed,deathStartTime,deathYaw,deathStartFov;
+        private Vector3 deathStartPosition,deathFocus,deathFocusVelocity;
+        private Quaternion deathStartRotation;
+        private Renderer[] deathObstacles=System.Array.Empty<Renderer>();
+        private readonly Dictionary<Renderer,bool> hiddenForDeath=new();
+        public void BeginDeathView(float seconds)
+        {
+            if(!viewCamera)return;
+            deathView=true;deathDuration=Mathf.Max(.1f,seconds);deathElapsed=0;deathStartTime=Time.unscaledTime;
+            deathYaw=viewCamera.transform.eulerAngles.y;deathStartPosition=viewCamera.transform.position;
+            deathStartRotation=viewCamera.transform.rotation;deathStartFov=viewCamera.fieldOfView;
+            deathFocus=DeathFocus();deathFocusVelocity=Vector3.zero;orbiting=false;
+            var obstacles=new List<Renderer>();
+            foreach(var enemy in CharacterHealth.ActiveMonsters){if(!enemy||(enemy.transform.position-deathFocus).sqrMagnitude>900)continue;foreach(var r in enemy.GetComponentsInChildren<Renderer>())if(r is MeshRenderer||r is SkinnedMeshRenderer)obstacles.Add(r);}
+            deathObstacles=obstacles.ToArray();
+        }
+        public void EndDeathView(){if(!deathView)return;deathView=false;initialized=false;followVelocity=Vector3.zero;foreach(var pair in hiddenForDeath)if(pair.Key)pair.Key.forceRenderingOff=pair.Value;hiddenForDeath.Clear();deathObstacles=System.Array.Empty<Renderer>();}
+        private void OnDisable()=>EndDeathView();
+        Vector3 DeathFocus()=>ragdoll&&ragdoll.IsRagdoll?ragdoll.FollowPosition+Vector3.up*.2f:transform.position+Vector3.up*.8f;
+        private void UpdateDeathView()
+        {
+            float dt=Mathf.Min(.1f,Time.unscaledDeltaTime);deathElapsed=Mathf.Clamp(Time.unscaledTime-deathStartTime,0,deathDuration);
+            float t=deathElapsed/deathDuration,orbit=Mathf.SmoothStep(0,1,t);
+            deathFocus=Vector3.SmoothDamp(deathFocus,DeathFocus(),ref deathFocusVelocity,.09f,Mathf.Infinity,dt);
+            var rotation=Quaternion.Euler(deathPitch,deathYaw+360*orbit,0);
+            var backwards=-(rotation*Vector3.forward);float distance=Mathf.Max(deathDistance,Mathf.Abs(transform.lossyScale.y)*deathDistance);
+            int count=Physics.SphereCastNonAlloc(deathFocus,.15f,backwards,cameraHits,distance,~LayerMask.GetMask("Enemy","Ragdoll"),QueryTriggerInteraction.Ignore);
+            for(int i=0;i<count;i++){var c=cameraHits[i].collider;if(c.transform.IsChildOf(transform)||c.GetComponentInParent<CharacterHealth>())continue;distance=Mathf.Min(distance,Mathf.Max(.5f,cameraHits[i].distance-.1f));}
+            float zoom=Mathf.SmoothStep(0,1,Mathf.Clamp01(deathElapsed/.65f));
+            viewCamera.transform.SetPositionAndRotation(Vector3.Lerp(deathStartPosition,deathFocus+backwards*distance,zoom),Quaternion.Slerp(deathStartRotation,rotation,zoom));
+            viewCamera.fieldOfView=Mathf.Lerp(deathStartFov,deathFov,zoom);
+            // Near-camera enemies must not fill the screen and hide the fallen player.
+            var toward=deathFocus-viewCamera.transform.position;var ray=new Ray(viewCamera.transform.position,toward.normalized);
+            foreach(var r in deathObstacles){if(!r||!r.enabled||hiddenForDeath.ContainsKey(r))continue;var bounds=r.bounds;bounds.Expand(.25f);if(bounds.IntersectRay(ray,out float hit)&&hit<toward.magnitude-.15f){hiddenForDeath[r]=r.forceRenderingOff;r.forceRenderingOff=true;}}
+        }
         private float displayedYaw, displayedAngle, displayedDistance, collisionDistance;
         private float yawVelocity, pitchVelocity, zoomVelocity, collisionVelocity;
         private readonly RaycastHit[] cameraHits=new RaycastHit[64];
@@ -51,6 +92,7 @@ namespace GameData.Player.Script
         private void LateUpdate()
         {
             if(!viewCamera)return;
+            if(deathView){UpdateDeathView();return;}
             float dt=Time.deltaTime;
             var mouse=Mouse.current;
             bool controls=dt>0 && (!health||health.Health>0) && (!combat||combat.CanAttack);

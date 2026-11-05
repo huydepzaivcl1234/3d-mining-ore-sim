@@ -6,7 +6,7 @@ namespace GameData.Player.Script
 {
     public enum ProjectileElement { None, Fire, Ice }
     [DisallowMultipleComponent,RequireComponent(typeof(SurvivorAbilities))]
-    public sealed class SurvivorAutoCombat : MonoBehaviour
+    public sealed partial class SurvivorAutoCombat : MonoBehaviour
     {
         [HideInInspector] public SurvivorCombatData data;
         [Header("SFX")]
@@ -43,7 +43,7 @@ namespace GameData.Player.Script
         private SurvivorCombatData Core => data;
         public float BaseDamage => Core ? Mathf.Max(0f, Core.damage) : data ? data.damage : 20f;
         public float AttackRange => (Core ? Mathf.Max(.1f, Core.range) : data ? data.range : 13f)*(1f+(Stats?Stats.UpgradeBonus(SurvivorUpgradeId.AttackRange):0)*.01f);
-        public float BaseFireRate => Core ? 1f / Mathf.Max(.08f, Core.attackInterval) : 1f / Mathf.Max(.08f, data ? data.attackInterval : .65f);
+        public float BaseFireRate => Core ? Mathf.Max(.01f,Core.attackSpeed) : data ? Mathf.Max(.01f,data.attackSpeed) : 1f/.65f;
         public float BaseProjectileSpeed => Core ? Mathf.Max(.1f, Core.projectileSpeed) : data ? data.projectileSpeed : 22f;
         private CharacterHealth health;
         private MiningCardSystem cards;
@@ -68,8 +68,8 @@ namespace GameData.Player.Script
         public int HitsLanded {get;private set;}
         public int ActiveProjectiles {get {int count=0;foreach(var b in bolts)if(b.active)count++;return count;}}
         public float EffectiveDamage=>Stats?Stats.CalculateSurvivorDamage(BaseDamage):BaseDamage;
-        public float AttackInterval=>Mathf.Max(.08f,1f/BaseFireRate/Mathf.Max(.1f,Stats?Stats.AttackSpeed:1));
-        public float ShotsPerSecond=>1f/AttackInterval;
+        public float AttackInterval=>1f/ShotsPerSecond;
+        public float ShotsPerSecond=>Stats?Stats.CalculateAttacksPerSecond():data?data.AttacksPerSecond():BaseFireRate;
         public int TrueProjectileCount=>Stats&&Stats.UpgradeLevel(SurvivorUpgradeId.TrueBarrage)>0?Mathf.Clamp(Mathf.RoundToInt(Stats.AbilityData.epic.trueBarrage.projectileCount.At(Stats.UpgradeLevel(SurvivorUpgradeId.TrueBarrage))),0,SurvivorUpgradeData.LevelCap):0;
         private int ElementalProjectileCount=>(Stats&&Stats.UpgradeLevel(SurvivorUpgradeId.Burn)>0?1:0)+(Stats&&Stats.UpgradeLevel(SurvivorUpgradeId.Frostbite)>0?1:0);
         public int ProjectileCount=>1+ElementalProjectileCount+(Stats&&Stats.UpgradeLevel(SurvivorUpgradeId.TwinMagic)>0?1:0)+TrueProjectileCount;

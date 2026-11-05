@@ -9,19 +9,21 @@ namespace MiningSimulator.Ores
     {
         [Serializable] public sealed class SavedMonster
         {
-            public string prefab;
+            public string prefab,id;
             public int kind,level,clip,day,appearance;
             public Vector3 position,scale;
             public Quaternion rotation;
             public float health,maxHealth,armor,resistance,resistanceScale=100,damage,burnDamage,clock,phase,cooldown,lifetime;
             public bool boss,summon;
-            public void CaptureHealth(CharacterHealth h){health=h.Health;maxHealth=h.MaxHealth;armor=h.Armor;resistance=h.MagicResistance;resistanceScale=h.ResistanceScale;position=h.transform.position;rotation=h.transform.rotation;scale=h.transform.lossyScale;}
-            public void RestoreHealth(CharacterHealth h){h.ConfigureSpawnHealth(maxHealth);h.RestoreSavedHealth(health);h.ConfigureDefenses(armor,resistance,resistanceScale);}
+            public void CaptureHealth(CharacterHealth h){id=RunStateFields.Id(h);health=h.Health;maxHealth=h.MaxHealth;armor=h.Armor;resistance=h.MagicResistance;resistanceScale=h.ResistanceScale;position=h.transform.position;rotation=h.transform.rotation;scale=h.transform.lossyScale;}
+            public void RestoreHealth(CharacterHealth h){if(!string.IsNullOrEmpty(id))h.WorldSaveId=id;h.ConfigureSpawnHealth(maxHealth);h.RestoreSavedHealth(health);h.ConfigureDefenses(armor,resistance,resistanceScale);}
         }
         [Serializable] private sealed class SavedWorld
         {
             public int version=1;
             public float elapsed,credit;
+            public string playerId;
+            public RunCheckpoint.State runtime;
             public int day,eventKind,thiefDay,thieves;
             public bool eventAnnouncement,skullRolled,skullPending;
             public Vector3 playerPosition;
@@ -35,21 +37,22 @@ namespace MiningSimulator.Ores
         public string WorldSaveKey {get {string path=transform.name;for(var p=transform.parent;p;p=p.parent)path=p.name+"/"+path;return "Survivor.WorldMonsters.v1/"+gameObject.scene.path+"/"+path;}}
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetWorldSaving(){worldStopping=false;nextWorldSave=15;}
-        public static void CaptureWorldsIfDue(bool stopping=false)
+        public static void CaptureWorldsIfDue(bool stopping=false,bool force=false)
         {
-            if(worldStopping||!Application.isPlaying||!stopping&&Time.unscaledTime<nextWorldSave)return;
+            if(RunCheckpoint.IsRestoring||worldStopping||!Application.isPlaying||!stopping&&!force&&Time.unscaledTime<nextWorldSave)return;
             nextWorldSave=Time.unscaledTime+15;
-            foreach(var zone in activeZones)if(zone&&zone.started&&!zone.restoringWorld&&!zone.worldLoadFailed)zone.SaveWorld();
+            bool includeRuntime=true;foreach(var zone in activeZones)if(zone&&zone.started&&!zone.restoringWorld&&!zone.worldLoadFailed){zone.SaveWorld(includeRuntime);includeRuntime=false;}
             if(stopping)worldStopping=true;
         }
-        public void SaveWorld()
+        public void SaveWorld(bool includeRuntime=true)
         {
             if(restoringWorld||worldLoadFailed||!started||!player)return;
-            var save=new SavedWorld{elapsed=spawnElapsedSeconds,credit=spawnCredit,playerPosition=player.transform.position,day=SpawnDayNumber,eventKind=(int)CurrentDailyEvent,eventAnnouncement=dailyAnnouncementPending,thiefDay=thiefDay,thieves=spawnedThieves};
+            var save=new SavedWorld{playerId=RunStateFields.Id(player),elapsed=spawnElapsedSeconds,credit=spawnCredit,playerPosition=player.transform.position,day=SpawnDayNumber,eventKind=(int)CurrentDailyEvent,eventAnnouncement=dailyAnnouncementPending,thiefDay=thiefDay,thieves=spawnedThieves};
             if(additionalRoster&&skullNights.TryGetValue(additionalRoster,out var roll)){save.skullRolled=roll.IsRolledFor(save.day);save.skullPending=roll.Pending;}
             if(SurvivorCrowd.Current)SurvivorCrowd.Current.CaptureWorld(this,save.monsters);
             foreach(var m in alive)if(m&&m.Health&&m.Health.Health>0&&!m.IsDespawning&&liveSpecies.TryGetValue(m,out var entry))save.monsters.Add(m.CaptureWorld(entry.prefab.name));
             foreach(var god in GetComponentsInChildren<GodBossController>())if(god.Health&&god.Health.Health>0){var record=new SavedMonster{kind=2,day=god.EncounterDay,appearance=god.AppearanceNumber};record.CaptureHealth(god.Health);save.monsters.Add(record);}
+            if(includeRuntime)save.runtime=RunCheckpoint.Capture(player);
             GameSave.SetString(WorldSaveKey,JsonUtility.ToJson(save));
         }
         private void StartWorldRestore()
@@ -65,6 +68,8 @@ namespace MiningSimulator.Ores
         }
         private IEnumerator RestoreWorld(SavedWorld saved)
         {
+            float previousScale=Time.timeScale;if(saved.runtime!=null){RunCheckpoint.IsRestoring=true;Time.timeScale=0;}
+            if(player&&!string.IsNullOrEmpty(saved.playerId))player.WorldSaveId=saved.playerId;
             while(!WorldNavigationGrid.Instance||!WorldNavigationGrid.Instance.HasBaked)yield return null;
             if(player){var rb=player.GetComponent<Rigidbody>();if(rb){rb.position=saved.playerPosition;rb.linearVelocity=Vector3.zero;}player.transform.position=saved.playerPosition;}
             spawnElapsedSeconds=Mathf.Max(0,saved.elapsed);spawnCredit=Mathf.Max(0,saved.credit);
@@ -83,7 +88,11 @@ namespace MiningSimulator.Ores
                 else{var m=Instantiate(entry.prefab,record.position,record.rotation,transform);m.Initialize(this,player,record.boss,record.summon);m.RestoreWorld(record);alive.Add(m);liveSpecies[m]=entry;if(record.summon)godSummons.Add(m);}
                 RestoredMonsterCount++;
             }
-            nextTimedRetry=Time.time+1;restoringWorld=false;
+            restoringWorld=false;
+            if(saved.runtime!=null){yield return null;while(System.Array.Exists(FindObjectsByType<MonsterSpawnZone>(FindObjectsSortMode.None),z=>z.IsRestoringWorld))yield return null;
+                try{RunCheckpoint.Restore(saved.runtime,player);}catch(Exception e){worldLoadFailed=true;Debug.LogError("Run checkpoint restore failed; original save preserved: "+e);}
+                finally{RunCheckpoint.IsRestoring=false;Time.timeScale=previousScale;}}
+            nextTimedRetry=Time.time+1;
             if(worldLoadFailed)Debug.LogWarning("Some saved monsters could not be restored; original checkpoint is preserved.");
             ForecastChanged?.Invoke();
         }

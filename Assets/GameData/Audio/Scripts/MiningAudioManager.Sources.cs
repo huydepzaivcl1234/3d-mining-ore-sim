@@ -70,9 +70,10 @@ namespace MiningSimulator.Ores
 
         private void OnApplicationFocus(bool hasFocus)
         {
+            ApplyUpgradeAudioBypass(hasFocus);
             if (audioData != null && audioData.MuteAudioOnLostFocus)
             {
-                AudioListener.pause = !hasFocus;
+                AudioListener.pause = upgradeThemeActive || !hasFocus;
             }
 
             if (hasFocus)
@@ -148,6 +149,9 @@ namespace MiningSimulator.Ores
 
             EnsureClipLoaded(audioData.BackgroundMusic);
             EnsureClipLoaded(audioData.ShopMusic);
+            EnsureClipLoaded(audioData.UpgradeMusic);
+            EnsureClipLoaded(audioData.CardHoverSfx);
+            EnsureClipLoaded(audioData.CardPickSfx);
             EnsureClipLoaded(audioData.MorningAmbience);
             for (int index = 0; index < audioData.MorningAmbienceCount; index++)
             {

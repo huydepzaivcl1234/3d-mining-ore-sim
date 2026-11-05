@@ -1,4 +1,4 @@
-using TMPro;
+﻿using TMPro;
 using UnityEngine;
 using GameData.Player.Script;
 using System.Collections.Generic;
@@ -46,12 +46,13 @@ namespace MiningSimulator.Ores
             (coordinator==null || !coordinator.BlocksGameplay);
         public void Configure(MiningCardData settings, PlayerStats target, UiPanelCoordinator ui,
             RectTransform panel, TMP_Text heading, UnityEngine.UI.Button[] buttons)
-        { data=settings;player=target;coordinator=ui;choicePanel=panel;title=heading;choices=buttons; Bind(); }
+        { data=settings;player=target;coordinator=ui;choicePanel=panel;title=heading;choices=buttons;panelView=panel?panel.GetComponent<UpgradePanelView>():null; Bind(); }
         private void Awake() { Bind(); if(choicePanel!=null) choicePanel.gameObject.SetActive(false); }
         private void Start() { Bind(); }
         private void Update()
         {
             RefreshQueueHud();
+            SanctuaryInput();
             if(choiceOpen && choicePanel && !choicePanel.gameObject.activeInHierarchy)ClosePending();
             if(choiceOpen){if(!coordinator)Time.timeScale=0;Cursor.lockState=CursorLockMode.None;Cursor.visible=true;}
 
@@ -60,83 +61,10 @@ namespace MiningSimulator.Ores
         {
             if (!player) player=FindAnyObjectByType<PlayerStats>();
             if(player!=null) { playerHealth=player.GetComponent<CharacterHealth>(); controller=player.GetComponent<GameData.Player.Script.PlayerController1>(); }
-            if(choices==null || choices.Length<3) return;
             RefreshPresentation();
-            for (int i=0;i<choices.Length;i++)
-            {
-                if (!choices[i]) continue;
-                choices[i].gameObject.SetActive(i<3);
-                if (i>=3) continue;
-
-            }
-            choices[0].onClick.RemoveListener(ChooseDamage); choices[0].onClick.AddListener(ChooseDamage);
-            choices[1].onClick.RemoveListener(ChooseMagazine); choices[1].onClick.AddListener(ChooseMagazine);
-            choices[2].onClick.RemoveListener(ChooseBulletSpeed); choices[2].onClick.AddListener(ChooseBulletSpeed);
+            BindOfferClicks();
         }
-        // Figma 2:3, 1460 x 870. Native controls retain their existing callbacks.
-        public void RefreshPresentation()
-        {
-            if(!choicePanel||!title||choices==null||choices.Length<3)return;
-            choicePanel.sizeDelta=new Vector2(1460,870);
-            var bg=choicePanel.GetComponent<UnityEngine.UI.Image>();if(bg){bg.color=Hex("171B21");bg.sprite=panelSprite;bg.type=UnityEngine.UI.Image.Type.Sliced;}
-            Border(choicePanel,Hex("9B7A42"));
-            Hide(choicePanel,"OfferHeader");
-            EnsureCloseButton();
-            Pixel(title.rectTransform,32,28,1396,60);title.font=headingFont?headingFont:title.font;title.fontStyle=FontStyles.Normal;title.enableAutoSizing=false;title.fontSize=40;title.alignment=TextAlignmentOptions.TopLeft;title.color=Hex("F0D99F");title.text=abilityChoice?"CHOOSE AN ABILITY":"CHOOSE AN UPGRADE";
-            Label(choicePanel,"ChoiceHint","Each upgrade adds the listed bonus. Max-level cards (99) are removed from offers.",32,96,1396,30,21,Hex("9FA8AA"));
-            for(int i=0;i<3;i++)
-            {
-                var button=choices[i];if(!button)continue;var rect=(RectTransform)button.transform;
-                Pixel(rect,424,150+i*196,1004,178);Hide(rect,"RarityStripe");
-                foreach(var old in button.GetComponentsInChildren<TMP_Text>(true))if(old.transform.parent==rect&&!old.name.StartsWith("Offer"))old.gameObject.SetActive(false);
-                var layout=button.GetComponent<UnityEngine.UI.LayoutElement>();if(!layout)layout=button.gameObject.AddComponent<UnityEngine.UI.LayoutElement>();layout.ignoreLayout=true;
-                int rarity=i<offers.Count?offers[i].rarity:0;
-                Color accent=data&&data.survivorUpgrades?data.survivorUpgrades.RarityColor(rarity):Hex("A6B3A8");
-                Color surface=rarity==4?Hex("302719"):rarity==3?Hex("242038"):rarity==2?Hex("192A38"):rarity==1?Hex("172D29"):Hex("1E2828");
-                var image=button.GetComponent<UnityEngine.UI.Image>();image.sprite=panelSprite;image.type=UnityEngine.UI.Image.Type.Sliced;image.color=surface;
-                Border(rect,accent);var colors=button.colors;colors.normalColor=Color.white;colors.highlightedColor=new Color(1.1f,1.1f,1.1f,1);colors.pressedColor=new Color(.9f,.9f,.9f,1);colors.selectedColor=Color.white;button.colors=colors;
-                var plate=Box(rect,"IconPlate",Vector2.zero,Vector2.one,Hex("10191F"));Pixel(plate,22,22,112,134);
-                var icon=Box(rect,"UpgradeIcon",Vector2.zero,Vector2.one,Color.white);Pixel(icon,49,60,58,58);icon.SetAsLastSibling();
-                var iconImage=icon.GetComponent<UnityEngine.UI.Image>();Sprite sprite=null;
-                string name="",description="",level="",preview="";
-                if(data&&data.survivorUpgrades&&i<offers.Count)
-                {
-                    var offer=offers[i];var def=data.survivorUpgrades.Find(offer.id);name=(offer.shiny?"SPARKLING ":"")+data.survivorUpgrades.Title(offer.id);
-                    description=def.Ability?data.survivorUpgrades.Description(offer.id):$"{def.description}: +{offer.amount:0.##}{def.unit}";
-                    int current=player?player.UpgradeLevel(offer.id):0;level=current==0?"NEW · LEVEL 1":$"LEVEL {current} → {current+1}";
-                    sprite=offer.id==SurvivorUpgradeId.ProjectileSpeed?arrowIcon:offer.id==SurvivorUpgradeId.MaxHealth?starIcon:offer.id==SurvivorUpgradeId.PhysicalDamage?swordsIcon:def.icon;
-                    preview=UpgradePreview(offer);
-                }
-                if(!sprite&&upgradeIcons!=null&&i<upgradeIcons.Length)sprite=upgradeIcons[i];
-                if(!sprite)sprite=starIcon;
-                iconImage.sprite=sprite;iconImage.type=UnityEngine.UI.Image.Type.Simple;iconImage.preserveAspect=true;iconImage.color=Color.white;
-                Label(rect,"OfferRarity",(i<offers.Count&&offers[i].shiny?"SPARKLING · ":"")+SurvivorUpgradeData.RarityName(rarity),158,22,560,20,14,accent);
-                var nameText=Label(rect,"OfferName",name,158,47,560,43,29,Hex("F0E3C7"));nameText.font=headingFont?headingFont:title.font;nameText.enableAutoSizing=true;nameText.fontSizeMin=24;nameText.fontSizeMax=29;
-                bool hasPreview=!string.IsNullOrWhiteSpace(preview);
-                var descriptionText=Label(rect,"OfferDescription",description,158,94,560,hasPreview?44:(i<offers.Count&&data&&data.survivorUpgrades&&data.survivorUpgrades.Find(offers[i].id).Ability)?72:50,description.Length>65?18:20,Hex("CDD2CA"));descriptionText.enableAutoSizing=true;descriptionText.fontSizeMin=hasPreview?14:13;descriptionText.fontSizeMax=hasPreview?18:20;descriptionText.overflowMode=TextOverflowModes.Ellipsis;
-                var previewText=Label(rect,"OfferPreview",preview,158,148,560,20,17,accent);previewText.textWrappingMode=TextWrappingModes.NoWrap;previewText.enableAutoSizing=true;previewText.fontSizeMin=13;previewText.fontSizeMax=17;previewText.overflowMode=TextOverflowModes.Ellipsis;
-                var levelText=Label(rect,"OfferLevel",level,742,22,240,134,18,Hex("D6BC87"));levelText.alignment=TextAlignmentOptions.MidlineLeft;
-            }
-            var sparks=GetComponent<UpgradeSparkVfx>();if(!sparks&&data&&data.sparkleVfx)sparks=gameObject.AddComponent<UpgradeSparkVfx>();if(sparks)sparks.Refresh(choices,offers,data);
-            var inventory=Box(choicePanel,"BuildInventory",Vector2.zero,Vector2.one,Hex("11171C"));Pixel(inventory,32,150,362,570);
-            var outline=inventory.GetComponent<UnityEngine.UI.Outline>();if(outline)outline.enabled=false;Hide(inventory,"Header");
-            var heading=Label(inventory,"Heading","YOUR CHARACTER",24,24,314,36,24,Hex("D6BC87"));heading.font=headingFont?headingFont:title.font;
-            Label(inventory,"Caption","AUTOMATIC ATTACKS",24,82,314,20,14,Hex("909F9E"));
-            var combat=player?player.GetComponent<SurvivorAutoCombat>():null;
-            string totals=combat?$"Damage<pos=185>{combat.EffectiveDamage:0.##}\nAttack speed<pos=185>{combat.ShotsPerSecond:0.##} /s\nAttack range<pos=185>{combat.AttackRange:0.##} m\nProjectile speed<pos=185>{combat.ProjectileSpeed:0.##} m/s":"";
-            Label(inventory,"Totals",totals,24,124,314,120,23,Hex("EDE1C6"));
-            var divider=Box(inventory,"Divider",Vector2.zero,Vector2.one,Hex("3E4242"));Pixel(divider,24,265,314,1);
-            var ownedHeading=Label(inventory,"OwnedHeading","OWNED CARDS",24,288,314,28,18,Hex("D6BC87"));ownedHeading.font=headingFont?headingFont:title.font;
-            string owned="";int count=0;
-            if(player&&data&&data.survivorUpgrades)foreach(var def in data.survivorUpgrades.definitions){if(def==null||def.Retired)continue;int lv=player.UpgradeLevel(def.id);if(lv<=0)continue;owned+=$"{data.survivorUpgrades.Title(def.id)}<pos=176>Level {lv} / 99\n";count++;}
-            if(count==0)owned="No upgrades yet";
-            RefreshOwnedScroll(inventory,owned);
-            Label(inventory,"CapNote","Max-level cards will not appear again.",24,510,314,40,16,Hex("7F8D8D"));
-            var skip=Box(choicePanel,"SkipOffer",Vector2.zero,Vector2.one,Hex("252C2E"));Pixel(skip,420,744,210,58);var border=skip.GetComponent<UnityEngine.UI.Outline>();if(border)border.enabled=false;
-            var skipButton=skip.GetComponent<UnityEngine.UI.Button>();if(!skipButton)skipButton=skip.gameObject.AddComponent<UnityEngine.UI.Button>();skip.GetComponent<UnityEngine.UI.Image>().raycastTarget=true;skipButton.targetGraphic=skip.GetComponent<UnityEngine.UI.Image>();skipButton.onClick.RemoveListener(CancelChoice);skipButton.onClick.RemoveListener(ClosePending);skipButton.onClick.AddListener(ClosePending);
-            var skipText=Label(skip,"Label","LATER",0,0,210,58,20,Hex("D0C7B2"));skipText.font=headingFont?headingFont:title.font;skipText.alignment=TextAlignmentOptions.Center;
-            Hide(choicePanel,"RefreshOffer");Label(choicePanel,"PauseNote","The game is paused while you choose an upgrade.",658,744,738,58,18,Hex("899594")).alignment=TextAlignmentOptions.MidlineLeft;
-        }
+        public void RefreshPresentation() => RefreshEditablePanel();
         private void RefreshOwnedScroll(RectTransform inventory,string owned)
         {
             Hide(inventory,"Bonuses");
@@ -161,7 +89,7 @@ namespace MiningSimulator.Ores
             switch(offer.id){
                 case SurvivorUpgradeId.CardMagnet:before=player.CardAttractionRadius;after=player.AbilityData.common.cardMagnet.radius.At(player.UpgradeLevel(offer.id)+1);unit=" m pickup range";break;
                 case SurvivorUpgradeId.PhysicalDamage:before=c.EffectiveDamage;after=player.CalculateSurvivorDamage(c.BaseDamage,offer.amount);unit=" damage";break;
-                case SurvivorUpgradeId.AttackSpeed:before=c.ShotsPerSecond;after=Mathf.Min(12.5f,c.BaseFireRate*Mathf.Max(.1f,player.CalculateAttackSpeed(offer.amount)));unit=" /s";break;
+                case SurvivorUpgradeId.AttackSpeed:before=c.ShotsPerSecond;after=player.CalculateAttacksPerSecond(offer.amount);unit=" /s";break;
                 case SurvivorUpgradeId.ProjectileSize:before=c.ProjectileRadius*2;after=before*ratio;unit=" m";break;
                 case SurvivorUpgradeId.AttackRange:before=c.AttackRange;after=before*ratio;unit=" m";break;
                 case SurvivorUpgradeId.ProjectileSpeed:before=c.ProjectileSpeed;after=before*(100+player.GunCardBulletSpeedPercent+bonus+offer.amount)/(100+player.GunCardBulletSpeedPercent+bonus);unit=" m/s";break;
@@ -202,23 +130,24 @@ namespace MiningSimulator.Ores
             Place(rect,min,max);var text=rect.GetComponent<TMP_Text>();text.font=bodyFont?bodyFont:title.font;text.fontStyle=FontStyles.Normal;text.enableAutoSizing=false;text.textWrappingMode=TextWrappingModes.Normal;text.text=value;text.fontSize=size;text.color=new Color(.92f,.93f,.87f);text.raycastTarget=false;
             text.alignment=TextAlignmentOptions.MidlineLeft;return text;
         }
-        public Vector2 DropChances(bool boss)
+        public Vector2 DropChances(bool boss, MonsterRewardData species=null)
         {
             if(!data)return Vector2.zero;
-            float baseline=boss?data.bossDropPercent:data.monsterDropPercent;
-            float blue=Mathf.Clamp01(data.abilityCardPercent*.01f);
+            var loot=MonsterLootSettings.DropsFor(species);
+            float baseline=loot?(boss?loot.bossCardDropPercent:loot.cardDropPercent):(boss?data.bossDropPercent:data.monsterDropPercent);
+            float blue=Mathf.Clamp01((loot?loot.abilityCardSharePercent:data.abilityCardPercent)*.01f);
             int fortune=player?player.UpgradeLevel(SurvivorUpgradeId.CardFortune):0;
             float bonus=fortune>0?player.AbilityData.epic.cardFortune.dropBonus.At(fortune):0;
             float basicBonus=player&&player.UpgradeLevel(SurvivorUpgradeId.TripleBasics)>0?player.AbilityData.epic.tripleChoice.basicDropBonus:0;
             var chance=new Vector2(Mathf.Max(0,baseline*(1-blue)+bonus+basicBonus),Mathf.Max(0,baseline*blue+bonus));
             float total=chance.x+chance.y;return total>100?chance*(100/total):chance;
         }
-        public bool TryDrop(Vector3 position, bool boss)
+        public bool TryDrop(Vector3 position, bool boss, MonsterRewardData species=null)
         {
             if(!data||data.tiers==null||data.tiers.Length==0)return false;
             bool basic=!data.survivorUpgrades||data.survivorUpgrades.HasEligible(player,false);
             bool ability=CanOfferAbilities&&data.abilityCard!=null&&data.abilityCard.prefab;
-            var chance=DropChances(boss);if(!ability){chance.x+=chance.y;chance.y=0;}if(!basic){chance.y+=chance.x;chance.x=0;}float sample=Random.value*100;
+            var chance=DropChances(boss,species);if(!ability){chance.x+=chance.y;chance.y=0;}if(!basic){chance.y+=chance.x;chance.x=0;}float sample=Random.value*100;
             if(ability&&sample<chance.y)return Spawn(data.abilityCard,position)!=null;
             if(basic&&sample>=chance.y&&sample<chance.y+chance.x)return Spawn(data.tiers[0],position)!=null;
             return false;
@@ -266,6 +195,7 @@ namespace MiningSimulator.Ores
             if(!coordinator)Time.timeScale=0f;
             if(coordinator!=null) coordinator.OpenPanel(choicePanel); else choicePanel.gameObject.SetActive(true);
             Cursor.lockState=CursorLockMode.None;Cursor.visible=true;
+            PanelAudio(true);
             return true;
         }
         public bool CollectBlueBox(float rarityMultiplier=1f)=>data&&data.survivorUpgrades?Collect(data.abilityCard,rarityMultiplier):CollectGunBox(false);
@@ -325,14 +255,14 @@ namespace MiningSimulator.Ores
             if(!blueChoice||index<0||index>=blueOptions.Length||!choices[index].gameObject.activeSelf||!gunSpecials||!gunSpecials.Unlock(blueOptions[index]))return;
             CompleteQueuedChoice();
         }
-        private void ChooseDamage(){if(data&&data.survivorUpgrades&&!blueChoice)ChooseOffer(0);else if(blueChoice)ChooseBlue(0);else Choose(MiningCardChoice.GunDamage);}
+        private void ChooseDamage(){if(data&&data.survivorUpgrades&&!blueChoice)PickWithFeedback(0);else if(blueChoice)ChooseBlue(0);else Choose(MiningCardChoice.GunDamage);}
         private static string CardText(string key, string fallback)
         {
             string value=MiningLocalization.TextKey(key,fallback);
             return string.IsNullOrEmpty(value) || value==key ? fallback : value;
         }
-        private void ChooseMagazine(){if(data&&data.survivorUpgrades&&!blueChoice)ChooseOffer(1);else if(blueChoice)ChooseBlue(1);else Choose(MiningCardChoice.Magazine);}
-        private void ChooseBulletSpeed(){if(data&&data.survivorUpgrades&&!blueChoice)ChooseOffer(2);else if(blueChoice)ChooseBlue(2);else Choose(MiningCardChoice.BulletSpeed);}
+        private void ChooseMagazine(){if(data&&data.survivorUpgrades&&!blueChoice)PickWithFeedback(1);else if(blueChoice)ChooseBlue(1);else Choose(MiningCardChoice.Magazine);}
+        private void ChooseBulletSpeed(){if(data&&data.survivorUpgrades&&!blueChoice)PickWithFeedback(2);else if(blueChoice)ChooseBlue(2);else Choose(MiningCardChoice.BulletSpeed);}
         public bool Choose(MiningCardChoice choice)
         {
             if(pending==null || player==null || (choice!=MiningCardChoice.GunDamage && choice!=MiningCardChoice.Magazine && choice!=MiningCardChoice.BulletSpeed)) return false;
@@ -355,4 +285,3 @@ namespace MiningSimulator.Ores
         public void CancelChoice(){ClosePending();}
     }
 }
-

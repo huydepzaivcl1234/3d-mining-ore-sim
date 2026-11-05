@@ -332,11 +332,13 @@ public bool TryGetPatrolPoint(Vector3 origin,out Vector3 point)
             CheckMonsterUnlocks();
             if (dayNight != null && scheduledDay != dayNight.DayNumber) BuildDailySchedule();
         }
-        public void GrantRewards(MonsterRewardData data, Vector3 origin, float goldMultiplier = 1, float experienceMultiplier = 1)
+        public void GrantRewards(MonsterRewardData data, Vector3 origin, float goldMultiplier = 1, float experienceMultiplier = 1, int monsterLevel=1)
         {
             if (data == null) return;
-            float xp = Mathf.Max(0, data.experience) * Mathf.Max(0f, experienceMultiplier);
-            float money = Mathf.Max(0, data.gold) * Mathf.Max(0f, goldMultiplier);
+            var rewards=MonsterLootSettings.RewardsFor(data);
+            var loot=MonsterLootSettings.DropsFor(data);
+            float xp = Mathf.Max(0, rewards.experience) * Mathf.Max(0f, experienceMultiplier);
+            float money = Mathf.Max(0, rewards.gold) * Mathf.Max(0f, goldMultiplier) * rewards.GoldMultiplier(monsterLevel);
             if (upgradeSystem != null)
             {
                 xp = upgradeSystem.CalculatePlayerExperienceReward(xp);
@@ -352,15 +354,15 @@ public bool TryGetPatrolPoint(Vector3 origin,out Vector3 point)
                 if (awarded > 0f && moneyPopupPrefab != null && moneyPopupUiData != null)
                     Instantiate(moneyPopupPrefab).Initialize(awarded, origin, moneyPopupUiData);
             }
-            if (data.drops == null) return;
-            foreach (var drop in data.drops)
+            if (loot.drops == null) return;
+            foreach (var drop in loot.drops)
             {
                 if (drop == null || drop.item == null || drop.chancePercent <= 0) continue;
                 if (drop.chancePercent < 100 && UnityEngine.Random.value >= drop.chancePercent / 100) continue;
                 int min = Mathf.Clamp(drop.minimumAmount, 1, 10000);
                 int max = Mathf.Clamp(drop.maximumAmount, min, 10000);
                 int count = UnityEngine.Random.Range(min, max + 1);
-                MonsterItemPickup.Spawn(data, drop, count, origin, player, inventory,
+                MonsterItemPickup.Spawn(loot, drop, count, origin, player, inventory,
                     groundLayers, audioManager);
             }
         }
@@ -584,7 +586,7 @@ public bool TryGetPatrolPoint(Vector3 origin,out Vector3 point)
                 float height = Mathf.Max(radius * 2, capsule.height * Mathf.Abs(scale.y));
                 Vector3 bottom = ground.point + Vector3.up * (radius + 0.1f);
                 Vector3 top = ground.point + Vector3.up * Mathf.Max(radius + 0.1f, height - radius);
-                if (Physics.CheckCapsule(bottom, top, radius, ~0, QueryTriggerInteraction.Ignore)) continue;
+                if (Physics.CheckCapsule(bottom, top, radius, ~LayerMask.GetMask("Ragdoll"), QueryTriggerInteraction.Ignore)) continue;
                 bool blocked = false;
                 foreach (var other in alive)
                     if (other != null && (other.transform.position - ground.point).sqrMagnitude < minimumSpacing * minimumSpacing)
@@ -621,7 +623,7 @@ public bool TryGetPatrolPoint(Vector3 origin,out Vector3 point)
             {
                 RaycastHit hit = groundHits[i];
                 Collider surface = hit.collider;
-                if (surface == null || hit.normal.y < 0.7f ||
+                if (surface == null || !GroundSurfaceLayers.Contains(surface.gameObject.layer) || hit.normal.y < 0.7f ||
                     surface.GetComponentInParent<CharacterHealth>() != null ||
                     surface is CharacterController) continue;
 
@@ -681,4 +683,3 @@ public void ResetEncounter()
         }
 }
 }
-

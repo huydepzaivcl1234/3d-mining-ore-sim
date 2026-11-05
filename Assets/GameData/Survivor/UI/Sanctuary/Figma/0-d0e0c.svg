@@ -1,0 +1,15 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="19" height="19" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="speed / editable vector" clip-path="url(#clip0_0_14)">
+<path id="Vector" d="M2.28 2.28L17.29 9.12L2.28 15.96L5.51 9.31L2.28 2.28Z" fill="#A2F9D5"/>
+<path id="Vector_2" d="M5.51 9.31L17.29 9.12L2.28 15.96L5.51 9.31Z" fill="#40AF9A"/>
+<g id="Vector_3">
+<path d="M0.76 7.41L3.99 8.55ZM0.19 10.83L3.61 10.26Z" fill="black"/>
+<path d="M0.76 7.41L3.99 8.55M0.19 10.83L3.61 10.26" stroke-width="4" stroke-linecap="round" stroke="#DEFFF3"/>
+</g>
+</g>
+<defs>
+<clipPath id="clip0_0_14">
+<rect width="19" height="19" fill="white"/>
+</clipPath>
+</defs>
+</svg>

@@ -27,8 +27,8 @@ namespace MiningSimulator.Ores
             if (error != null && error != reportedError) Debug.LogError("Game save: " + error);
             reportedError = error;
         }
-        private void OnApplicationPause(bool paused) { if (paused) FlushAndReport(); }
-        private void OnApplicationFocus(bool focused) { if (!focused) FlushAndReport(); }
+        private void OnApplicationPause(bool paused) { if (paused) {MonsterSpawnZone.CaptureWorldsIfDue(force:true);FlushAndReport();} }
+        private void OnApplicationFocus(bool focused) { if (!focused) {MonsterSpawnZone.CaptureWorldsIfDue(force:true);FlushAndReport();} }
         private void OnApplicationQuit() { MonsterSpawnZone.CaptureWorldsIfDue(true);FlushAndReport(); }
         private void OnDestroy() { FlushAndReport(); }
     }

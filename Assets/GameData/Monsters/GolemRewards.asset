@@ -130,6 +130,10 @@ MonoBehaviour:
   burnDurationSeconds: 0
   lifeStealPercent: 0
   healingBonusPercent: 0
+  lootProfileOnly: 0
+  cardDropPercent: 2
+  bossCardDropPercent: 5
+  abilityCardSharePercent: 1
   drops:
   - item: {fileID: 11400000, guid: 6556e39ad099f9f4aafb234d4eec3f75, type: 2}
     chancePercent: 10

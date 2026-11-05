@@ -16,6 +16,17 @@ namespace MiningSimulator.Ores
         [Range(0f, 1f), SerializeField] private float musicVolume = 0.55f;
         [SerializeField] private AudioMixerGroup musicMixerGroup;
 
+        [Header("Upgrade panel")]
+        [SerializeField] AudioClip upgradeMusic, cardHoverSfx, cardPickSfx;
+        [Range(0,1),SerializeField] float upgradeMusicVolume=.35f, cardHoverVolume=.5f;
+        [Min(0),SerializeField] float upgradeMusicFadeSeconds=.8f;
+        public AudioClip UpgradeMusic=>upgradeMusic;
+        public AudioClip CardHoverSfx=>cardHoverSfx;
+        public AudioClip CardPickSfx=>cardPickSfx?cardPickSfx:upgradePurchasedSfx;
+        public float UpgradeMusicVolume=>Mathf.Clamp01(upgradeMusicVolume);
+        public float CardHoverVolume=>Mathf.Clamp01(cardHoverVolume);
+        public float UpgradeMusicFadeSeconds=>Mathf.Max(0,upgradeMusicFadeSeconds);
+
         [Header("World Ambience")]
         [Tooltip("Loop played while the DayNightSystem is in its Day period.")]
         [SerializeField] private AudioClip morningAmbience;
@@ -40,6 +51,11 @@ namespace MiningSimulator.Ores
         [SerializeField] private AudioClip upgradePurchasedSfx;
         [SerializeField] private AudioClip levelUpSfx;
         [SerializeField] private AudioClip rebirthSfx;
+        [Header("Player death")]
+        [SerializeField] private AudioClip playerDeathSfx;
+        [Range(0,1),SerializeField] private float playerDeathVolume=1;
+        public AudioClip PlayerDeathSfx=>playerDeathSfx;
+        public float PlayerDeathVolume=>playerDeathVolume;
         [Header("Monster loot")]
         [SerializeField] private AudioClip monsterDropSfx;
         [SerializeField] private AudioClip monsterLootSfx;

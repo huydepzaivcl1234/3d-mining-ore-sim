@@ -72,7 +72,13 @@ namespace MiningSimulator.Ores
         public float ConsumableMonsterTrueDamageFraction => itemEffects != null ? itemEffects.MonsterTrueDamageFraction : 0f;
         public float Damage => coreData != null ? CalculateSurvivorDamage(coreData.damage) : ((data != null ? Mathf.Max(0, data.damage + Mathf.Max(0, data.damagePerLevel) * (Level - 1)) : 1) * (1f + CardDamagePercent * .01f) + CardDamage) * DamagePotionMultiplier * (1f + RuneUpgrades.Bonus(RuneStat.Damage) * .01f);
         public float AttackSpeed => CalculateAttackSpeed();
-        public float CalculateAttackSpeed(float addedPercent=0) => Mathf.Max(.1f, ((coreData != null ? coreData.attackSpeedMultiplier : data != null ? data.attackSpeed : 1f) * (1f + CardAttackSpeedPercent * .01f) + CardAttackSpeed) * AttackSpeedPotionMultiplier * (1f + RuneUpgrades.Bonus(RuneStat.AttackSpeed) * .01f)*(1f+(addedPercent+UpgradeBonus(SurvivorUpgradeId.AttackSpeed)+(UpgradeLevel(SurvivorUpgradeId.Quickening)>0?AbilityData.uncommon.quickening.bonus.At(UpgradeLevel(SurvivorUpgradeId.Quickening)):0))*.01f));
+        public float CalculateAttacksPerSecond(float addedPercent=0){
+            if(!coreData)return CalculateAttackSpeed(addedPercent);
+            float quickening=UpgradeLevel(SurvivorUpgradeId.Quickening)>0?AbilityData.uncommon.quickening.bonus.At(UpgradeLevel(SurvivorUpgradeId.Quickening)):0;
+            float bonus=addedPercent+CardAttackSpeedPercent+CardAttackSpeed*100f+(AttackSpeedPotionMultiplier-1)*100f+RuneUpgrades.Bonus(RuneStat.AttackSpeed)+UpgradeBonus(SurvivorUpgradeId.AttackSpeed)+quickening;
+            return coreData.AttacksPerSecond(bonus)*(TryGetComponent<PotionPlayerEffect>(out var potionStatus)?potionStatus.AttackSpeedMultiplier:1f);
+        }
+        public float CalculateAttackSpeed(float addedPercent=0) => coreData?CalculateAttacksPerSecond(addedPercent)/Mathf.Max(.01f,coreData.attackSpeed): Mathf.Max(.1f, ((coreData != null ? coreData.attackSpeedMultiplier : data != null ? data.attackSpeed : 1f) * (1f + CardAttackSpeedPercent * .01f) + CardAttackSpeed) * AttackSpeedPotionMultiplier * (1f + RuneUpgrades.Bonus(RuneStat.AttackSpeed) * .01f)*(1f+(addedPercent+UpgradeBonus(SurvivorUpgradeId.AttackSpeed)+(UpgradeLevel(SurvivorUpgradeId.Quickening)>0?AbilityData.uncommon.quickening.bonus.At(UpgradeLevel(SurvivorUpgradeId.Quickening)):0))*.01f));
         // Retain old flat bonuses for v2 saves; new cards add percentage points.
         public float CardDamagePercent { get; private set; }
         public float CardHealthPercent { get; private set; }

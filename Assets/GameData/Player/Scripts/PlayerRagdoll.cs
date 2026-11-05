@@ -52,6 +52,7 @@ namespace GameData.Player.Script
             foreach(var bone in bones)if(bone){var joint=bone.GetComponent<CharacterJoint>();if(joint&&joint.connectedBody)joint.connectedAnchor=joint.connectedBody.transform.InverseTransformPoint(bone.transform.TransformPoint(joint.anchor));}
             Physics.SyncTransforms();
             foreach(var bone in bones)if(bone){bone.isKinematic=false;bone.useGravity=true;bone.linearVelocity=velocity;bone.angularVelocity=angular;bone.WakeUp();}
+            var muscles=GetComponent<ActiveRagdollMuscles>();if(!muscles)muscles=gameObject.AddComponent<ActiveRagdollMuscles>();muscles.Begin(bones);
             if(velocity.sqrMagnitude<1)pelvis.AddForce(-transform.forward*collapseSpeed,ForceMode.VelocityChange);
         }
         public void AddVelocity(Vector3 velocity)
@@ -62,6 +63,7 @@ namespace GameData.Player.Script
         public void RestoreAnimatedPose()
         {
             if(!IsRagdoll)return;
+            GetComponent<ActiveRagdollMuscles>()?.Stop();
             foreach(var collider in boneColliders)if(collider)collider.enabled=false;
             foreach(var bone in bones)if(bone){if(!bone.isKinematic){bone.linearVelocity=Vector3.zero;bone.angularVelocity=Vector3.zero;}bone.isKinematic=true;}
             for(int i=0;i<bones.Length;i++)if(bones[i]){bones[i].transform.localPosition=localPositions[i];bones[i].transform.localRotation=localRotations[i];}

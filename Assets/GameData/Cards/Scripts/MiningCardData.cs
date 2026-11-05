@@ -36,8 +36,8 @@ namespace MiningSimulator.Ores
                 _ => 0f
             };
         }
-        [Range(0,100)] public float monsterDropPercent = 10f;
-        [Range(0,100)] public float bossDropPercent = 50f;
+        [HideInInspector,Range(0,100)] public float monsterDropPercent = 10f;
+        [HideInInspector,Range(0,100)] public float bossDropPercent = 50f;
         public Tier[] tiers = {
             new() {name="Common",color=Color.red,weight=70,damage=1,attackSpeed=3,health=5},
             new() {name="Uncommon",color=Color.green,weight=25,damage=3,attackSpeed=6,health=15},
@@ -45,7 +45,7 @@ namespace MiningSimulator.Ores
         };
         [Header("Blue ability card") ]
         public Tier abilityCard=new(){name="Ability",color=new Color(.1f,.5f,1f)};
-        [Range(0,100),Tooltip("Among successful card drops. Does not change the overall monster/boss drop chance.")] public float abilityCardPercent=20;
+        [HideInInspector,Range(0,100),Tooltip("Legacy fallback. Configure per-species or shared chances in MonsterLootSettings.")] public float abilityCardPercent=20;
         [Header("World drop")]
         [Min(0)] public float spawnHeight = 1f;
         [Min(0)] public float upwardImpulse = 3f;
@@ -79,4 +79,3 @@ namespace MiningSimulator.Ores
         [Min(1f)] public float fontSize = 28f;
     }
 }
-

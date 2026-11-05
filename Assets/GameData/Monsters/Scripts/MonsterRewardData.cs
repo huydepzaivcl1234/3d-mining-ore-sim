@@ -168,6 +168,11 @@ namespace MiningSimulator.Ores
         [Min(0)] public float burnDurationSeconds;
         [Range(0f, 100f)] public float lifeStealPercent;
         [Min(0)] public float healingBonusPercent;
+        [HideInInspector] public bool lootProfileOnly;
+        [Header("Card drops — independent from item rolls")]
+        [Range(0,100)] public float cardDropPercent=15;
+        [Range(0,100)] public float bossCardDropPercent=50;
+        [Range(0,100),Tooltip("Among successfully dropped cards, percentage that are blue ability cards.")] public float abilityCardSharePercent=5;
         public List<MonsterItemDrop> drops = new();
         [Header("Icon drop motion")]
         [Min(0.01f)] public float iconSize = 0.45f;

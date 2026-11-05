@@ -49,8 +49,9 @@ public static class BreadMonsterInspector
         if(Group(ref levels,"Levels, defenses & rewards")){
             Fields(so,"usePlayerRelativeLevels","minimumLevelsBelowPlayer","maximumLevelsBelowPlayer","maximumLevelsAbovePlayer","weakerLevelWeight","equalLevelWeight","strongerLevelWeight");
             if(!so.FindProperty("usePlayerRelativeLevels").boolValue)Fields(so,"minimumLevel","addPlayerLevelAtSpawn","playerLevelContribution","higherLevelChance","higherLevelIncreasePerDayPercent","maximumHigherLevelChancePercent");
-            Fields(so,"statGrowthPerLevel","randomStatMultiplier","armorPerLevel","magicResistancePerLevel","resistanceScale","experience","gold","goldGrowthPerLevel","drops");
+            Fields(so,"statGrowthPerLevel","randomStatMultiplier","armorPerLevel","magicResistancePerLevel","resistanceScale");
         }
+        MonsterLootInspector.DrawSpecies(so);
         if(Group(ref advanced,"Advanced — animation, navigation & lifetime")){
             Fields(so,"combat.attackState","combat.fireState","combat.animationBlendSeconds","combat.attackTurnSpeed","combat.trackingEndFraction","combat.chaseTurnSpeed","combat.targetScanSeconds","combat.targetMemorySeconds","combat.detectionHysteresis","combat.chaseRepathSeconds","combat.targetRepathDistance","combat.waypointTolerance","combat.avoidanceLookAhead","combat.avoidanceHoldSeconds","combat.stuckRepathSeconds","combat.pathRequestTimeout","combat.navigationObstacleLayers","combat.projectileCollisionLayers","spinDegreesPerSecond","combat.deathDelay","combatSeconds","dissolveSeconds","dissolveColor","dissolveShader");
         }

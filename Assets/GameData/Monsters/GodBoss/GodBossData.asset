@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: GodBossData
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.GodBossData
   prefab: {fileID: 662506849978405326, guid: fc0366bbbb555454c8013aefc970160f, type: 3}
+  lootAndRewards: {fileID: 11400000, guid: b6e86d824c04f9f459af0b9f05fdc6f7, type: 2}
   everyDays: 20
   minimumPlayerLevel: 30
   initialChancePercent: 5

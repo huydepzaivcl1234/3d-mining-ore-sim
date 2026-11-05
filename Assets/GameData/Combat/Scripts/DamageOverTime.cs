@@ -6,10 +6,10 @@ namespace MiningSimulator.Ores
     /// <summary>One timed effect. Refresh keeps tick progress and the strongest DPS.</summary>
     public sealed class DamageOverTime
     {
-        private float damagePerTick;
-        private float interval;
-        private float remaining;
-        private float elapsed;
+        [SerializeField] private float damagePerTick;
+        [SerializeField] private float interval;
+        [SerializeField] private float remaining;
+        [SerializeField] private float elapsed;
 
         public bool IsActive => remaining > 0f;
         public float DamagePerSecond => IsActive && interval > 0f ? damagePerTick / interval : 0f;

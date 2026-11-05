@@ -5,7 +5,7 @@ using MiningSimulator.Ores;
 namespace GameData.Player.Script
 {
     [DisallowMultipleComponent,DefaultExecutionOrder(200)]
-    public sealed class SurvivorEnemyStatus : MonoBehaviour
+    public sealed partial class SurvivorEnemyStatus : MonoBehaviour
     {
         private CharacterHealth health;
         private CharacterController motor;

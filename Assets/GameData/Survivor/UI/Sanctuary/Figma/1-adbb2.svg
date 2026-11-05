@@ -1,0 +1,9 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="1050" height="1050" viewBox="0 0 1050 1050" fill="none" xmlns="http://www.w3.org/2000/svg">
+<circle id="Ambient glow" cx="525" cy="525" r="525" fill="url(#paint0_radial_0_29)"/>
+<defs>
+<radialGradient id="paint0_radial_0_29" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(525 525) scale(525)">
+<stop stop-color="#314473" stop-opacity="0.3"/>
+<stop offset="1" stop-color="#314473" stop-opacity="0"/>
+</radialGradient>
+</defs>
+</svg>

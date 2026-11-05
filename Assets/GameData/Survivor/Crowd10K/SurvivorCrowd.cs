@@ -98,7 +98,7 @@ namespace MiningSimulator.Ores
                 a=actors[i]=new Actor{transform=go.transform};a.health=go.AddComponent<CharacterHealth>();a.health.CrowdOwner=this;a.health.CrowdSlot=i;
                 int slot=i;a.health.Died+=()=>Killed(slot);a.health.Damaged+=()=>Hit(slot);
             }
-            a.zone=zone;a.entry=entry;a.reward=entry.prefab.SpeciesData;a.combat=entry.prefab.CombatData;
+            a.health.WorldSaveId=null;a.zone=zone;a.entry=entry;a.reward=entry.prefab.SpeciesData;a.combat=entry.prefab.CombatData;
             var stats=player.GetComponent<PlayerStats>();a.level=a.reward.RollSpawnLevel(UnityEngine.Random.value,stats?stats.Level:1,zone?zone.SpawnDayNumber:1);
             float growth=a.reward.StatMultiplier(a.level);float low=Mathf.Max(.01f,Mathf.Min(a.reward.randomStatMultiplier.x,a.reward.randomStatMultiplier.y)),high=Mathf.Max(low,Mathf.Max(a.reward.randomStatMultiplier.x,a.reward.randomStatMultiplier.y));
             a.damage=a.combat.damage*growth*UnityEngine.Random.Range(low,high);a.scale=Mathf.Max(.01f,entry.prefab.transform.lossyScale.x)*(zone?Mathf.Abs(zone.transform.lossyScale.x):1);
@@ -126,9 +126,9 @@ namespace MiningSimulator.Ores
             if(a.health.HealthBar)a.health.HealthBar.gameObject.SetActive(false);
             if(navigation&&navigation.TryGetGroundPoint(a.transform.position,out var foot))positions[i]=next[i]=foot;
             a.zone?.NotifyDefeated(a.transform.position);
-            MonsterKillCredit.Notify(a.health.LastDamageSource,a.reward,false,a.reward.experience);
-            if(cards)cards.TryDrop(a.transform.position,false);
-            a.zone?.GrantRewards(a.reward,a.transform.position+Vector3.up*.6f,a.reward.GoldMultiplier(a.level));
+            MonsterKillCredit.Notify(a.health.LastDamageSource,a.reward,false,MonsterLootSettings.RewardsFor(a.reward).experience);
+            if(cards)cards.TryDrop(a.transform.position,false,a.reward);
+            a.zone?.GrantRewards(a.reward,a.transform.position+Vector3.up*.6f,1,1,a.level);
         }
         public void RemoveZone(MonsterSpawnZone zone)
         {
@@ -328,4 +328,3 @@ namespace MiningSimulator.Ores
         }
     }
 }
-

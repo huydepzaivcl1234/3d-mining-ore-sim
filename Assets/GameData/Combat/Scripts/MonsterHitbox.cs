@@ -43,6 +43,7 @@ namespace MiningSimulator.Ores
 
         public static bool IgnoreShot(Collider shape)
         {
+            if(shape.gameObject.layer==LayerMask.NameToLayer("Ragdoll"))return true;
             var hitbox = shape.GetComponentInParent<MonsterHitbox>();
             if (hitbox)
             {

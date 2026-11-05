@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -55,6 +55,7 @@ namespace MiningSimulator.Ores
         }
         private bool initialized;
         private readonly Dictionary<RectTransform, Vector2> additionalPanelHomes = new();
+        private RectTransform transparentBackdropPanel;
         private CanvasGroup backdropGroup;
         private RectTransform backdropRect;
         private Coroutine backdropRoutine;
@@ -537,6 +538,7 @@ namespace MiningSimulator.Ores
 
         private Vector2 GetHomePosition(RectTransform panel)
         {
+            if(panel&&panel.GetComponent<UpgradePanelView>())return panel.anchoredPosition;
             if (panel == upgradePanel) return upgradeHome;
             if (panel == rebirthPanel) return rebirthPanelHome;
             if (panel == audioSettingsPanel) return audioSettingsHome;
@@ -587,6 +589,13 @@ namespace MiningSimulator.Ores
             group.blocksRaycasts = interactive;
         }
 
+        // Only the requesting panel opts out; other modals keep their normal dimming.
+        public void SetModalBackdropTransparent(RectTransform panel,bool transparent)
+        {
+            if(!panel || (transparentBackdropPanel==panel)==transparent)return;
+            transparentBackdropPanel=transparent?panel:null;
+            if(activeModal==panel)ShowBackdrop(panel);
+        }
         private void ShowBackdrop(RectTransform panel)
         {
             EnsureBackdrop(panel);
@@ -601,7 +610,7 @@ namespace MiningSimulator.Ores
             {
                 StopCoroutine(backdropRoutine);
             }
-            float targetAlpha = uiData != null ? uiData.ModalBackdropColor.a : 0.6f;
+            float targetAlpha = transparentBackdropPanel==panel?0f:uiData != null ? uiData.ModalBackdropColor.a : 0.6f;
             backdropRoutine = StartCoroutine(
                 AnimateCanvasGroupAlpha(backdropGroup, targetAlpha, BackdropFadeDuration));
         }

@@ -14,7 +14,7 @@ public sealed class MonsterRewardDataEditor : Editor
     public override void OnInspectorGUI()
     {
         var data = (MonsterRewardData)target;
-        if (!data.HasCombatData)
+        if (!data.lootProfileOnly && !data.HasCombatData)
         {
             EditorGUILayout.HelpBox("Legacy combat values still apply. Migrate an existing species before enabling defaults.", MessageType.Warning);
             if (GUILayout.Button("Enable combat settings for a NEW species"))
@@ -27,7 +27,7 @@ public sealed class MonsterRewardDataEditor : Editor
         }
         if (data is BreadMonsterData) { BreadMonsterInspector.Draw(serializedObject); return; }
         MonsterSpeciesInspector.Draw(serializedObject);
-        if (data.HasCombatData)
+        if (!data.lootProfileOnly && data.HasCombatData)
             EditorGUILayout.HelpBox($"Attack speed: {data.combat.SafeAttackSpeed:0.##}x. Cooldown: {data.combat.attackCooldown / data.combat.SafeAttackSpeed:0.###}s before boss buffs.", MessageType.Info);
     }
 }

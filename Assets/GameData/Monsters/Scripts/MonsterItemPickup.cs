@@ -3,7 +3,7 @@ using UnityEngine;
 namespace MiningSimulator.Ores
 {
     // Independent of the corpse so destroying the monster cannot destroy its loot.
-    public sealed class MonsterItemPickup : MonoBehaviour
+    public sealed partial class MonsterItemPickup : MonoBehaviour
     {
         private MonsterRewardData settings;
         private MiningItemData item;

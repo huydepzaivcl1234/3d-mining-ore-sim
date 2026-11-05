@@ -222,6 +222,7 @@ namespace MiningSimulator.Ores
         private void Awake()
         {
             speciesData = rewards;
+            ragdollPrevious=transform.position;
             health = GetComponent<CharacterHealth>();
             motor = GetComponent<CharacterController>();
             rangedAttack = GetComponent<IMonsterRangedAttack>();
@@ -241,12 +242,18 @@ namespace MiningSimulator.Ores
             health.Damaged -= OnDamage;
             health.Died -= OnDeath;
         }
+        private Vector3 ragdollPrevious,ragdollVelocity;
         private bool damageReactionPending;
         private int hitReactionLayer = -1;
         private void PlayHitReaction()
         {
             if (animator == null || !health.IsGunShot) return;
-            if (hitReactionLayer < 0) { Play("Damage"); return; }
+            if (hitReactionLayer < 0)
+            {
+                // Some authored species only have Idle/Walk/Throw; a missing reaction must not lock their AI.
+                if (animator.HasState(0, Animator.StringToHash("Damage"))) Play("Damage");
+                return;
+            }
             var reaction = animator.GetCurrentAnimatorStateInfo(hitReactionLayer);
             if ((reaction.IsName("Damage") && reaction.normalizedTime < 1f) ||
                 (animator.IsInTransition(hitReactionLayer) && animator.GetNextAnimatorStateInfo(hitReactionLayer).IsName("Damage"))) return;
@@ -288,11 +295,12 @@ namespace MiningSimulator.Ores
             if (thief != null) thief.OnKilled();
             var killer = health.LastDamageSource;
             MonsterKillCredit.Notify(killer, SpeciesData, IsBoss,
-                rewards != null ? rewards.experience * (IsBoss ? bossSettings.experienceMultiplier : 1f) : 0f);
+                rewards != null ? MonsterLootSettings.RewardsFor(rewards).experience * (IsBoss ? MonsterLootSettings.BossExperience(bossSettings.experienceMultiplier) : 1f) : 0f);
             var breadRagdoll=GetComponent<BreadMonsterRagdoll>();
-            if(!breadRagdoll)Play("Down");
+            bool pooledRagdoll=RagdollSettings.Current&&RagdollSettings.Current.monsterRagdolls&&animator&&(breadRagdoll||GetComponent<PotionMonsterAbility>());
+            if(!breadRagdoll&&!pooledRagdoll)Play("Down");
             var cards = FindFirstObjectByType<MiningCardSystem>();
-            if (cards != null) cards.TryDrop(transform.position, IsBoss);
+            if (cards != null) cards.TryDrop(transform.position, IsBoss,rewards);
             motor.enabled = false;
             navigation?.Reset();
             groundWarning?.Hide();
@@ -300,14 +308,16 @@ namespace MiningSimulator.Ores
             health.enabled = false;
             if (health.HealthBar != null) health.HealthBar.gameObject.SetActive(false);
             foreach (var shape in GetComponentsInChildren<Collider>()) shape.enabled = false;
-            if(breadRagdoll)breadRagdoll.Activate();
+            if(pooledRagdoll)MonsterCorpsePool.Spawn(this,animator,ragdollVelocity);
+            else if(breadRagdoll)breadRagdoll.Activate();
             if (zone != null) zone.GrantRewards(rewards, transform.position + Vector3.up * 0.6f,
-                (rewards != null ? rewards.GoldMultiplier(Level) : 1f) * (IsBoss ? bossSettings.goldMultiplier : 1f),
-                IsBoss ? bossSettings.experienceMultiplier : 1f);
+                IsBoss ? MonsterLootSettings.BossGold(bossSettings.goldMultiplier) : 1f,
+                IsBoss ? MonsterLootSettings.BossExperience(bossSettings.experienceMultiplier) : 1f, Level);
             Destroy(gameObject, deathDelay);
         }
         private void LateUpdate()
         {
+            if(health&&health.Health>0&&Time.deltaTime>0){ragdollVelocity=(transform.position-ragdollPrevious)/Time.deltaTime;ragdollPrevious=transform.position;}
             if(visibility&&visibility.SimulationPaused)return;
             if(TryGetComponent<GameData.Player.Script.SurvivorEnemyStatus>(out var abilityStatus)&&abilityStatus.Airborne)return;
             if (health == null || health.Health > 0f) return;
@@ -373,9 +383,10 @@ namespace MiningSimulator.Ores
             if (Skullclaw != null) BeginSkullclawAttack();
             Transform victim = target != null ? target.transform : null;
             rangedStrike = rangedAttack != null && rangedAttack.IsReady && victim != null &&
-                Vector3.ProjectOnPlane(victim.position - transform.position, Vector3.up).magnitude > EffectiveAttackRange;
+                (CombatData != null && CombatData.rangedOnly || Vector3.ProjectOnPlane(victim.position - transform.position, Vector3.up).magnitude > EffectiveAttackRange);
             secondAttack = nextSecondAttack && !string.IsNullOrEmpty(secondAttackState);
             nextSecondAttack = !secondAttack && !string.IsNullOrEmpty(secondAttackState);
+            if(rangedStrike&&rangedAttack is PotionMonsterAbility potion)potion.PrepareThrow(victim);
             attackStateHash = Animator.StringToHash(ActiveAttackState);
             nextAttack = Time.time + EffectiveAttackCooldown;
             hitApplied = false;
@@ -521,6 +532,7 @@ namespace MiningSimulator.Ores
                     target != null && HasStrikeLineOfSight(target.transform,
                         targetCollider != null ? targetCollider.ClosestPoint(transform.TransformPoint(motor.center)) :
                             target.transform.position + Vector3.up * .5f);
+                if (CombatData != null && CombatData.rangedOnly) canEngage = chasing && canShoot;
                 if (canEngage && Time.time >= nextAttack && !reacting)
                 {
                     BeginAttack();
@@ -633,8 +645,11 @@ private Vector3 ChaseDirection(bool chasing,float? reach=null)
             legacyNavigation.moveSpeed = moveSpeed;
             legacyNavigation.avoidanceLookAhead = avoidanceLookAhead;
             legacyNavigation.avoidanceHoldSeconds = avoidanceHoldSeconds;
+            // Ranged-only species need an approach inside throwing range, not an unreachable melee slot.
+            float approachRange = reach ?? (CombatData != null && CombatData.rangedOnly && rangedAttack != null && rangedAttack.IsReady
+                ? rangedAttack.Range : EngagementRange);
             return navigation.Tick(destination, chasing && target != null ? target.transform : null,
-                reach??EngagementRange, CombatData ?? legacyNavigation, navigationStep>0?navigationStep:Time.deltaTime);
+                approachRange, CombatData ?? legacyNavigation, navigationStep>0?navigationStep:Time.deltaTime);
         }
 
 private bool UpdatePlayerTarget(float dt)

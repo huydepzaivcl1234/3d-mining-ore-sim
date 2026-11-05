@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -149,7 +149,7 @@ namespace MiningSimulator.Ores
                 foreach(var collider in FindObjectsByType<Collider>(FindObjectsSortMode.None)){
                     if(!collider.enabled||collider.isTrigger||!collider.gameObject.activeInHierarchy||
                         (groundLayers.value&(1<<collider.gameObject.layer))==0||
-                        (groundLayer>=0&&collider.gameObject.layer!=groundLayer)||IsDynamicActor(collider))continue;
+                        !GroundSurfaceLayers.Contains(collider.gameObject.layer)||IsDynamicActor(collider))continue;
                     if(!found){bounds=collider.bounds;found=true;}else bounds.Encapsulate(collider.bounds);
                 }
                 if(found){min=bounds.min;max=bounds.max;}
@@ -219,7 +219,7 @@ namespace MiningSimulator.Ores
                     Vector3.Angle(hit.normal, Vector3.up) > maximumSlope) continue;
                 // Only authored Ground-layer geometry supports actors; roofs on obstacle layers do not.
                 int groundLayer = LayerMask.NameToLayer("Ground");
-                if (groundLayer >= 0 && hit.collider.gameObject.layer != groundLayer) continue;
+                if (!GroundSurfaceLayers.Contains(hit.collider.gameObject.layer)) continue;
                 if (hit.point.y < supportHeight - .01f) continue;
                 nearest = hit.distance; supportHeight = hit.point.y;
                 slope = Vector3.Angle(hit.normal, Vector3.up); layer = hit.collider.gameObject.layer; supported = true;

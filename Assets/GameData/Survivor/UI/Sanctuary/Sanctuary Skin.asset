@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8faedccb7de1fe4f8163b203d0ab115, type: 3}
+  m_Name: Sanctuary Skin
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.UpgradeSanctuarySkin
+  heading: {fileID: 11400000, guid: d33c4a8d85b5024409e4a48fef8260bf, type: 2}
+  body: {fileID: 11400000, guid: 396c300d8769d06489571164b955656e, type: 2}
+  vectorMaterial: {fileID: 2100000, guid: dbc1236558c46ee4a8e8ee4fef4ed648, type: 2}
+  ambientLeft: {fileID: 3286163911610860551, guid: dc35079fd7badbf4f9b74f56f2c8a320, type: 3}
+  ambientRight: {fileID: 3286163911610860551, guid: 727ac9021d2e9014d895b17a86fbc93b, type: 3}
+  spark: {fileID: 3286163911610860551, guid: b57ddd652f1b09f4fa6cb82f576f4a4c, type: 3}
+  sword:
+    icon: {fileID: 3286163911610860551, guid: be8ecc1a19beb2a44b2fddef7fff0bdf, type: 3}
+    glow: {fileID: 3286163911610860551, guid: 26a1ada569432a84987397e68ed1f402, type: 3}
+    ring: {fileID: 3286163911610860551, guid: 299ca38741d6a3b4cb1682ec6065e43e, type: 3}
+    medallion: {fileID: 3286163911610860551, guid: c29834f26a9a2cc45b1b41e69d593705, type: 3}
+  speed:
+    icon: {fileID: 3286163911610860551, guid: ecbb3fbad3ae3a0479ad9ca8a3208155, type: 3}
+    glow: {fileID: 3286163911610860551, guid: ffea5192d0b6f984f87140113d67d265, type: 3}
+    ring: {fileID: 3286163911610860551, guid: 274dadcc8136fd44bafb50a4191f4ad1, type: 3}
+    medallion: {fileID: 3286163911610860551, guid: 963a23b06535e5141bbc07cfaaae9137, type: 3}
+  heart:
+    icon: {fileID: 3286163911610860551, guid: 5e9717939954fd9459b9121eb0b27a2d, type: 3}
+    glow: {fileID: 3286163911610860551, guid: 1984d8c6b1071c64ebbbc00eae2a5ae3, type: 3}
+    ring: {fileID: 3286163911610860551, guid: f354150b406050843a4e7676b844f755, type: 3}
+    medallion: {fileID: 3286163911610860551, guid: 5da2f466af2f9ba409d84134149e09d1, type: 3}
+  fire:
+    icon: {fileID: 3286163911610860551, guid: b76844672026cfd4c8bf7dc13d495650, type: 3}
+    glow: {fileID: 3286163911610860551, guid: 203c6004a5936b44d96a516751a98da8, type: 3}
+    ring: {fileID: 3286163911610860551, guid: 67081286085fea64c891fd25d6e64861, type: 3}
+    medallion: {fileID: 3286163911610860551, guid: a09603fa1874a9841bc8a4ae53556063, type: 3}
+  ricochet:
+    icon: {fileID: 3286163911610860551, guid: 3a86457eb697ad1419fa32f5260959e5, type: 3}
+    glow: {fileID: 3286163911610860551, guid: 0ac0f2ff955b5c5459a0d6095bda8c1a, type: 3}
+    ring: {fileID: 3286163911610860551, guid: 3c5f441a5c8b67146aa8ffb20923b844, type: 3}
+    medallion: {fileID: 3286163911610860551, guid: 8a6239c1d57229541876c0afe4bb674b, type: 3}
+  cube:
+    icon: {fileID: 3286163911610860551, guid: 4845e83c813a453489b4e9c0a17fe7f3, type: 3}
+    glow: {fileID: 3286163911610860551, guid: 2c4ea64e0abe4ff4baa7df4e3e4cee4e, type: 3}
+    ring: {fileID: 3286163911610860551, guid: 8f6b03ea85183834f969df256ded6554, type: 3}
+    medallion: {fileID: 3286163911610860551, guid: 6ce51acf4c30fb94895b2c957c315650, type: 3}

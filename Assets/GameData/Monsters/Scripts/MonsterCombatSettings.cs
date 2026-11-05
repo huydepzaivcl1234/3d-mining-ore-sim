@@ -62,6 +62,7 @@ namespace MiningSimulator.Ores
         [Min(.5f)] public float pathRequestTimeout = 5f;
         public LayerMask navigationObstacleLayers = ~0;
         [Header("Ranged attack (optional)")]
+        public bool rangedOnly;
         public HomingMonsterProjectile projectile;
         public string fireState = "Fire";
         [Min(.1f)] public float rangedRange = 8f;

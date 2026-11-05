@@ -6,7 +6,7 @@ namespace MiningSimulator.Ores
 {
     [DisallowMultipleComponent]
     [UnityEngine.Scripting.APIUpdating.MovedFrom(true, "MiningSimulator.Ores", "Assembly-CSharp", "MiningCharacterHealth")]
-    public sealed class CharacterHealth : MonoBehaviour
+    public sealed partial class CharacterHealth : MonoBehaviour
     {
         [Min(1f), SerializeField] private float maxHealth = 100f;
         [Header("Fallback defenses for non-player actors (player uses Core Data)")]
@@ -17,6 +17,7 @@ namespace MiningSimulator.Ores
         [Tooltip("HP restored per tick. Set 0 to disable; dead characters never regenerate.")]
         [Min(0f), SerializeField] private float regenAmount = 5f;
         [Min(0.1f), SerializeField] private float regenInterval = 5f;
+        public string WorldSaveId {get;set;}
         private float regenTimer;
         public event System.Action Damaged;
         public static event System.Action<CharacterHealth,float,GameObject,bool,CombatDamageType> AnyDamaged;

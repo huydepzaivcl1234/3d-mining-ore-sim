@@ -48,6 +48,8 @@ namespace MiningSimulator.Ores
                 choiceOpen=true;if(!coordinator)Time.timeScale=0;AudioListener.pause=true;Cursor.lockState=CursorLockMode.None;Cursor.visible=true;
                 if(coordinator)coordinator.OpenPanel(choicePanel);else choicePanel.gameObject.SetActive(true);
             }
+            PanelAudio(true);
+            RevealOffers();
             return true;
         }
         private void CompleteQueuedChoice()
@@ -60,8 +62,10 @@ namespace MiningSimulator.Ores
         }
         public void ClosePending()
         {
+            CancelPickFeedback();
+            PanelAudio(false);
             choiceOpen=false;
-            if(coordinator&&choicePanel)coordinator.NotifyExternalPanelClosed(choicePanel);
+            if(coordinator&&coordinator.isActiveAndEnabled&&choicePanel)coordinator.NotifyExternalPanelClosed(choicePanel);
             if(choicePanel)choicePanel.gameObject.SetActive(false);
             RestorePause();RefreshQueueHud();
         }
@@ -97,6 +101,3 @@ namespace MiningSimulator.Ores
         }
     }
 }
-
-
-

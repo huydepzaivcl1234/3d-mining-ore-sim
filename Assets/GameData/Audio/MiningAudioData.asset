@@ -18,6 +18,12 @@ MonoBehaviour:
   loopMusic: 1
   musicVolume: 0.05
   musicMixerGroup: {fileID: 0}
+  upgradeMusic: {fileID: 8300000, guid: 7436cd24c030474193501e928de51be4, type: 3}
+  cardHoverSfx: {fileID: 8300000, guid: ba4790257693442f8fb3b8fb76be3006, type: 3}
+  cardPickSfx: {fileID: 8300000, guid: b437d6189e5e41a2a4aafd84df6fe8cb, type: 3}
+  upgradeMusicVolume: 0.35
+  cardHoverVolume: 0.5
+  upgradeMusicFadeSeconds: 0.8
   morningAmbience: {fileID: 8300000, guid: 8f4807570f294534ae0d678339307aa1, type: 3}
   additionalMorningAmbiences:
   - {fileID: 8300000, guid: 9a1d8a42638ce4a40bd954823f777eee, type: 3}

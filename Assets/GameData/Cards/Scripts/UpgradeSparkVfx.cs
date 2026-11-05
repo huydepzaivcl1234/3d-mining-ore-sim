@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -17,7 +17,10 @@ namespace MiningSimulator.Ores
             if(!stage)Build(settings);
             for(int i=0;i<buttons.Length;i++){
                 if(!buttons[i])continue;
-                var parent=(RectTransform)buttons[i].transform;
+                var card=(RectTransform)buttons[i].transform;
+                foreach(string old in new[]{"Anime sparkle — left","Anime sparkle — right"}){var t=card.Find(old);if(t)t.gameObject.SetActive(false);}
+                var binding=card.GetComponent<UpgradeCardView>();
+                var parent=binding&&binding.bindings.actionLabel?binding.bindings.actionLabel.transform.parent as RectTransform:card.Find("SelectAction") as RectTransform ?? card;
                 for(int side=0;side<2;side++){
                     string name=side==0?"Anime sparkle — left":"Anime sparkle — right";
                     var child=parent.Find(name) as RectTransform;

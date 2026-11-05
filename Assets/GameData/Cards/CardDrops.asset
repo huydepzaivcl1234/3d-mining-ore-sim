@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: CardDrops
   m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MiningCardData
   survivorUpgrades: {fileID: 11400000, guid: dbca92068a500964c804a17b038d37d0, type: 2}
-  monsterDropPercent: 15
-  bossDropPercent: 50
+  monsterDropPercent: 2
+  bossDropPercent: 5
   tiers:
   - name: Common
     prefab: {fileID: 8214108381286288886, guid: aadebc53953011549a1b0d5cf53711a7, type: 3}
@@ -65,7 +65,7 @@ MonoBehaviour:
     gunDamagePercent: 1
     magazineBonus: 1
     bulletSpeedPercent: 1
-  abilityCardPercent: 5
+  abilityCardPercent: 1
   spawnHeight: 1
   upwardImpulse: 3
   sidewaysImpulse: 1.3

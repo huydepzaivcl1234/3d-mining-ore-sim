@@ -117,8 +117,8 @@ MonoBehaviour:
   statGrowthPerLevel: 0.75
   goldGrowthPerLevel: 0.75
   randomStatMultiplier: {x: 0.9, y: 1.1}
-  experience: 25
-  gold: 50
+  experience: 1000
+  gold: 500
   armor: 1
   magicResistance: 1
   armorPerLevel: 1
@@ -130,6 +130,10 @@ MonoBehaviour:
   burnDurationSeconds: 0
   lifeStealPercent: 0
   healingBonusPercent: 0
+  lootProfileOnly: 0
+  cardDropPercent: 2
+  bossCardDropPercent: 5
+  abilityCardSharePercent: 1
   drops: []
   iconSize: 0.45
   launchUpSpeed: 4

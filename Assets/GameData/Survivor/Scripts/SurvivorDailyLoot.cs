@@ -6,7 +6,7 @@ using MiningSimulator.Ores;
 namespace GameData.Player.Script
 {
     [DisallowMultipleComponent]
-    public sealed class SurvivorDailyLoot : MonoBehaviour
+    public sealed partial class SurvivorDailyLoot : MonoBehaviour
     {
         public SurvivorLootData data;
         private DayNightSystem clock;
@@ -14,7 +14,7 @@ namespace GameData.Player.Script
         private float retryAt;
         private bool saveBlocked;
         private const string Key="Survivor.DailyLoot.v1";
-        [Serializable] private sealed class BoxProgress {public bool shiny,collected;}
+        [Serializable] private sealed class BoxProgress {public bool shiny,collected;public SurvivorLootBox.SavedBox runtime;}
         [Serializable] private sealed class Progress {public int version=2,day=-1;public bool shiny,collected;public List<BoxProgress> boxes=new();}
         private Progress progress=new();
         private readonly RaycastHit[] groundHits=new RaycastHit[32];
@@ -44,7 +44,7 @@ namespace GameData.Player.Script
         public bool RefreshMorning()
         {
             retryAt=Time.time+2;
-            if(saveBlocked||!data||!data.prefab||!clock||clock.CurrentPeriod!=MiningTimePeriod.Day||!cards||!cards.Player||!cards.CanOfferAbilities)return false;
+            if(saveBlocked||!data||!data.prefab||!clock||clock.CurrentPeriod!=MiningTimePeriod.Day&&!(progress.day==clock.DayNumber&&progress.boxes.Exists(b=>b.runtime!=null&&!b.collected))||!cards||!cards.Player||!cards.CanOfferAbilities)return false;
             if(progress.day!=clock.DayNumber){
                 ClearBoxes();progress=new Progress{day=clock.DayNumber};
                 for(int i=0;i<Mathf.Clamp(data.boxesPerMorning,0,50);i++)progress.boxes.Add(new BoxProgress{shiny=UnityEngine.Random.value<data.shinyChancePercent*.01f});
@@ -53,10 +53,11 @@ namespace GameData.Player.Script
             while(boxes.Count<progress.boxes.Count)boxes.Add(null);
             bool spawned=false;
             for(int i=0;i<progress.boxes.Count;i++){
-                if(progress.boxes[i].collected||boxes[i]||!TryFindPosition(out var point))continue;
+                if(progress.boxes[i].collected||boxes[i])continue;
+                Vector3 point;if(progress.boxes[i].runtime!=null)point=progress.boxes[i].runtime.landing;else if(!TryFindPosition(out point))continue;
                 var go=Instantiate(data.prefab,point+Vector3.up*data.dropHeight,Quaternion.Euler(0,UnityEngine.Random.Range(0,360),0),transform);
                 var box=go.GetComponent<SurvivorLootBox>();if(!box)box=go.AddComponent<SurvivorLootBox>();boxes[i]=box;
-                box.Configure(this,cards,progress.boxes[i].shiny);box.BeginDrop(point);WorldActorVisibility.Attach(go);BoxesSpawned++;spawned=true;
+                box.Configure(this,cards,progress.boxes[i].shiny);if(progress.boxes[i].runtime!=null)box.RestoreRuntime(progress.boxes[i].runtime);else box.BeginDrop(point);WorldActorVisibility.Attach(go);BoxesSpawned++;spawned=true;
             }
             return spawned;
         }

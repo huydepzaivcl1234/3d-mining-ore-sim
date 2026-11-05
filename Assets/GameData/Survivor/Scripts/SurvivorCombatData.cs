@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 namespace GameData.Player.Script
 {
@@ -8,7 +8,23 @@ namespace GameData.Player.Script
     {
         [Header("Survivor — base attack") ]
         [Min(0)] public float damage=20f;
-        [Min(.08f)] public float attackInterval=.65f;
+        [HideInInspector,Min(.08f)] public float attackInterval=.65f; // Old seconds/attack; migrated once.
+        [Min(.01f),Tooltip("Base attacks per second, before bonuses.")] public float attackSpeed=1f/.65f;
+        [Min(0),Tooltip("Attacks/second added by +100% bonus attack speed.")] public float attackSpeedRatio=1f/.65f;
+        public float baseBonusAttackSpeedPercent;
+        [Min(.01f)] public float maximumAttackSpeed=12.5f;
+        [SerializeField,HideInInspector] private int attackSpeedVersion;
+        public void MigrateAttackSpeed(){
+            if(attackSpeedVersion>0)return;
+            attackSpeed=1f/CombatValue(attackInterval,.65f,.08f);attackSpeedRatio=attackSpeed;
+            baseBonusAttackSpeedPercent=(CombatValue(attackSpeedMultiplier,1,.1f)-1)*100f;attackSpeedVersion=1;
+        }
+        private void OnEnable(){MigrateAttackSpeed();}
+        public float AttacksPerSecond(float bonusPercent=0){
+            MigrateAttackSpeed();
+            float total=CombatValue(attackSpeed,1f/.65f,.01f)+CombatValue(attackSpeedRatio,0,0)*(baseBonusAttackSpeedPercent+bonusPercent)*.01f;
+            return Mathf.Clamp(CombatValue(total,.01f,.01f),.01f,CombatValue(maximumAttackSpeed,12.5f,.01f));
+        }
         [Min(1)] public float range=13f;
         [Min(1)] public float projectileSpeed=22f;
         [Min(.02f)] public float projectileRadius=.10f;
@@ -42,7 +58,7 @@ namespace GameData.Player.Script
         [Min(0f)] public float magicResistancePerLevel;
         [Min(.01f)] public float resistanceScale = 100f;
         [Header("Automatic attacks - multiplier on the equipped attack cadence")]
-        [Min(.1f)] public float attackSpeedMultiplier = 1f;
+        [HideInInspector,Min(.1f)] public float attackSpeedMultiplier = 1f;
 
         [Header("XP / Level - starting values; current progress is saved per player")]
         [Min(1)] public int startingLevel = 1;
@@ -72,6 +88,10 @@ namespace GameData.Player.Script
             float.IsNaN(value) || float.IsInfinity(value) ? fallback : Mathf.Max(minimum, value);
         private void OnValidate()
         {
+            MigrateAttackSpeed();
+            attackSpeed=CombatValue(attackSpeed,1f/.65f,.01f);attackSpeedRatio=CombatValue(attackSpeedRatio,0,0);
+            maximumAttackSpeed=CombatValue(maximumAttackSpeed,12.5f,.01f);
+            baseBonusAttackSpeedPercent=float.IsNaN(baseBonusAttackSpeedPercent)||float.IsInfinity(baseBonusAttackSpeedPercent)?0:baseBonusAttackSpeedPercent;
             damage = CombatValue(damage, 20f, 0f);
             range = CombatValue(range, 13f, .1f);
             attackInterval = CombatValue(attackInterval, .65f, .08f);

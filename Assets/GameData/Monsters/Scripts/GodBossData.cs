@@ -6,6 +6,7 @@ namespace MiningSimulator.Ores
     public sealed class GodBossData : ScriptableObject
     {
         public GodBossController prefab;
+        public MonsterRewardData lootAndRewards;
         [HideInInspector] public int everyDays = 50; // Legacy serialized field; encounters now use daily rolls.
         [Header("Daily encounter after reaching the required player level")]
         [Min(1)] public int minimumPlayerLevel=15;

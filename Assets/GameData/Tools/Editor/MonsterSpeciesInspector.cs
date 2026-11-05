@@ -15,7 +15,7 @@ public static class MonsterSpeciesInspector
     private static readonly Dictionary<string,bool> groups=new();
     public static void Draw(SerializedObject so)
     {
-        so.Update();Fields(so,"minimumSpawnDay");EditorGUILayout.Space(5);var data=(MonsterRewardData)so.targetObject;
+        so.Update();if(((MonsterRewardData)so.targetObject).lootProfileOnly){MonsterLootInspector.DrawSpecies(so);so.ApplyModifiedProperties();return;}Fields(so,"minimumSpawnDay");EditorGUILayout.Space(5);var data=(MonsterRewardData)so.targetObject;
         EditorGUILayout.LabelField(ObjectNames.NicifyVariableName(data.GetType().Name.Replace("Data","")),EditorStyles.boldLabel);
         EditorGUILayout.LabelField($"{data.combat.maxHealth:0.##} HP | {data.combat.damage:0.##} {data.attackDamageType} damage | Melee {data.combat.attackRange:0.##} m");
         if(GUILayout.Button("Preview attack ranges in Scene")){
@@ -23,7 +23,7 @@ public static class MonsterSpeciesInspector
         }
         EditorGUILayout.HelpBox("This asset owns this monster's settings. Other species' abilities and unused projectile settings are omitted.",MessageType.None);
         if(Group(so,"Core stats",true))Fields(so,"combat.maxHealth","combat.regenAmount","combat.regenInterval","combat.damage","attackDamageType","combat.attackSpeed","combat.attackCooldown","armor","magicResistance");
-        if(Group(so,"Melee attack",true)){
+        if(!data.combat.rangedOnly&&Group(so,"Melee attack",true)){
             Fields(so,"combat.attackRange","combat.attackArc","combat.hitHeight","combat.hitShape");
             if(data is SkullclawData)Fields(so,"rightContact","leftContact");else Fields(so,"combat.hitMoment");
             if(so.FindProperty("combat.hitShape").enumValueIndex==(int)MushroomMonster.HitShape.Area)Fields(so,"combat.areaRadius","combat.areaForwardOffset","combat.areaSideOffset");
@@ -32,13 +32,13 @@ public static class MonsterSpeciesInspector
                 if(!string.IsNullOrWhiteSpace(so.FindProperty("combat.secondAttackState").stringValue))Fields(so,"combat.secondHitMoment","combat.secondAreaRadius","combat.secondAreaOffset");
             }
         }
-        if((HasRanged(data)||data.GetType()==typeof(MonsterRewardData))&&Group(so,HasRanged(data)?"Ranged attack":"Ranged attack (optional)",HasRanged(data)))Fields(so,"combat.rangedRange","combat.projectile","combat.releaseMoment","combat.projectileSpeed","combat.projectileTurnDegreesPerSecond","combat.projectileRadius","combat.projectileLifetime","combat.projectileCollisionLayers");
+        if((HasRanged(data)||data.GetType()==typeof(MonsterRewardData))&&Group(so,HasRanged(data)?"Ranged attack":"Ranged attack (optional)",HasRanged(data)))Fields(so,"combat.rangedRange",data is PotionMonsterData?"combat.fireState":"combat.projectile","combat.releaseMoment","combat.projectileSpeed","combat.projectileTurnDegreesPerSecond","combat.projectileRadius","combat.projectileLifetime","combat.projectileCollisionLayers");
         var own=OwnFields(data.GetType());
         if(own.Length>0&&Group(so,"Species abilities & animations",true))foreach(var name in own){if(data is SkullclawData&&(name=="rightContact"||name=="leftContact"))continue;Fields(so,name);}
         if(Group(so,"Movement & navigation"))Fields(so,"combat.moveSpeed","combat.detectionRange","combat.chaseTurnSpeed","combat.targetScanSeconds","combat.targetMemorySeconds","combat.retaliationForgetSeconds","combat.detectionHysteresis","combat.chaseRepathSeconds","combat.chaseStandDirections","combat.chaseStandRangeFraction","combat.chaseStandMaximumRangeFraction","combat.targetRepathDistance","combat.waypointTolerance","combat.avoidanceLookAhead","combat.avoidanceHoldSeconds","combat.stuckRepathSeconds","combat.pathRequestTimeout","combat.navigationObstacleLayers");
         if(Group(so,"Spawn levels & stat growth"))DrawLevels(so);
         if(Group(so,"Boss variant"))DrawBoss(so);
-        if(Group(so,"Rewards & drops"))Fields(so,"experience","gold","goldGrowthPerLevel","drops","iconSize","launchUpSpeed","launchOutSpeed","groundWaitSeconds","attractionRadius","attractionSpeed","attractionAcceleration");
+        if(Group(so,"Rewards & drops"))MonsterLootInspector.DrawSpecies(so);
         if(Group(so,"Advanced — animation, defenses & lifetime")){
             if(!(data is SkullclawData))Fields(so,"combat.attackState");
             if(HasRanged(data))Fields(so,"combat.fireState");
@@ -49,7 +49,7 @@ public static class MonsterSpeciesInspector
         }
         if(so.ApplyModifiedProperties())SceneView.RepaintAll();
     }
-    public static bool HasRanged(MonsterRewardData data)=>data is MushranonData||data.combat.projectile;
+    public static bool HasRanged(MonsterRewardData data)=>data is PotionMonsterData||data is MushranonData||data.combat.projectile;
     private static string[] OwnFields(Type type)=>type.GetFields(System.Reflection.BindingFlags.Public|System.Reflection.BindingFlags.Instance).Where(f=>f.DeclaringType!=typeof(MonsterRewardData)).Select(f=>f.Name).ToArray();
     public static bool Group(SerializedObject so,string title,bool initial=false){string key=so.targetObject.GetType().FullName+"/"+title;if(!groups.TryGetValue(key,out bool open))open=initial;EditorGUILayout.Space(4);open=EditorGUILayout.Foldout(open,title,true,EditorStyles.foldoutHeader);groups[key]=open;return open;}
     public static void Fields(SerializedObject so,params string[] names){foreach(var name in names){var p=so.FindProperty(name);if(p!=null)EditorGUILayout.PropertyField(p,true);}}

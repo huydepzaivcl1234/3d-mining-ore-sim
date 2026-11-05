@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d8c77936c611bb44b381ae5cfe1f34d, type: 3}
+  m_Name: MonsterLootSettings
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.MonsterLootSettings
+  dropMode: 1
+  rewardMode: 0
+  shared: {fileID: 11400000, guid: 92dda482682dee849b47e42786ac025d, type: 2}

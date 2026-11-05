@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 22c474f793a6c9a468b23191397433dd, type: 3}
+  m_Name: SurfaceAudio
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.SurfaceAudioData
+  surfaces:
+  - surface: 0
+    layers:
+      serializedVersion: 2
+      m_Bits: 1024
+    footsteps:
+    - {fileID: 8300000, guid: 3a4c0e933ddd9824d94773ae53c1a37d, type: 3}
+    - {fileID: 8300000, guid: 38fe7bdac250d7044aeebfc8e9b0df2e, type: 3}
+    - {fileID: 8300000, guid: bd84dd6cee665f349b6b04cf601abbb1, type: 3}
+    - {fileID: 8300000, guid: e2f2a8926ccf7e648a37ab691287031a, type: 3}
+    - {fileID: 8300000, guid: 7f64ed82f71f0904c956782529059c62, type: 3}
+    jump: {fileID: 0}
+    landing: {fileID: 0}
+  - surface: 1
+    layers:
+      serializedVersion: 2
+      m_Bits: 2048
+    footsteps: []
+    jump: {fileID: 0}
+    landing: {fileID: 0}
+  - surface: 2
+    layers:
+      serializedVersion: 2
+      m_Bits: 4096
+    footsteps: []
+    jump: {fileID: 0}
+    landing: {fileID: 0}
+  - surface: 3
+    layers:
+      serializedVersion: 2
+      m_Bits: 8192
+    footsteps: []
+    jump: {fileID: 0}
+    landing: {fileID: 0}
+  fallbackSteps:
+  - {fileID: 8300000, guid: 3a4c0e933ddd9824d94773ae53c1a37d, type: 3}
+  - {fileID: 8300000, guid: 38fe7bdac250d7044aeebfc8e9b0df2e, type: 3}
+  - {fileID: 8300000, guid: bd84dd6cee665f349b6b04cf601abbb1, type: 3}
+  - {fileID: 8300000, guid: e2f2a8926ccf7e648a37ab691287031a, type: 3}
+  - {fileID: 8300000, guid: 7f64ed82f71f0904c956782529059c62, type: 3}

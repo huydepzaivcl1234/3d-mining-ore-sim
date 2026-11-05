@@ -7,6 +7,10 @@ namespace GameData.Player.Script
     public sealed class PlayerFootsteps : MonoBehaviour
     {
         [SerializeField] private MiningAudioManager audioManager;
+        [SerializeField] private SurfaceAudioData surfaceAudio;
+        private readonly RaycastHit[] groundHits=new RaycastHit[24];
+        public int LastSurfaceLayer{get;private set;}=-1;
+        private AudioClip[] previousSet;
         [SerializeField] private AudioClip[] grassClips=System.Array.Empty<AudioClip>();
         [SerializeField] private AudioClip jumpClip,landingClip;
         [SerializeField] private Transform leftFoot,rightFoot;
@@ -43,20 +47,33 @@ namespace GameData.Player.Script
             if(!Active||!controller.IsGrounded||!moving||input&&input.Move.sqrMagnitude<.01f)return;
             PlayStep(evt!=null?evt.intParameter==1:right);
         }
+        public SurfaceAudioData.Surface SurfaceAt(Vector3 point)
+        {
+            int count=Physics.RaycastNonAlloc(point+Vector3.up*.5f,Vector3.down,groundHits,2.5f,GroundSurfaceLayers.Mask,QueryTriggerInteraction.Ignore);
+            float nearest=float.PositiveInfinity;LastSurfaceLayer=-1;
+            for(int i=0;i<count;i++){var hit=groundHits[i];if(hit.transform.IsChildOf(transform)||hit.distance>=nearest)continue;nearest=hit.distance;LastSurfaceLayer=hit.collider.gameObject.layer;}
+            return surfaceAudio&&LastSurfaceLayer>=0?surfaceAudio.ForLayer(LastSurfaceLayer):null;
+        }
         private void PlayStep(bool isRight){
-            if(Time.time<nextStep||!audioManager||grassClips.Length==0)return;
-            int index=grassClips.Length==1?0:Random.Range(0,grassClips.Length-1);
-            if(grassClips.Length>1&&index>=previousClip)index++;
-            if(!grassClips[index])return;previousClip=index;
-            var foot=isRight?rightFoot:leftFoot;
-            audioManager.PlayWorldSfx(grassClips[index],foot?foot.position:transform.position,volume);
+            if(Time.time<nextStep||!audioManager)return;
+            var foot=isRight?rightFoot:leftFoot;var point=foot?foot.position:transform.position;
+            var surface=SurfaceAt(point);var clips=surface!=null&&surface.footsteps.Length>0?surface.footsteps:surfaceAudio&&surfaceAudio.fallbackSteps.Length>0?surfaceAudio.fallbackSteps:grassClips;
+            if(clips.Length==0)return;if(previousSet!=clips){previousClip=-1;previousSet=clips;}
+            int index=clips.Length==1?0:Random.Range(0,previousClip>=0?clips.Length-1:clips.Length);
+            if(clips.Length>1&&index>=previousClip&&previousClip>=0)index++;
+            if(!clips[index])return;previousClip=index;
+            audioManager.PlayWorldSfx(clips[index],point,volume);
             right=!isRight;nextStep=Time.time+minimumInterval;StepsPlayed++;
         }
-        private void OnJump(){if(!Active||!audioManager||!jumpClip)return;audioManager.PlayWorldSfx(jumpClip,transform.position,jumpVolume);nextStep=Time.time+.15f;JumpsPlayed++;}
+        private void OnJump(){
+            if(!Active||!audioManager)return;var surface=SurfaceAt(transform.position);var clip=surface!=null&&surface.jump?surface.jump:jumpClip;if(!clip)return;
+            audioManager.PlayWorldSfx(clip,transform.position,jumpVolume);nextStep=Time.time+.15f;JumpsPlayed++;
+        }
         private void OnLanding(float speed){
-            if(!Active||!audioManager||!landingClip||Time.time<nextLanding)return;
+            if(!Active||!audioManager||Time.time<nextLanding)return;
             Vector3 point=leftFoot&&rightFoot?(leftFoot.position+rightFoot.position)*.5f:transform.position;
-            audioManager.PlayWorldSfx(landingClip,point,landingVolume*Mathf.Clamp(speed/5f,.4f,1f));nextLanding=Time.time+.2f;nextStep=Time.time+.16f;LandingsPlayed++;
+            var surface=SurfaceAt(point);var clip=surface!=null&&surface.landing?surface.landing:landingClip;if(!clip)return;
+            audioManager.PlayWorldSfx(clip,point,landingVolume*Mathf.Clamp(speed/5f,.4f,1f));nextLanding=Time.time+.2f;nextStep=Time.time+.16f;LandingsPlayed++;
         }
         private void Update(){
             Vector3 delta=transform.position-previousPosition;previousPosition=transform.position;delta.y=0;

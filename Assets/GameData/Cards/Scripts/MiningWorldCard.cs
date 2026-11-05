@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace MiningSimulator.Ores
 {
-    public sealed class MiningWorldCard : MonoBehaviour
+    public sealed partial class MiningWorldCard : MonoBehaviour
     {
         private MiningCardSystem owner;
         private MiningCardData data;

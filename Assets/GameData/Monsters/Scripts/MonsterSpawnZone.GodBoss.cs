@@ -53,7 +53,7 @@ namespace MiningSimulator.Ores
                 var prefabMotor = godBossData.prefab.GetComponent<CharacterController>();
                 float radius = prefabMotor.radius, height = Mathf.Max(radius * 2, godBossData.height);
                 if (Physics.CheckCapsule(hit.point + Vector3.up * (radius + .15f),
-                    hit.point + Vector3.up * (height - radius), radius * .95f, ~0, QueryTriggerInteraction.Ignore)) continue;
+                    hit.point + Vector3.up * (height - radius), radius * .95f, ~LayerMask.GetMask("Ragdoll"), QueryTriggerInteraction.Ignore)) continue;
                 godBoss = Instantiate(godBossData.prefab, hit.point + Vector3.up * .1f, Quaternion.identity, transform);
                 int appearance=GameSave.GetInt(GodAppearanceKey);
                 if(GameSave.GetInt(GodAppearanceDayKey)!=SpawnDayNumber){appearance++;GameSave.SetInt(GodAppearanceKey,appearance);GameSave.SetInt(GodAppearanceDayKey,SpawnDayNumber);GameSave.Save();}
@@ -67,6 +67,12 @@ namespace MiningSimulator.Ores
         private void OnGodDefeated(GodBossController boss)
         {
             boss.Defeated -= OnGodDefeated;
+            if(godBossData&&godBossData.lootAndRewards){
+                var loot=godBossData.lootAndRewards;
+                MonsterKillCredit.Notify(boss.Health.LastDamageSource,loot,true,MonsterLootSettings.RewardsFor(loot).experience*MonsterLootSettings.BossExperience(loot.boss.experienceMultiplier));
+                var cards=FindAnyObjectByType<MiningCardSystem>();if(cards)cards.TryDrop(boss.transform.position,true,loot);
+                GrantRewards(loot,boss.transform.position,MonsterLootSettings.BossGold(loot.boss.goldMultiplier),MonsterLootSettings.BossExperience(loot.boss.experienceMultiplier),boss.AppearanceNumber);
+            }
             GameSave.SetInt(GodDefeatedDayKey, boss.EncounterDay); GameSave.Save();
             NotifyDefeated(boss.transform.position);
             godBoss = null; ForecastChanged?.Invoke();
