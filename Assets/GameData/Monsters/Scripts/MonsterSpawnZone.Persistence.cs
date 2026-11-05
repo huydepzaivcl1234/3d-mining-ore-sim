@@ -22,6 +22,7 @@ namespace MiningSimulator.Ores
         {
             public int version=1;
             public float elapsed,credit;
+            public int spawnPacingVersion,spawnKills;public bool initialMonsterSpawned;
             public string playerId;
             public RunCheckpoint.State runtime;
             public int day,eventKind,thiefDay,thieves;
@@ -37,6 +38,7 @@ namespace MiningSimulator.Ores
         public string WorldSaveKey {get {string path=transform.name;for(var p=transform.parent;p;p=p.parent)path=p.name+"/"+path;return "Survivor.WorldMonsters.v1/"+gameObject.scene.path+"/"+path;}}
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetWorldSaving(){worldStopping=false;nextWorldSave=15;}
+        internal static void ClearResetSchedules(){skullNights.Clear();worldStopping=false;nextWorldSave=Time.unscaledTime+15;}
         public static void CaptureWorldsIfDue(bool stopping=false,bool force=false)
         {
             if(RunCheckpoint.IsRestoring||worldStopping||!Application.isPlaying||!stopping&&!force&&Time.unscaledTime<nextWorldSave)return;
@@ -47,7 +49,7 @@ namespace MiningSimulator.Ores
         public void SaveWorld(bool includeRuntime=true)
         {
             if(restoringWorld||worldLoadFailed||!started||!player)return;
-            var save=new SavedWorld{playerId=RunStateFields.Id(player),elapsed=spawnElapsedSeconds,credit=spawnCredit,playerPosition=player.transform.position,day=SpawnDayNumber,eventKind=(int)CurrentDailyEvent,eventAnnouncement=dailyAnnouncementPending,thiefDay=thiefDay,thieves=spawnedThieves};
+            var save=new SavedWorld{playerId=RunStateFields.Id(player),elapsed=spawnElapsedSeconds,credit=spawnCredit,spawnPacingVersion=1,spawnKills=spawnKills,initialMonsterSpawned=initialMonsterSpawned,playerPosition=player.transform.position,day=SpawnDayNumber,eventKind=(int)CurrentDailyEvent,eventAnnouncement=dailyAnnouncementPending,thiefDay=thiefDay,thieves=spawnedThieves};
             if(additionalRoster&&skullNights.TryGetValue(additionalRoster,out var roll)){save.skullRolled=roll.IsRolledFor(save.day);save.skullPending=roll.Pending;}
             if(SurvivorCrowd.Current)SurvivorCrowd.Current.CaptureWorld(this,save.monsters);
             foreach(var m in alive)if(m&&m.Health&&m.Health.Health>0&&!m.IsDespawning&&liveSpecies.TryGetValue(m,out var entry))save.monsters.Add(m.CaptureWorld(entry.prefab.name));
@@ -72,7 +74,9 @@ namespace MiningSimulator.Ores
             if(player&&!string.IsNullOrEmpty(saved.playerId))player.WorldSaveId=saved.playerId;
             while(!WorldNavigationGrid.Instance||!WorldNavigationGrid.Instance.HasBaked)yield return null;
             if(player){var rb=player.GetComponent<Rigidbody>();if(rb){rb.position=saved.playerPosition;rb.linearVelocity=Vector3.zero;}player.transform.position=saved.playerPosition;}
-            spawnElapsedSeconds=Mathf.Max(0,saved.elapsed);spawnCredit=Mathf.Max(0,saved.credit);
+            spawnElapsedSeconds=Mathf.Max(0,saved.elapsed);
+            if(saved.spawnPacingVersion==1){spawnKills=Mathf.Max(0,saved.spawnKills);initialMonsterSpawned=saved.initialMonsterSpawned;spawnCredit=Mathf.Clamp(saved.credit,0,CurrentSpawnInterval);}
+            else{initialMonsterSpawned=saved.monsters.Count>0||saved.elapsed>0;spawnKills=initialMonsterSpawned&&saved.monsters.Count==0?1:0;spawnCredit=0;} // Older saves keep their monsters, discard old burst credits.
             thiefDay=saved.thiefDay;spawnedThieves=saved.thieves;
             if(saved.day==SpawnDayNumber){scheduledDay=saved.day;CurrentDailyEvent=(DailyEncounterEvent)saved.eventKind;dailyAnnouncementPending=saved.eventAnnouncement;if(additionalRoster&&saved.skullRolled){var roll=new SkullclawNightRoll();roll.Roll(saved.day,saved.skullPending?100:0,0);skullNights[additionalRoster]=roll;}}
             foreach(var record in saved.monsters){

@@ -147,6 +147,7 @@ namespace MiningSimulator.Ores
     public static class GameSave
     {
         private static GameSaveStore store;
+        internal static bool SuppressWrites {get;set;}
 #if UNITY_EDITOR
         // Injected only by isolated Editor tests; never touches the real profile.
         private static GameSaveStore testStore;
@@ -159,7 +160,7 @@ namespace MiningSimulator.Ores
         public static string FilePath => System.IO.Path.Combine(Application.persistentDataPath, "Saves", "profile.json");
         public static GameSaveStore Store => ExistingStore ?? (store = new GameSaveStore(FilePath));
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ClearRuntime() { store = null; }
+        private static void ClearRuntime() { store = null; SuppressWrites=false; }
         private static bool Legacy(string key) => Store.Writable && Store.LegacyAllowed && !Store.IsKnown(key) && PlayerPrefs.HasKey(key);
         public static bool HasKey(string key) => !UseFiles ? PlayerPrefs.HasKey(key) : Store.Contains(key) || Legacy(key);
         public static string GetString(string key, string fallback = "")
@@ -181,17 +182,17 @@ namespace MiningSimulator.Ores
             return float.TryParse(Store.Get(key, ""), NumberStyles.Float, CultureInfo.InvariantCulture, out float value) &&
                 !float.IsNaN(value) && !float.IsInfinity(value) ? value : fallback;
         }
-        public static void SetString(string key, string value) { if (UseFiles) Store.Set(key, value); else PlayerPrefs.SetString(key, value); }
-        public static void SetInt(string key, int value) { if (UseFiles) Store.Set(key, value.ToString(CultureInfo.InvariantCulture)); else PlayerPrefs.SetInt(key, value); }
+        public static void SetString(string key, string value) { if(SuppressWrites)return; if (UseFiles) Store.Set(key, value); else PlayerPrefs.SetString(key, value); }
+        public static void SetInt(string key, int value) { if(SuppressWrites)return; if (UseFiles) Store.Set(key, value.ToString(CultureInfo.InvariantCulture)); else PlayerPrefs.SetInt(key, value); }
         public static void SetFloat(string key, float value)
         {
-            if (float.IsNaN(value) || float.IsInfinity(value)) return;
+            if (SuppressWrites || float.IsNaN(value) || float.IsInfinity(value)) return;
             if (UseFiles) Store.Set(key, value.ToString("R", CultureInfo.InvariantCulture)); else PlayerPrefs.SetFloat(key, value);
         }
-        public static void DeleteKey(string key) { if (UseFiles) Store.Delete(key); else PlayerPrefs.DeleteKey(key); }
+        public static void DeleteKey(string key) { if(SuppressWrites)return; if (UseFiles) Store.Delete(key); else PlayerPrefs.DeleteKey(key); }
         // Existing callers request persistence; the host coalesces writes, rather than blocking each transaction.
-        public static void Save() { if (!UseFiles) PlayerPrefs.Save(); }
-        public static bool Flush() => ExistingStore == null || ExistingStore.Flush();
+        public static void Save() { if(SuppressWrites)return; if (!UseFiles) PlayerPrefs.Save(); }
+        public static bool Flush() => SuppressWrites || ExistingStore == null || ExistingStore.Flush();
         public static bool ResetAll() => !UseFiles || Store.Reset();
     }
 }

@@ -268,7 +268,7 @@ namespace MiningSimulator.Ores
         public bool IsCapsulePlacementClear(Vector3 foot, float radius, float height)
         {
             return isActiveAndEnabled && TryGetGroundPoint(foot, out Vector3 support) &&
-                foot.y >= support.y - probeGroundClearance && IsCapsuleClear(foot, radius, height);
+                Mathf.Abs(foot.y-support.y) <= probeGroundClearance && IsCapsuleClear(foot, radius, height);
         }
         private bool IsCapsuleClear(Vector3 p, float radius, float height)
         {

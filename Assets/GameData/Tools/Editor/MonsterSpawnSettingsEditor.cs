@@ -8,11 +8,9 @@ public sealed class MonsterSpawnSettingsEditor : Editor
     {
         DrawDefaultInspector();
         var settings=(MonsterSpawnSettings)target;
-        EditorGUILayout.LabelField($"Spawn rate: start {settings.RateAtSeconds(0):0.##}/s | 1 min {settings.RateAtSeconds(60):0.##}/s | 5 min {settings.RateAtSeconds(300):0.##}/s",EditorStyles.wordWrappedLabel);
-        EditorGUILayout.HelpBox("Distances are in metres. Scene rings: yellow = minimum, cyan = maximum. Choose the spawn origin with Follow Player. God Boss and its summons use GodBossData.",MessageType.Info);
-        EditorGUILayout.LabelField($"Level 15 at 5 min: {settings.RateAtSeconds(300,15):0.##}/s | Level 50: {settings.RateAtSeconds(300,50):0.##}/s",EditorStyles.wordWrappedLabel);
-        EditorGUILayout.HelpBox("No per-frame or maximum-per-second spawn cap. Rate grows with time and player level. Maximum Living Monsters only limits the total population.",MessageType.Info);
-        EditorGUILayout.LabelField($"Monsters per group: level 1 = {settings.GroupSizeAtLevel(1)} | level 50 = {settings.GroupSizeAtLevel(50)} | level 100 = {settings.GroupSizeAtLevel(100)}",EditorStyles.wordWrappedLabel);
+        EditorGUILayout.HelpBox("A fresh run spawns one monster, then waits for its defeat. Regular spawns then arrive one at a time. Day/night and player level do not accelerate this pacing.",MessageType.Info);
+        EditorGUILayout.LabelField($"Interval: first kill {settings.IntervalAfterKills(1):0.##}s | 10 kills {settings.IntervalAfterKills(10):0.##}s | 50 kills {settings.IntervalAfterKills(50):0.##}s | 120 kills {settings.IntervalAfterKills(120):0.##}s",EditorStyles.wordWrappedLabel);
+        EditorGUILayout.HelpBox("Distances are metres. Yellow = minimum, cyan = maximum. Existing boss/summon rules remain separate after the first kill.",MessageType.Info);
         if(GUI.changed)SceneView.RepaintAll();
     }
     [DrawGizmo(GizmoType.Selected|GizmoType.NonSelected)]

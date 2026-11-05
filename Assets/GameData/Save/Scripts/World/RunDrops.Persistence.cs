@@ -20,7 +20,8 @@ namespace MiningSimulator.Ores
         public static void RestoreRuntime(SavedDrop s,CharacterHealth player){
             var inventory=UnityEngine.Object.FindAnyObjectByType<MiningItemSystem>();if(!inventory)return;
             var database=RunStateFields.Get<MiningItemDatabase>(inventory,"database");var item=database?database.FindById(s.item):null;
-            MonsterRewardData settings=null;foreach(var asset in Resources.FindObjectsOfTypeAll<MonsterRewardData>())if(asset.name==s.settings){settings=asset;break;}
+            var shared=MonsterLootSettings.Current;
+            MonsterRewardData settings=shared&&shared.shared&&shared.shared.name==s.settings?shared.shared:null;foreach(var asset in Resources.FindObjectsOfTypeAll<MonsterRewardData>())if(asset.name==s.settings){settings=asset;break;}
             if(!item||!settings)throw new InvalidOperationException("Missing saved loot asset: "+s.item+" / "+s.settings);
             // No drop/pickup sound during loading.
             Spawn(settings,new MonsterItemDrop{item=item},s.count,s.position,player,inventory,~0,null);

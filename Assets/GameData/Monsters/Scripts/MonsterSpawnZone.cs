@@ -167,7 +167,7 @@ namespace MiningSimulator.Ores
         public event Action<Vector3> PeriodCleared;
         private int rewardDay=-1, periodSpawns;private MiningTimePeriod rewardPeriod;
         private bool periodRewarded, periodHasKill;private Vector3 lastKillPoint;
-        public void NotifyDefeated(Vector3 point){periodHasKill=true;lastKillPoint=point;}
+        public void NotifyDefeated(Vector3 point){if(spawnKills<int.MaxValue)spawnKills++;if(spawnKills==1)spawnCredit=0;periodHasKill=true;lastKillPoint=point;}
         public bool IsPeriodClearForReward
         {
             get
@@ -377,6 +377,7 @@ public bool TryGetPatrolPoint(Vector3 origin,out Vector3 point)
             if (scheduledDay != dayNight.DayNumber) BuildDailySchedule();
             if(!player || player.Health<=0 || RuneStation.PlayerUsesRuneTime)return;
             spawnElapsedSeconds+=Time.deltaTime;
+            if(spawnKills==0){TickTimedSpawns(Time.deltaTime);return;}
             TickGodEncounter();
             AnnounceDailyEvent();
             if (requireTreasureChest && (TreasureChest.Active == null || !TreasureChest.Active.IsAlive)) return;
@@ -612,7 +613,11 @@ public bool TryGetPatrolPoint(Vector3 origin,out Vector3 point)
         {
             var grid=WorldNavigationGrid.Instance;
             // All spawn routes, including God's summons, must stay inside the playable navigation area.
-            if(PlayerHuntMode && grid && grid.HasBaked && !grid.Contains(position)){ground=default;return false;}
+            if(PlayerHuntMode && grid && grid.HasBaked){
+                if(!grid.TryGetGroundPoint(position,out var support)){ground=default;return false;}
+                // Probe from the sampled elevation, not the player's height (raised platforms).
+                position.y=support.y;
+            }
             // Use authored ground colliders; actors and steep surfaces cannot support a spawn.
             int count = Physics.RaycastNonAlloc(position + Vector3.up * 30f,
                 Vector3.down, groundHits, 60f, groundLayers,
@@ -661,7 +666,7 @@ public static void ResetLoadedEncounters()
 public void ResetEncounter()
         {
             if(SurvivorCrowd.Current)SurvivorCrowd.Current.RemoveZone(this);
-            spawnElapsedSeconds=0;spawnCredit=1;nextTimedRetry=0;
+            spawnElapsedSeconds=0;spawnCredit=0;nextTimedRetry=0;spawnKills=0;initialMonsterSpawned=false;
             lastKnownSpawnDay=SpawnDayNumber;
             ResetGodEncounter();
             // Reset can return to the same day: day-number comparison alone misses it.

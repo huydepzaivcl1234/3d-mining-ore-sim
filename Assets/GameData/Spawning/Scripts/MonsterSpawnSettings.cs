@@ -4,17 +4,13 @@ namespace MiningSimulator.Ores
     [CreateAssetMenu(menuName="Survivor/Spawning/Monster Spawn Settings")]
     public sealed class MonsterSpawnSettings : ScriptableObject
     {
-        [Header("Continuous spawning — gameplay time, not a daily quota")]
-        [Min(.01f)] public float initialSpawnsPerSecond=.5f;
-        [Min(0),Tooltip("Gameplay seconds before population growth starts. Day/night transitions do not reset this timer.")] public float growthDelaySeconds=60f;
-        [Min(0),Tooltip("Added to the spawn rate every gameplay minute after Growth Delay Seconds.")] public float additionalSpawnsPerSecondPerMinute=.15f;
-        [Min(0),Tooltip("Added to the spawn rate for each player level above 1. No maximum spawn rate.")] public float additionalSpawnsPerSecondPerPlayerLevel=.15f;
-        [Min(1),Tooltip("Simultaneous living monsters across spawners. Spawning waits for space; there is no daily quota.")] public int maximumLivingMonsters=50;
-        public float RateAtSeconds(float seconds,int playerLevel=1)=>Mathf.Max(.01f,initialSpawnsPerSecond)+Mathf.Max(0,additionalSpawnsPerSecondPerMinute)*Mathf.Max(0,seconds-Mathf.Max(0,growthDelaySeconds))/60f+Mathf.Max(0,additionalSpawnsPerSecondPerPlayerLevel)*Mathf.Max(0,playerLevel-1);
-        [Header("Spawn groups")]
-        [Min(1)] public int initialGroupSize=3;
-        [Min(1)] public int playerLevelsPerExtraGroupMember=10;
-        public int GroupSizeAtLevel(int level)=>Mathf.Max(1,initialGroupSize)+Mathf.Max(0,level-1)/Mathf.Max(1,playerLevelsPerExtraGroupMember);
+        [Header("Slow start � first monster must be defeated")]
+        [Min(.1f),Tooltip("Seconds between regular spawns after the first kill. Each spawn creates one monster.")] public float initialSpawnInterval=8f;
+        [Min(1)] public int killsPerSpeedIncrease=10;
+        [Min(0),Tooltip("Seconds removed from the interval after each kill milestone.")] public float intervalReductionPerMilestone=.5f;
+        [Min(.1f)] public float minimumSpawnInterval=2f;
+        [Min(1),Tooltip("Total living monsters across spawners. Boss/special encounter rules are separate.")] public int maximumLivingMonsters=1000;
+        public float IntervalAfterKills(int kills)=>Mathf.Max(Mathf.Max(.1f,minimumSpawnInterval),Mathf.Max(.1f,initialSpawnInterval)-Mathf.Max(0,kills)/Mathf.Max(1,killsPerSpeedIncrease)*Mathf.Max(0,intervalReductionPerMilestone));
         [Header("Regular monsters — horizontal distance in metres")]
         [Tooltip("Off: around the spawner. On: around the moving player. Chest defense uses its own chest settings.")]
         public bool followPlayer;

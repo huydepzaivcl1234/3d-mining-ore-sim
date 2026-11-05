@@ -11,6 +11,8 @@ namespace MiningSimulator.Ores
     [UnityEngine.Scripting.APIUpdating.MovedFrom(true,"MiningSimulator.Ores","Assembly-CSharp","MiningMainMenu")]
     public sealed class GameMainMenu : MonoBehaviour
     {
+        [Tooltip("Use authored Play / Settings / Quit buttons without the legacy themed pages or transitions.")]
+        [SerializeField] private bool simpleMenu;
         [Header("Data and pages")]
         [SerializeField] private MainMenuData data;
         [SerializeField] private GameEconomyData gameData;
@@ -78,6 +80,7 @@ namespace MiningSimulator.Ores
         private float timeScaleBeforeMenu = 1f;
         private bool ownsGameplayPause;
         private bool closing;
+        private bool quitting;
         private Vector2 cardHomePosition;
         private readonly MiningAnimatedCurrencyValue gemCounter = new();
         private UiPanelCoordinator panelCoordinator;
@@ -95,7 +98,7 @@ namespace MiningSimulator.Ores
                 return;
             }
 
-            if (!data.ShowOnStart)
+            if (!data.ShowOnStart || WorldProgressReset.IsResetting && WorldProgressReset.ContinueAfterReload)
             {
                 gameObject.SetActive(false);
                 return;
@@ -104,6 +107,7 @@ namespace MiningSimulator.Ores
             cardHomePosition = card.anchoredPosition;
             PauseGameplay();
 
+            if(simpleMenu){ShowImmediately();return;}
             mainView.SetActive(true);
             settingsView.SetActive(false);
             exitConfirmation.SetActive(false);
@@ -134,7 +138,7 @@ namespace MiningSimulator.Ores
 
             RefreshAudioControls();
             audioManager?.PlayMainMenuMusic();
-            PlayEntrance();
+            if(!simpleMenu)PlayEntrance();
             SelectButton(playButton);
         }
 
@@ -148,7 +152,6 @@ namespace MiningSimulator.Ores
 
         private void OnDisable()
         {
-            panelCoordinator?.SetMainMenuOpen(false);
             RemoveListeners();
             MiningLocalization.LanguageChanged -= RefreshLocalization;
             if (wallet != null)
@@ -160,10 +163,7 @@ namespace MiningSimulator.Ores
             ReleaseGameplayPause();
         }
 
-        private void OnDestroy()
-        {
-            ReleaseGameplayPause();
-        }
+        private void OnApplicationQuit() => quitting = true;
 
         public void Play()
         {
@@ -172,6 +172,7 @@ namespace MiningSimulator.Ores
                 return;
             }
 
+            if(simpleMenu){PlaySelectedGame();return;}
             ResolvePlaySelection();
             if (playSelection != null && playSelection.HandlePlayRequest())
             {
@@ -189,6 +190,7 @@ namespace MiningSimulator.Ores
                 return;
             }
 
+            if(simpleMenu){FinishPlay();return;}
             closing = true;
             SetMainButtonsInteractable(false);
             StopTransition(ref transition);
@@ -226,6 +228,7 @@ namespace MiningSimulator.Ores
             ResolvePlaySelection();
             playSelection?.MarkGameStarted();
             PauseGameplay();
+            if(simpleMenu){ShowImmediately();audioManager?.PlayMainMenuMusic();SelectButton(playButton);return;}
             mainView.SetActive(true);
             settingsView.SetActive(false);
             exitConfirmation.SetActive(false);
@@ -233,7 +236,7 @@ namespace MiningSimulator.Ores
             ShowImmediately();
             RefreshAudioControls();
             audioManager?.PlayMainMenuMusic();
-            PlayEntrance();
+            if(!simpleMenu)PlayEntrance();
             SelectButton(playButton);
         }
 
@@ -275,6 +278,7 @@ namespace MiningSimulator.Ores
                 return;
             }
 
+            if(simpleMenu){ConfirmExit();return;}
             mainViewGroup.interactable = false;
             exitConfirmation.SetActive(true);
             exitConfirmationGroup.alpha = 0f;
@@ -306,6 +310,7 @@ namespace MiningSimulator.Ores
 
         public void ConfirmExit()
         {
+            quitting = true;
             audioManager?.SaveVolumeSettings();
 #if UNITY_EDITOR
             UnityEditor.EditorApplication.isPlaying = false;
@@ -343,6 +348,8 @@ namespace MiningSimulator.Ores
             playSelection?.MarkGameStarted();
             audioManager?.PlayWorldAmbience();
             ReleaseGameplayPause();
+            // Play explicitly starts the run even if a restored checkpoint was captured while paused.
+            if(simpleMenu && (!panelCoordinator || !panelCoordinator.BlocksGameplay) && Time.timeScale<=0f)Time.timeScale=1f;
             gameObject.SetActive(false);
         }
 
@@ -401,8 +408,7 @@ namespace MiningSimulator.Ores
             canvasGroup.alpha = 1f;
             canvasGroup.interactable = true;
             canvasGroup.blocksRaycasts = true;
-            card.localScale = Vector3.one;
-            card.anchoredPosition = cardHomePosition;
+            if(!simpleMenu){card.localScale = Vector3.one;card.anchoredPosition = cardHomePosition;}
             SetMainButtonsInteractable(true);
         }
 
@@ -419,6 +425,7 @@ namespace MiningSimulator.Ores
 
         private void RefreshLocalization()
         {
+            if(simpleMenu)return; // Keep the designer-authored button labels editable.
             if (data == null)
             {
                 return;
@@ -492,6 +499,7 @@ namespace MiningSimulator.Ores
             }
             ResolvePlaySelection();
             gameData ??= wallet != null ? wallet.GameData : null;
+            if(simpleMenu)return data && canvasGroup && card && playButton && settingsButton && exitButton && sharedSettingsPanel;
             return data != null && canvasGroup != null && card != null &&
                    mainView != null && settingsView != null && mainViewGroup != null &&
                    settingsViewGroup != null && playButton != null && settingsButton != null &&
@@ -584,7 +592,8 @@ namespace MiningSimulator.Ores
 
         private void ReleaseGameplayPause()
         {
-            if(panelCoordinator){panelCoordinator.SetMainMenuOpen(false);return;}
+            if(quitting)return;
+            if(panelCoordinator){if(panelCoordinator.isActiveAndEnabled)panelCoordinator.SetMainMenuOpen(false);return;}
             if (!ownsGameplayPause)
             {
                 return;

@@ -1,41 +1,37 @@
-using GameData.Player.Script;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace MiningSimulator.Ores
 {
-    /// <summary>Explicit gameplay reset; never clears controls, audio or graphics preferences.</summary>
+    /// <summary>Reset gameplay and reload the authored scene, including every transient runtime object.</summary>
     public static class WorldProgressReset
     {
-        public static bool ResetAll()
+        public static bool IsResetting {get;private set;}
+        public static bool ContinueAfterReload {get;private set;}
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void Initialize(){SceneManager.sceneLoaded-=Reloaded;IsResetting=false;ContinueAfterReload=false;}
+        public static bool ResetAll(bool continueGame=false)
         {
-            if (!GameSave.ResetAll()) { Debug.LogError("Cannot reset save files. Progress preserved."); return false; }
-            MiningDamagePopup.ClearAll();
-            foreach (var cards in Loaded<MiningCardSystem>()) cards.CancelChoice();
-            foreach (var monster in Loaded<MushroomMonster>()) Remove(monster);
-            foreach (var god in Loaded<GodBossController>()) Remove(god);
-            foreach (var bleed in Loaded<GodBossBleed>()) bleed.Clear();
-            foreach (var projectile in Loaded<HomingMonsterProjectile>())
-                if (projectile.gameObject.activeInHierarchy) SceneProjectilePool.Release(projectile.gameObject);
-            foreach (var projectile in Loaded<TowerProjectile>())
-                if (projectile.gameObject.activeInHierarchy) SceneProjectilePool.Release(projectile.gameObject);
-            foreach (var card in Loaded<MiningWorldCard>()) Remove(card);
-            foreach (var box in Loaded<BlueGunUpgradeBox>()) Remove(box);
-            foreach (var special in Loaded<GunSpecialUpgrades>()) special.ResetProgress();
-            foreach (var weapons in Loaded<PlayerWeaponProgression>()) weapons.ResetProgress();
-            PlayerStats.ResetSavedProgress();
-            foreach (var upgrades in Loaded<EconomyUpgradeSystem>()) { upgrades.SetPermanentMoneyMultiplier(1f); upgrades.SetPermanentExperienceMultiplier(1f); upgrades.ResetAutoUpgrade(); upgrades.ResetAllUpgrades(); }
-            foreach (var items in Loaded<MiningItemSystem>()) items.ResetAllData();
-            foreach (var achievements in Loaded<MiningAchievementSystem>()) achievements.ResetAllData();
-            foreach (var quests in Loaded<MiningQuestSystem>()) quests.ResetAllData();
-            TreasureChest.ResetSavedProgress(); TowerWorldSave.ResetAllProgress();
-            foreach (var wallet in Loaded<PlayerWallet>()) { wallet.ResetMoney(); wallet.ResetGems(); }
-            foreach (var player in Loaded<PlayerRespawn>()) player.RespawnNow();
-            foreach(var loot in Loaded<SurvivorDailyLoot>())loot.ResetProgress();
-            DayNightSystem.ResetSavedClock(); MonsterSpawnZone.ResetLoadedEncounters();
-            GameSave.Flush();
+            if(IsResetting)return false;
+            var scene=SceneManager.GetActiveScene();
+            if(Application.isPlaying&&SceneUtility.GetBuildIndexByScenePath(scene.path)<0){Debug.LogError("Reset requires the current gameplay scene in Build Settings; save preserved.");return false;}
+            if(!GameSave.ResetAll()){Debug.LogError("Cannot reset save files. Progress preserved: "+GameSave.Store.LastError);return false;}
+            if(!Application.isPlaying)return true;
+            if(continueGame){GameSave.SetInt("MiningSimulator.SaveExists.v1",1);if(!GameSave.Flush())return false;}
+            IsResetting=true;ContinueAfterReload=continueGame;GameSave.SuppressWrites=true;
+            TowerWorldSave.ResetAllProgress();
+            MonsterSpawnZone.ClearResetSchedules();
+            RunCheckpoint.IsRestoring=false;
+            SceneManager.sceneLoaded+=Reloaded;
+            Time.timeScale=1;AudioListener.pause=false;
+            try{if(SceneManager.LoadSceneAsync(scene.path,LoadSceneMode.Single)==null)throw new System.InvalidOperationException("Scene reload did not start");}
+            catch(System.Exception e){Reloaded(default,LoadSceneMode.Single);Debug.LogError("Save was reset, but scene reload failed: "+e.Message);return false;}
             return true;
         }
-        private static T[] Loaded<T>() where T : Object => Object.FindObjectsByType<T>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-        private static void Remove(Component component) { component.gameObject.SetActive(false); Object.Destroy(component.gameObject); }
+        static void Reloaded(Scene scene,LoadSceneMode mode)
+        {
+            SceneManager.sceneLoaded-=Reloaded;
+            GameSave.SuppressWrites=false;IsResetting=false;ContinueAfterReload=false;
+        }
     }
 }

@@ -81,41 +81,7 @@ namespace MiningSimulator.Ores
         }
 
         /// <summary>Clears all gameplay progression, including the saved Rebirth count.</summary>
-        public bool ResetAllProgress()
-        {
-            if (!GameSave.ResetAll())
-            {
-                Debug.LogError("Cannot reset save files. Existing progress was not reset.", this);
-                return false;
-            }
-            FindResetTargetsIfMissing();
-            PlayerStats.ResetSavedProgress();
-            MiningDamagePopup.ClearAll();
-            upgradeSystem?.ResetAutoUpgrade();
-            DayNightSystem.ResetSavedClock();
-            TreasureChest.ResetSavedProgress();
-            TowerWorldSave.ResetAllProgress();
-            MonsterSpawnZone.ResetLoadedEncounters();
-            completedRebirths = 0;
-            GameSave.DeleteKey("MiningSimulator.SaveExists.v1");
-            if (rebirthData != null)
-            {
-                GameSave.DeleteKey(rebirthData.RebirthCountSaveKey);
-                GameSave.Save();
-            }
-
-            upgradeSystem?.ResetAllUpgrades();
-
-            itemSystem?.ResetAllData();
-            achievementSystem?.ResetAllData();
-            questSystem?.ResetAllData();
-            wallet?.ResetMoney();
-            wallet?.ResetGems();
-            GameSave.Flush();
-            ApplyPermanentBoost();
-            StateChanged?.Invoke();
-            return true;
-        }
+        public bool ResetAllProgress()=>WorldProgressReset.ResetAll(continueGame:true);
 
         private void LoadProgress()
         {
