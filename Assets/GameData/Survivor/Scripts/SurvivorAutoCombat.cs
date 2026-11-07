@@ -55,6 +55,9 @@ namespace GameData.Player.Script
         private List<CharacterHealth> volleyTargets;
         private Material material,impactMaterial;
         private readonly List<ImpactFlash> impacts=new();
+        private sealed class ImpactParticles {public GameObject go;public ParticleSystem[] particles;public float remaining,duration;}
+        private readonly List<ImpactParticles> impactParticles=new();
+        public int ImpactParticlesPlayed {get;private set;}
         public int ImpactFlashesPlayed {get;private set;}
         public int ActiveImpactFlashes {get {int count=0;foreach(var flash in impacts)if(flash.go.activeSelf)count++;return count;}}
         private sealed class ImpactFlash {public GameObject go;public Transform transform;public Renderer renderer;public Color color;public float remaining,duration,size;}
@@ -99,6 +102,7 @@ namespace GameData.Player.Script
             StepImpactFlashes(Time.deltaTime);
             if(!CanAttack){nextAttack=Time.time;CurrentTarget=null;if(!health||health.Health<=0)ClearBolts();return;}
             StepBolts(Time.deltaTime);
+            var alune=GetComponent<AlunePlayerEffect>();if(alune&&alune.IsStunned){nextAttack=Time.time;CurrentTarget=null;return;}
             float nearest=AttackRange*AttackRange;
             CurrentTarget=null;(volleyTargets??=new()).Clear();
             foreach(var target in CharacterHealth.ActiveMonsters)
@@ -211,8 +215,7 @@ namespace GameData.Player.Script
                 float dealt=target.DealDamageWithTrueBonus(damage,type,gameObject,0,!secondary,false,proc);
                 if(dealt>0)
                 {
-                    HitsLanded++;ShowImpactFlash(flashPoint,impactColor);
-                    if(audioManager&&impactSfx.Length>0){int sample=impactSfx.Length==1?0:Random.Range(0,impactSfx.Length-1);if(impactSfx.Length>1&&sample>=lastImpact)sample++;lastImpact=sample;if(impactSfx[sample]){audioManager.PlayWorldSfx(impactSfx[sample],hitPoint,impactVolume);ImpactSoundsPlayed++;}}
+                    HitsLanded++;PlayContactImpact(flashPoint,incoming,impactColor);
                     if(abilities)abilities.ProjectileHit(target,damage,dealt,secondary,canBounce,hitPoint,element);
                     // Larger projectiles damage every target overlapping their impact sphere.
                     if(Stats&&Stats.UpgradeLevel(SurvivorUpgradeId.ProjectileSize)>0)
@@ -231,7 +234,30 @@ namespace GameData.Player.Script
             // GPU actors have no collider; place feedback on their visible front, not inside the mesh.
             return center+direction*(.45f*Mathf.Max(.1f,target.transform.lossyScale.x));
         }
-        private void ShowImpactFlash(Vector3 point,Color color)
+        public void PlaySwordImpact(CharacterHealth target,Vector3 contact,Vector3 incoming,Color color)
+        {
+            PlayContactImpact(contact,incoming,color,.24f);
+        }
+        private void PlayContactImpact(Vector3 point,Vector3 incoming,Color color,float size=0)
+        {
+            ShowImpactFlash(point,color,size);ShowImpactParticles(point,incoming);
+            if(audioManager&&impactSfx.Length>0){int sample=impactSfx.Length==1?0:Random.Range(0,impactSfx.Length-1);if(impactSfx.Length>1&&sample>=lastImpact)sample++;lastImpact=sample;if(impactSfx[sample]){audioManager.PlayWorldSfx(impactSfx[sample],point,impactVolume);ImpactSoundsPlayed++;}}
+        }
+        private void ShowImpactParticles(Vector3 point,Vector3 incoming)
+        {
+            if(!data.impactParticlePrefab||!pool)return;
+            ImpactParticles slot=null;foreach(var item in impactParticles)if(!item.go.activeSelf){slot=item;break;}
+            if(slot==null){
+                if(impactParticles.Count>=Mathf.Max(8,data.poolCapacity))return;
+                var go=Instantiate(data.impactParticlePrefab,pool.transform);go.name="Attack hit particles";go.SetActive(false);
+                slot=new ImpactParticles{go=go,particles=go.GetComponentsInChildren<ParticleSystem>(true)};
+                foreach(var particle in slot.particles){var main=particle.main;main.loop=false;main.stopAction=ParticleSystemStopAction.None;slot.duration=Mathf.Max(slot.duration,main.startDelay.constantMax+main.duration+main.startLifetime.constantMax);}
+                impactParticles.Add(slot);
+            }
+            slot.go.transform.SetPositionAndRotation(point,Quaternion.LookRotation(incoming.sqrMagnitude>.0001f?incoming.normalized:Vector3.up));slot.go.transform.localScale=Vector3.one*data.impactParticleScale;slot.remaining=slot.duration;slot.go.SetActive(true);
+            foreach(var particle in slot.particles){particle.Stop(false,ParticleSystemStopBehavior.StopEmittingAndClear);particle.Play(false);}ImpactParticlesPlayed++;
+        }
+        private void ShowImpactFlash(Vector3 point,Color color,float sizeOverride=0)
         {
             if(data.impactFlashSeconds<=0||!impactMaterial)return;
             ImpactFlash flash=null;foreach(var item in impacts)if(!item.go.activeSelf){flash=item;break;}
@@ -242,7 +268,7 @@ namespace GameData.Player.Script
                 var renderer=go.GetComponent<Renderer>();renderer.sharedMaterial=impactMaterial;renderer.shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;renderer.receiveShadows=false;
                 flash=new ImpactFlash{go=go,transform=go.transform,renderer=renderer};impacts.Add(flash);
             }
-            flash.color=Color.Lerp(color,Color.white,.65f);flash.duration=flash.remaining=data.impactFlashSeconds;flash.size=ProjectileRadius*2*data.impactFlashSize;
+            flash.color=Color.Lerp(color,Color.white,.65f);flash.duration=flash.remaining=data.impactFlashSeconds;flash.size=sizeOverride>0?sizeOverride:ProjectileRadius*2*data.impactFlashSize;
             flash.transform.position=point;flash.transform.localScale=Vector3.one*flash.size;flash.go.SetActive(true);SetImpactColor(flash,1);ImpactFlashesPlayed++;
         }
         private void SetImpactColor(ImpactFlash flash,float alpha)
@@ -251,6 +277,7 @@ namespace GameData.Player.Script
         }
         private void StepImpactFlashes(float dt)
         {
+            foreach(var effect in impactParticles)if(effect.go.activeSelf){effect.remaining-=dt;if(effect.remaining<=0)effect.go.SetActive(false);}
             foreach(var flash in impacts){
                 if(!flash.go.activeSelf)continue;flash.remaining=Mathf.Max(0,flash.remaining-dt);
                 if(flash.remaining<=0){flash.go.SetActive(false);continue;}
@@ -273,7 +300,7 @@ namespace GameData.Player.Script
             if(CurrentTarget){Gizmos.color=attackRangeColor;Gizmos.DrawLine(Origin,Point(CurrentTarget));}
             Gizmos.color=previous;
         }
-        private void ClearBolts(){foreach(var flash in impacts)if(flash.go)flash.go.SetActive(false);foreach(var b in bolts){b.active=false;b.target=null;if(b.go)b.go.SetActive(false);}}
+        private void ClearBolts(){foreach(var effect in impactParticles)if(effect.go)effect.go.SetActive(false);foreach(var flash in impacts)if(flash.go)flash.go.SetActive(false);foreach(var b in bolts){b.active=false;b.target=null;if(b.go)b.go.SetActive(false);}}
         private void OnDisable(){CurrentTarget=null;ClearBolts();if(frostVoice)frostVoice.Stop();}
         private void OnDestroy(){if(pool)Destroy(pool);if(material)Destroy(material);if(impactMaterial)Destroy(impactMaterial);}
     }

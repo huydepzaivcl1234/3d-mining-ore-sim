@@ -37,6 +37,8 @@ MonoBehaviour:
   projectileTrailWidth: 0.65
   impactFlashSeconds: 0.09
   impactFlashSize: 1.8
+  impactParticlePrefab: {fileID: 5165956445846146450, guid: b2a0a932ef457514db7690b4e9524b84, type: 3}
+  impactParticleScale: 0.12
   magazineCapacity: 9
   reloadSeconds: 1.5
   abilities: {fileID: 11400000, guid: 13917a56e1f8fa64c95ad82cd6ecd04e, type: 2}

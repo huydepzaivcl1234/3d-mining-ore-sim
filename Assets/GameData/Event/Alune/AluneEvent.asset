@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 031ead6edc8cbc740b8b5c42ab59a221, type: 3}
+  m_Name: AluneEvent
+  m_EditorClassIdentifier: Assembly-CSharp::MiningSimulator.Ores.AluneEventData
+  duration: 120
+  meteorInterval: 3
+  scatterRadius: 10
+  fallHeight: 60
+  fallSeconds: 7
+  impactRadius: 2
+  meteorSize: 1
+  meteorPrefab: {fileID: 3787747253323423064, guid: fca9b8ec1cdec334b8022c5c4d107f71, type: 3}
+  impactPrefab: {fileID: 1758473627833946668, guid: 9b21333b068a5084ba09535839bee3c8, type: 3}
+  warningShader: {fileID: 4800000, guid: b0d2120fa98d498498f08fd811238915, type: 3}
+  warningColor: {r: 1, g: 0.04, b: 0.01, a: 0.7}
+  impactVisualSeconds: 1.5
+  monsterMaxHealthPercent: 20
+  playerImpactMaxHealthPercent: 25
+  proximityDistance: 2
+  minimumSlowPercent: 20
+  maximumSlowPercent: 99
+  slowSeconds: 1
+  stunSeconds: 1
+  playerTickMaxHealthPercent: 1
+  tickSeconds: 0.25

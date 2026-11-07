@@ -4,7 +4,7 @@ using UnityEngine;
 using MiningSimulator.Ores;
 namespace GameData.Player.Script
 {
-    public enum SurvivorUpgradeId { PhysicalDamage,AttackSpeed,ReloadSpeed,AttackRange,ProjectileSpeed,Armor,MagicResistance,MoveSpeed,Magazine,LifeSteal,Regeneration,MaxHealth,SplitShot,FleetForce,ArmorStrike,LifeSpring,PowerSurge,Burn,ProjectileSize,Shield,Airborne,Aura,Ricochet,Invulnerability,Quickening,FlatPower,TwinMagic,ReactiveArmor,Weaken,EmergencyHeal,Retaliate,BossVitality,DoubleBasics,OrbBarrage,TripleBasics,Frostbite,CardFortune,TrueBarrage,TitanBlessing,MissingHealthArmor,ChargedCube,CardMagnet,Count }
+    public enum SurvivorUpgradeId { PhysicalDamage,AttackSpeed,ReloadSpeed,AttackRange,ProjectileSpeed,Armor,MagicResistance,MoveSpeed,Magazine,LifeSteal,Regeneration,MaxHealth,SplitShot,FleetForce,ArmorStrike,LifeSpring,PowerSurge,Burn,ProjectileSize,Shield,Airborne,Aura,Ricochet,Invulnerability,Quickening,FlatPower,TwinMagic,ReactiveArmor,Weaken,EmergencyHeal,Retaliate,BossVitality,DoubleBasics,OrbBarrage,TripleBasics,Frostbite,CardFortune,TrueBarrage,TitanBlessing,MissingHealthArmor,ChargedCube,CardMagnet,FlyingSword,Count }
     [CreateAssetMenu(menuName="Survivor/Upgrade Cards")]
     public sealed class SurvivorUpgradeData : ScriptableObject
     {

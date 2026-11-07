@@ -109,6 +109,13 @@ namespace GameData.Player.Script
             if (controller) controller.enabled = false;
             if(ragdoll)ragdoll.RestoreAnimatedPose();
             Vector3 position = spawnPoint ? spawnPoint.position : initialPosition;
+            var grid=WorldNavigationGrid.Instance;var capsule=GetComponent<CapsuleCollider>();
+            float size=Mathf.Abs(transform.lossyScale.y),radius=capsule?capsule.radius*size:.5f,height=capsule?capsule.height*size:1.8f;
+            if(grid)for(int attempt=0;attempt<64;attempt++){
+                if(!grid.TryGetRandomStandPoint(radius,height,out var candidate))break;
+                bool clear=true;foreach(var enemy in CharacterHealth.ActiveMonsters)if(enemy&&enemy.IsTargetable&&(enemy.transform.position-candidate).sqrMagnitude<(radius+2)*(radius+2)){clear=false;break;}
+                if(clear){position=candidate+Vector3.up*.03f;break;}
+            }
             Quaternion rotation = spawnPoint ? spawnPoint.rotation : initialRotation;
             var body = GetComponent<Rigidbody>();
             transform.SetPositionAndRotation(position, rotation);

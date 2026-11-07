@@ -32,11 +32,11 @@ namespace GameData.Player.Script
         private void Awake(){stats=GetComponent<PlayerStats>();health=GetComponent<CharacterHealth>();combat=GetComponent<SurvivorAutoCombat>();}
         private void OnEnable(){CharacterHealth.AnyDamaged+=OnDamage;CharacterHealth.AnyDied+=OnDeath;}
         private void Start(){ResetLife();if(health&&health.HealthBar&&!GetComponent<PlayerShieldBar>())gameObject.AddComponent<PlayerShieldBar>();}
-        public void ResetLife(){ResetCube();shieldLevel=Level(SurvivorUpgradeId.Shield);shield=MaxShield;shieldDelay=lifeTimer=auraTimer=invulnTimer=invulnerable=recoveryCooldown=recoveryRemaining=0;incomingHits=orbHits=0;attackers.Clear();}
-        private void OnDisable(){ResetCube();CharacterHealth.AnyDamaged-=OnDamage;CharacterHealth.AnyDied-=OnDeath;attackers.Clear();if(auraEffect)auraEffect.SetActive(false);if(shieldEffect)shieldEffect.SetActive(false);}
+        public void ResetLife(){ResetSword();ResetCube();shieldLevel=Level(SurvivorUpgradeId.Shield);shield=MaxShield;shieldDelay=lifeTimer=auraTimer=invulnTimer=invulnerable=recoveryCooldown=recoveryRemaining=0;incomingHits=orbHits=0;attackers.Clear();}
+        private void OnDisable(){ResetSword();ResetCube();CharacterHealth.AnyDamaged-=OnDamage;CharacterHealth.AnyDied-=OnDeath;attackers.Clear();if(auraEffect)auraEffect.SetActive(false);if(shieldEffect)shieldEffect.SetActive(false);}
         private void Update()
         {
-            if(!health||health.Health<=0){ResetCube();if(auraEffect)auraEffect.SetActive(false);if(shieldEffect)shieldEffect.SetActive(false);return;}
+            if(!health||health.Health<=0){ResetSword();ResetCube();if(auraEffect)auraEffect.SetActive(false);if(shieldEffect)shieldEffect.SetActive(false);return;}
             if(!combat||!combat.CanAttack)return;
             Tick(Time.deltaTime);
         }
@@ -61,6 +61,7 @@ namespace GameData.Player.Script
             SurvivorLoopVfx.Set(ref auraEffect,Settings.uncommon.aura.visual,transform,lv>0,AuraRadius/Mathf.Max(.01f,Settings.uncommon.aura.visual.referenceRadius));
             SurvivorLoopVfx.Set(ref shieldEffect,Settings.uncommon.shield.visual,transform,shield>0||Invulnerable);
             TickCube(dt);
+            TickSword(dt);
         }
         public float ReceiveHit(float amount,GameObject source)
         {
@@ -131,6 +132,6 @@ namespace GameData.Player.Script
         {
             list.Clear();foreach(var target in CharacterHealth.ActiveMonsters)if(target&&target.isActiveAndEnabled&&target.IsTargetable&&(planar?Vector3.ProjectOnPlane(target.transform.position-point,Vector3.up):target.transform.position-point).sqrMagnitude<=range*range)list.Add(target);
         }
-        private void OnDestroy(){DestroyCube();if(auraEffect)Destroy(auraEffect);if(shieldEffect)Destroy(shieldEffect);}
+        private void OnDestroy(){DestroySword();DestroyCube();if(auraEffect)Destroy(auraEffect);if(shieldEffect)Destroy(shieldEffect);}
     }
 }

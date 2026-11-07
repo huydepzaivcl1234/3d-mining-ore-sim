@@ -24,6 +24,7 @@ namespace MiningSimulator.Ores
             {typeof(GodBossBleed),new[]{"source","elapsed","duration","nextTick","percent"}},
             {typeof(BreadSugarEffect),new[]{"effect","source"}},
             {typeof(PotionPlayerEffect),new[]{"burn","source","slowRemaining","slowPercent"}},
+            {typeof(AlunePlayerEffect),new[]{"slowRemaining","slowPercent","stunRemaining","pendingStun","tickSeconds","tickElapsed","tickPercent"}},
             {typeof(BreadMonsterAbility),new[]{"healingClock","thrown"}},
             {typeof(PotionMonsterAbility),new[]{"thrown","prepared","preparedKind","preparedTarget"}},
             {typeof(MushroomMonster),new[]{"@nextAttack","@nextDecision","verticalSpeed","hitApplied","rangedStrike","secondAttack","nextSecondAttack","strikeLocked","strikeForward","strikeCenter","animationState","attackStateHash","target","~lastTargetSeen","playerDetected","lastKnownPlayer"}},

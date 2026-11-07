@@ -24,4 +24,7 @@ MonoBehaviour:
   bossExtraHealthPercent: 50
   nightOnlyIcon: {fileID: 21300000, guid: cbcf685202fb17443982b3ddb98397d1, type: 3}
   bossInvasionIcon: {fileID: 21300000, guid: 7004e2a2e7be53d439f646583ebacf6b, type: 3}
+  aluneIcon: {fileID: 0}
+  alune: {fileID: 11400000, guid: 40a8c1dba5ca40042a570e593e02cf70, type: 2}
+  aluneChancePercent: 100
   debugOverride: -1

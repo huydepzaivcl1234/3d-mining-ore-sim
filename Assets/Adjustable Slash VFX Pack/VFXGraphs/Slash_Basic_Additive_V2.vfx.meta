@@ -1,0 +1,21 @@
+fileFormatVersion: 2
+guid: dab324f59faaf7341b56646c9e9130ae
+VisualEffectImporter:
+  externalObjects: {}
+  serializedVersion: 1
+  template:
+    name: 
+    category: 
+    description: 
+    icon: {instanceID: 0}
+    thumbnail: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 373530
+  packageName: Adjustable Slash VFX Pack
+  packageVersion: 1.0
+  assetPath: Assets/Adjustable Slash VFX Pack/VFXGraphs/Slash_Basic_Additive_V2.vfx
+  uploadId: 900124

@@ -62,6 +62,7 @@ MonoBehaviour:
     navigationObstacleLayers:
       serializedVersion: 2
       m_Bits: 4294967295
+    rangedOnly: 0
     projectile: {fileID: 0}
     fireState: Fire
     rangedRange: 8
@@ -114,7 +115,7 @@ MonoBehaviour:
   higherLevelChance: 0.35
   higherLevelIncreasePerDayPercent: 0.01
   maximumHigherLevelChancePercent: 50
-  statGrowthPerLevel: 0.5
+  statGrowthPerLevel: 0.25
   goldGrowthPerLevel: 0.75
   randomStatMultiplier: {x: 0.9, y: 1.1}
   experience: 50
@@ -125,7 +126,7 @@ MonoBehaviour:
   magicResistancePerLevel: 1
   resistanceScale: 100
   attackDamageType: 0
-  burnDamagePerTick: 0.5
+  burnDamagePerTick: 1
   burnTickSeconds: 1
   burnDurationSeconds: 3
   lifeStealPercent: 0

@@ -2,8 +2,8 @@ using UnityEngine;
 
 namespace MiningSimulator.Ores
 {
-    public enum DailyEncounterEvent { Normal = 0, NightOnly = 1, BossInvasion = 2 }
-    public enum DailyEncounterOverride { Random = -1, Normal = 0, NightOnly = 1, BossInvasion = 2 }
+    public enum DailyEncounterEvent { Normal = 0, NightOnly = 1, BossInvasion = 2, Alune = 3 }
+    public enum DailyEncounterOverride { Random = -1, Normal = 0, NightOnly = 1, BossInvasion = 2, Alune = 3 }
 
     [CreateAssetMenu(menuName = "Mining Simulator/Daily Encounter Events")]
     public sealed class DailyEncounterEventData : ScriptableObject
@@ -20,7 +20,9 @@ namespace MiningSimulator.Ores
         [Min(0)] public float bossExtraSizePercent = 50f;
         [Min(0)] public float bossExtraDamagePercent = 30f;
         [Min(0)] public float bossExtraHealthPercent = 50f;
-        public Sprite nightOnlyIcon, bossInvasionIcon;
+        public Sprite nightOnlyIcon, bossInvasionIcon, aluneIcon;
+        public AluneEventData alune;
+        [Range(0,100)] public float aluneChancePercent=5;
         [Tooltip("Force an event for testing; boss level/species gates remain controlled by existing debug settings.")]
         public DailyEncounterOverride debugOverride = DailyEncounterOverride.Random;
 
@@ -32,9 +34,11 @@ namespace MiningSimulator.Ores
                     ? DailyEncounterEvent.Normal : (DailyEncounterEvent)debugOverride;
             float night = Mathf.Clamp(nightOnlyChancePercent, 0, 100);
             float boss = bossEligible ? Mathf.Clamp(bossInvasionChancePercent, 0, 100 - night) : 0;
+            float meteor=alune?Mathf.Clamp(aluneChancePercent,0,100-night-boss):0;
             float roll = Mathf.Clamp01(sample) * 100;
             return roll < night ? DailyEncounterEvent.NightOnly :
-                roll < night + boss ? DailyEncounterEvent.BossInvasion : DailyEncounterEvent.Normal;
+                roll < night + boss ? DailyEncounterEvent.BossInvasion :
+                roll < night + boss + meteor ? DailyEncounterEvent.Alune : DailyEncounterEvent.Normal;
         }
     }
 }

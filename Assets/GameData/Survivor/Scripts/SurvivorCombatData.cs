@@ -39,6 +39,8 @@ namespace GameData.Player.Script
         [Range(.1f,2f)] public float projectileTrailWidth=.65f;
         [Min(0),Tooltip("Set 0 to disable the small impact flash.")] public float impactFlashSeconds=.09f;
         [Min(.1f)] public float impactFlashSize=1.8f;
+        public GameObject impactParticlePrefab;
+        [Min(.01f)] public float impactParticleScale=.35f;
         [HideInInspector]
         [Min(1)] public int magazineCapacity=9;
         [HideInInspector,Min(.1f)] public float reloadSeconds=1.5f;

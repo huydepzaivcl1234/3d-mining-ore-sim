@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: 4ce462ef2cc650c4f8e35829d8508a13
+ScriptedImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 2
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+  script: {fileID: 11500000, guid: 625f186215c104763be7675aa2d941aa, type: 3}
+AssetOrigin:
+  serializedVersion: 1
+  productId: 373530
+  packageName: Adjustable Slash VFX Pack
+  packageVersion: 1.0
+  assetPath: Assets/Adjustable Slash VFX Pack/Shaders/SlashToonShaderMulltiply.shadergraph
+  uploadId: 900124

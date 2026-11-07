@@ -25,6 +25,7 @@ namespace MiningSimulator.Ores
             public int spawnPacingVersion,spawnKills;public bool initialMonsterSpawned;
             public string playerId;
             public RunCheckpoint.State runtime;
+            public AluneMeteorEvent.Saved alune;
             public int day,eventKind,thiefDay,thieves;
             public bool eventAnnouncement,skullRolled,skullPending;
             public Vector3 playerPosition;
@@ -50,6 +51,7 @@ namespace MiningSimulator.Ores
         {
             if(restoringWorld||worldLoadFailed||!started||!player)return;
             var save=new SavedWorld{playerId=RunStateFields.Id(player),elapsed=spawnElapsedSeconds,credit=spawnCredit,spawnPacingVersion=1,spawnKills=spawnKills,initialMonsterSpawned=initialMonsterSpawned,playerPosition=player.transform.position,day=SpawnDayNumber,eventKind=(int)CurrentDailyEvent,eventAnnouncement=dailyAnnouncementPending,thiefDay=thiefDay,thieves=spawnedThieves};
+            if(alune)save.alune=alune.Capture();
             if(additionalRoster&&skullNights.TryGetValue(additionalRoster,out var roll)){save.skullRolled=roll.IsRolledFor(save.day);save.skullPending=roll.Pending;}
             if(SurvivorCrowd.Current)SurvivorCrowd.Current.CaptureWorld(this,save.monsters);
             foreach(var m in alive)if(m&&m.Health&&m.Health.Health>0&&!m.IsDespawning&&liveSpecies.TryGetValue(m,out var entry))save.monsters.Add(m.CaptureWorld(entry.prefab.name));
@@ -92,6 +94,7 @@ namespace MiningSimulator.Ores
                 else{var m=Instantiate(entry.prefab,record.position,record.rotation,transform);m.Initialize(this,player,record.boss,record.summon);m.RestoreWorld(record);alive.Add(m);liveSpecies[m]=entry;if(record.summon)godSummons.Add(m);}
                 RestoredMonsterCount++;
             }
+            if(saved.alune!=null)Alune.Restore(saved.alune);else if(alune)alune.Clear();
             restoringWorld=false;
             if(saved.runtime!=null){yield return null;while(System.Array.Exists(FindObjectsByType<MonsterSpawnZone>(FindObjectsSortMode.None),z=>z.IsRestoringWorld))yield return null;
                 try{RunCheckpoint.Restore(saved.runtime,player);}catch(Exception e){worldLoadFailed=true;Debug.LogError("Run checkpoint restore failed; original save preserved: "+e);}

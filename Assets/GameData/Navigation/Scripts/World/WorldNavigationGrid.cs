@@ -254,6 +254,12 @@ namespace MiningSimulator.Ores
             if (!isActiveAndEnabled || cells == null || Index(p) < 0 || !SampleGround(ref p, out float slope, out _) || slope > maximumSlope) return false;
             return IsCapsuleClear(p, radius, height);
         }
+        public bool TryGetRandomStandPoint(float radius,float height,out Vector3 point)
+        {
+            point=default;if(!HasBaked||CellCount==0)return false;
+            for(int attempt=0;attempt<96;attempt++){var cell=cells[UnityEngine.Random.Range(0,CellCount)];if(cell.ground&&cell.open&&IsCapsulePlacementClear(cell.point,radius,height)){point=cell.point;return true;}}
+            return false;
+        }
         public bool TryGetGroundPoint(Vector3 position, out Vector3 point)
         {
             point = position;

@@ -62,6 +62,7 @@ MonoBehaviour:
     navigationObstacleLayers:
       serializedVersion: 2
       m_Bits: 4294967295
+    rangedOnly: 0
     projectile: {fileID: 5961622864036143045, guid: d18d250c869a47b4b9e217f619d3e40f, type: 3}
     fireState: Fire
     rangedRange: 8
@@ -172,3 +173,4 @@ MonoBehaviour:
   attractionRadius: 30
   attractionSpeed: 2
   attractionAcceleration: 3
+  projectileTravelDistance: 10

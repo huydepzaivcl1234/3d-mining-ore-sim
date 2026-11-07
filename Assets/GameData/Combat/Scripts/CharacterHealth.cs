@@ -147,6 +147,7 @@ public void ConfigureMaximumHealth(float value, bool preserveDamage = true)
         private float initializedMaxHealth;
         public void Respawn()
         {
+            if(TryGetComponent<AlunePlayerEffect>(out var alune))alune.Clear();
             LastDamageSource = null;
             health = MaxHealth;
             regenTimer = 0f;

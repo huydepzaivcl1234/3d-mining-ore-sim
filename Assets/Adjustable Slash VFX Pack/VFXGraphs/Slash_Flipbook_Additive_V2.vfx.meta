@@ -1,0 +1,21 @@
+fileFormatVersion: 2
+guid: d01904fe6926f4e46aa916f0015e6164
+VisualEffectImporter:
+  externalObjects: {}
+  serializedVersion: 1
+  template:
+    name: 
+    category: 
+    description: 
+    icon: {instanceID: 0}
+    thumbnail: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 373530
+  packageName: Adjustable Slash VFX Pack
+  packageVersion: 1.0
+  assetPath: Assets/Adjustable Slash VFX Pack/VFXGraphs/Slash_Flipbook_Additive_V2.vfx
+  uploadId: 900124

@@ -1,0 +1,21 @@
+fileFormatVersion: 2
+guid: 7b622e73184179845be566ad9c5c3829
+VisualEffectImporter:
+  externalObjects: {}
+  serializedVersion: 1
+  template:
+    name: 
+    category: 
+    description: 
+    icon: {instanceID: 0}
+    thumbnail: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 373530
+  packageName: Adjustable Slash VFX Pack
+  packageVersion: 1.0
+  assetPath: Assets/Adjustable Slash VFX Pack/VFXGraphs/Slash_Basic_Multiply_V1.vfx
+  uploadId: 900124

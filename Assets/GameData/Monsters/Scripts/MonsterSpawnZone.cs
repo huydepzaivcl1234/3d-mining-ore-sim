@@ -106,8 +106,8 @@ namespace MiningSimulator.Ores
         public MiningTimePeriod SpawnPeriod => CurrentDailyEvent == DailyEncounterEvent.NightOnly
             ? MiningTimePeriod.Night : MiningTimePeriod.Day;
         public Sprite DailyEventIcon => dailyEvents == null ? null :
-            CurrentDailyEvent == DailyEncounterEvent.NightOnly ? dailyEvents.nightOnlyIcon : dailyEvents.bossInvasionIcon;
-        public string DailyEventLabel => CurrentDailyEvent == DailyEncounterEvent.NightOnly
+            CurrentDailyEvent == DailyEncounterEvent.Alune ? dailyEvents.aluneIcon : CurrentDailyEvent == DailyEncounterEvent.NightOnly ? dailyEvents.nightOnlyIcon : dailyEvents.bossInvasionIcon;
+        public string DailyEventLabel => CurrentDailyEvent == DailyEncounterEvent.Alune ? "Alune — Meteor shower (120s)" : CurrentDailyEvent == DailyEncounterEvent.NightOnly
             ? MiningLocalization.TextKey("DAILY_EVENT_NIGHT_ONLY", "Day off - monsters arrive at night")
             : MiningLocalization.TextKey("DAILY_EVENT_BOSS", "Boss invasion");
         [HideInInspector, SerializeField] private int minimumPerDay = 3;
@@ -378,6 +378,7 @@ public bool TryGetPatrolPoint(Vector3 origin,out Vector3 point)
             if(!player || player.Health<=0 || RuneStation.PlayerUsesRuneTime)return;
             spawnElapsedSeconds+=Time.deltaTime;
             if(spawnKills==0){TickTimedSpawns(Time.deltaTime);return;}
+            TickAlune(Time.deltaTime);
             TickGodEncounter();
             AnnounceDailyEvent();
             if (requireTreasureChest && (TreasureChest.Active == null || !TreasureChest.Active.IsAlive)) return;
@@ -479,6 +480,7 @@ public bool TryGetPatrolPoint(Vector3 origin,out Vector3 point)
         {
             forecast.Clear();waves.Clear();nextWave=0;nextSpawnRetry=0;
             scheduledDay=SpawnDayNumber;
+            if(alune&&alune.IsActive&&!forcedDailyEvent.HasValue){CurrentDailyEvent=DailyEncounterEvent.Alune;return;}
             dailyEvents??=additionalRoster!=null?additionalRoster.DailyEvents:null;
             dailyEvents??=Resources.Load<DailyEncounterEventData>("DailyEncounterEvents");
             bool bossEligible=monsters.Exists(CanSpawnEventBoss);
@@ -486,6 +488,7 @@ public bool TryGetPatrolPoint(Vector3 origin,out Vector3 point)
             if(forcedDailyEvent.HasValue)CurrentDailyEvent=forcedDailyEvent.Value;
             forcedDailyEvent=null;
             if(CurrentDailyEvent==DailyEncounterEvent.NightOnly)CurrentDailyEvent=DailyEncounterEvent.Normal;
+            if(CurrentDailyEvent==DailyEncounterEvent.Alune&&dailyEvents&&dailyEvents.alune)Alune.Begin();
             dailyAnnouncementPending=CurrentDailyEvent!=DailyEncounterEvent.Normal;
             ForecastChanged?.Invoke();
         }
@@ -665,6 +668,7 @@ public static void ResetLoadedEncounters()
 
 public void ResetEncounter()
         {
+            if(alune)alune.Clear();
             if(SurvivorCrowd.Current)SurvivorCrowd.Current.RemoveZone(this);
             spawnElapsedSeconds=0;spawnCredit=0;nextTimedRetry=0;spawnKills=0;initialMonsterSpawned=false;
             lastKnownSpawnDay=SpawnDayNumber;

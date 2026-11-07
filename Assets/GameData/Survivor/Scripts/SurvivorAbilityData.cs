@@ -95,8 +95,22 @@ namespace GameData.Player.Script
             public StatBonus quickening=new(){title="Quickening",bonus=new(15,1)};
             public StatBonus flatPower=new(){title="Flat Power",bonus=new(1,2)};
         }
+        [Serializable] public sealed class FlyingSword : Ability
+        {
+            public GameObject prefab,slashPrefab;
+            [Min(.01f)] public float slashReferenceRadius=.17f;
+            public float slashYawOffset;
+            [Min(.01f),Tooltip("Thickness of the swept blade, not the full area radius.")] public float bladeThickness=.12f;
+            public Scaling flatDamage=new(1,1);
+            [Min(0)] public float attackDamagePercent=10,attackSpeedPercent=35;
+            [Min(.1f)] public float cleaveRadius=2,orbitRadius=1.5f,orbitHeight=1.2f;
+            [Range(90,330)] public float cleaveDegrees=240;
+            [Min(.01f)] public float approachSeconds=.15f,swingSeconds=.35f,returnSeconds=.18f;
+            public Color slashColor=new(.4f,.75f,1,.9f);
+        }
         [Serializable] public sealed class Rare
         {
+            public FlyingSword flyingSword=new(){title="Spectral Sword"};
             public TwinMagic twinMagic=new(){title="Twin Magic"};
             public AdaptiveArmor reactiveArmor=new(){title="Reactive Armor"};
             public Weaken weaken=new(){title="Weaken"};
@@ -118,7 +132,7 @@ namespace GameData.Player.Script
             SurvivorUpgradeId.LifeSpring=>common.lifeSpring,SurvivorUpgradeId.PowerSurge=>common.powerSurge,SurvivorUpgradeId.Burn=>common.ignite,
             SurvivorUpgradeId.Shield=>uncommon.shield,SurvivorUpgradeId.Airborne=>uncommon.airborne,SurvivorUpgradeId.Aura=>uncommon.aura,
             SurvivorUpgradeId.Ricochet=>uncommon.ricochet,SurvivorUpgradeId.Invulnerability=>uncommon.invulnerability,SurvivorUpgradeId.Quickening=>uncommon.quickening,SurvivorUpgradeId.FlatPower=>uncommon.flatPower,
-            SurvivorUpgradeId.TwinMagic=>rare.twinMagic,SurvivorUpgradeId.ReactiveArmor=>rare.reactiveArmor,SurvivorUpgradeId.Weaken=>rare.weaken,
+            SurvivorUpgradeId.FlyingSword=>rare.flyingSword,SurvivorUpgradeId.TwinMagic=>rare.twinMagic,SurvivorUpgradeId.ReactiveArmor=>rare.reactiveArmor,SurvivorUpgradeId.Weaken=>rare.weaken,
             SurvivorUpgradeId.EmergencyHeal=>rare.emergencyHeal,SurvivorUpgradeId.Retaliate=>rare.retaliate,SurvivorUpgradeId.BossVitality=>rare.bossVitality,SurvivorUpgradeId.DoubleBasics=>rare.doubleChoice,
             SurvivorUpgradeId.OrbBarrage=>common.orbBarrage,SurvivorUpgradeId.TripleBasics=>epic.tripleChoice,SurvivorUpgradeId.Frostbite=>epic.frostbite,SurvivorUpgradeId.CardFortune=>epic.cardFortune,SurvivorUpgradeId.TrueBarrage=>epic.trueBarrage,SurvivorUpgradeId.TitanBlessing=>epic.titanBlessing,SurvivorUpgradeId.MissingHealthArmor=>epic.missingHealthArmor,SurvivorUpgradeId.ChargedCube=>epic.chargedCube,_=>null};
         public string Description(SurvivorUpgradeId id)
@@ -138,6 +152,7 @@ namespace GameData.Player.Script
             case SurvivorUpgradeId.Invulnerability:var i=uncommon.invulnerability;return $"Every ({i.cooldown})s, become invulnerable for {N(i.duration)}s. Minimum cooldown: {N(i.minimumCooldown)}s.";
             case SurvivorUpgradeId.Quickening:return $"Gain ({uncommon.quickening.bonus})% attack speed.";
             case SurvivorUpgradeId.FlatPower:return $"Gain ({uncommon.flatPower.bonus}) attack damage.";
+            case SurvivorUpgradeId.FlyingSword:var sword=rare.flyingSword;return $"Summon one orbiting sword. Sweep the sword through enemies in your attack range with a {N(sword.cleaveDegrees)}-degree crescent slash, dealing ({sword.flatDamage}) + {N(sword.attackDamagePercent)}% of your attack damage as magic damage in a {N(sword.cleaveRadius)} m arc. Each enemy is hit once per swing. Attacks at {N(sword.attackSpeedPercent)}% of your attack speed. Upgrades strengthen the same sword.";
             case SurvivorUpgradeId.TwinMagic:var t=rare.twinMagic;return $"Fire two projectiles simultaneously at two different enemies in attack range (both target the same enemy when only one is available). The second deals {N(t.flatDamage)} + {N(t.baseDamagePercent)}% base damage as magic damage.";
             case SurvivorUpgradeId.ReactiveArmor:var d=rare.reactiveArmor;return $"Each distinct enemy that hits you grants {N(d.armorPerEnemy)} armor and {N(d.magicResistancePerEnemy)} magic resistance. After {N(d.quietTime)}s without hits, lose one stack every {N(d.decayInterval)}s.";
             case SurvivorUpgradeId.Weaken:var w=rare.weaken;return $"Damage reduces enemy damage dealt by ({w.damageReduction}) for {N(w.duration)}s. Does not stack; hits while active do not reset its duration.";

@@ -144,6 +144,26 @@ MonoBehaviour:
         baseValue: 1
         perLevel: 1
   rare:
+    flyingSword:
+      title: Spectral Sword
+      prefab: {fileID: 9179060454844374053, guid: f49ec5dfe189d9c45833364535197b18, type: 3}
+      slashPrefab: {fileID: 6772009323167988225, guid: 6c4fa846cde99c641a486aa855913c6a, type: 3}
+      slashReferenceRadius: 0.17
+      slashYawOffset: 0
+      bladeThickness: 0.12
+      flatDamage:
+        baseValue: 1
+        perLevel: 1
+      attackDamagePercent: 10
+      attackSpeedPercent: 35
+      cleaveRadius: 2
+      orbitRadius: 1.5
+      orbitHeight: 1.2
+      cleaveDegrees: 240
+      approachSeconds: 0.15
+      swingSeconds: 0.35
+      returnSeconds: 0.18
+      slashColor: {r: 0.4, g: 0.75, b: 1, a: 0.9}
     twinMagic:
       title: Twin Magic
       flatDamage: 1

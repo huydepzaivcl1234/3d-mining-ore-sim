@@ -64,6 +64,7 @@ namespace GameData.Player.Script
         private PistolShooting _shooting;
         private FullBodyFirstPerson _fullBodyLook;
         private TopDownSurvivor _topDown;
+        private MiningSimulator.Ores.AlunePlayerEffect _alune;
         private SurvivorCombatData CoreData => _playerStats != null ? _playerStats.CoreData : null;
 
         private bool _grounded;
@@ -112,6 +113,7 @@ namespace GameData.Player.Script
             _shooting = GetComponent<PistolShooting>();
             _fullBodyLook = GetComponent<FullBodyFirstPerson>();
             _topDown=GetComponent<TopDownSurvivor>();
+            _alune=GetComponent<MiningSimulator.Ores.AlunePlayerEffect>();if(!_alune)_alune=gameObject.AddComponent<MiningSimulator.Ores.AlunePlayerEffect>();
             gameplayUi=FindAnyObjectByType<MiningSimulator.Ores.UiPanelCoordinator>();
             mainMenu=FindAnyObjectByType<MiningSimulator.Ores.GameMainMenu>();
 
@@ -185,9 +187,9 @@ namespace GameData.Player.Script
             float walkSpeed = _playerStats != null ? _playerStats.WalkSpeed : coreData != null ? coreData.walkSpeed : WalkSpeed;
             float runSpeed = _playerStats != null ? _playerStats.RunSpeed : coreData != null ? coreData.runSpeed : RunSpeed;
             bool running = _inputManager.Run && (_runMana == null || _runMana.CanRun);
-            float targetSpeed = Mathf.Max(0f, running ? runSpeed : walkSpeed);
+            float targetSpeed = Mathf.Max(0f, running ? runSpeed : walkSpeed)*(_alune?_alune.MovementMultiplier:1);
             float animationSpeed = running ? RunAnimationSpeed : WalkAnimationSpeed;
-            Vector2 movementInput = Vector2.ClampMagnitude(_inputManager.Move, 1f);
+            Vector2 movementInput = _alune&&_alune.IsStunned?Vector2.zero:Vector2.ClampMagnitude(_inputManager.Move, 1f);
 
             // Camera-relative world input is independent of which enemy the actor faces.
             Vector3 worldMove=_topDown&&_topDown.enabled?_topDown.MovementDirection(movementInput):transform.TransformDirection(new Vector3(movementInput.x,0,movementInput.y));
@@ -267,7 +269,7 @@ namespace GameData.Player.Script
             bool jumpPressed = _jumpRequested || (_inputManager.Jump && !_jumpHeldLastStep);
             _jumpRequested = false;
             _jumpHeldLastStep = _inputManager.Jump;
-            if (!jumpPressed || !_grounded || _jumpPending || Time.timeScale <= 0f || (_topDown && _topDown.enabled ? (gameplayUi && gameplayUi.BlocksGameplay || mainMenu && mainMenu.IsOpen) : Cursor.lockState != CursorLockMode.Locked)) return;
+            if (_alune&&_alune.IsStunned || !jumpPressed || !_grounded || _jumpPending || Time.timeScale <= 0f || (_topDown && _topDown.enabled ? (gameplayUi && gameplayUi.BlocksGameplay || mainMenu && mainMenu.IsOpen) : Cursor.lockState != CursorLockMode.Locked)) return;
 
             _jumpPending = true;
             _animator.ResetTrigger(_jumpHash);

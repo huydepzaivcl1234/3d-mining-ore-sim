@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace MiningSimulator.Ores
 {
-    /// <summary>Swept, one-hit projectile. Steering follows the chosen living player or miner.</summary>
+    /// <summary>Swept, one-hit projectile. Mushranon shots keep their firing direction; other species may steer.</summary>
     public sealed class HomingMonsterProjectile : MonoBehaviour, IPooledProjectile
     {
         [SerializeField, Min(.1f)] [HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("speed")] private float legacy_speed = 8f;
@@ -20,7 +20,9 @@ namespace MiningSimulator.Ores
         private MushroomMonster owner;
         private Transform victim;
         private CharacterHealth victimHealth;
-        private float age;
+        private float age,travelled;
+        private bool straightFlight;
+        private float travelLimit;
         private bool launched, resolved;
 
         public static Vector3 AimPoint(Transform target)
@@ -34,7 +36,9 @@ namespace MiningSimulator.Ores
             data = attacker != null ? attacker.CombatData : null;
             victim = target;
             victimHealth = target != null ? target.GetComponent<CharacterHealth>() : null;
-            age = 0f;
+            age = travelled = 0f;
+            straightFlight=attacker && attacker.SpeciesData is MushranonData;
+            travelLimit=straightFlight?Mathf.Max(.1f,((MushranonData)attacker.SpeciesData).projectileTravelDistance):float.PositiveInfinity;
             resolved = false;
             launched = true;
         }
@@ -46,7 +50,7 @@ namespace MiningSimulator.Ores
         private void OnDisable() => ResetForPool();
         public void ResetForPool()
         {
-            owner=null;victim=null;victimHealth=null;data=null;age=0;launched=resolved=false;
+            owner=null;victim=null;victimHealth=null;data=null;age=travelled=0;straightFlight=false;travelLimit=0;launched=resolved=false;
             System.Array.Clear(hits,0,hits.Length);
         }
         // Separate the simulation step from destruction for deterministic validation.
@@ -55,14 +59,14 @@ namespace MiningSimulator.Ores
             if (!launched) return false;
             if (resolved) return true;
             age += seconds;
-            if (owner == null || owner.IsDespawning || victim == null || age >= lifetime ||
-                victimHealth != null && victimHealth.Health <= 0f)
+            if (owner == null || owner.IsDespawning || age >= lifetime ||
+                !straightFlight && (victim == null || victimHealth != null && victimHealth.Health <= 0f))
             { Resolve(false); return true; }
-            Vector3 aim = AimPoint(victim) - transform.position;
+            Vector3 aim = !straightFlight && victim ? AimPoint(victim) - transform.position : Vector3.zero;
             if (aim.sqrMagnitude > .001f)
                 transform.rotation = Quaternion.RotateTowards(transform.rotation,
                     Quaternion.LookRotation(aim), turnDegreesPerSecond * seconds);
-            float distance = speed * seconds;
+            float distance = Mathf.Min(Mathf.Max(0,speed * seconds),Mathf.Max(0,travelLimit-travelled));
             int count = Physics.SphereCastNonAlloc(transform.position, radius, transform.forward,
                 hits, distance, collisionLayers, QueryTriggerInteraction.Ignore);
             RaycastHit nearest = default;
@@ -77,15 +81,17 @@ namespace MiningSimulator.Ores
             if (nearest.collider != null)
             {
                 transform.position += transform.forward * nearestDistance;
-                Resolve(nearest.transform.IsChildOf(victim));
+                Resolve(victim && nearest.transform.IsChildOf(victim));
                 return true;
             }
             if (count == hits.Length) { Resolve(false); return true; }
-            var targetCollider = victim.GetComponent<Collider>();
+            var targetCollider = victim ? victim.GetComponent<Collider>() : null;
             if (targetCollider != null && targetCollider.enabled &&
                 (targetCollider.ClosestPoint(transform.position) - transform.position).sqrMagnitude <= radius * radius)
             { Resolve(true); return true; }
             transform.position += transform.forward * distance;
+            travelled+=distance;
+            if(straightFlight&&travelled>=travelLimit){Resolve(false);return true;}
             return false;
         }
         private void Resolve(bool impact)

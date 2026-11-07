@@ -25,7 +25,7 @@ public sealed class SurvivorCombatDataEditor : Editor
         Group("Stamina",false,"maxStamina","runningCostPerSecond","staminaRecoveryPerSecond","staminaRecoveryDelay","sprintRecoveryThreshold");
         Group("Experience & levels",false,"startingLevel","startingExperience","experienceRequired","experienceRequirementGrowth");
         Group("Projectile models",false,"projectileAppearance","normalProjectilePrefab","iceProjectilePrefab","fireProjectilePrefab","toxicProjectilePrefab","chargedCubePrefab");
-        Group("Projectile feedback — visuals only",false,"projectileTrailSeconds","projectileTrailWidth","impactFlashSeconds","impactFlashSize","projectileColor");
+        Group("Projectile feedback — visuals only",false,"projectileTrailSeconds","projectileTrailWidth","impactFlashSeconds","impactFlashSize","impactParticlePrefab","impactParticleScale","projectileColor");
         Group("Advanced — pooling & collision",false,"maximumProjectilesPerVolley","poolCapacity","hitLayers");
         return root;
     }

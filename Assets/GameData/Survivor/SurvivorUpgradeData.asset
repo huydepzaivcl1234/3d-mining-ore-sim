@@ -300,6 +300,15 @@ MonoBehaviour:
     amount: 1
     unit: 
     icon: {fileID: 21300000, guid: 15593fcaa5d4412182a183e226758152, type: 3}
+  - id: 42
+    title: Spectral Sword
+    description: Summon one orbiting sword. Automatically cleave enemies in your
+      attack range with a 240-degree crescent slash, dealing (1 (+1 per upgrade))
+      + 10% of your attack damage as magic damage in a 2 m area. Attacks at 35% of
+      your attack speed. Upgrades strengthen the same sword.
+    amount: 1
+    unit: 
+    icon: {fileID: 21300000, guid: 1f59f0c79b8e51c42913c56dbc59aa7a, type: 3}
   basicRarityBonusPercent:
   - 0
   - 3
@@ -532,6 +541,9 @@ MonoBehaviour:
       weight: 1
       amountMultiplier: 1
     - id: 32
+      weight: 1
+      amountMultiplier: 1
+    - id: 42
       weight: 1
       amountMultiplier: 1
     uncommon:
